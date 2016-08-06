@@ -1,0 +1,13 @@
+apply plugin: 'spring-boot'
+
+dependencies {
+
+    compile project(":eventuate-local-java-common")
+    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    compile 'org.apache.kafka:kafka-clients:0.9.0.1'
+    compile 'commons-lang:commons-lang:2.6'
+
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.1'
+    testCompile 'commons-io:commons-io:2.5'
+
+}

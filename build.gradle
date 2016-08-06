@@ -1,0 +1,70 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
+    }
+}
+
+plugins {
+    id "com.github.hierynomus.license" version "0.12.1"
+}
+
+allprojects {
+    group = "io.eventuate.local.java"
+}
+
+projects {
+
+    license {
+        header rootProject.file('src/license/HEADER')
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+
+    repositories {
+        mavenCentral()
+        maven { url "http://mavenrepo.eventuate.io/release"}
+    }
+
+    dependencies {
+        testCompile "junit:junit:4.12"
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                repository(url: deployUrl)
+                pom.project {
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = "2.11"
+}
+
+gradle.projectsEvaluated {
+    task aggregateJavaDocs(type: Javadoc) {
+        description = 'Aggregates Javadoc API documentation of all subprojects.'
+        group = JavaBasePlugin.DOCUMENTATION_GROUP
+        dependsOn subprojects.findAll { subproject -> subproject.plugins.hasPlugin(PublicModulePlugin) }.javadoc
+
+        source subprojects.findAll { subproject -> subproject.plugins.hasPlugin(PublicModulePlugin) }.javadoc.source
+        destinationDir file("$buildDir/docs/javadoc")
+        classpath = files(subprojects.findAll { subproject -> subproject.plugins.hasPlugin(PublicModulePlugin) }.javadoc.classpath)
+    }
+}

@@ -1,0 +1,5 @@
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    compile 'commons-lang:commons-lang:2.6'
+    compile 'org.apache.kafka:kafka-clients:0.9.0.1'
+}

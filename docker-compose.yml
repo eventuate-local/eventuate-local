@@ -1,0 +1,56 @@
+zookeeper:
+  image: debezium/zookeeper:0.2
+  ports:
+    - 2181:2181
+    - 2888:2888
+    - 3888:3888
+
+
+kafka:
+  image: debezium/kafka:0.2
+  ports:
+    - 9092:9092
+  environment:
+    - ADVERTISED_HOST_NAME=${DOCKER_HOST_IP}
+  links:
+    - zookeeper
+
+connect:
+  image: debezium/connect:0.2
+  ports:
+    - 9095:8083
+  environment:
+    - GROUP_ID=1
+    - CONFIG_STORAGE_TOPIC=my-connect-configs
+    - OFFSET_STORAGE_TOPIC=my-connect-offsets
+    - ADVERTISED_HOST_NAME=${DOCKER_HOST_IP}
+  links:
+    - zookeeper
+    - kafka
+    - mysql
+
+mysql:
+  image: mysql:5.7.13
+  ports:
+    - 3306:3306
+  volumes:
+    - ./mysql.conf.d:/etc/mysql/conf.d
+  environment:
+    - MYSQL_ROOT_PASSWORD=rootpassword
+    - MYSQL_USER=mysqluser
+    - MYSQL_PASSWORD=mysqlpw
+
+publisher:
+  image: java:8
+  working_dir: /app
+  volumes:
+    - ./eventuate-local-java-publisher/build/libs:/app
+  command: java -jar /app/eventuate-local-java-publisher-0.1.0-SNAPSHOT.jar
+  ports:
+    - "9096:8080"
+  links:
+    - kafka
+  environment:
+    - EVENTUATELOCAL_PUBLISHER_BOOTSTRAP_SERVERS=kafka:9092
+    - EVENTUATELOCAL_PUBLISHER_GROUP_ID=eventuate-event-publisher
+    - EVENTUATELOCAL_PUBLISHER_EVENT_TOPIC=mysql-server-1.eventuate.events

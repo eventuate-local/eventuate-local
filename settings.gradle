@@ -1,0 +1,7 @@
+include 'eventuate-local-java-common'
+include 'eventuate-local-java-jdbc'
+include 'eventuate-local-java-jdbc-autoconfigure'
+include 'eventuate-local-java-jdbc-tests'
+include 'eventuate-local-java-publisher'
+
+rootProject.name = 'eventuate-local-java'

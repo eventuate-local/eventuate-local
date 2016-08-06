@@ -1,0 +1,17 @@
+// apply plugin: PrivateModulePlugin
+
+dependencies {
+
+    testCompile "io.eventuate.client.java:eventuate-client-java-tests-common:$eventuateClientVersion"
+
+    testCompile project(":eventuate-local-java-jdbc-autoconfigure")
+
+    testCompile "junit:junit:4.11"
+    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+
+}
+
+test {
+    forkEvery 1
+    ignoreFailures (!project.hasProperty("ignoreE2EFailures") || ignoreE2EFailures.toBoolean())
+}

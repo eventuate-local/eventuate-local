@@ -1,0 +1,20 @@
+configurations {
+    // Kafka Connect has some un-needed dependencies that introduce problems:
+    //  "Unable to create a Configuration, because no Bean Validation provider"
+
+    all*.exclude group: "org.glassfish.jersey.containers", module: "jersey-container-servlet"
+}
+
+dependencies {
+    compile 'commons-lang:commons-lang:2.6'
+    compile "io.debezium:debezium-embedded:$debeziumVersion"
+    compile "io.debezium:debezium-connector-mysql:$debeziumVersion"
+    compile project(":eventuate-local-java-common")
+    compile 'org.apache.curator:curator-recipes:2.8.0'
+
+    compile "ch.qos.logback:logback-classic:1.1.5"
+
+    testCompile project(":eventuate-local-java-jdbc")
+    testCompile "junit:junit:4.11"
+    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+}

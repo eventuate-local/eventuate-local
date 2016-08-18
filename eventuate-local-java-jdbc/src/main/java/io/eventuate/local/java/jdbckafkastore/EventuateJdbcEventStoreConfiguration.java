@@ -4,10 +4,13 @@ import io.eventuate.javaclient.commonimpl.EventuateAggregateStoreImpl;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.EventuateAggregateStore;
+import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 
@@ -15,7 +18,8 @@ import javax.sql.DataSource;
  * Defines the Spring beans for the JDBC-based aggregate store
  */
 @Configuration
-@EnableConfigurationProperties(EventuateLocalAggregateStoreConfiguration.class)
+@EnableConfigurationProperties(EventuateKafkaConfigurationProperties.class)
+@EnableTransactionManagement
 public class EventuateJdbcEventStoreConfiguration {
 
   @Bean
@@ -30,7 +34,7 @@ public class EventuateJdbcEventStoreConfiguration {
   }
 
   @Bean
-  public EventuateKafkaAggregateSubscriptions eventuateKafkaAggregateSubscriptions(EventuateLocalAggregateStoreConfiguration eventuateLocalAggregateStoreConfiguration) {
+  public EventuateKafkaAggregateSubscriptions eventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration) {
     return new EventuateKafkaAggregateSubscriptions(eventuateLocalAggregateStoreConfiguration);
   }
 }

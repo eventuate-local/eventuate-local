@@ -9,6 +9,7 @@ import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.javaclient.commonimpl.SerializedEvent;
 import io.eventuate.local.common.AggregateTopicMapping;
 import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -30,9 +31,9 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
-  private EventuateLocalAggregateStoreConfiguration eventuateLocalAggregateStoreConfiguration;
+  private EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration;
 
-  public EventuateKafkaAggregateSubscriptions(EventuateLocalAggregateStoreConfiguration eventuateLocalAggregateStoreConfiguration) {
+  public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration) {
     this.eventuateLocalAggregateStoreConfiguration = eventuateLocalAggregateStoreConfiguration;
   }
 

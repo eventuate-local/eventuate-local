@@ -1,1 +1,0 @@
-http DELETE http://${DOCKER_HOST_IP?}:9095/connectors/events-connector

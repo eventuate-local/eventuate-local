@@ -19,89 +19,62 @@ There is a Kafka topic for each aggregate type.
 
 = About change data capture
 
-The change data capture component currently uses http://debezium.io/[Debezium], which itself uses http://kafka.apache.org/documentation.html#connect[Kafka Connect].
-A Kafka Connect connector tails the MySQL transaction log and publishes changes to a Kafka topic.
-An Eventuate Local `publisher` consumes that Kafka topic, transforms each captured change back into an event, and publishes that event to the appropriate aggregate topic.
+Eventuate Local has a change data capture (CDC) component  that
+
+1. tails the MySQL transaction log
+2. publishes each event inserted into the `EVENTS` table to Kafka topic for the event's aggregate.
+
+The CDC component runs within each application.
 
 = Setting up Eventuate Local
 
-The easiest way to get started is to run a set of Docker containers.
+To use Eventuate Local you need to
+
+1. Create `EVENT` and `ENTITIES`'` tables in a MySQL database.
+2. Run Apache Zookeeper and Apache Kafka
+
+The easiest way to get started is to run a set of Docker containers using Docker Compose.
 
 == The quick version
 
 Run the following commands:
 
 ```
-. ./set-env.sh
-./initialize.sh
+./scripts/initialize.sh
 ```
 
 Read on for the longer version.
 
 == Set some environment variables
 
-Please review the file `./set-env.sh` and run
+Please review the file `./scripts/set-env.sh` and run
 
 ```
-. ./set-env.sh
-```
-
-== Build the publisher
-
-You need to build the publisher application in order to run the Docker container.
-
-```
-./gradlew :eventuate-local-java-publisher:assemble
+. ./scripts/set-env.sh
 ```
 
 == Run the Docker containers
 
 The `docker-compose.yml` defines a set of Docker containers:
 
-* zookeeper
-* kafka
-* connect - Kafka Connect
+* zookeeper - used by both the change data capture component and Kafka
+* kafka - message broker
 * mysql - MySQL database
-* publisher - publishes changes to the `EVENTS` table to Kafka topics
 
-Create all of these containers except publisher using the following command:
+Create these containers using the following command:
 
 ```
-docker-compose up -d connect
+docker-compose up -d
 ```
 
 == Create the database schema
 
 Run this command:
 ```
-./create-mysql-database.sh
+./scripts/create-mysql-database.sh
 ```
 
-This creates a MySQL database called `eventuate` and the necessary tables table.
-
-== Create the change capture topic
-
-Run this command to create the topic for the captured changes:
-
-```
-./create-topics.sh
-```
-
-== Create the connector
-
-Next, create the Kafka Connect connector that tails the MySQL transaction log and captures the changes made to the `EVENTS` table.
-
-```
-./create-connector.sh
-```
-
-== Launch the publisher
-
-Finally, run the publisher:
-
-```
-docker-compose up -d publish
-```
+This creates a MySQL database called `eventuate` and the necessary tables.
 
 At this point Eventuate Local is ready.
 
@@ -120,11 +93,12 @@ For more information about developing applications with Eventuate Local see the 
 Please specify the following in `gradle.properties`:
 
 ```
-eventuateLocalVersion=0.1.0.RELEASE
+eventuateLocalVersion=0.2.0.RELEASE
 ```
 
 and instead of the HTTP/STOMP dependency, specify the following:
 
 ```
 compile "io.eventuate.local.java:eventuate-local-java-jdbc:${eventuateLocalVersion}"
+compile "io.eventuate.local.java:eventuate-local-java-embedded-cdc-autoconfigure:${eventuateLocalVersion}"
 ```

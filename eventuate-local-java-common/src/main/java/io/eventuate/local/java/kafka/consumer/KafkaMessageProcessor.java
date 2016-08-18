@@ -52,7 +52,7 @@ public class KafkaMessageProcessor {
       count++;
       offsetTracker.noteProcessed(new TopicPartition(record.topic(), record.partition()), record.offset());
     }
-    logger.debug("removed {} {} processed records from queue", subscriberId, count);
+    logger.trace("removed {} {} processed records from queue", subscriberId, count);
     return offsetTracker.offsetsToCommit();
   }
 

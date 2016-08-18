@@ -73,7 +73,6 @@ public class EventuateKafkaConsumer {
 
       KafkaMessageProcessor processor = new KafkaMessageProcessor(subscriberId, handler);
 
-
       for (String topic : topics) {
         verifyTopicExistsBeforeSubscribing(consumer, topic);
       }

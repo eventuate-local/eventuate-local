@@ -36,7 +36,7 @@ public class KafkaMessageProcessor {
         if (t != null) {
           logger.error("Got exception: ", t);
         } else {
-          logger.info("Adding processed record to queue {} {}", subscriberId, record.offset());
+          logger.debug("Adding processed record to queue {} {}", subscriberId, record.offset());
           processedRecords.add(record);
         }
       });

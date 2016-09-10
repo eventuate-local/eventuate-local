@@ -40,8 +40,10 @@ The easiest way to get started is to run a set of Docker containers using Docker
 Run the following commands:
 
 ```
-./scripts/initialize.sh
+. ./scripts/initialize.sh
 ```
+
+This command sets some environment variables and creates some Docker containers.
 
 Read on for the longer version.
 
@@ -59,22 +61,14 @@ The `docker-compose.yml` defines a set of Docker containers:
 
 * zookeeper - used by both the change data capture component and Kafka
 * kafka - message broker
-* mysql - MySQL database
+* mysql - MySQL database that has the eventuate schema defined.
+See `create-eventuate-database.sql` if you want to use a different MySQL instance.
 
 Create these containers using the following command:
 
 ```
 docker-compose up -d
 ```
-
-== Create the database schema
-
-Run this command:
-```
-./scripts/create-mysql-database.sh
-```
-
-This creates a MySQL database called `eventuate` and the necessary tables.
 
 At this point Eventuate Local is ready.
 
@@ -93,7 +87,7 @@ For more information about developing applications with Eventuate Local see the 
 Please specify the following in `gradle.properties`:
 
 ```
-eventuateLocalVersion=0.2.0.RELEASE
+eventuateLocalVersion=0.3.0.RELEASE
 ```
 
 and instead of the HTTP/STOMP dependency, specify the following:

@@ -4,5 +4,6 @@ include 'eventuate-local-java-jdbc-autoconfigure'
 include 'eventuate-local-java-jdbc-tests'
 include 'eventuate-local-java-embedded-cdc'
 include 'eventuate-local-java-embedded-cdc-autoconfigure'
+include 'eventuate-local-java-cdc-service'
 
 rootProject.name = 'eventuate-local-java'

@@ -47,9 +47,9 @@ public class EventuateKafkaConsumer {
 
   private void verifyTopicExistsBeforeSubscribing(KafkaConsumer<String, String> consumer, String topic) {
     try {
-      logger.info("Verifying Topic {}", topic);
+      logger.debug("Verifying Topic {}", topic);
       List<PartitionInfo> partitions = consumer.partitionsFor(topic);
-      logger.info("Got these partitions {} for Topic {}", partitions, topic);
+      logger.debug("Got these partitions {} for Topic {}", partitions, topic);
     } catch (Throwable e) {
       logger.error("Got exception: ", e);
       throw new RuntimeException(e);
@@ -59,9 +59,9 @@ public class EventuateKafkaConsumer {
   private void maybeCommitOffsets(KafkaConsumer<String, String> consumer, KafkaMessageProcessor processor) {
     Map<TopicPartition, OffsetAndMetadata> offsetsToCommit = processor.offsetsToCommit();
     if (!offsetsToCommit.isEmpty()) {
-      logger.info("Committing offsets {} {}", subscriberId, offsetsToCommit);
+      logger.debug("Committing offsets {} {}", subscriberId, offsetsToCommit);
       consumer.commitSync(offsetsToCommit);
-      logger.info("Committed offsets {}", subscriberId);
+      logger.debug("Committed offsets {}", subscriberId);
       processor.noteOffsetsCommitted(offsetsToCommit);
     }
   }
@@ -77,11 +77,11 @@ public class EventuateKafkaConsumer {
         verifyTopicExistsBeforeSubscribing(consumer, topic);
       }
 
-      logger.info("Subscribing to {} {}", subscriberId, topics);
+      logger.debug("Subscribing to {} {}", subscriberId, topics);
 
       consumer.subscribe(new ArrayList<>(topics));
 
-      logger.info("Subscribed to {} {}", subscriberId, topics);
+      logger.debug("Subscribed to {} {}", subscriberId, topics);
 
       new Thread(() -> {
 
@@ -90,21 +90,21 @@ public class EventuateKafkaConsumer {
           while (!stopFlag.get()) {
             ConsumerRecords<String, String> records = consumer.poll(100);
             if (!records.isEmpty())
-              logger.info("Got {} {} records", subscriberId, records.count());
+              logger.debug("Got {} {} records", subscriberId, records.count());
 
             for (ConsumerRecord<String, String> record : records) {
-              logger.info("processing record {} {} {}", subscriberId, record.offset(), record.value());
+              logger.debug("processing record {} {} {}", subscriberId, record.offset(), record.value());
               if (logger.isDebugEnabled())
                 logger.debug(String.format("EventuateKafkaAggregateSubscriptions subscriber = %s, offset = %d, key = %s, value = %s", subscriberId, record.offset(), record.key(), record.value()));
               processor.process(record);
             }
             if (!records.isEmpty())
-              logger.info("Processed {} {} records", subscriberId, records.count());
+              logger.debug("Processed {} {} records", subscriberId, records.count());
 
             maybeCommitOffsets(consumer, processor);
 
             if (!records.isEmpty())
-              logger.info("To commit {} {}", subscriberId, processor.getPending());
+              logger.debug("To commit {} {}", subscriberId, processor.getPending());
 
           }
 

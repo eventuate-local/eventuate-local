@@ -10,7 +10,7 @@ dependencies {
 
     compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
     compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
-    compile 'mysql:mysql-connector-java:6.0.3'
+    compile 'mysql:mysql-connector-java:5.1.39'
 
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 

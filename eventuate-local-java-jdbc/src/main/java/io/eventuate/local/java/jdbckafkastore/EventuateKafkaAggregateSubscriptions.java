@@ -44,7 +44,7 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
     synchronized (consumers) {
       consumers.stream().forEach(EventuateKafkaConsumer::stop);
     }
-    logger.info("Waiting for consumers to commit");
+    logger.debug("Waiting for consumers to commit");
     try {
       TimeUnit.SECONDS.sleep(2);
     } catch (InterruptedException e) {

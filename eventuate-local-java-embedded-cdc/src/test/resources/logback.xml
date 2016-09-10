@@ -17,4 +17,8 @@
     </logger>
     <logger name="org.apache.kafka" level='debug'>
     </logger>
+    <logger name="org.springframework" level='info'>
+    </logger>
+    <logger name="org.apache.curator" level='info'>
+    </logger>
 </configuration>

@@ -5,6 +5,7 @@ import io.eventuate.EntityIdAndVersion;
 import io.eventuate.Int128;
 import io.eventuate.SubscriberOptions;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
+import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.local.java.jdbckafkastore.EventuateJdbcEventStoreConfiguration;
 import io.eventuate.local.java.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
@@ -25,20 +26,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 
+import static io.eventuate.testutil.AsyncUtil.await;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = EmbeddedDebeziumCDCTest.EmbeddedDebeziumCDCTestConfiguration.class)
+@SpringApplicationConfiguration(classes = EventTableChangesToAggregateTopicRelayTest.EventTableChangesToAggregateTopicRelayTestConfiguration.class)
 @DirtiesContext
 @IntegrationTest
-public class EmbeddedDebeziumCDCTest {
+public class EventTableChangesToAggregateTopicRelayTest {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   @org.springframework.context.annotation.Configuration
-  @Import({EventuateJdbcEventStoreConfiguration.class, EmbeddedDebeziumCDCConfiguration.class})
+  @Import({EventuateJdbcEventStoreConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
   @EnableAutoConfiguration
-  public static class EmbeddedDebeziumCDCTestConfiguration {
+  public static class EventTableChangesToAggregateTopicRelayTestConfiguration {
 
 
   }
@@ -59,18 +61,18 @@ public class EmbeddedDebeziumCDCTest {
 
     long publishTime = System.currentTimeMillis();
 
-    EntityIdAndVersion ewidv = eventuateJdbcEventStore.save(aggregateType, myEvents, Optional.empty()).get();
+    EntityIdVersionAndEventIds ewidv = await(eventuateJdbcEventStore.save(aggregateType, myEvents, Optional.empty()));
 
     Int128 expectedEventId = ewidv.getEntityVersion();
     BlockingQueue<Int128> result = new LinkedBlockingDeque<>();
 
-    logger.info("Looking for eventId {}", expectedEventId);
+    logger.debug("Looking for eventId {}", expectedEventId);
 
     eventuateKafkaAggregateSubscriptions.subscribe("testSubscriber",
             Collections.singletonMap(aggregateType, Collections.singleton(eventType)),
             SubscriberOptions.DEFAULTS,
             se -> {
-              logger.info("got se {}", se);
+              logger.debug("got se {}", se);
               if (se.getId().equals(expectedEventId))
                 result.add(se.getId());
               return CompletableFuture.completedFuture(null);
@@ -80,7 +82,7 @@ public class EmbeddedDebeziumCDCTest {
 
     long endTime = System.currentTimeMillis();
 
-    logger.info("got the event I just published in msecs {}", endTime - publishTime);
+    logger.debug("got the event I just published in msecs {}", endTime - publishTime);
   }
 
 

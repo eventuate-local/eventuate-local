@@ -1,13 +1,18 @@
 package io.eventuate.local.cdc.debezium;
 
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("eventuateLocal.embedded.cdc")
-public class EmbeddedDebeziumCDCConfigurationProperties {
+import javax.validation.constraints.NotNull;
 
+@ConfigurationProperties("eventuateLocal.cdc")
+public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
+
+  @NotBlank
   private String dbUserName;
 
+  @NotBlank
   private String dbPassword;
 
   public String getDbUserName() {

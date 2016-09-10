@@ -5,6 +5,7 @@ import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.EventuateAggregateStore;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -23,17 +24,20 @@ import javax.sql.DataSource;
 public class EventuateJdbcEventStoreConfiguration {
 
   @Bean
+  @ConditionalOnMissingBean(AggregateCrud.class)
   public EventuateJdbcAggregateStore eventuateJdbcEventStore(DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
     return new EventuateJdbcAggregateStore(jdbcTemplate);
   }
 
   @Bean
+  @ConditionalOnMissingBean(EventuateAggregateStore.class)
   public EventuateAggregateStore httpStompEventStore(AggregateCrud restClient, AggregateEvents stompClient) {
     return new EventuateAggregateStoreImpl(restClient, stompClient);
   }
 
   @Bean
+  @ConditionalOnMissingBean(AggregateEvents.class)
   public EventuateKafkaAggregateSubscriptions eventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration) {
     return new EventuateKafkaAggregateSubscriptions(eventuateLocalAggregateStoreConfiguration);
   }

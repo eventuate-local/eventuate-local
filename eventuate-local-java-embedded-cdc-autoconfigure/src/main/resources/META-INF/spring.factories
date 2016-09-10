@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-io.eventuate.local.cdc.debezium.EmbeddedDebeziumCDCConfiguration
+io.eventuate.local.cdc.debezium.EventTableChangesToAggregateTopicRelayConfiguration

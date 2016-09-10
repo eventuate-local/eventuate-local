@@ -1,11 +1,15 @@
 package io.eventuate.local.java.kafka;
 
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import javax.validation.constraints.NotNull;
 
 @ConfigurationProperties("eventuateLocal.kafka")
 public class EventuateKafkaConfigurationProperties {
 
-  private String bootstrapServers = "192.168.99.100:9092";
+  @NotBlank
+  private String bootstrapServers;
 
   public String getBootstrapServers() {
     return bootstrapServers;

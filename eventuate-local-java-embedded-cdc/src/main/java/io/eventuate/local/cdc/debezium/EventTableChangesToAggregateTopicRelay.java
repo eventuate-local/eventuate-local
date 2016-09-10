@@ -20,14 +20,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
-public class EmbeddedDebeziumCDC {
+/**
+ * Subscribes to changes made to EVENTS table and publishes them to aggregate topics
+ */
+public class EventTableChangesToAggregateTopicRelay {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -39,11 +37,10 @@ public class EmbeddedDebeziumCDC {
   private final String dbUser;
   private final String dbPassword;
   private final LeaderSelector leaderSelector;
-  private CountDownLatch counterLatch;
 
-  public EmbeddedDebeziumCDC(String kafkaBootstrapServers,
-                             JdbcUrl jdbcUrl,
-                             String dbUser, String dbPassword, CuratorFramework client) {
+  public EventTableChangesToAggregateTopicRelay(String kafkaBootstrapServers,
+                                                JdbcUrl jdbcUrl,
+                                                String dbUser, String dbPassword, CuratorFramework client) {
     this.kafkaBootstrapServers = kafkaBootstrapServers;
     this.jdbcUrl = jdbcUrl;
     this.dbUser = dbUser;
@@ -58,20 +55,30 @@ public class EmbeddedDebeziumCDC {
 
       private void takeLeadership() throws InterruptedException {
         logger.info("Taking leadership");
-        startCapturingChanges();
-        counterLatch = new CountDownLatch(1);
         try {
-          counterLatch.await();
-        } catch (InterruptedException e) {
-          logger.error("Interrupted while taking leadership");
+          CompletableFuture<Object> completion = startCapturingChanges();
+          try {
+            completion.get();
+          } catch (InterruptedException e) {
+            logger.error("Interrupted while taking leadership");
+          }
+        } catch (Throwable t) {
+          logger.error("In takeLeadership", t);
+          throw t instanceof RuntimeException ? (RuntimeException)t : new RuntimeException(t);
+        } finally {
+          logger.debug("TakeLeadership returning");
         }
       }
 
       @Override
       public void stateChanged(CuratorFramework client, ConnectionState newState) {
+
+        logger.debug("StateChanged: {}", newState);
+
         switch (newState) {
           case SUSPENDED:
             resignLeadership();
+            break;
 
           case RECONNECTED:
             try {
@@ -79,9 +86,11 @@ public class EmbeddedDebeziumCDC {
             } catch (InterruptedException e) {
               logger.error("While handling RECONNECTED", e);
             }
+            break;
 
           case LOST:
             resignLeadership();
+            break;
         }
       }
 
@@ -92,20 +101,19 @@ public class EmbeddedDebeziumCDC {
         } catch (InterruptedException e) {
           logger.error("While handling SUSPEND", e);
         }
-        if (counterLatch != null && counterLatch.getCount() > 0)
-          counterLatch.countDown();
       }
     });
   }
 
   @PostConstruct
   public void start() {
+    logger.info("CDC initialized. Ready to become leader");
     leaderSelector.start();
   }
 
-  public void startCapturingChanges() {
+  public CompletableFuture<Object> startCapturingChanges() throws InterruptedException {
 
-    logger.info("Starting to capture changes");
+    logger.debug("Starting to capture changes");
 
     producer = new EventuateKafkaProducer(kafkaBootstrapServers);
 
@@ -115,7 +123,8 @@ public class EmbeddedDebeziumCDC {
             .with("connector.class",
                     "io.debezium.connector.mysql.MySqlConnector")
 
-            .with("offset.storage", MyKafkaOffsetBackingStore.class.getName())
+            .with("offset.storage", KafkaOffsetBackingStore.class.getName())
+            .with("bootstrap.servers", kafkaBootstrapServers)
             .with("offset.storage.topic", "eventuate.local.cdc." + connectorName + ".offset.storage")
 
             .with("poll.interval.ms", 50)
@@ -128,7 +137,7 @@ public class EmbeddedDebeziumCDC {
             .with("database.password", dbPassword)
             .with("database.server.id", 85744)
             .with("database.server.name", "my-app-connector")
-            .with("database.whitelist", "eventuate")
+            //.with("database.whitelist", "eventuate")
             .with("database.history",
                     io.debezium.relational.history.KafkaDatabaseHistory.class.getName())
             .with("database.history.kafka.topic",
@@ -137,14 +146,29 @@ public class EmbeddedDebeziumCDC {
                     kafkaBootstrapServers)
             .build();
 
+    CompletableFuture<Object> completion = new CompletableFuture<>();
     engine = EmbeddedEngine.create()
-            .using(config)
+            .using((success, message, throwable) -> {
+              if (success)
+                completion.complete(null);
+              else
+                completion.completeExceptionally(new RuntimeException("Engine failed to start" + message, throwable));
+            })
             .using(config)
             .notifying(this::handleEvent)
             .build();
 
     Executor executor = Executors.newCachedThreadPool();
-    executor.execute(engine);
+    executor.execute(() -> {
+      try {
+        engine.run();
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
+    });
+
+    logger.debug("Started engine");
+    return completion;
   }
 
   @PreDestroy
@@ -155,7 +179,7 @@ public class EmbeddedDebeziumCDC {
 
   public void stopCapturingChanges() throws InterruptedException {
 
-    logger.info("Stopping to capture changes");
+    logger.debug("Stopping to capture changes");
 
     if (producer != null)
       producer.close();
@@ -163,12 +187,12 @@ public class EmbeddedDebeziumCDC {
 
     if (engine != null) {
 
-      logger.info("Stopping Debezium engine");
+      logger.debug("Stopping Debezium engine");
       engine.stop();
 
       try {
         while (!engine.await(30, TimeUnit.SECONDS)) {
-          logger.info("Waiting another 30 seconds for the embedded engine to shut down");
+          logger.debug("Waiting another 30 seconds for the embedded engine to shut down");
         }
       } catch (InterruptedException e) {
         Thread.interrupted();
@@ -194,10 +218,17 @@ public class EmbeddedDebeziumCDC {
               eventData,
               eventType);
 
+
+      String aggregateTopic = AggregateTopicMapping.aggregateTypeToTopic(entityType);
+      String json = toJson(pe);
+
+      if (logger.isInfoEnabled())
+        logger.debug("Publishing triggeringEvent={}, event={}", triggeringEvent, json);
+
       producer.send(
-              AggregateTopicMapping.aggregateTypeToTopic(entityType),
+              aggregateTopic,
               entityId,
-              toJson(pe)
+              json
       );
     }
   }
@@ -211,14 +242,14 @@ public class EmbeddedDebeziumCDC {
     }
   }
 
-  public static class MyKafkaOffsetBackingStore extends KafkaOffsetBackingStore {
-
-    @Override
-    public void configure(Map<String, ?> configs) {
-      Map<String, Object> updatedConfig = new HashMap<>(configs);
-      updatedConfig.put("bootstrap.servers", kafkaBootstrapServers);
-      super.configure(updatedConfig);
-    }
-  }
+//  public static class MyKafkaOffsetBackingStore extends KafkaOffsetBackingStore {
+//
+//    @Override
+//    public void configure(WorkerConfig configs) {
+//      Map<String, Object> updatedConfig = new HashMap<>(configs.originals());
+//      updatedConfig.put("bootstrap.servers", kafkaBootstrapServers);
+//      super.configure(new WorkerConfig(configs.));
+//    }
+//  }
 
 }

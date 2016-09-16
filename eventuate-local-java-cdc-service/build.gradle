@@ -14,3 +14,5 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
     compile project(":eventuate-local-java-embedded-cdc-autoconfigure")
 }
+
+uploadArchives.dependsOn(bootRepackage)

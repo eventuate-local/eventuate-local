@@ -19,80 +19,146 @@ There is a Kafka topic for each aggregate type.
 
 = About change data capture
 
-Eventuate Local has a change data capture (CDC) component  that
+Eventuate Local has a change data capture (CDC) component that
 
 1. tails the MySQL transaction log
 2. publishes each event inserted into the `EVENTS` table to Kafka topic for the event's aggregate.
 
-The CDC component runs within each application.
+The CDC component runs either embedded within each application or as a service `cdcservice`.
 
 = Setting up Eventuate Local
 
 To use Eventuate Local you need to
 
-1. Create `EVENT` and `ENTITIES`'` tables in a MySQL database.
-2. Run Apache Zookeeper and Apache Kafka
+1. Create `EVENT` and `ENTITIES` tables in a MySQL database.
+2. Run Apache Zookeeper, Apache Kafka and the optional `cdcservice`
+3. Use the Eventuate Local artifacts in your application.
 
-The easiest way to get started is to run a set of Docker containers using Docker Compose.
+The easiest way to get started is to run a set of Docker containers using Docker Compose as described below.
 
-== The quick version
+== The quick setup
 
-Run the following commands:
+This is the fastest way to get started with Eventuate Local.
 
-```
-. ./scripts/initialize.sh
-```
+=== Set the DOCKER_HOST_IP environment variable
 
-This command sets some environment variables and creates some Docker containers.
+You must first set the environment variable `DOCKER_HOST_IP` to the IP address of the machine running Docker.
+For example, if you are running Docker Machine on Mac/Windows this would be the IP address of the VirtualBox VM.
+Please note that you cannot set `DOCKER_HOST_IP` to `localhost` since that will not resolve to the correct IP address within a Docker container.
 
-Read on for the longer version.
+=== Run the Eventuate Local Docker containers
 
-== Set some environment variables
-
-Please review the file `./scripts/set-env.sh` and run
-
-```
-. ./scripts/set-env.sh
-```
-
-== Run the Docker containers
-
-The `docker-compose.yml` defines a set of Docker containers:
-
-* zookeeper - used by both the change data capture component and Kafka
-* kafka - message broker
-* mysql - MySQL database that has the eventuate schema defined.
-See `create-eventuate-database.sql` if you want to use a different MySQL instance.
-
-Create these containers using the following command:
+Next, you can run the Docker containers.
+First, copy https://github.com/eventuate-local/eventuate-local/blob/master/docker-compose-eventuate-local.yml[docker-compose-eventuate-local.yml] to your project.
+Then, launch the Docker containers by running the following command:
 
 ```
-docker-compose up -d
+docker-compose -f docker-compose-eventuate-local.yml
 ```
 
-At this point Eventuate Local is ready.
+This command creates the following containers:
 
-= Running an example application
+* Apache Zookeeper - used by both the change data capture component and Kafka
+* Apache Kafka - message broker
+* MySQL - MySQL database that has the eventuate schema already defined
+* cdcservice - the change data capture component
 
-We are currently enhancing http://eventuate.io/exampleapps.html[the example applications] to support both Eventuate and Eventuate Local.
-Currently, the `wip-eventuate-local` branch of https://github.com/cer/event-sourcing-examples/tree/wip-eventuate-local[Event Sourcing Examples] supports Eventuate Local.
-To build and run with Eventuate Local, use `./gradlew -P eventuateLocal ...`.
+For convenience, you might want to add the contents of this file to your project's `docker-compose.yml` file.
 
-= Developing an application
+=== Set some environment variables
 
-For more information about developing applications with Eventuate Local see the http://eventuate.io/gettingstartedv2.html[Getting Started guide].
+In order for your Sprint Boot application to use Eventuate Local you need to set the following application properties:
 
-== Note
+----
+spring.datasource.url=jdbc:mysql://${DOCKER_HOST_IP}/eventuate
+spring.datasource.username=mysqluser
+spring.datasource.password=mysqlpw
+eventuateLocal.kafka.bootstrapServers=$DOCKER_HOST_IP:9092
+eventuateLocal.zookeeper.connectionString=$DOCKER_HOST_IP:2181
+eventuateLocal.cdc.dbUserName=root
+eventuateLocal.cdc.dbPassword=rootpassword
+----
 
-Please specify the following in `gradle.properties`:
+
+A convenient way to do that is to set the corresponding OS environment variables:
+
+----
+export SPRING_DATASOURCE_URL=jdbc:mysql://${DOCKER_HOST_IP}/eventuate
+export SPRING_DATASOURCE_USERNAME=mysqluser
+export SPRING_DATASOURCE_PASSWORD=mysqlpw
+export SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.jdbc.Driver
+export EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS=$DOCKER_HOST_IP:9092
+export EVENTUATELOCAL_CDC_DB_USER_NAME=root
+export EVENTUATELOCAL_CDC_DB_PASSWORD=rootpassword
+export EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING=$DOCKER_HOST_IP:2181
+----
+
+You can do that by running the https://github.com/eventuate-local/eventuate-local/blob/master/scripts/set-env.sh[set-env.sh] bash script:
+
+=== Use the Eventuate Local libraries
+
+If you are using Gradle then please specify the following in `gradle.properties`:
 
 ```
-eventuateLocalVersion=0.3.0.RELEASE
+eventuateLocalVersion=0.4.0.RELEASE
 ```
 
-and instead of the HTTP/STOMP dependency, specify the following:
+and instead of the Eventuate HTTP/STOMP artifacts, specify the following:
 
 ```
 compile "io.eventuate.local.java:eventuate-local-java-jdbc:${eventuateLocalVersion}"
 compile "io.eventuate.local.java:eventuate-local-java-embedded-cdc-autoconfigure:${eventuateLocalVersion}"
 ```
+For more information about developing applications with Eventuate Local see the http://eventuate.io/gettingstartedv2.html[Getting Started guide].
+
+=== Configuring your application containers
+
+You need to configure your application's containers to connect to the Eventuate MySQL, Kafka and Zookeeper containers.
+You can do that using the following in your project's `docker-compose.yml` file using `links` and `environment`:
+
+```
+mycontainer:
+  ...
+  links:
+    - mysql
+    - kafka
+    - zookeeper
+  environment:
+    SPRING_DATASOURCE_URL: jdbc:mysql://mysql/eventuate
+    SPRING_DATASOURCE_USERNAME: mysqluser
+    SPRING_DATASOURCE_PASSWORD: mysqlpw
+    SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver
+    EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
+    EVENTUATELOCAL_CDC_DB_USER_NAME: root
+    EVENTUATELOCAL_CDC_DB_PASSWORD: rootpassword
+```
+
+Note: in order for this to work you have either copied the container definitions from `docker-compose-eventuate-local.yml` to you `docker-compose.yml` file or you are running `docker-compose` with multiple `-f` arguments:
+
+```
+docker-compose -f docker-compose-eventuate-local.yml -f docker-compose.yml up -d
+```
+
+== The not so quick version
+
+TBD
+
+= Running an example application
+
+We are currently enhancing http://eventuate.io/exampleapps.html[the example applications] to support both Eventuate and Eventuate Local.
+Currently,  https://github.com/cer/event-sourcing-examples/java-spring[Event Sourcing Examples Java/Spring version] supports Eventuate Local.
+
+To build with Eventuate Local, use this command:
+
+```
+./gradlew -P eventuateLocal assemble
+```
+
+To start the Docker Containers with Eventuate Local run this command:
+
+```
+docker-compose -f docker-compose-eventuate-local.yml up -d
+```
+
+The `docker-compose-eventuate-local.yml` file defines the application containers and the Eventuate Local containers and links them appropriately.

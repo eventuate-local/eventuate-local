@@ -1,4 +1,4 @@
 #! /bin/bash
 
-docker run -it --rm debezium/zookeeper:0.2 bin/zkCli.sh -server $EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING
+docker run -it --rm --entrypoint=bin/zkCli.sh eventuateio/eventuateio-local-zookeeper:0.5.0  -server $EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING
 

@@ -1,13 +1,12 @@
 package io.eventuate.local.cdc.debezium;
 
 
-import io.eventuate.EntityIdAndVersion;
 import io.eventuate.Int128;
 import io.eventuate.SubscriberOptions;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
-import io.eventuate.local.java.jdbckafkastore.EventuateJdbcEventStoreConfiguration;
+import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import io.eventuate.local.java.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,7 +37,7 @@ public class EventTableChangesToAggregateTopicRelayTest {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   @org.springframework.context.annotation.Configuration
-  @Import({EventuateJdbcEventStoreConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
+  @Import({EventuateLocalConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
   @EnableAutoConfiguration
   public static class EventTableChangesToAggregateTopicRelayTestConfiguration {
 

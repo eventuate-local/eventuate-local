@@ -48,7 +48,6 @@ public class LeadershipElectionTest {
     TimeUnit.SECONDS.sleep(5);
     assertEquals(1L, MyLeaderSelectorListener.leaderCounter.get());
 
-    TimeUnit.SECONDS.sleep(120);
   }
 
 

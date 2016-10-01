@@ -14,5 +14,4 @@ dependencies {
 
 test {
     forkEvery 1
-    ignoreFailures (!project.hasProperty("ignoreE2EFailures") || ignoreE2EFailures.toBoolean())
 }

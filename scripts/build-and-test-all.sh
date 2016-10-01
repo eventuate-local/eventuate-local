@@ -7,9 +7,12 @@ set -e
 docker-compose stop
 docker-compose rm --force -v
 
-./scripts/initialize.sh
+docker-compose up -d
 
-./gradlew $* cleanTest :eventuate-local-java-jdbc-tests:test -P ignoreE2EFailures=false
+./gradlew $* build
+
+docker-compose stop
+docker-compose rm --force -v
 
 
 

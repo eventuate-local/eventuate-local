@@ -225,11 +225,19 @@ public class EventTableChangesToAggregateTopicRelay {
       if (logger.isInfoEnabled())
         logger.debug("Publishing triggeringEvent={}, event={}", triggeringEvent, json);
 
-      producer.send(
-              aggregateTopic,
-              entityId,
-              json
-      );
+      try {
+        producer.send(
+                aggregateTopic,
+                entityId,
+                json
+        ).get(10, TimeUnit.SECONDS);
+      } catch (RuntimeException e) {
+        logger.error("error publishing to " + aggregateTopic, e);
+        throw e;
+      } catch (Throwable e) {
+        logger.error("error publishing to " + aggregateTopic, e);
+        throw new RuntimeException(e);
+      }
     }
   }
 

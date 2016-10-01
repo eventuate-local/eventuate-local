@@ -5,6 +5,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class EventuateKafkaProducer {
@@ -28,8 +29,15 @@ public class EventuateKafkaProducer {
   }
 
 
-  public void send(String topic, String key, String body) {
-    producer.send(new ProducerRecord<String, String>(topic, key, body));
+  public CompletableFuture<?> send(String topic, String key, String body) {
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    producer.send(new ProducerRecord<>(topic, key, body), (metadata, exception) -> {
+      if (exception == null)
+        result.complete(metadata);
+      else
+        result.completeExceptionally(exception);
+    });
+    return result;
   }
 
   public void close() {

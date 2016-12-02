@@ -1,5 +1,7 @@
 = Eventuate Local
 
+image::http://eventuate.io/i/logo.gif[]
+
 == Simplifying the development of transactional microservices
 
 Eventuate&trade; Local is the on-premise, open source version of http://eventuate.io/[Eventuate&trade;], which is a platform for developing transactional business applications that use the microservice architecture.

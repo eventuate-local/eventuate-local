@@ -8,6 +8,8 @@
 //    all*.exclude module: "slf4j-log4j12"
 //}
 
+apply plugin: PrivateModulePlugin
+
 dependencies {
     compile 'commons-lang:commons-lang:2.6'
 

@@ -1,3 +1,5 @@
+apply plugin: PrivateModulePlugin
+
 dependencies {
     compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
     compile 'commons-lang:commons-lang:2.6'

@@ -1,5 +1,7 @@
 // apply plugin: PublicModulePlugin
 
+apply plugin: PrivateModulePlugin
+
 dependencies {
 
     compile project(":eventuate-local-java-common")

@@ -8,6 +8,7 @@ buildscript {
 }
 
 apply plugin: 'spring-boot'
+apply plugin: PrivateModulePlugin
 
 dependencies {
     compile "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
@@ -16,3 +17,4 @@ dependencies {
 }
 
 uploadArchives.dependsOn(bootRepackage)
+bintrayUpload.dependsOn(bootRepackage)

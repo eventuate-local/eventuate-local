@@ -5,5 +5,6 @@ include 'eventuate-local-java-jdbc-tests'
 include 'eventuate-local-java-embedded-cdc'
 include 'eventuate-local-java-embedded-cdc-autoconfigure'
 include 'eventuate-local-java-cdc-service'
+include 'eventuate-local-java-kafka'
 
 rootProject.name = 'eventuate-local-java'

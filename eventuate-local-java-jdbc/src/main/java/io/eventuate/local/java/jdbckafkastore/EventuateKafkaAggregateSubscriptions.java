@@ -2,7 +2,6 @@ package io.eventuate.local.java.jdbckafkastore;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.eventuate.EventContext;
 import io.eventuate.Int128;
 import io.eventuate.SubscriberOptions;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
@@ -17,7 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PreDestroy;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -99,7 +101,7 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
               pe.getEventType(),
               record.partition(),
               record.offset(),
-              new EventContext(String.format("eto:%s:%s:%s", pe.getId(), record.topic(), record.offset())));
+              EtopEventContext.make(pe.getId(), record.topic(), record.partition(), record.offset()));
     } catch (IOException e) {
       logger.error("Got exception: ", e);
       throw new RuntimeException(e);

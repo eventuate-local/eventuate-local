@@ -6,6 +6,7 @@ dependencies {
 
     compile "io.eventuate.client.java:eventuate-client-java-common-impl:$eventuateClientVersion"
     compile "io.eventuate.client.java:eventuate-client-java-jdbc-common:$eventuateClientVersion"
+    compile "io.eventuate.client.java:eventuate-client-java-spring-common:$eventuateClientVersion"
 
 
     compile "org.springframework.boot:spring-boot-starter:$springBootVersion"

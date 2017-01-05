@@ -1,0 +1,5 @@
+mysql:
+  image: test-eventuateio-local-mysql
+
+cdcservice:
+  image: test-eventuateio-local-cdc-service

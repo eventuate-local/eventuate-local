@@ -1,19 +1,19 @@
 package io.eventuate.local.java.jdbckafkastore;
 
-import io.eventuate.javaclient.commonimpl.EventuateAggregateStoreImpl;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
-import io.eventuate.EventuateAggregateStore;
 import io.eventuate.javaclient.commonimpl.SerializedEventDeserializer;
 import io.eventuate.javaclient.commonimpl.adapters.AsyncToSyncAggregateEventsAdapter;
 import io.eventuate.javaclient.commonimpl.adapters.AsyncToSyncTimeoutOptions;
 import io.eventuate.javaclient.commonimpl.adapters.SyncToAsyncAggregateCrudAdapter;
+import io.eventuate.javaclient.spring.common.EventuateCommonConfiguration;
+import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 @Configuration
 @EnableConfigurationProperties(EventuateKafkaConfigurationProperties.class)
 @EnableTransactionManagement
+@Import(EventuateCommonConfiguration.class)
 public class EventuateLocalConfiguration {
 
   @Autowired(required=false)
@@ -36,9 +37,14 @@ public class EventuateLocalConfiguration {
   // CRUD
 
   @Bean
-  public EventuateLocalAggregateCrud eventuateLocalAggregateCrud(DataSource db) {
+  public EventuateJdbcAccess eventuateJdbcAccess(DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalAggregateCrud(jdbcTemplate);
+    return new EventuateLocalJdbcAccess(jdbcTemplate);
+  }
+
+  @Bean
+  public EventuateLocalAggregateCrud eventuateLocalAggregateCrud(EventuateJdbcAccess eventuateJdbcAccess) {
+    return new EventuateLocalAggregateCrud(eventuateJdbcAccess);
   }
 
   @Bean
@@ -64,20 +70,7 @@ public class EventuateLocalConfiguration {
   }
 
   // Aggregate Store
+  // Why @ConditionalOnMissingBean(EventuateAggregateStore.class)??
 
-  @Bean
-  @ConditionalOnMissingBean(EventuateAggregateStore.class)
-  public EventuateAggregateStore eventuateAggregateStore(AggregateCrud restClient, AggregateEvents stompClient) {
-    EventuateAggregateStoreImpl eventuateAggregateStore = new EventuateAggregateStoreImpl(restClient, stompClient);
-    if (serializedEventDeserializer != null)
-      eventuateAggregateStore.setSerializedEventDeserializer(serializedEventDeserializer);
-    return eventuateAggregateStore;
-  }
-
-  @Bean
-  public io.eventuate.sync.EventuateAggregateStore syncEventuateAggregateStore(io.eventuate.javaclient.commonimpl.sync.AggregateCrud aggregateCrud,
-                                                                               io.eventuate.javaclient.commonimpl.sync.AggregateEvents aggregateEvents) {
-    return new io.eventuate.javaclient.commonimpl.sync.EventuateAggregateStoreImpl(aggregateCrud, aggregateEvents);
-  }
 
 }

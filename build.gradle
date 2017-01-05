@@ -4,6 +4,7 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
 
@@ -25,9 +26,23 @@ projects {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'com.jfrog.bintray'
+
+    bintray {
+        user = System.getenv('BINTRAY_USER')
+        key = System.getenv('BINTRAY_KEY')
+        configurations = ['archives']
+        pkg {
+            repo = 'eventuate-maven-release'
+            name = 'eventuate-local'
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/eventuate-local/eventuate-local'
+        }
+    }
 
     repositories {
         mavenCentral()
+        jcenter()
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
     }
 

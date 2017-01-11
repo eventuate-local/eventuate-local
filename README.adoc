@@ -149,7 +149,7 @@ TBD
 = Running an example application
 
 We are currently enhancing http://eventuate.io/exampleapps.html[the example applications] to support both Eventuate and Eventuate Local.
-Currently,  https://github.com/cer/event-sourcing-examples/java-spring[Event Sourcing Examples Java/Spring version] supports Eventuate Local.
+Currently,  https://github.com/cer/event-sourcing-examples/tree/master/java-spring[Event Sourcing Examples Java/Spring version] supports Eventuate Local.
 
 To build with Eventuate Local, use this command:
 

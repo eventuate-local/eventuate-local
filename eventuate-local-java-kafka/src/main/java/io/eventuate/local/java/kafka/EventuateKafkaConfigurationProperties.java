@@ -9,6 +9,8 @@ public class EventuateKafkaConfigurationProperties {
   @NotBlank
   private String bootstrapServers;
 
+  private long connectionValidationTimeout=1000;
+
   public String getBootstrapServers() {
     return bootstrapServers;
   }
@@ -17,4 +19,11 @@ public class EventuateKafkaConfigurationProperties {
     this.bootstrapServers = bootstrapServers;
   }
 
+  public long getConnectionValidationTimeout() {
+    return connectionValidationTimeout;
+  }
+
+  public void setConnectionValidationTimeout(long connectionValidationTimeout) {
+    this.connectionValidationTimeout = connectionValidationTimeout;
+  }
 }

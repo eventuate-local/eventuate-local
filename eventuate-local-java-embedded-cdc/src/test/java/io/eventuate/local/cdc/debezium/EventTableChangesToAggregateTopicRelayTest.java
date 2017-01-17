@@ -6,8 +6,8 @@ import io.eventuate.SubscriberOptions;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import io.eventuate.local.java.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
+import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -23,7 +23,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 import static io.eventuate.testutil.AsyncUtil.await;
 import static org.junit.Assert.assertNotNull;
@@ -49,6 +53,11 @@ public class EventTableChangesToAggregateTopicRelayTest {
 
   @Autowired
   private EventuateKafkaAggregateSubscriptions eventuateKafkaAggregateSubscriptions;
+
+  @Test
+  public void shouldStartup() throws InterruptedException {
+    TimeUnit.SECONDS.sleep(10);
+  }
 
   @Test
   public void shouldCaptureAndPublishChange() throws ExecutionException, InterruptedException {

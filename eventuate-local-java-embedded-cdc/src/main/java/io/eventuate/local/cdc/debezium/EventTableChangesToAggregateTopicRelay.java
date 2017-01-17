@@ -35,6 +35,7 @@ public class EventTableChangesToAggregateTopicRelay {
   private EventuateKafkaProducer producer;
   private EmbeddedEngine engine;
 
+  private CdcStartupValidator cdcStartupValidator;
   public static String kafkaBootstrapServers;
   private final JdbcUrl jdbcUrl;
   private final String dbUser;
@@ -43,11 +44,15 @@ public class EventTableChangesToAggregateTopicRelay {
 
   public EventTableChangesToAggregateTopicRelay(String kafkaBootstrapServers,
                                                 JdbcUrl jdbcUrl,
-                                                String dbUser, String dbPassword, CuratorFramework client) {
+                                                String dbUser, String dbPassword,
+                                                CuratorFramework client,
+                                                CdcStartupValidator cdcStartupValidator) {
     this.kafkaBootstrapServers = kafkaBootstrapServers;
     this.jdbcUrl = jdbcUrl;
     this.dbUser = dbUser;
     this.dbPassword = dbPassword;
+
+    this.cdcStartupValidator = cdcStartupValidator;
 
     leaderSelector = new LeaderSelector(client, "/eventuatelocal/cdc/leader", new LeaderSelectorListener() {
 
@@ -67,7 +72,7 @@ public class EventTableChangesToAggregateTopicRelay {
           }
         } catch (Throwable t) {
           logger.error("In takeLeadership", t);
-          throw t instanceof RuntimeException ? (RuntimeException)t : new RuntimeException(t);
+          throw t instanceof RuntimeException ? (RuntimeException) t : new RuntimeException(t);
         } finally {
           logger.debug("TakeLeadership returning");
         }
@@ -117,6 +122,8 @@ public class EventTableChangesToAggregateTopicRelay {
   public CompletableFuture<Object> startCapturingChanges() throws InterruptedException {
 
     logger.debug("Starting to capture changes");
+
+    cdcStartupValidator.validateEnvironment();
 
     producer = new EventuateKafkaProducer(kafkaBootstrapServers);
 

@@ -102,7 +102,7 @@ You can do that by running the https://github.com/eventuate-local/eventuate-loca
 If you are using Gradle then please specify the following in `gradle.properties`:
 
 ```
-eventuateLocalVersion=0.4.0.RELEASE
+eventuateLocalVersion=0.11.0.RELEASE
 ```
 
 and instead of the Eventuate HTTP/STOMP artifacts, specify the following:
@@ -148,13 +148,12 @@ TBD
 
 = Running an example application
 
-We are currently enhancing http://eventuate.io/exampleapps.html[the example applications] to support both Eventuate and Eventuate Local.
-Currently,  https://github.com/cer/event-sourcing-examples/java-spring[Event Sourcing Examples Java/Spring version] supports Eventuate Local.
+The http://eventuate.io/exampleapps.html[Eventuate example applications] support both Eventuate and Eventuate Local.
 
-To build with Eventuate Local, use this command:
+To build an example with Eventuate Local, use this command:
 
 ```
-./gradlew -P eventuateLocal assemble
+./gradlew -P eventuateDriver=local assemble
 ```
 
 To start the Docker Containers with Eventuate Local run this command:

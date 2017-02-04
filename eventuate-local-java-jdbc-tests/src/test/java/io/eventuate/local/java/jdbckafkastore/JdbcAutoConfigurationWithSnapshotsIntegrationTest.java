@@ -50,7 +50,7 @@ public class JdbcAutoConfigurationWithSnapshotsIntegrationTest  {
 
     EntityWithIdAndVersion<Account> updateResult = accountRepository.update(saveResult.getEntityId(), new DebitAccountCommand(debitAmount, null));
 
-    verify(accountSnapshotStrategy).possiblySnapshot(any(), any(), any());
+    verify(accountSnapshotStrategy).possiblySnapshot(any(), any(), any(), any());
 
     EntityWithMetadata<Account> findResult = accountRepository.find(saveResult.getEntityId());
 

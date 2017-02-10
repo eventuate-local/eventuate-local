@@ -1,0 +1,40 @@
+{
+  "src_folders": ["test/e2e-tests"],
+  "output_folder": "reports",
+  "custom_commands_path": "",
+  "custom_assertions_path": "",
+  "page_objects_path": "test/e2e-pages",
+  "globals_path": "test/e2e-globals/globals.js",
+
+  "selenium": {
+    "start_process": true,
+    "server_path": "./node_modules/selenium-standalone/.selenium/selenium-server/3.0.1-server.jar",
+    "log_path": "./reports",
+    "host": "127.0.0.1",
+    "port": 4444,
+    "cli_args": {
+      "webdriver.chrome.driver": "./node_modules/selenium-standalone/.selenium/chromedriver/2.27-x64-chromedriver",
+      "webdriver.firefox.driver": "./node_modules/selenium-standalone/.selenium/geckodriver/0.13.0-x64-geckodriver",
+      "webdriver.gecko.driver": "./node_modules/selenium-standalone/.selenium/geckodriver/0.13.0-x64-geckodriver"
+    }
+  },
+  "test_settings": {
+    "default": {
+      "launch_url": "http://localhost:8080",
+      "selenium_port": 4444,
+      "selenium_host": "localhost",
+      "silent": true,
+      "screenshots" : {
+        "enabled" : true,
+        "on_failure" : true,
+        "on_error" : true,
+        "path" : "./reports/screenshots"
+      },
+      "desiredCapabilities": {
+        "browserName": "firefox",
+        "javascriptEnabled": true,
+        "acceptSslCerts": true
+      }
+    }
+  }
+}

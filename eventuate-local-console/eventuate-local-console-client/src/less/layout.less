@@ -1,0 +1,48 @@
+@import "./mixins";
+
+.react-root {
+  .HolyGrail();
+}
+
+header, footer {
+  .HolyGrail-header-footer();
+}
+.app-body {
+  .HolyGrail-body();
+}
+
+.app-content {
+  //.HolyGrail-content();
+  width: 100%;
+}
+.app-nav {
+  //.HolyGrail-ads();
+  //.HolyGrail-nav();
+  display: none;
+
+}
+.app-ads {
+  //.HolyGrail-ads();
+  display: none;
+
+}
+@media (min-width: @hg_break_lg) {
+  .app-body {
+    .HolyGrail-body-lg();
+  }
+  .app-content {
+    //.HolyGrail-content-lg();
+  }
+  .app-nav {
+    //.HolyGrail-ads();
+    //.HolyGrail-nav();
+    //.HolyGrail-ads-lg();
+    display: none;
+
+  }
+  .app-ads {
+    //.HolyGrail-ads();
+    //.HolyGrail-ads-lg();
+    display: none;
+  }
+}

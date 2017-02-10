@@ -1,0 +1,115 @@
+@import "mixins";
+
+.element-sort-toggler,
+.types-header-cell,
+.instances-header-cell,
+.events-header-cell {
+  cursor: pointer;
+  padding: 6px 12px;
+  .noselect();
+}
+
+table.selectable-rows {
+  table-layout: fixed;
+  & > thead > tr > th:first-of-type,
+  & > tfoot > tr > th:first-of-type,
+  & > tbody > tr > td:first-of-type {
+    width: 2.5em;
+  }
+
+  & > thead > tr > th {
+    vertical-align: middle;
+  }
+}
+
+.in-table-checkbox-wrap {
+  padding: 6px 0;
+}
+
+.updated-when {
+
+  h2 &,
+  h3 & {
+    font-size: 13px;
+    font-weight: normal;
+    color: #555;
+    position: relative;
+    top: -4px;
+  }
+  th & {
+    font-size: 13px;
+    font-weight: normal;
+    color: #555;
+  }
+
+}
+
+time, span {
+  td > & {
+    display: inline-block;
+    padding: 6px 12px;
+  }
+}
+
+.element-type {
+  position: relative;
+  padding: 3px 5px;
+
+  &>span {
+    display: none;
+  }
+  &:hover>span {
+    display: inline-block;
+    position: absolute;
+    min-width: 5em;
+    border: 1px solid #555;
+    padding: 3px 5px;
+    bottom: 1.6em;
+    background-color: #f8f8f8;
+    left: 0;
+  }
+}
+
+.table-events-log {
+  &>thead>tr>th,
+  &>tbody>tr>td {
+    &:nth-child(1) {
+      //min-width: 25%;
+      width: 15%;
+    }
+    &:nth-child(2) {
+      //min-width: 25%;
+      width: 25%;
+    }
+    &:nth-child(3) {
+      //min-width: 25%;
+      width: 25%;
+    }
+    &:nth-child(4) {
+      //min-width: 50%;
+      width: 35%;
+    }
+
+    .btn {
+      padding: 0;
+    }
+  }
+}
+
+//.standard-animation-enter {
+//  opacity: 0.01;
+//}
+//
+//.standard-animation-enter.standard-animation-enter-active {
+//  opacity: 1;
+//  transition: opacity 500ms ease-in;
+//}
+//
+//.standard-animation-leave {
+//  opacity: 1;
+//}
+//
+//.standard-animation-leave.standard-animation-leave-active {
+//  opacity: 0.01;
+//  transition: opacity 300ms ease-in;
+//}

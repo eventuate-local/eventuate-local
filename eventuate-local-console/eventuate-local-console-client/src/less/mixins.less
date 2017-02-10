@@ -1,0 +1,56 @@
+@import "./vars";
+
+//https://philipwalton.github.io/solved-by-flexbox/demos/holy-grail/
+//https://philipwalton.github.io/solved-by-flexbox/demos/sticky-footer/
+.HolyGrail {
+  display: flex;
+  height: 100%; /* 1, 3 */
+  flex-direction: column;
+}
+
+.HolyGrail-header-footer {
+  flex: none; /* 2 */
+}
+
+.HolyGrail-body {
+  display: flex;
+  flex: 1 0 auto; /* 2 */
+  flex-direction: column;
+  padding: @hg_space;
+}
+
+.HolyGrail-content {
+  margin-top: @hg_space;
+}
+
+.HolyGrail-nav, .HolyGrail-ads {
+  padding: 1em;
+  border-radius: 3px;
+  background: rgba(147, 128, 108, 0.1);
+}
+.HolyGrail-nav {
+  order: -1;
+}
+
+.HolyGrail-body-lg {
+  flex-direction: row;
+}
+.HolyGrail-content-lg {
+  flex: 1;
+  padding: 0 @hg_space_lg;
+  margin: 0;
+}
+.HolyGrail-nav-lg,
+.HolyGrail-ads-lg {
+  flex: 0 0 12em;
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Chrome/Safari/Opera */
+  -khtml-user-select: none; /* Konqueror */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
+                                  not supported by any browser */
+}

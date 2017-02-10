@@ -1,0 +1,358 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto:300,400,500);
+
+html {
+  box-sizing: border-box;
+}
+
+html * {
+  box-sizing: inherit;
+}
+
+:after,:before {
+  box-sizing: border-box;
+}
+
+body {
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+button,input,select,textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+body,html,main {
+  position: relative;
+  height: 100%;
+  min-height: 100%;
+  font-family: Roboto,sans-serif;
+}
+
+main {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: row;
+  height: auto;
+  min-height: 0;
+}
+
+#root {
+  position: relative;
+  height: 100%;
+  min-height: 100%;
+}
+
+.react-root {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+footer,header {
+  flex: none;
+}
+
+.app-body {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.app-content {
+  width: 100%;
+}
+
+.app-ads,.app-nav {
+  display: none;
+}
+
+@media (min-width:768px) {
+  .app-body {
+    flex-direction: row;
+  }
+
+  .app-ads,  .app-nav {
+    display: none;
+  }
+}
+
+.page-agg-types .table-responsive.selected-table.is-visible {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+
+.page-agg-types .table-responsive.selected-table.is-visible+.table-responsive.sorted-table {
+  margin-top: 2px;
+  border-top: 1px solid #ccc;
+}
+
+.page-events h2,.page-events h3,.page-instances h2 {
+  font-weight: 400;
+}
+
+.page-subscription {
+  width: 100%;
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  display: table;
+}
+
+.page-subscription .head {
+  flex: 0 1 auto;
+  display: table-row;
+}
+
+.page-subscription .terminal {
+  flex: 1 1 auto;
+  display: table-row;
+  height: 100%;
+}
+
+.page-subscription .terminal-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  min-height: 50vh;
+}
+
+.page-subscription .terminal-content {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: auto;
+  border: 1px solid #aaa;
+  box-shadow: 0 0 4px 0 rgba(0,0,0,.3);
+}
+
+.page-subscription .terminal-content table {
+  margin-bottom: 0;
+}
+
+.element-sort-toggler,.events-header-cell,.instances-header-cell,.types-header-cell {
+  cursor: pointer;
+  padding: 6px 12px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+table.selectable-rows {
+  table-layout: fixed;
+}
+
+table.selectable-rows>tbody>tr>td:first-of-type,table.selectable-rows>tfoot>tr>th:first-of-type,table.selectable-rows>thead>tr>th:first-of-type {
+  width: 2.5em;
+}
+
+table.selectable-rows>thead>tr>th {
+  vertical-align: middle;
+}
+
+.in-table-checkbox-wrap {
+  padding: 6px 0;
+}
+
+h2 .updated-when,h3 .updated-when {
+  position: relative;
+  top: -4px;
+}
+
+h2 .updated-when,h3 .updated-when,th .updated-when {
+  font-size: 13px;
+  font-weight: 400;
+  color: #555;
+}
+
+td>span,td>time {
+  display: inline-block;
+  padding: 6px 12px;
+}
+
+.element-type {
+  position: relative;
+  padding: 3px 5px;
+}
+
+.element-type>span {
+  display: none;
+}
+
+.element-type:hover>span {
+  display: inline-block;
+  position: absolute;
+  min-width: 5em;
+  border: 1px solid #555;
+  padding: 3px 5px;
+  bottom: 1.6em;
+  background-color: #f8f8f8;
+  left: 0;
+}
+
+.table-events-log>tbody>tr>td:nth-child(1),.table-events-log>thead>tr>th:nth-child(1) {
+  width: 15%;
+}
+
+.table-events-log>tbody>tr>td:nth-child(2),.table-events-log>tbody>tr>td:nth-child(3),.table-events-log>thead>tr>th:nth-child(2),.table-events-log>thead>tr>th:nth-child(3) {
+  width: 25%;
+}
+
+.table-events-log>tbody>tr>td:nth-child(4),.table-events-log>thead>tr>th:nth-child(4) {
+  width: 35%;
+}
+
+.table-events-log>tbody>tr>td .btn,.table-events-log>thead>tr>th .btn {
+  padding: 0;
+}
+
+.icon-refresh-animate {
+  animation-name: rotateThis;
+  animation-duration: .5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes rotateThis {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  to {
+    transform: scale(1) rotate(1turn);
+  }
+}
+
+.icon-heartbeat-animate {
+  color: #f30;
+}
+
+.icon-heartbeat-animate,.icon-network-animate {
+  animation-name: heartbeat;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(.75);
+  }
+
+  20% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(.75);
+  }
+
+  60% {
+    transform: scale(1);
+  }
+
+  80% {
+    transform: scale(.75);
+  }
+
+  to {
+    transform: scale(.75);
+  }
+}
+
+.standard-animation-enter {
+  opacity: .01;
+}
+
+.standard-animation-enter.standard-animation-enter-active {
+  opacity: 1;
+  transition: opacity .5s ease-in;
+}
+
+.standard-animation-leave {
+  opacity: 1;
+}
+
+.standard-animation-leave.standard-animation-leave-active {
+  opacity: .01;
+  transition: opacity .3s ease-in;
+}
+
+.standard-animation-head-enter {
+  position: relative;
+  opacity: .01;
+  transform: translateY(100%);
+}
+
+.standard-animation-head-enter.standard-animation-head-enter-active {
+  opacity: 1;
+  transform: translate(0);
+  transition: opacity .5s ease-in,transform .5s ease-in;
+}
+
+.standard-animation-head-leave {
+  position: relative;
+  opacity: 1;
+  transform: translate(0);
+}
+
+.standard-animation-head-leave.standard-animation-head-leave-active {
+  opacity: .01;
+  transform: translateY(100%);
+  transition: opacity .3s ease-in,transform .3s ease-in;
+}
+
+.standard-animation-foot-enter {
+  position: relative;
+  opacity: .01;
+  transform: translateY(-100%);
+}
+
+.standard-animation-foot-enter.standard-animation-foot-enter-active {
+  opacity: 1;
+  transform: translate(0);
+  transition: opacity .5s ease-in,transform .5s ease-in;
+}
+
+.standard-animation-foot-leave {
+  position: relative;
+  opacity: 1;
+  transform: translate(0);
+}
+
+.standard-animation-foot-leave.standard-animation-foot-leave-active {
+  opacity: .01;
+  transform: translateY(-100%);
+  transition: opacity .3s ease-in,transform .3s ease-in;
+}
+
+.navbar {
+  margin-bottom: 0;
+}
+
+footer .navbar {
+  padding-top: 1em;
+}
+
+hr {
+  margin-top: .5em;
+  margin-bottom: .3em;
+}
+
+.checkbox-inline input[type=checkbox] {
+  top: -10px;
+  left: 3px;
+  margin-left: 0;
+}
+
+.panel>*>.table-responsive>.table,.shorten-form-group>*>.form-group {
+  margin-bottom: 0;
+}
+/*# sourceMappingURL=style.f900624322d3f631f943.css.map*/

@@ -29,3 +29,6 @@ local_developer_config
 /web/web.log
 *.log
 *.pid
+
+eventuate-local-console/eventuate-local-console-server/test/res
+eventuate-local-console/eventuate-local-console-server/reports

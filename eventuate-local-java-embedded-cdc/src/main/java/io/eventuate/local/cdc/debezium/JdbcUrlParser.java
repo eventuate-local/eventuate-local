@@ -14,6 +14,6 @@ public class JdbcUrlParser {
     String host = m.group(1);
     String port = m.group(2);
     String database = m.group(3);
-    return new JdbcUrl(host, port == null ? 3306 : Integer.parseInt(port), database);
+    return new JdbcUrl(host, port == null ? 3306 : Integer.parseInt(port.substring(1)), database);
   }
 }

@@ -4,6 +4,8 @@ set -e
 
 . ./scripts/set-env.sh
 
+./gradlew $* testClasses
+
 docker-compose stop
 docker-compose rm --force -v
 

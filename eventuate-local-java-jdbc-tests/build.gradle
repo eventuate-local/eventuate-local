@@ -5,7 +5,10 @@ dependencies {
     testCompile "io.eventuate.client.java:eventuate-client-java-tests-common:$eventuateClientVersion"
 
     testCompile project(":eventuate-local-java-jdbc-autoconfigure")
-    testCompile project(":eventuate-local-java-embedded-cdc-autoconfigure")
+
+    if (!project.hasProperty("excludeCdcLibs") ||  !excludeCdcLibs.toBoolean()) {
+        testCompile project(":eventuate-local-java-embedded-cdc-autoconfigure")
+    }
 
     testCompile "junit:junit:4.11"
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"

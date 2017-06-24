@@ -31,7 +31,9 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getDbUserName(),
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getDbPassword(),
             client,
-            cdcStartupValidator);
+            cdcStartupValidator,
+            new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
+                    eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()));
   }
 
   @Bean

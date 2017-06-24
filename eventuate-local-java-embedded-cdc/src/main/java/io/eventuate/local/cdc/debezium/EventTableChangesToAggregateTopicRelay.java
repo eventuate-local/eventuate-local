@@ -24,6 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Subscribes to changes made to EVENTS table and publishes them to aggregate topics
@@ -36,23 +37,32 @@ public class EventTableChangesToAggregateTopicRelay {
   private EmbeddedEngine engine;
 
   private CdcStartupValidator cdcStartupValidator;
-  public static String kafkaBootstrapServers;
+  private String kafkaBootstrapServers;
   private final JdbcUrl jdbcUrl;
   private final String dbUser;
   private final String dbPassword;
   private final LeaderSelector leaderSelector;
 
+  private AtomicReference<RelayStatus> status = new AtomicReference<>(RelayStatus.IDLE);
+
+  public RelayStatus getStatus() {
+    return status.get();
+  }
+
+  private final TakeLeadershipAttemptTracker takeLeadershipAttemptTracker;
+
   public EventTableChangesToAggregateTopicRelay(String kafkaBootstrapServers,
                                                 JdbcUrl jdbcUrl,
                                                 String dbUser, String dbPassword,
                                                 CuratorFramework client,
-                                                CdcStartupValidator cdcStartupValidator) {
+                                                CdcStartupValidator cdcStartupValidator, TakeLeadershipAttemptTracker takeLeadershipAttemptTracker) {
     this.kafkaBootstrapServers = kafkaBootstrapServers;
     this.jdbcUrl = jdbcUrl;
     this.dbUser = dbUser;
     this.dbPassword = dbPassword;
 
     this.cdcStartupValidator = cdcStartupValidator;
+    this.takeLeadershipAttemptTracker = takeLeadershipAttemptTracker;
 
     leaderSelector = new LeaderSelector(client, "/eventuatelocal/cdc/leader", new LeaderSelectorListener() {
 
@@ -62,20 +72,33 @@ public class EventTableChangesToAggregateTopicRelay {
       }
 
       private void takeLeadership() throws InterruptedException {
-        logger.info("Taking leadership");
-        try {
-          CompletableFuture<Object> completion = startCapturingChanges();
+
+        RuntimeException laste = null;
+        do {
+          takeLeadershipAttemptTracker.attempting();
+          status.set(RelayStatus.RUNNING);
+          logger.info("Taking leadership");
           try {
-            completion.get();
-          } catch (InterruptedException e) {
-            logger.error("Interrupted while taking leadership");
+            CompletableFuture<Object> completion = startCapturingChanges();
+            try {
+              completion.get();
+            } catch (InterruptedException e) {
+              logger.error("Interrupted while taking leadership");
+            }
+            return;
+          } catch (Throwable t) {
+            switch (status.get()) {
+              case RUNNING:
+                status.set(RelayStatus.FAILED);
+            }
+            logger.error("In takeLeadership", t);
+            laste = t instanceof RuntimeException ? (RuntimeException) t : new RuntimeException(t);
+            doResign();
+          } finally {
+            logger.debug("TakeLeadership returning");
           }
-        } catch (Throwable t) {
-          logger.error("In takeLeadership", t);
-          throw t instanceof RuntimeException ? (RuntimeException) t : new RuntimeException(t);
-        } finally {
-          logger.debug("TakeLeadership returning");
-        }
+        } while (status.get() == RelayStatus.FAILED && takeLeadershipAttemptTracker.shouldAttempt());
+        throw laste;
       }
 
       @Override
@@ -103,6 +126,12 @@ public class EventTableChangesToAggregateTopicRelay {
       }
 
       private void resignLeadership() {
+        status.set(RelayStatus.STOPPING);
+        doResign();
+        status.set(RelayStatus.IDLE);
+      }
+
+      private void doResign() {
         logger.info("Resigning leadership");
         try {
           stopCapturingChanges();
@@ -160,10 +189,11 @@ public class EventTableChangesToAggregateTopicRelay {
     CompletableFuture<Object> completion = new CompletableFuture<>();
     engine = EmbeddedEngine.create()
             .using((success, message, throwable) -> {
-              if (success)
+              if (success) {
                 completion.complete(null);
+              }
               else
-                completion.completeExceptionally(new RuntimeException("Engine failed to start" + message, throwable));
+                completion.completeExceptionally(new RuntimeException("Engine through exception" + message, throwable));
             })
             .using(config)
             .notifying(this::handleEvent)

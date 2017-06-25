@@ -1,5 +1,7 @@
 #! /bin/bash
 
+export TERM=dumb
+
 set -e
 
 . ./scripts/set-env.sh

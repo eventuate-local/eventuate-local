@@ -2,7 +2,12 @@
 
 set -e
 
-export DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f docker-compose-cdc.yml"
+if [ -z "$DOCKER_COMPOSE" ]; then
+    echo setting DOCKER_COMPOSE
+    export DOCKER_COMPOSE="docker-compose -f docker-compose.yml -f docker-compose-cdc.yml"
+else
+    echo using existing DOCKER_COMPOSE = $DOCKER_COMPOSE
+fi
 
 export GRADLE_OPTIONS="-P excludeCdcLibs=true"
 

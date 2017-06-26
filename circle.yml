@@ -1,0 +1,17 @@
+machine:
+  services:
+    - docker
+  java:
+    version: openjdk8
+
+# Our docker-compose setup tries to start mysql on 3306 port,
+# so we remove mysql to free the port for docker
+dependencies:
+  pre:
+      - DEBIAN_FRONTEND=noninteractive sudo apt-get --purge autoremove mysql-server
+
+test:
+  override:
+  - TERM=dumb scripts/build-and-test-all.sh
+  - TERM=dumb scripts/build-and-test-all-cdc.sh
+

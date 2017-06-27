@@ -14,4 +14,6 @@ test:
   override:
   - TERM=dumb scripts/build-and-test-all.sh
   - TERM=dumb scripts/build-and-test-all-cdc.sh
-
+  post:
+    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
+    - find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;

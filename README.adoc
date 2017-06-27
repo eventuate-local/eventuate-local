@@ -1,5 +1,6 @@
 = Eventuate Local
 
+image::https://api.bintray.com/packages/eventuateio-oss/eventuate-maven-release/eventuate-local/images/download.svg[link="https://bintray.com/eventuateio-oss/eventuate-maven-release/eventuate-local/_latestVersion"]
 image::http://eventuate.io/i/logo.gif[]
 
 == Simplifying the development of transactional microservices

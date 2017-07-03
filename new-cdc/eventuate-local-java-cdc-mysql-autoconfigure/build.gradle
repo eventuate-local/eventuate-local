@@ -1,0 +1,3 @@
+dependencies {
+    compile project(":new-cdc:eventuate-local-java-cdc-mysql-connector")
+}

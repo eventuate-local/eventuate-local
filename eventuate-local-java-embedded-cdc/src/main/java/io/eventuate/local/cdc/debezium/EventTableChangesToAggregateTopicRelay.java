@@ -1,10 +1,9 @@
 package io.eventuate.local.cdc.debezium;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.debezium.config.Configuration;
 import io.debezium.embedded.EmbeddedEngine;
+import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.AggregateTopicMapping;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -20,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -254,10 +254,14 @@ public class EventTableChangesToAggregateTopicRelay {
       String entityType = after.getString("entity_type");
       String entityId = after.getString("entity_id");
       String triggeringEvent = after.getString("triggering_event");
+      Optional<String> metadata = Optional.ofNullable(after.getString("metadata"));
+
       PublishedEvent pe = new PublishedEvent(eventId,
               entityId, entityType,
               eventData,
-              eventType);
+              eventType,
+              null,
+              metadata);
 
 
       String aggregateTopic = AggregateTopicMapping.aggregateTypeToTopic(entityType);
@@ -283,12 +287,7 @@ public class EventTableChangesToAggregateTopicRelay {
   }
 
   public static String toJson(PublishedEvent eventInfo) {
-    ObjectMapper om = new ObjectMapper();
-    try {
-      return om.writeValueAsString(eventInfo);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+    return JSonMapper.toJson(eventInfo);
   }
 
 //  public static class MyKafkaOffsetBackingStore extends KafkaOffsetBackingStore {

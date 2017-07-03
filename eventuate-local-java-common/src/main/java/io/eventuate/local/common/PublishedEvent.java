@@ -1,25 +1,31 @@
 package io.eventuate.local.common;
 
+import java.util.Optional;
+
 /**
  * An event that is published to Kafka
  */
-public class PublishedEvent {
+public class PublishedEvent implements BinLogEvent {
 
   private String id;
   private String entityId;
   private String entityType;
   private String eventData;
   private String eventType;
+  private BinlogFileOffset binlogFileOffset;
+  private Optional<String> metadata;
 
   public PublishedEvent() {
   }
 
-  public PublishedEvent(String id, String entityId, String entityType, String eventData, String eventType) {
+  public PublishedEvent(String id, String entityId, String entityType, String eventData, String eventType, BinlogFileOffset binlogFileOffset, Optional<String> metadata) {
     this.id = id;
     this.entityId = entityId;
     this.entityType = entityType;
     this.eventData = eventData;
     this.eventType = eventType;
+    this.binlogFileOffset = binlogFileOffset;
+    this.metadata = metadata;
   }
 
   public String getId() {
@@ -60,5 +66,22 @@ public class PublishedEvent {
 
   public String getEventType() {
     return eventType;
+  }
+
+  public Optional<String> getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(Optional<String> metadata) {
+    this.metadata = metadata;
+  }
+
+  @Override
+  public BinlogFileOffset getBinlogFileOffset() {
+    return binlogFileOffset;
+  }
+
+  public void setBinlogFileOffset(BinlogFileOffset binlogFileOffset) {
+    this.binlogFileOffset = binlogFileOffset;
   }
 }

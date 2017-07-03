@@ -56,7 +56,7 @@ public class JdbcAutoConfigurationWithSnapshotsIntegrationTest  {
 
     assertEquals(initialBalance.subtract(debitAmount), findResult.getEntity().getBalance());
 
-    verify(accountSnapshotStrategy).recreateAggregate(any(), any());
+    verify(accountSnapshotStrategy).recreateAggregate(any(), any(), any());
 
     verifyNoMoreInteractions(accountSnapshotStrategy);
 

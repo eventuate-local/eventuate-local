@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.debezium.config.Configuration;
 import io.debezium.embedded.EmbeddedEngine;
+import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.AggregateTopicMapping;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -14,12 +15,16 @@ import org.apache.curator.framework.recipes.leader.LeaderSelectorListener;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
+import org.apache.kafka.connect.storage.FileOffsetBackingStore;
 import org.apache.kafka.connect.storage.KafkaOffsetBackingStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -42,6 +47,9 @@ public class EventTableChangesToAggregateTopicRelay {
   private final String dbUser;
   private final String dbPassword;
   private final LeaderSelector leaderSelector;
+
+  @Value("${debezium.data.path:#{null}}")
+  private String dataPath;
 
   private AtomicReference<RelayStatus> status = new AtomicReference<>(RelayStatus.IDLE);
 
@@ -157,15 +165,29 @@ public class EventTableChangesToAggregateTopicRelay {
     producer = new EventuateKafkaProducer(kafkaBootstrapServers);
 
     String connectorName = "my-sql-connector";
-    Configuration config = Configuration.create()
-                                    /* begin engine properties */
+    Configuration.Builder builder = Configuration.create();
+    if (dataPath != null) {
+      builder = builder.with("offset.storage",
+          FileOffsetBackingStore.class.getName())
+          .with("offset.storage.file.filename",
+              Paths.get(dataPath, "offset.dat").toAbsolutePath())
+          .with("database.history.file.filename",
+              Paths.get(dataPath, "dbhistory.dat").toAbsolutePath())
+          .with("database.history",
+              io.debezium.relational.history.FileDatabaseHistory.class.getName());
+    } else {
+      builder = builder.with("database.history",
+          io.debezium.relational.history.KafkaDatabaseHistory.class.getName())
+          .with("database.history.kafka.topic",
+              "eventuate.local.cdc." + connectorName + ".history.kafka.topic")
+          .with("offset.storage",
+              KafkaOffsetBackingStore.class.getName())
+          .with("offset.storage.topic", "eventuate.local.cdc." + connectorName + ".offset.storage");
+    }
+    Configuration config = builder
             .with("connector.class",
                     "io.debezium.connector.mysql.MySqlConnector")
-
-            .with("offset.storage", KafkaOffsetBackingStore.class.getName())
             .with("bootstrap.servers", kafkaBootstrapServers)
-            .with("offset.storage.topic", "eventuate.local.cdc." + connectorName + ".offset.storage")
-
             .with("poll.interval.ms", 50)
             .with("offset.flush.interval.ms", 6000)
                                     /* begin connector properties */
@@ -178,10 +200,7 @@ public class EventTableChangesToAggregateTopicRelay {
             .with("database.server.name", "my-app-connector")
             // Unnecessary.with("database.whitelist", jdbcUrl.getDatabase())
             .with("table.whitelist", jdbcUrl.getDatabase() + ".events")
-            .with("database.history",
-                    io.debezium.relational.history.KafkaDatabaseHistory.class.getName())
-            .with("database.history.kafka.topic",
-                    "eventuate.local.cdc." + connectorName + ".history.kafka.topic")
+
             .with("database.history.kafka.bootstrap.servers",
                     kafkaBootstrapServers)
             .build();
@@ -254,10 +273,14 @@ public class EventTableChangesToAggregateTopicRelay {
       String entityType = after.getString("entity_type");
       String entityId = after.getString("entity_id");
       String triggeringEvent = after.getString("triggering_event");
+      Optional<String> metadata = Optional.ofNullable(after.getString("metadata"));
+
       PublishedEvent pe = new PublishedEvent(eventId,
               entityId, entityType,
               eventData,
-              eventType);
+              eventType,
+              null,
+              metadata);
 
 
       String aggregateTopic = AggregateTopicMapping.aggregateTypeToTopic(entityType);
@@ -283,12 +306,7 @@ public class EventTableChangesToAggregateTopicRelay {
   }
 
   public static String toJson(PublishedEvent eventInfo) {
-    ObjectMapper om = new ObjectMapper();
-    try {
-      return om.writeValueAsString(eventInfo);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+    return JSonMapper.toJson(eventInfo);
   }
 
 //  public static class MyKafkaOffsetBackingStore extends KafkaOffsetBackingStore {

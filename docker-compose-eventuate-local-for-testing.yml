@@ -2,5 +2,6 @@
 cdcservice:
   image: test-eventuateio-local-cdc-service
 
-mysql:
-  image: test-eventuateio-local-mysql
+# Some demos have their own image
+#mysql:
+#  image: test-eventuateio-local-mysql

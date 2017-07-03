@@ -35,7 +35,7 @@ public abstract class AbstractTopicRelayTest {
     String aggregateType = "TestAggregate";
     String eventType = "TestEvent";
 
-    List<EventTypeAndData> myEvents = Collections.singletonList(new EventTypeAndData(eventType, "{}"));
+    List<EventTypeAndData> myEvents = Collections.singletonList(new EventTypeAndData(eventType, "{}", Optional.empty()));
 
     long publishTime = System.currentTimeMillis();
 

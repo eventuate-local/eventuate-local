@@ -22,10 +22,10 @@ import java.util.function.BiConsumer;
 public class EventuateKafkaConsumer {
 
 
+  private static Logger logger = LoggerFactory.getLogger(EventuateKafkaConsumer.class);
   private final String subscriberId;
   private final BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler;
   private final List<String> topics;
-  private Logger logger = LoggerFactory.getLogger(getClass());
   private AtomicBoolean stopFlag = new AtomicBoolean(false);
   private Properties consumerProperties;
 
@@ -34,22 +34,15 @@ public class EventuateKafkaConsumer {
     this.handler = handler;
     this.topics = topics;
 
-    consumerProperties = new Properties();
-    consumerProperties.put("bootstrap.servers", bootstrapServers);
-    consumerProperties.put("group.id", subscriberId);
-    consumerProperties.put("enable.auto.commit", "false");
-    //consumerProperties.put("auto.commit.interval.ms", "1000");
-    consumerProperties.put("session.timeout.ms", "30000");
-    consumerProperties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-    consumerProperties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-    consumerProperties.put("auto.offset.reset", "earliest");
+    this.consumerProperties = ConsumerPropertiesFactory.makeConsumerProperties(bootstrapServers, subscriberId);
   }
 
-  private void verifyTopicExistsBeforeSubscribing(KafkaConsumer<String, String> consumer, String topic) {
+  public static List<PartitionInfo> verifyTopicExistsBeforeSubscribing(KafkaConsumer<String, String> consumer, String topic) {
     try {
       logger.debug("Verifying Topic {}", topic);
       List<PartitionInfo> partitions = consumer.partitionsFor(topic);
       logger.debug("Got these partitions {} for Topic {}", partitions, topic);
+      return partitions;
     } catch (Throwable e) {
       logger.error("Got exception: ", e);
       throw new RuntimeException(e);

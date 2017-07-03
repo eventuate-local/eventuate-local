@@ -12,7 +12,8 @@ create table events (
   event_data varchar(1000) NOT NULL,
   entity_type VARCHAR(1000) NOT NULL,
   entity_id VARCHAR(1000) NOT NULL,
-  triggering_event VARCHAR(1000)
+  triggering_event VARCHAR(1000),
+  metadata VARCHAR(1000)
 );
 
 CREATE INDEX events_idx ON events(entity_type, entity_id, event_id);

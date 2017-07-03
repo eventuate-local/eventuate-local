@@ -1,10 +1,10 @@
 package io.eventuate.local.java.jdbckafkastore;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.eventuate.Int128;
 import io.eventuate.SubscriberOptions;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
+import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.commonimpl.SerializedEvent;
 import io.eventuate.local.common.AggregateTopicMapping;
 import io.eventuate.local.common.PublishedEvent;
@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PreDestroy;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -90,22 +89,17 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
   }
 
   private SerializedEvent toSerializedEvent(ConsumerRecord<String, String> record) {
-    try {
-      ObjectMapper om = new ObjectMapper();
-      PublishedEvent pe = om.readValue(record.value(), PublishedEvent.class);
-      return new SerializedEvent(
-              Int128.fromString(pe.getId()),
-              pe.getEntityId(),
-              pe.getEntityType(),
-              pe.getEventData(),
-              pe.getEventType(),
-              record.partition(),
-              record.offset(),
-              EtopEventContext.make(pe.getId(), record.topic(), record.partition(), record.offset()));
-    } catch (IOException e) {
-      logger.error("Got exception: ", e);
-      throw new RuntimeException(e);
-    }
+    PublishedEvent pe = JSonMapper.fromJson(record.value(), PublishedEvent.class);
+    return new SerializedEvent(
+            Int128.fromString(pe.getId()),
+            pe.getEntityId(),
+            pe.getEntityType(),
+            pe.getEventData(),
+            pe.getEventType(),
+            record.partition(),
+            record.offset(),
+            EtopEventContext.make(pe.getId(), record.topic(), record.partition(), record.offset()),
+            pe.getMetadata());
   }
 
 

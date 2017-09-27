@@ -27,8 +27,9 @@ dependencies {
     compile "ch.qos.logback:logback-classic:1.1.5"
     compile "io.eventuate.client.java:eventuate-client-java-common-impl:$eventuateClientVersion"
 
+    compile project(":eventuate-local-java-jdbc")
+
     testCompile "io.eventuate.client.java:eventuate-client-java-test-util:$eventuateClientVersion"
-    testCompile project(":eventuate-local-java-jdbc")
     testCompile "junit:junit:4.11"
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }

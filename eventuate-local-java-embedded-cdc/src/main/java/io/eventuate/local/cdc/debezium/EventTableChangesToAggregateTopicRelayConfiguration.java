@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import javax.sql.DataSource;
 
 @Configuration
 @EnableConfigurationProperties({EventTableChangesToAggregateTopicRelayConfigurationProperties.class,
@@ -18,15 +22,17 @@ import org.springframework.context.annotation.Configuration;
 public class EventTableChangesToAggregateTopicRelayConfiguration {
 
   @Bean
-  public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL,
-                                                                    EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
-                                                                    EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                    CuratorFramework client,
-                                                                    CdcStartupValidator cdcStartupValidator) {
+  @Profile("!EventuatePolling")
+  public AbstractEventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL,
+    EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+    EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+    CuratorFramework client,
+    CdcStartupValidator cdcStartupValidator) {
+
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
 
-
-    return new EventTableChangesToAggregateTopicRelay(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+    return new EventTableChangesToAggregateTopicRelay(
+            eventuateKafkaConfigurationProperties.getBootstrapServers(),
             jdbcUrl,
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getDbUserName(),
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getDbPassword(),
@@ -37,19 +43,49 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
   }
 
   @Bean
-  public CdcStartupValidator cdcStartupValidator(@Value("${spring.datasource.url}") String dataSourceURL,
-                                                 EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
-                                                 EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                 CdcStartupValidatorConfigurationProperties cdcStartupValidatorConfigurationProperties) {
+  @Profile("EventuatePolling")
+  public AbstractEventTableChangesToAggregateTopicRelay pollingCDC(DataSource dataSource,
+    EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+    EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+    CuratorFramework client,
+    CdcStartupValidator cdcStartupValidator) {
+
+    return new EventTableChangesToAggregateTopicPollingRelay(dataSource,
+        eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRequestPeriodInMilliseconds(),
+        eventuateKafkaConfigurationProperties.getBootstrapServers(),
+        client,
+        cdcStartupValidator,
+        new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
+            eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()));
+  }
+
+  @Bean
+  @Profile("!EventuatePolling")
+  public CdcStartupValidator debeziumCdcStartupValidator(@Value("${spring.datasource.url}") String dataSourceURL,
+    EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+    EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+    CdcStartupValidatorConfigurationProperties cdcStartupValidatorConfigurationProperties) {
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
 
-    CdcStartupValidator cdcStartupValidator = new CdcStartupValidator(jdbcUrl,
+    DebeziumCdcStartupValidator cdcStartupValidator = new DebeziumCdcStartupValidator(jdbcUrl,
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getDbUserName(),
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getDbPassword(),
             eventuateKafkaConfigurationProperties.getBootstrapServers());
 
     cdcStartupValidator.setMySqlValidationMaxAttempts(cdcStartupValidatorConfigurationProperties.getMySqlValidationMaxAttempts());
     cdcStartupValidator.setMySqlValidationTimeoutMillis(cdcStartupValidatorConfigurationProperties.getMySqlValidationTimeoutMillis());
+    cdcStartupValidator.setKafkaValidationMaxAttempts(cdcStartupValidatorConfigurationProperties.getKafkaValidationMaxAttempts());
+    cdcStartupValidator.setKafkaValidationTimeoutMillis(cdcStartupValidatorConfigurationProperties.getKafkaValidationTimeoutMillis());
+
+    return cdcStartupValidator;
+  }
+
+  @Bean
+  @Profile("EventuatePolling")
+  public CdcStartupValidator basicCdcStartupValidator(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+    CdcStartupValidatorConfigurationProperties cdcStartupValidatorConfigurationProperties) {
+    CdcStartupValidator cdcStartupValidator = new CdcStartupValidator(eventuateKafkaConfigurationProperties.getBootstrapServers());
+
     cdcStartupValidator.setKafkaValidationMaxAttempts(cdcStartupValidatorConfigurationProperties.getKafkaValidationMaxAttempts());
     cdcStartupValidator.setKafkaValidationTimeoutMillis(cdcStartupValidatorConfigurationProperties.getKafkaValidationTimeoutMillis());
 

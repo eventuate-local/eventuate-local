@@ -16,11 +16,6 @@ import java.util.Properties;
 
 public class CdcStartupValidator {
 
-  private JdbcUrl jdbcUrl;
-  private String dbUser;
-  private String dbPassword;
-  private long mySqlValidationTimeoutMillis;
-  private int mySqlValidationMaxAttempts;
   private long kafkaValidationTimeoutMillis;
   private int kafkaValidationMaxAttempts;
 
@@ -28,51 +23,12 @@ public class CdcStartupValidator {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public CdcStartupValidator(JdbcUrl jdbcUrl, String dbUser, String dbPassword, String bootstrapServers) {
-    this.jdbcUrl = jdbcUrl;
-    this.dbUser = dbUser;
-    this.dbPassword = dbPassword;
+  public CdcStartupValidator(String bootstrapServers) {
     this.bootstrapServers = bootstrapServers;
   }
 
   public void validateEnvironment() {
-    validateDatasourceConnection();
     validateKafkaConnection();
-  }
-
-  private void validateDatasourceConnection() {
-    logger.info("About to validate DataSource connection");
-    Map<String, String> connectorConfig = new HashMap<>();
-    connectorConfig.put(MySqlConnectorConfig.HOSTNAME.name(), jdbcUrl.getHost());
-    connectorConfig.put(MySqlConnectorConfig.PORT.name(), String.valueOf(jdbcUrl.getPort()));
-    connectorConfig.put(MySqlConnectorConfig.USER.name(), dbUser);
-    connectorConfig.put(MySqlConnectorConfig.PASSWORD.name(), dbPassword);
-
-    Configuration config = Configuration.from(connectorConfig);
-    try (MySqlJdbcContext jdbcContext = new MySqlJdbcContext(config)) {
-      jdbcContext.start();
-      JdbcConnection mysql = jdbcContext.jdbc();
-      int i = mySqlValidationMaxAttempts;
-      SQLException lastException = null;
-      while (i > 0) {
-        try {
-          mysql.execute("SELECT version()");
-          logger.info("Successfully tested connection for {}:{} with user '{}'", jdbcContext.hostname(), jdbcContext.port(), mysql.username());
-          return;
-        } catch (SQLException e) {
-          lastException = e;
-          logger.info("Failed testing connection for {}:{} with user '{}'", jdbcContext.hostname(), jdbcContext.port(), mysql.username());
-          i--;
-          try {
-            Thread.sleep(mySqlValidationTimeoutMillis);
-          } catch (InterruptedException ie) {
-            throw new RuntimeException("MySql validation had been interrupted!", ie);
-          }
-        }
-      }
-      jdbcContext.shutdown();
-      throw new RuntimeException(lastException);
-    }
   }
 
   private void validateKafkaConnection() {
@@ -111,15 +67,6 @@ public class CdcStartupValidator {
     consumerProperties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
 
     return new KafkaConsumer<>(consumerProperties);
-  }
-
-
-  public void setMySqlValidationTimeoutMillis(long mySqlValidationTimeoutMillis) {
-    this.mySqlValidationTimeoutMillis = mySqlValidationTimeoutMillis;
-  }
-
-  public void setMySqlValidationMaxAttempts(int mySqlValidationMaxAttempts) {
-    this.mySqlValidationMaxAttempts = mySqlValidationMaxAttempts;
   }
 
   public void setKafkaValidationTimeoutMillis(long kafkaValidationTimeoutMillis) {

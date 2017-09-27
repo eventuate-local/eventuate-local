@@ -2,18 +2,20 @@ package io.eventuate.local.cdc.debezium;
 
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Profile;
 
 @ConfigurationProperties("eventuateLocal.cdc")
 public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
 
-  @NotBlank
   private String dbUserName;
 
-  @NotBlank
   private String dbPassword;
+
+  private int pollingRequestPeriodInMilliseconds;
 
   private int maxRetries = 5;
   private long retryPeriodInMilliseconds = 60 * 1000;
+
 
   public String getDbUserName() {
     return dbUserName;
@@ -29,6 +31,14 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
 
   public void setDbPassword(String dbPassword) {
     this.dbPassword = dbPassword;
+  }
+
+  public int getPollingRequestPeriodInMilliseconds() {
+    return pollingRequestPeriodInMilliseconds;
+  }
+
+  public void setPollingRequestPeriodInMilliseconds(int pollingRequestPeriodInMilliseconds) {
+    this.pollingRequestPeriodInMilliseconds = pollingRequestPeriodInMilliseconds;
   }
 
   public void setMaxRetries(int maxRetries) {

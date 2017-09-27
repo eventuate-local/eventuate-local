@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public class JdbcUrlParser {
   public static JdbcUrl parse(String dataSourceURL) {
-    Pattern p = Pattern.compile("jdbc:mysql://([^:/]+)(:[0-9]+)?/([^?]+)(\\?.*)?$");
+    Pattern p = Pattern.compile("jdbc:.+://([^:/]+)(:[0-9]+)?/([^?]+)(\\?.*)?$");
     Matcher m = p.matcher(dataSourceURL);
 
     if (!m.matches())

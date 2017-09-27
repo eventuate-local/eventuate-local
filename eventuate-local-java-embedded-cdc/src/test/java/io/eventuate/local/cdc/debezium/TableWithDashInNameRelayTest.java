@@ -12,8 +12,6 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.BadSqlGrammarException;
-import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
@@ -54,11 +52,29 @@ public class TableWithDashInNameRelayTest extends AbstractTopicRelayTest {
     }
 
     @Override
-    public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL, EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties, EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties, CuratorFramework client, CdcStartupValidator cdcStartupValidator) {
+    public AbstractEventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL,
+      EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+      EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+      CuratorFramework client,
+      CdcStartupValidator cdcStartupValidator) {
+
       ResourceDatabasePopulator rdp = new ResourceDatabasePopulator(new ClassPathResource("/cdc-test-schema.sql"));
       rdp.execute(makeDataSource());
 
       return super.embeddedDebeziumCDC(dataSourceURL, eventTableChangesToAggregateTopicRelayConfigurationProperties, eventuateKafkaConfigurationProperties, client, cdcStartupValidator);
+    }
+
+    @Override
+    public AbstractEventTableChangesToAggregateTopicRelay pollingCDC(DataSource dataSource,
+      EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+      EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+      CuratorFramework client,
+      CdcStartupValidator cdcStartupValidator) {
+
+      ResourceDatabasePopulator rdp = new ResourceDatabasePopulator(new ClassPathResource("/cdc-test-schema.sql"));
+      rdp.execute(makeDataSource());
+
+      return super.pollingCDC(dataSource, eventTableChangesToAggregateTopicRelayConfigurationProperties, eventuateKafkaConfigurationProperties, client, cdcStartupValidator);
     }
   }
 

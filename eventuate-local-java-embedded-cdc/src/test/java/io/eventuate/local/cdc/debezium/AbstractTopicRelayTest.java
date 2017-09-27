@@ -57,6 +57,7 @@ public abstract class AbstractTopicRelayTest {
             }).get();
 
     Assert.assertNotNull(result.poll(30, TimeUnit.SECONDS));
+    Assert.assertNull(result.poll(30, TimeUnit.SECONDS));
 
     long endTime = System.currentTimeMillis();
 

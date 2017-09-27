@@ -10,7 +10,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 
@@ -23,7 +22,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
 
   @Bean
   @Profile("!EventuatePolling")
-  public AbstractEventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL,
+  public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL,
     EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
     EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
     CuratorFramework client,
@@ -31,7 +30,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
 
-    return new EventTableChangesToAggregateTopicRelay(
+    return new MySqlBinLogBasedEventTableChangesToAggregateTopicRelay(
             eventuateKafkaConfigurationProperties.getBootstrapServers(),
             jdbcUrl,
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getDbUserName(),
@@ -44,13 +43,13 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public AbstractEventTableChangesToAggregateTopicRelay pollingCDC(DataSource dataSource,
+  public EventTableChangesToAggregateTopicRelay pollingCDC(DataSource dataSource,
     EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
     EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
     CuratorFramework client,
     CdcStartupValidator cdcStartupValidator) {
 
-    return new EventTableChangesToAggregateTopicPollingRelay(dataSource,
+    return new PollingBasedEventTableChangesToAggregateTopicRelay(dataSource,
         eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRequestPeriodInMilliseconds(),
         eventuateKafkaConfigurationProperties.getBootstrapServers(),
         client,

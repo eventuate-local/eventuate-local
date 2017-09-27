@@ -52,7 +52,7 @@ public class TableWithDashInNameRelayTest extends AbstractTopicRelayTest {
     }
 
     @Override
-    public AbstractEventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL,
+    public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL,
       EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
       CuratorFramework client,
@@ -65,7 +65,7 @@ public class TableWithDashInNameRelayTest extends AbstractTopicRelayTest {
     }
 
     @Override
-    public AbstractEventTableChangesToAggregateTopicRelay pollingCDC(DataSource dataSource,
+    public EventTableChangesToAggregateTopicRelay pollingCDC(DataSource dataSource,
       EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
       CuratorFramework client,

@@ -10,11 +10,11 @@ CREATE TABLE events (
   entity_id VARCHAR(1000) NOT NULL,
   triggering_event VARCHAR(1000),
   metadata VARCHAR(1000),
-  sent SMALLINT DEFAULT 0
+  published SMALLINT DEFAULT 0
 );
 
 CREATE INDEX events_idx ON events(entity_type, entity_id, event_id);
-CREATE INDEX events_sent_idx ON events(sent);
+CREATE INDEX events_published_idx ON events(published);
 
 CREATE TABLE entities (
   entity_type VARCHAR(1000),

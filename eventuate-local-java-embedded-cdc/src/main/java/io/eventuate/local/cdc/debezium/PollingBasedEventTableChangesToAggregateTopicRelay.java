@@ -5,7 +5,6 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import javax.sql.DataSource;
@@ -14,18 +13,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * Monitors changes made to EVENTS table and publishes them to aggregate topics
  */
-public class EventTableChangesToAggregateTopicPollingRelay extends AbstractEventTableChangesToAggregateTopicRelay {
+public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTableChangesToAggregateTopicRelay {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private int requestPeriodInMilliseconds;
   private boolean watcherRunning = false;
 
-  public EventTableChangesToAggregateTopicPollingRelay(
+  public PollingBasedEventTableChangesToAggregateTopicRelay(
     DataSource dataSource,
     int requestPeriodInMilliseconds,
     String kafkaBootstrapServers,
@@ -53,30 +53,46 @@ public class EventTableChangesToAggregateTopicPollingRelay extends AbstractEvent
 
         while (watcherRunning) {
           try {
-            List<String> handledEventIds = new ArrayList<>();
 
-            namedParameterJdbcTemplate.query("SELECT * FROM EVENTS WHERE SENT = 0 ORDER BY EVENT_ID ASC", rs -> {
-              logger.trace("Got row");
-
-              String eventId = rs.getString("event_id");
-              String eventType = rs.getString("event_type");
-              String eventData = rs.getString("event_data");
-              String entityType = rs.getString("entity_type");
-              String entityId = rs.getString("entity_id");
-              String triggeringEvent = rs.getString("triggering_event");
-              Optional<String> metadata = Optional.ofNullable(rs.getString("metadata"));
-
-              handleEvent(eventId, eventType, eventData, entityType, entityId, triggeringEvent, metadata);
-
-              handledEventIds.add(eventId);
-            });
-
-            if (!handledEventIds.isEmpty()) {
-              namedParameterJdbcTemplate.update("UPDATE EVENTS SET SENT = 1 WHERE EVENT_ID in (:ids)",
-                      Collections.singletonMap("ids", handledEventIds));
+            class Event {
+              String eventId;
+              String eventType;
+              String eventData;
+              String entityType;
+              String entityId;
+              String triggeringEvent;
+              Optional<String> metadata;
             }
 
-            completableFuture.complete(null);
+            List<Event> events = new ArrayList<>();
+
+            namedParameterJdbcTemplate.query("SELECT * FROM events WHERE published = 0 ORDER BY event_id ASC", rs -> {
+              logger.trace("Got row");
+
+              events.add(new Event() {{
+                eventId = rs.getString("event_id");
+                eventType = rs.getString("event_type");
+                eventData = rs.getString("event_data");
+                entityType = rs.getString("entity_type");
+                entityId = rs.getString("entity_id");
+                triggeringEvent = rs.getString("triggering_event");
+                metadata = Optional.ofNullable(rs.getString("metadata"));
+              }});
+            });
+
+            events.forEach(event -> handleEvent(event.eventId,
+                event.eventType,
+                event.eventData,
+                event.entityType,
+                event.entityId,
+                event.triggeringEvent,
+                event.metadata));
+
+            if (!events.isEmpty()) {
+              namedParameterJdbcTemplate.update("UPDATE events SET published = 1 WHERE event_id in (:ids)",
+                      Collections.singletonMap("ids", events.stream().map(event -> event.eventId).collect(Collectors.toList())));
+              completableFuture.complete(null);
+            }
 
             try {
               Thread.sleep(requestPeriodInMilliseconds);

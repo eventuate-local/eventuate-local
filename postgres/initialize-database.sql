@@ -14,7 +14,7 @@ CREATE TABLE events (
 );
 
 CREATE INDEX events_idx ON events(entity_type, entity_id, event_id);
-CREATE INDEX events_published_idx ON events(published);
+CREATE INDEX events_published_idx ON events(published, event_id);
 
 CREATE TABLE entities (
   entity_type VARCHAR(1000),

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @SpringApplicationConfiguration(classes = EventPollingDaoTest.EventPollingTestConfiguration.class)
 @DirtiesContext
 @IntegrationTest
-public class EventPollingDaoTest extends AbstractTopicRelayTest {
+public class EventPollingDaoTest {
 
   @Autowired
   private JdbcTemplate jdbcTemplate;

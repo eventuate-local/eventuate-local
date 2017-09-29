@@ -14,7 +14,9 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
     compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
     compile 'mysql:mysql-connector-java:5.1.39'
-    compile 'org.postgresql:postgresql:9.4-1200-jdbc41'
+    compile ('org.postgresql:postgresql:9.4-1200-jdbc41') {
+        exclude group: "org.slf4j", module: "slf4j-simple"
+    }
 
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 

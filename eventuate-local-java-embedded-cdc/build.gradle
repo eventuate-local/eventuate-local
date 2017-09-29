@@ -28,7 +28,9 @@ dependencies {
     compile "io.eventuate.client.java:eventuate-client-java-common-impl:$eventuateClientVersion"
 
     compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
-    compile 'org.postgresql:postgresql:9.4-1200-jdbc41'
+    compile ('org.postgresql:postgresql:9.4-1200-jdbc41') {
+        exclude group: "org.slf4j", module: "slf4j-simple"
+    }
 
     testCompile project(":eventuate-local-java-jdbc")
     testCompile "io.eventuate.client.java:eventuate-client-java-test-util:$eventuateClientVersion"

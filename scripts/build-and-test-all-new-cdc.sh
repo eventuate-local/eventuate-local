@@ -27,7 +27,7 @@ $DOCKER_COMPOSE up -d
 # wait for MySQL
 
 echo waiting for MySQL
-sleep 10
+./scripts/wait-for-mysql.sh
 
 ./scripts/mysql-cli.sh  -i < eventuate-local-java-embedded-cdc/src/test/resources/cdc-test-schema.sql
 
@@ -37,13 +37,13 @@ sleep 10
 
 echo testing restart MySQL restart scenario $(date)
 
-docker stop eventuatelocal_mysql_1
+docker stop  $(echo ${PWD##*/} | sed -e 's/-//g')_mysql_1
 
 sleep 10
 
-docker start eventuatelocal_mysql_1
+docker start  $(echo ${PWD##*/} | sed -e 's/-//g')_mysql_1
 
-sleep 30
+./scripts/wait-for-mysql.sh
 
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:cleanTest :eventuate-local-java-jdbc-tests:test
 

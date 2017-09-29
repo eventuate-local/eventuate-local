@@ -144,7 +144,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
       String triggeringEvent = after.getString("triggering_event");
       Optional<String> metadata = Optional.ofNullable(after.getString("metadata"));
 
-      handleEvent(eventId, eventType, eventData, entityType, entityId, triggeringEvent, metadata);
+      handleEvent(new EventToPublish(eventId, eventType, eventData, entityType, entityId, triggeringEvent, metadata));
     }
   }
 }

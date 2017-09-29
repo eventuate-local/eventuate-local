@@ -1,6 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 
+import com.google.common.collect.ImmutableMap;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -21,21 +22,24 @@ import java.util.stream.Collectors;
 public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTableChangesToAggregateTopicRelay {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
-  private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+  private EventPollingDao eventPollingDao;
   private int requestPeriodInMilliseconds;
+  private int maxEventsPerPolling;
   private boolean watcherRunning = false;
 
   public PollingBasedEventTableChangesToAggregateTopicRelay(
-    DataSource dataSource,
+    EventPollingDao eventPollingDao,
     int requestPeriodInMilliseconds,
+    int maxEventsPerPolling,
     String kafkaBootstrapServers,
     CuratorFramework client,
     CdcStartupValidator cdcStartupValidator,
     TakeLeadershipAttemptTracker takeLeadershipAttemptTracker) {
 
     super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker);
-    this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+    this.eventPollingDao = eventPollingDao;
     this.requestPeriodInMilliseconds = requestPeriodInMilliseconds;
+    this.maxEventsPerPolling = maxEventsPerPolling;
   }
 
   public CompletableFuture<Object> startCapturingChanges() throws InterruptedException {
@@ -54,45 +58,19 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
         while (watcherRunning) {
           try {
 
-            class Event {
-              String eventId;
-              String eventType;
-              String eventData;
-              String entityType;
-              String entityId;
-              String triggeringEvent;
-              Optional<String> metadata;
+            List<EventToPublish> eventToPublishes = eventPollingDao.findEventsToPublish(maxEventsPerPolling);
+
+            eventToPublishes.forEach(eventToPublish -> handleEvent(eventToPublish));
+
+            if (!eventToPublishes.isEmpty()) {
+
+              eventPollingDao.markEventsAsPublished(eventToPublishes
+                .stream()
+                .map(EventToPublish::getEventId)
+                .collect(Collectors.toList()));
             }
 
-            List<Event> events = new ArrayList<>();
-
-            namedParameterJdbcTemplate.query("SELECT * FROM events WHERE published = 0 ORDER BY event_id ASC", rs -> {
-              logger.trace("Got row");
-
-              events.add(new Event() {{
-                eventId = rs.getString("event_id");
-                eventType = rs.getString("event_type");
-                eventData = rs.getString("event_data");
-                entityType = rs.getString("entity_type");
-                entityId = rs.getString("entity_id");
-                triggeringEvent = rs.getString("triggering_event");
-                metadata = Optional.ofNullable(rs.getString("metadata"));
-              }});
-            });
-
-            events.forEach(event -> handleEvent(event.eventId,
-                event.eventType,
-                event.eventData,
-                event.entityType,
-                event.entityId,
-                event.triggeringEvent,
-                event.metadata));
-
-            if (!events.isEmpty()) {
-              namedParameterJdbcTemplate.update("UPDATE events SET published = 1 WHERE event_id in (:ids)",
-                      Collections.singletonMap("ids", events.stream().map(event -> event.eventId).collect(Collectors.toList())));
-              completableFuture.complete(null);
-            }
+            completableFuture.complete(null);
 
             try {
               Thread.sleep(requestPeriodInMilliseconds);

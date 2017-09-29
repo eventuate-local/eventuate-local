@@ -149,31 +149,26 @@ public abstract class EventTableChangesToAggregateTopicRelay {
     return JSonMapper.toJson(eventInfo);
   }
 
-  protected void handleEvent(String eventId,
-    String eventType,
-    String eventData,
-    String entityType,
-    String entityId,
-    String triggeringEvent,
-    Optional<String> metadata) {
+  protected void handleEvent(EventToPublish eventToPublish) {
 
-    PublishedEvent pe = new PublishedEvent(eventId,
-        entityId, entityType,
-        eventData,
-        eventType,
+    PublishedEvent pe = new PublishedEvent(eventToPublish.getEventId(),
+        eventToPublish.getEntityId(),
+        eventToPublish.getEntityType(),
+        eventToPublish.getEventData(),
+        eventToPublish.getEventType(),
         null,
-        metadata);
+        eventToPublish.getMetadataOptional());
 
 
-    String aggregateTopic = AggregateTopicMapping.aggregateTypeToTopic(entityType);
+    String aggregateTopic = AggregateTopicMapping.aggregateTypeToTopic(pe.getEntityType());
     String json = toJson(pe);
 
     if (logger.isInfoEnabled())
-      logger.debug("Publishing triggeringEvent={}, event={}", triggeringEvent, json);
+      logger.debug("Publishing triggeringEvent={}, event={}", eventToPublish.getTriggeringEvent(), json);
 
     try {
       producer.send(aggregateTopic,
-          entityId,
+          eventToPublish.getEntityId(),
           json).get(10, TimeUnit.SECONDS);
     } catch (RuntimeException e) {
       logger.error("error publishing to " + aggregateTopic, e);

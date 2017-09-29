@@ -65,7 +65,7 @@ public class TableWithDashInNameRelayTest extends AbstractTopicRelayTest {
     }
 
     @Override
-    public EventTableChangesToAggregateTopicRelay pollingCDC(DataSource dataSource,
+    public EventTableChangesToAggregateTopicRelay pollingCDC(EventPollingDao eventPollingDao,
       EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
       CuratorFramework client,
@@ -74,7 +74,7 @@ public class TableWithDashInNameRelayTest extends AbstractTopicRelayTest {
       ResourceDatabasePopulator rdp = new ResourceDatabasePopulator(new ClassPathResource("/cdc-test-schema.sql"));
       rdp.execute(makeDataSource());
 
-      return super.pollingCDC(dataSource, eventTableChangesToAggregateTopicRelayConfigurationProperties, eventuateKafkaConfigurationProperties, client, cdcStartupValidator);
+      return super.pollingCDC(eventPollingDao, eventTableChangesToAggregateTopicRelayConfigurationProperties, eventuateKafkaConfigurationProperties, client, cdcStartupValidator);
     }
   }
 

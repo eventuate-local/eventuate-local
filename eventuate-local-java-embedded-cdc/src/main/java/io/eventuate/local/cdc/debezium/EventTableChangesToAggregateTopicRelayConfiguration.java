@@ -43,14 +43,15 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public EventTableChangesToAggregateTopicRelay pollingCDC(DataSource dataSource,
+  public EventTableChangesToAggregateTopicRelay pollingCDC(EventPollingDao eventPollingDao,
     EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
     EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
     CuratorFramework client,
     CdcStartupValidator cdcStartupValidator) {
 
-    return new PollingBasedEventTableChangesToAggregateTopicRelay(dataSource,
+    return new PollingBasedEventTableChangesToAggregateTopicRelay(eventPollingDao,
         eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRequestPeriodInMilliseconds(),
+        eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxEventsPerPolling(),
         eventuateKafkaConfigurationProperties.getBootstrapServers(),
         client,
         cdcStartupValidator,
@@ -91,6 +92,12 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
     return cdcStartupValidator;
   }
 
+  @Bean
+  @Profile("EventuatePolling")
+  public EventPollingDao eventPollingDao(DataSource dataSource) {
+    return new EventPollingDao(dataSource);
+  }
+
   @Bean(destroyMethod = "close")
   public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
     String connectionString = eventuateLocalZookeperConfigurationProperties.getConnectionString();
@@ -106,6 +113,4 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
     client.start();
     return client;
   }
-
-
 }

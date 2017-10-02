@@ -15,6 +15,10 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
 
   private int maxEventsPerPolling;
 
+  private int maxAttemptsForPolling;
+
+  private int delayPerPollingAttemptInMilliseconds;
+
   private int maxRetries = 5;
   private long retryPeriodInMilliseconds = 60 * 1000;
 
@@ -65,5 +69,21 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
 
   public void setMaxEventsPerPolling(int maxEventsPerPolling) {
     this.maxEventsPerPolling = maxEventsPerPolling;
+  }
+
+  public int getMaxAttemptsForPolling() {
+    return maxAttemptsForPolling;
+  }
+
+  public void setMaxAttemptsForPolling(int maxAttemptsForPolling) {
+    this.maxAttemptsForPolling = maxAttemptsForPolling;
+  }
+
+  public int getDelayPerPollingAttemptInMilliseconds() {
+    return delayPerPollingAttemptInMilliseconds;
+  }
+
+  public void setDelayPerPollingAttemptInMilliseconds(int delayPerPollingAttemptInMilliseconds) {
+    this.delayPerPollingAttemptInMilliseconds = delayPerPollingAttemptInMilliseconds;
   }
 }

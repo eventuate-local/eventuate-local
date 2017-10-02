@@ -54,7 +54,9 @@ public class EventPollingDaoTest {
 
   @Test
   public void testFindAndPublish() {
-    List<EventToPublish> eventsToPublish = eventPollingDao.findEventsToPublish(1000);
+    eventPollingDao.setMaxEventsPerPolling(1000);
+
+    List<EventToPublish> eventsToPublish = eventPollingDao.findEventsToPublish();
 
     Assert.assertEquals(2, eventsToPublish.size());
 
@@ -82,12 +84,14 @@ public class EventPollingDaoTest {
     eventPollingDao.markEventsAsPublished(eventsToPublish.stream().map(eventToPublish ->
         eventToPublish.getEventId()).collect(Collectors.toList()));
 
-    Assert.assertTrue(eventPollingDao.findEventsToPublish(1000).isEmpty());
+    Assert.assertTrue(eventPollingDao.findEventsToPublish().isEmpty());
   }
 
     @Test
   public void testLimit() {
-    List<EventToPublish> eventsToPublish = eventPollingDao.findEventsToPublish(1);
+    eventPollingDao.setMaxEventsPerPolling(1);
+
+    List<EventToPublish> eventsToPublish = eventPollingDao.findEventsToPublish();
 
     Assert.assertEquals(1, eventsToPublish.size());
   }

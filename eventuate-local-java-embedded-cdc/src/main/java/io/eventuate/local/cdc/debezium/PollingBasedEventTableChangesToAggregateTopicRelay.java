@@ -30,7 +30,6 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
   public PollingBasedEventTableChangesToAggregateTopicRelay(
     EventPollingDao eventPollingDao,
     int requestPeriodInMilliseconds,
-    int maxEventsPerPolling,
     String kafkaBootstrapServers,
     CuratorFramework client,
     CdcStartupValidator cdcStartupValidator,
@@ -58,7 +57,7 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
         while (watcherRunning) {
           try {
 
-            List<EventToPublish> eventToPublishes = eventPollingDao.findEventsToPublish(maxEventsPerPolling);
+            List<EventToPublish> eventToPublishes = eventPollingDao.findEventsToPublish();
 
             eventToPublishes.forEach(eventToPublish -> handleEvent(eventToPublish));
 

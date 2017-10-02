@@ -51,7 +51,6 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
 
     return new PollingBasedEventTableChangesToAggregateTopicRelay(eventPollingDao,
         eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRequestPeriodInMilliseconds(),
-        eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxEventsPerPolling(),
         eventuateKafkaConfigurationProperties.getBootstrapServers(),
         client,
         cdcStartupValidator,
@@ -94,8 +93,13 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public EventPollingDao eventPollingDao(DataSource dataSource) {
-    return new EventPollingDao(dataSource);
+  public EventPollingDao eventPollingDao(DataSource dataSource,
+    EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties) {
+
+    return new EventPollingDao(dataSource,
+      eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxEventsPerPolling(),
+      eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxAttemptsForPolling(),
+      eventTableChangesToAggregateTopicRelayConfigurationProperties.getDelayPerPollingAttemptInMilliseconds());
   }
 
   @Bean(destroyMethod = "close")

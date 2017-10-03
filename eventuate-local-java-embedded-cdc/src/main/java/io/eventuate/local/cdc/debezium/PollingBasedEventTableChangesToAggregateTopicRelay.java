@@ -24,7 +24,6 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
   private Logger logger = LoggerFactory.getLogger(getClass());
   private EventPollingDao eventPollingDao;
   private int requestPeriodInMilliseconds;
-  private int maxEventsPerPolling;
   private boolean watcherRunning = false;
 
   public PollingBasedEventTableChangesToAggregateTopicRelay(
@@ -38,7 +37,6 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
     super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker);
     this.eventPollingDao = eventPollingDao;
     this.requestPeriodInMilliseconds = requestPeriodInMilliseconds;
-    this.maxEventsPerPolling = maxEventsPerPolling;
   }
 
   public CompletableFuture<Object> startCapturingChanges() throws InterruptedException {

@@ -93,16 +93,10 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public DataSourceFactory dataSourceFactory() {
-    return new DataSourceFactory();
-  }
-
-  @Bean
-  @Profile("EventuatePolling")
-  public EventPollingDao eventPollingDao(DataSourceFactory dataSourceFactory,
+  public EventPollingDao eventPollingDao(DataSource dataSource,
     EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties) {
 
-    return new EventPollingDao(dataSourceFactory,
+    return new EventPollingDao(dataSource,
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxEventsPerPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxAttemptsForPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getDelayPerPollingAttemptInMilliseconds());

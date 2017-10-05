@@ -3,9 +3,10 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,7 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.Properties;
+import java.util.Arrays;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -32,6 +33,11 @@ public class DatabaseBinlogOffsetKafkaStoreTest extends AbstractCdcTest{
 
   @Autowired
   EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
+
+  @Before
+  public void init() {
+    Assume.assumeFalse(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
+  }
 
   @Test
   public void shouldSendBinlogFilenameAndOffset() throws InterruptedException {

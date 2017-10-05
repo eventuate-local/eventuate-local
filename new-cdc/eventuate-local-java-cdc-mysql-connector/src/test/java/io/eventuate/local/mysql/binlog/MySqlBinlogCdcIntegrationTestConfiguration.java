@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -20,16 +21,18 @@ import java.util.concurrent.TimeoutException;
 
 @Configuration
 @EnableAutoConfiguration
-@EnableConfigurationProperties({MySqlBinaryLogClientConfigurationProperties.class, EventuateLocalZookeperConfigurationProperties.class})
+@EnableConfigurationProperties({MySqlBinaryLogClientConfigurationProperties.class, EventuateLocalZookeperConfigurationProperties.class, PollingConfigurationProperties.class})
 @Import(EventuateDriverConfiguration.class)
 public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
+  @Profile("!EventuatePolling")
   public SourceTableNameSupplier sourceTableNameSupplier(MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties) {
     return new SourceTableNameSupplier(mySqlBinaryLogClientConfigurationProperties.getSourceTableName(), "EVENTS");
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
                                                                    MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties,
                                                                    SourceTableNameSupplier sourceTableNameSupplier,
@@ -45,12 +48,14 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public EventuateJdbcAccess eventuateJdbcAccess(DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
     return new EventuateLocalJdbcAccess(jdbcTemplate);
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public IWriteRowsEventDataParser<PublishedEvent> eventDataParser(DataSource dataSource,
                                                                    SourceTableNameSupplier sourceTableNameSupplier) {
     return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName());
@@ -62,6 +67,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                  MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties,
                                                                  MySqlBinaryLogClient mySqlBinaryLogClient,
@@ -70,6 +76,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore) {
     return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore);
   }
@@ -79,4 +86,37 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
     return new PublishedEventPublishingStrategy();
   }
 
+
+  @Bean
+  @Profile("EventuatePolling")
+  public PollingCdcKafkaPublisher<PublishedEvent> pollingCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+    PublishingStrategy<PublishedEvent> publishingStrategy) {
+    return new PollingCdcKafkaPublisher<>(eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
+  }
+
+  @Bean
+  @Profile("EventuatePolling")
+  public PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor(PollingConfigurationProperties pollingConfigurationProperties,
+    PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
+    return new PollingCdcProcessor<>(pollingDao, pollingConfigurationProperties.getPollingRequestPeriodInMilliseconds());
+  }
+
+  @Bean
+  @Profile("EventuatePolling")
+  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider() {
+    return new EventPollingDataProvider();
+  }
+
+  @Bean
+  @Profile("EventuatePolling")
+  public PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao(PollingConfigurationProperties pollingConfigurationProperties,
+    PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider,
+    DataSource dataSource) {
+
+    return new PollingDao<>(pollingDataProvider,
+      dataSource,
+      pollingConfigurationProperties.getMaxEventsPerPolling(),
+      pollingConfigurationProperties.getMaxAttemptsForPolling(),
+      pollingConfigurationProperties.getDelayPerPollingAttemptInMilliseconds());
+  }
 }

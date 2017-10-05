@@ -10,6 +10,11 @@ dependencies {
     compile project(":eventuate-local-java-jdbc")
     compile project(":eventuate-local-java-common")
 
+    compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
+    compile ('org.postgresql:postgresql:9.4-1200-jdbc41') {
+        exclude group: "org.slf4j", module: "slf4j-simple"
+    }
+
     testCompile project(":eventuate-local-java-jdbc")
     testCompile "junit:junit:4.11"
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"

@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -28,53 +27,50 @@ import java.util.stream.Collectors;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MySqlBinlogCdcIntegrationTestConfiguration.class)
 @IntegrationTest
-public class MySQLCdcProcessorTest extends AbstractCdcTest {
+public class PollingCdcProcessorTest extends AbstractCdcTest {
 
-  @Autowired
   EventuateJdbcAccess eventuateJdbcAccess;
-
-  private MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient;
-
-  private DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore;
 
   EventuateLocalAggregateCrud localAggregateCrud;
 
+  private PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao;
+
+  private Logger logger = LoggerFactory.getLogger(this.getClass());
+
   @Before
   public void init() {
-    Assume.assumeFalse(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
+    Assume.assumeTrue(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
 
-    mySqlBinaryLogClient = applicationContext.getAutowireCapableBeanFactory().getBean(MySqlBinaryLogClient.class);
-    binlogOffsetKafkaStore = applicationContext.getAutowireCapableBeanFactory().getBean(DatabaseBinlogOffsetKafkaStore.class);
+    eventuateJdbcAccess = applicationContext.getAutowireCapableBeanFactory().getBean(EventuateJdbcAccess.class);
+    pollingDao = applicationContext.getAutowireCapableBeanFactory().getBean(PollingDao.class);
     localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
   }
 
   @Test
   public void shouldReadNewEventsOnly() throws InterruptedException {
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
-    MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor = new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore);
-    mySQLCdcProcessor.start(publishedEvent -> {
+    PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor = new PollingCdcProcessor<>(pollingDao, 4000);
+    pollingCdcProcessor.start(publishedEvent -> {
       publishedEvents.add(publishedEvent);
-      binlogOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
     });
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
     waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData);
-    mySQLCdcProcessor.stop();
+    pollingCdcProcessor.stop();
 
     Thread.sleep(10000);
 
     publishedEvents.clear();
-    mySQLCdcProcessor.start(publishedEvent -> {
+    pollingCdcProcessor.start(publishedEvent -> {
       publishedEvents.add(publishedEvent);
-      binlogOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
     });
     List<String> excludedIds = entityIdVersionAndEventIds.getEventIds().stream().map(Int128::asString).collect(Collectors.toList());
 
     accountCreatedEventData = generateAccountCreatedEvent();
     entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
     waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData, excludedIds);
-    mySQLCdcProcessor.stop();
+    pollingCdcProcessor.stop();
   }
 
   @Test
@@ -84,11 +80,11 @@ public class MySQLCdcProcessorTest extends AbstractCdcTest {
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
 
-    MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor = new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore);
-    mySQLCdcProcessor.start(publishedEvents::add);
+    PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor = new PollingCdcProcessor<>(pollingDao, 4000);
+    pollingCdcProcessor.start(publishedEvents::add);
 
     waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData);
-    mySQLCdcProcessor.stop();
+    pollingCdcProcessor.stop();
   }
 
   private PublishedEvent waitForEventExcluding(BlockingQueue<PublishedEvent> publishedEvents, Int128 eventId, LocalDateTime deadline, String eventData, List<String> excludedIds) throws InterruptedException {

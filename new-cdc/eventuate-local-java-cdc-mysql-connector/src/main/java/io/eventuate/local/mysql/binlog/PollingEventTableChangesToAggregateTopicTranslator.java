@@ -1,6 +1,5 @@
 package io.eventuate.local.mysql.binlog;
 
-import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.mysql.binlog.exception.EventuateLocalPublishingException;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
@@ -12,17 +11,19 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-public class EventTableChangesToAggregateTopicTranslator<M extends BinLogEvent> {
+public class PollingEventTableChangesToAggregateTopicTranslator<EVENT_BEAN, EVENT, ID> {
 
   private final LeaderSelector leaderSelector;
-  private MySQLCdcKafkaPublisher<M> mySQLCdcKafkaPublisher;
-  private MySQLCdcProcessor<M> mySQLCdcProcessor;
+  private PollingCdcKafkaPublisher pollingCdcKafkaPublisher;
+  private PollingCdcProcessor pollingCdcProcessor;
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
-  public EventTableChangesToAggregateTopicTranslator(MySQLCdcKafkaPublisher<M> mySQLCdcKafkaPublisher, MySQLCdcProcessor<M> mySQLCdcProcessor, CuratorFramework client) {
-    this.mySQLCdcKafkaPublisher = mySQLCdcKafkaPublisher;
-    this.mySQLCdcProcessor = mySQLCdcProcessor;
+  public PollingEventTableChangesToAggregateTopicTranslator(PollingCdcKafkaPublisher<EVENT> pollingCdcKafkaPublisher,
+    PollingCdcProcessor<EVENT_BEAN, EVENT, ID> pollingCdcProcessor, CuratorFramework client) {
+    this.pollingCdcKafkaPublisher = pollingCdcKafkaPublisher;
+    this.pollingCdcProcessor = pollingCdcProcessor;
+
     this.leaderSelector = new LeaderSelector(client, "/eventuatelocal/cdc/leader", new LeaderSelectorListener() {
 
       @Override
@@ -86,11 +87,11 @@ public class EventTableChangesToAggregateTopicTranslator<M extends BinLogEvent> 
   public void startCapturingChanges() throws InterruptedException {
     logger.debug("Starting to capture changes");
 
-    mySQLCdcKafkaPublisher.start();
+    pollingCdcKafkaPublisher.start();
     try {
-      mySQLCdcProcessor.start(publishedEvent -> {
+      pollingCdcProcessor.start(publishedEvent -> {
         try {
-          mySQLCdcKafkaPublisher.handleEvent(publishedEvent);
+          pollingCdcKafkaPublisher.handleEvent(publishedEvent);
         } catch (EventuateLocalPublishingException e) {
           throw new RuntimeException(e);
         }
@@ -114,7 +115,7 @@ public class EventTableChangesToAggregateTopicTranslator<M extends BinLogEvent> 
   public void stopCapturingChanges() throws InterruptedException {
     logger.debug("Stopping to capture changes");
 
-    mySQLCdcKafkaPublisher.stop();
-    mySQLCdcProcessor.stop();
+    pollingCdcKafkaPublisher.stop();
+    pollingCdcProcessor.stop();
   }
 }

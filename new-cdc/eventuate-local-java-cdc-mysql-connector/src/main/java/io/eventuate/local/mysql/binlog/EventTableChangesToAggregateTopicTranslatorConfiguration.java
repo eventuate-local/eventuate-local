@@ -13,27 +13,35 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 @Configuration
-@EnableConfigurationProperties({MySqlBinaryLogClientConfigurationProperties.class, EventuateLocalZookeperConfigurationProperties.class})
+@EnableConfigurationProperties({
+  MySqlBinaryLogClientConfigurationProperties.class,
+  EventuateLocalZookeperConfigurationProperties.class,
+  PollingConfigurationProperties.class
+})
 @Import(EventuateDriverConfiguration.class)
 public class EventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
+  @Profile("!EventuatePolling")
   public SourceTableNameSupplier sourceTableNameSupplier(MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties) {
     return new SourceTableNameSupplier(mySqlBinaryLogClientConfigurationProperties.getSourceTableName(), "EVENTS");
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public IWriteRowsEventDataParser eventDataParser(DataSource dataSource, SourceTableNameSupplier sourceTableNameSupplier) {
     return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName());
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
                                                                    MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties,
                                                                    SourceTableNameSupplier sourceTableNameSupplier,
@@ -54,6 +62,7 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public MySQLCdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore, PublishingStrategy<PublishedEvent> publishingStrategy) {
     return new MySQLCdcKafkaPublisher<>(binlogOffsetKafkaStore, eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
   }
@@ -64,11 +73,13 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore) {
     return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore);
   }
 
   @Bean
+  @Profile("!EventuatePolling")
   public DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties,
                                                                MySqlBinaryLogClient mySqlBinaryLogClient,
@@ -77,10 +88,11 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  public EventTableChangesToAggregateTopicTranslator<PublishedEvent> eventTableChangesToAggregateTopicTranslator(MySQLCdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher,
-                                                                                                 MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor,
-                                                                                                 CuratorFramework curatorFramework) {
-    return new EventTableChangesToAggregateTopicTranslator<>(mySQLCdcKafkaPublisher, mySQLCdcProcessor, curatorFramework);
+  @Profile("!EventuatePolling")
+  public MySQLBinaryLogEventTableChangesToAggregateTopicTranslator<PublishedEvent> eventTableChangesToAggregateTopicTranslator(MySQLCdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher,
+                                                                                                                               MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor,
+                                                                                                                               CuratorFramework curatorFramework) {
+    return new MySQLBinaryLogEventTableChangesToAggregateTopicTranslator<>(mySQLCdcKafkaPublisher, mySQLCdcProcessor, curatorFramework);
   }
 
   @Bean(destroyMethod = "close")
@@ -99,5 +111,45 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
     return client;
   }
 
+  @Bean
+  @Profile("EventuatePolling")
+  public PollingCdcKafkaPublisher<PublishedEvent> pollingCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+    PublishingStrategy<PublishedEvent> publishingStrategy) {
+    return new PollingCdcKafkaPublisher<>(eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
+  }
 
+  @Bean
+  @Profile("EventuatePolling")
+  public PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor(PollingConfigurationProperties pollingConfigurationProperties,
+    PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
+    return new PollingCdcProcessor<>(pollingDao, pollingConfigurationProperties.getPollingRequestPeriodInMilliseconds());
+  }
+
+  @Bean
+  @Profile("EventuatePolling")
+  public PollingEventTableChangesToAggregateTopicTranslator<PublishedEventBean, PublishedEvent, String> pollingEventTableChangesToAggregateTopicTranslator(PollingCdcKafkaPublisher<PublishedEvent> pollingCdcKafkaPublisher,
+    PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor,
+    CuratorFramework curatorFramework) {
+
+    return new PollingEventTableChangesToAggregateTopicTranslator<>(pollingCdcKafkaPublisher, pollingCdcProcessor, curatorFramework);
+  }
+
+  @Bean
+  @Profile("EventuatePolling")
+  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider() {
+    return new EventPollingDataProvider();
+  }
+
+  @Bean
+  @Profile("EventuatePolling")
+  public PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao(PollingConfigurationProperties pollingConfigurationProperties,
+    PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider,
+    DataSource dataSource) {
+
+    return new PollingDao<>(pollingDataProvider,
+      dataSource,
+      pollingConfigurationProperties.getMaxEventsPerPolling(),
+      pollingConfigurationProperties.getMaxAttemptsForPolling(),
+      pollingConfigurationProperties.getDelayPerPollingAttemptInMilliseconds());
+  }
 }

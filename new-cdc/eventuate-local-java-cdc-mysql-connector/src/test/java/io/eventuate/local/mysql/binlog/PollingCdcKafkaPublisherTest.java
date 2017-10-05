@@ -23,7 +23,7 @@ import java.util.Collections;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MySqlBinlogCdcIntegrationTestConfiguration.class)
 @IntegrationTest
-public class MySQLCdcKafkaPublisherTest extends AbstractCdcTest {
+public class PollingCdcKafkaPublisherTest extends AbstractCdcTest {
 
   @Autowired
   EventuateJdbcAccess eventuateJdbcAccess;
@@ -34,31 +34,29 @@ public class MySQLCdcKafkaPublisherTest extends AbstractCdcTest {
   @Autowired
   private PublishingStrategy<PublishedEvent> publishingStrategy;
 
-  DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore;
-
-  private MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor;
+  private PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> postgresCdcProcessor;
 
   private EventuateLocalAggregateCrud localAggregateCrud;
 
   @Before
   public void init() {
-    Assume.assumeFalse(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
+    Assume.assumeTrue(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
 
-    mySQLCdcProcessor = applicationContext.getAutowireCapableBeanFactory().getBean(MySQLCdcProcessor.class);
-    binlogOffsetKafkaStore = applicationContext.getAutowireCapableBeanFactory().getBean(DatabaseBinlogOffsetKafkaStore.class);
+    postgresCdcProcessor = applicationContext.getAutowireCapableBeanFactory().getBean(PollingCdcProcessor.class);
     localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
   }
 
+
   @Test
   public void shouldSendPublishedEventsToKafka() throws InterruptedException {
-    MySQLCdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher = new MySQLCdcKafkaPublisher<>(binlogOffsetKafkaStore,
+    PollingCdcKafkaPublisher<PublishedEvent> postgresCdcKafkaPublisher = new PollingCdcKafkaPublisher<>(
             eventuateKafkaConfigurationProperties.getBootstrapServers(),
             publishingStrategy);
-    mySQLCdcKafkaPublisher.start();
+    postgresCdcKafkaPublisher.start();
 
-    mySQLCdcProcessor.start(publishedEvent -> {
+    postgresCdcProcessor.start(publishedEvent -> {
       try {
-        mySQLCdcKafkaPublisher.handleEvent(publishedEvent);
+        postgresCdcKafkaPublisher.handleEvent(publishedEvent);
       } catch (EventuateLocalPublishingException e) {
         throw new RuntimeException(e);
       }
@@ -72,7 +70,7 @@ public class MySQLCdcKafkaPublisherTest extends AbstractCdcTest {
     consumer.subscribe(Collections.singletonList(getEventTopicName()));
 
     waitForEventInKafka(consumer, entityIdVersionAndEventIds.getEntityId(), LocalDateTime.now().plusSeconds(20));
-    mySQLCdcKafkaPublisher.stop();
+    postgresCdcKafkaPublisher.stop();
   }
 
 }

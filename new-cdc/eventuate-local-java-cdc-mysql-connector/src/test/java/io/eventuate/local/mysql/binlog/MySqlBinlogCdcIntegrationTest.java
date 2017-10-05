@@ -4,6 +4,8 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
@@ -27,15 +30,24 @@ public class MySqlBinlogCdcIntegrationTest extends AbstractCdcTest {
 
   @Value("${spring.datasource.url}")
   private String dataSourceURL;
-  @Autowired
-  EventuateJdbcAccess eventuateJdbcAccess;
-  @Autowired
-  private MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties;
-  @Autowired
-  private WriteRowsEventDataParser eventDataParser;
 
   @Autowired
+  EventuateJdbcAccess eventuateJdbcAccess;
+
+  @Autowired
+  private MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties;
+
+  private WriteRowsEventDataParser eventDataParser;
+
   private SourceTableNameSupplier sourceTableNameSupplier;
+
+  @Before
+  public void init() {
+    Assume.assumeFalse(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
+
+    eventDataParser = applicationContext.getAutowireCapableBeanFactory().getBean(WriteRowsEventDataParser.class);
+    sourceTableNameSupplier = applicationContext.getAutowireCapableBeanFactory().getBean(SourceTableNameSupplier.class);
+  }
 
   @Test
   public void shouldGetEvents() throws IOException, TimeoutException, InterruptedException, ExecutionException {

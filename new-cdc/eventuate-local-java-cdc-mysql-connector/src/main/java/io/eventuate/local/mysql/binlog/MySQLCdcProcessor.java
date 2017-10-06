@@ -2,29 +2,28 @@ package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
-import io.eventuate.local.common.PublishedEvent;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class MySQLCdcProcessor<M extends BinLogEvent> {
+public class MySQLCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
 
-  private MySqlBinaryLogClient<M> mySqlBinaryLogClient;
+  private MySqlBinaryLogClient<EVENT> mySqlBinaryLogClient;
   private DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore;
 
-  public MySQLCdcProcessor(MySqlBinaryLogClient<M> mySqlBinaryLogClient, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore) {
+  public MySQLCdcProcessor(MySqlBinaryLogClient<EVENT> mySqlBinaryLogClient, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore) {
     this.mySqlBinaryLogClient = mySqlBinaryLogClient;
     this.binlogOffsetKafkaStore = binlogOffsetKafkaStore;
   }
 
-  public void start(Consumer<M> eventConsumer) {
+  public void start(Consumer<EVENT> eventConsumer) {
     Optional<BinlogFileOffset> startingbinlogFileOffset = binlogOffsetKafkaStore.getLastBinlogFileOffset();
     try {
-      mySqlBinaryLogClient.start(startingbinlogFileOffset, new Consumer<M>() {
+      mySqlBinaryLogClient.start(startingbinlogFileOffset, new Consumer<EVENT>() {
         private boolean couldReadDuplicateEntries = true;
 
         @Override
-        public void accept(M publishedEvent) {
+        public void accept(EVENT publishedEvent) {
           if (couldReadDuplicateEntries) {
             if (startingbinlogFileOffset.map(s -> s.isSameOrAfter(publishedEvent.getBinlogFileOffset())).orElse(false)) {
               return;

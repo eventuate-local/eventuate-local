@@ -85,10 +85,11 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   @Profile("!EventuatePolling")
-  public MySQLBinaryLogEventTableChangesToAggregateTopicTranslator<PublishedEvent> eventTableChangesToAggregateTopicTranslator(MySQLCdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher,
-                                                                                                                               MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor,
-                                                                                                                               CuratorFramework curatorFramework) {
-    return new MySQLBinaryLogEventTableChangesToAggregateTopicTranslator<>(mySQLCdcKafkaPublisher, mySQLCdcProcessor, curatorFramework);
+  public EventTableChangesToAggregateTopicTranslator<PublishedEvent> mySqlEventTableChangesToAggregateTopicTranslator(MySQLCdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher,
+    MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor,
+    CuratorFramework curatorFramework) {
+
+    return new EventTableChangesToAggregateTopicTranslator<>(mySQLCdcKafkaPublisher, mySQLCdcProcessor, curatorFramework);
   }
 
   @Bean(destroyMethod = "close")
@@ -123,11 +124,11 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingEventTableChangesToAggregateTopicTranslator<PublishedEventBean, PublishedEvent, String> pollingEventTableChangesToAggregateTopicTranslator(PollingCdcKafkaPublisher<PublishedEvent> pollingCdcKafkaPublisher,
-    PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor,
-    CuratorFramework curatorFramework) {
+  public EventTableChangesToAggregateTopicTranslator<PublishedEvent> pollingEventTableChangesToAggregateTopicTranslator(PollingCdcKafkaPublisher<PublishedEvent> pollingCdcKafkaPublisher,
+                                                                                                                        PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor,
+                                                                                                                        CuratorFramework curatorFramework) {
 
-    return new PollingEventTableChangesToAggregateTopicTranslator<>(pollingCdcKafkaPublisher, pollingCdcProcessor, curatorFramework);
+    return new EventTableChangesToAggregateTopicTranslator<>(pollingCdcKafkaPublisher, pollingCdcProcessor, curatorFramework);
   }
 
   @Bean

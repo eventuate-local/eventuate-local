@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> {
+public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> implements CdcProcessor<EVENT> {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
   private PollingDao pollingDao;

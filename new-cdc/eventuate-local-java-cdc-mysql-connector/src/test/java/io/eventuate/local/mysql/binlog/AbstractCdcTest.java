@@ -16,9 +16,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.env.Environment;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,12 +25,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class AbstractCdcTest {
-
-  @Autowired
-  Environment environment;
-
-  @Autowired
-  ApplicationContext applicationContext;
 
   public String generateAccountCreatedEvent() {
     return JSonMapper.toJson(new AccountCreatedEvent(new BigDecimal(System.currentTimeMillis())));

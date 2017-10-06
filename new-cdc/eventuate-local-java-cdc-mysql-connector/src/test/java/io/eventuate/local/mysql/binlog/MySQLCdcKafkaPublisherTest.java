@@ -7,7 +7,6 @@ import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.mysql.binlog.exception.EventuateLocalPublishingException;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,7 +16,6 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -34,18 +32,17 @@ public class MySQLCdcKafkaPublisherTest extends AbstractCdcTest {
   @Autowired
   private PublishingStrategy<PublishedEvent> publishingStrategy;
 
+  @Autowired
   DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore;
 
+  @Autowired
   private MySQLCdcProcessor<PublishedEvent> mySQLCdcProcessor;
 
+  @Autowired
   private EventuateLocalAggregateCrud localAggregateCrud;
 
   @Before
   public void init() {
-    Assume.assumeFalse(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
-
-    mySQLCdcProcessor = applicationContext.getAutowireCapableBeanFactory().getBean(MySQLCdcProcessor.class);
-    binlogOffsetKafkaStore = applicationContext.getAutowireCapableBeanFactory().getBean(DatabaseBinlogOffsetKafkaStore.class);
     localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
   }
 

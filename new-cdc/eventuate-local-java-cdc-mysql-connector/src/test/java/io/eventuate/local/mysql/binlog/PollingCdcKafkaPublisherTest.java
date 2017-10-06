@@ -7,19 +7,20 @@ import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.mysql.binlog.exception.EventuateLocalPublishingException;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 
+
+@ActiveProfiles("EventuatePolling")
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MySqlBinlogCdcIntegrationTestConfiguration.class)
 @IntegrationTest
@@ -34,15 +35,13 @@ public class PollingCdcKafkaPublisherTest extends AbstractCdcTest {
   @Autowired
   private PublishingStrategy<PublishedEvent> publishingStrategy;
 
-  private PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> postgresCdcProcessor;
+  @Autowired
+  private PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor;
 
   private EventuateLocalAggregateCrud localAggregateCrud;
 
   @Before
   public void init() {
-    Assume.assumeTrue(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
-
-    postgresCdcProcessor = applicationContext.getAutowireCapableBeanFactory().getBean(PollingCdcProcessor.class);
     localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
   }
 
@@ -54,7 +53,7 @@ public class PollingCdcKafkaPublisherTest extends AbstractCdcTest {
             publishingStrategy);
     postgresCdcKafkaPublisher.start();
 
-    postgresCdcProcessor.start(publishedEvent -> {
+    pollingCdcProcessor.start(publishedEvent -> {
       try {
         postgresCdcKafkaPublisher.handleEvent(publishedEvent);
       } catch (EventuateLocalPublishingException e) {

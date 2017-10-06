@@ -21,7 +21,7 @@ import java.util.concurrent.TimeoutException;
 
 @Configuration
 @EnableAutoConfiguration
-@EnableConfigurationProperties({MySqlBinaryLogClientConfigurationProperties.class, EventuateLocalZookeperConfigurationProperties.class, PollingConfigurationProperties.class})
+@EnableConfigurationProperties({MySqlBinaryLogClientConfigurationProperties.class, EventuateLocalZookeperConfigurationProperties.class})
 @Import(EventuateDriverConfiguration.class)
 public class MySqlBinlogCdcIntegrationTestConfiguration {
 
@@ -96,9 +96,9 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor(PollingConfigurationProperties pollingConfigurationProperties,
+  public PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor(MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties,
     PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
-    return new PollingCdcProcessor<>(pollingDao, pollingConfigurationProperties.getPollingRequestPeriodInMilliseconds());
+    return new PollingCdcProcessor<>(pollingDao, mySqlBinaryLogClientConfigurationProperties.getPollingRequestPeriodInMilliseconds());
   }
 
   @Bean
@@ -109,14 +109,14 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao(PollingConfigurationProperties pollingConfigurationProperties,
+  public PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao(MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties,
     PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider,
     DataSource dataSource) {
 
     return new PollingDao<>(pollingDataProvider,
       dataSource,
-      pollingConfigurationProperties.getMaxEventsPerPolling(),
-      pollingConfigurationProperties.getMaxAttemptsForPolling(),
-      pollingConfigurationProperties.getDelayPerPollingAttemptInMilliseconds());
+      mySqlBinaryLogClientConfigurationProperties.getMaxEventsPerPolling(),
+      mySqlBinaryLogClientConfigurationProperties.getMaxAttemptsForPolling(),
+      mySqlBinaryLogClientConfigurationProperties.getDelayPerPollingAttemptInMilliseconds());
   }
 }

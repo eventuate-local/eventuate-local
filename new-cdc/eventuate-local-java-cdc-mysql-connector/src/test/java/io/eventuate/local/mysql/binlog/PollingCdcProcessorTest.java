@@ -5,44 +5,43 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@ActiveProfiles("EventuatePolling")
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MySqlBinlogCdcIntegrationTestConfiguration.class)
 @IntegrationTest
 public class PollingCdcProcessorTest extends AbstractCdcTest {
 
+  @Autowired
   EventuateJdbcAccess eventuateJdbcAccess;
 
   EventuateLocalAggregateCrud localAggregateCrud;
 
+  @Autowired
   private PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao;
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
   @Before
   public void init() {
-    Assume.assumeTrue(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
-
-    eventuateJdbcAccess = applicationContext.getAutowireCapableBeanFactory().getBean(EventuateJdbcAccess.class);
-    pollingDao = applicationContext.getAutowireCapableBeanFactory().getBean(PollingDao.class);
     localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
   }
 

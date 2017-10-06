@@ -17,6 +17,14 @@ public class MySqlBinaryLogClientConfigurationProperties {
 
   private String sourceTableName;
 
+  private int pollingRequestPeriodInMilliseconds;
+
+  private int maxEventsPerPolling;
+
+  private int maxAttemptsForPolling;
+
+  private int delayPerPollingAttemptInMilliseconds;
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -56,5 +64,37 @@ public class MySqlBinaryLogClientConfigurationProperties {
   public String getSourceTableName() {
 
     return sourceTableName;
+  }
+
+  public int getPollingRequestPeriodInMilliseconds() {
+    return pollingRequestPeriodInMilliseconds;
+  }
+
+  public void setPollingRequestPeriodInMilliseconds(int pollingRequestPeriodInMilliseconds) {
+    this.pollingRequestPeriodInMilliseconds = pollingRequestPeriodInMilliseconds;
+  }
+
+  public int getMaxEventsPerPolling() {
+    return maxEventsPerPolling;
+  }
+
+  public void setMaxEventsPerPolling(int maxEventsPerPolling) {
+    this.maxEventsPerPolling = maxEventsPerPolling;
+  }
+
+  public int getMaxAttemptsForPolling() {
+    return maxAttemptsForPolling;
+  }
+
+  public void setMaxAttemptsForPolling(int maxAttemptsForPolling) {
+    this.maxAttemptsForPolling = maxAttemptsForPolling;
+  }
+
+  public int getDelayPerPollingAttemptInMilliseconds() {
+    return delayPerPollingAttemptInMilliseconds;
+  }
+
+  public void setDelayPerPollingAttemptInMilliseconds(int delayPerPollingAttemptInMilliseconds) {
+    this.delayPerPollingAttemptInMilliseconds = delayPerPollingAttemptInMilliseconds;
   }
 }

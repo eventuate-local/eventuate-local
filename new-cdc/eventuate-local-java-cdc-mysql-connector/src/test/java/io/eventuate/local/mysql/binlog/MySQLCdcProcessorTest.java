@@ -5,12 +5,9 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -18,7 +15,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -33,18 +29,16 @@ public class MySQLCdcProcessorTest extends AbstractCdcTest {
   @Autowired
   EventuateJdbcAccess eventuateJdbcAccess;
 
+  @Autowired
   private MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient;
 
+  @Autowired
   private DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore;
 
   EventuateLocalAggregateCrud localAggregateCrud;
 
   @Before
   public void init() {
-    Assume.assumeFalse(Arrays.asList(environment.getActiveProfiles()).contains("EventuatePolling"));
-
-    mySqlBinaryLogClient = applicationContext.getAutowireCapableBeanFactory().getBean(MySqlBinaryLogClient.class);
-    binlogOffsetKafkaStore = applicationContext.getAutowireCapableBeanFactory().getBean(DatabaseBinlogOffsetKafkaStore.class);
     localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
   }
 

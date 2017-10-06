@@ -13,10 +13,12 @@ create table events (
   entity_type VARCHAR(1000) NOT NULL,
   entity_id VARCHAR(1000) NOT NULL,
   triggering_event VARCHAR(1000),
-  metadata VARCHAR(1000)
+  metadata VARCHAR(1000),
+  published TINYINT DEFAULT 0
 );
 
 CREATE INDEX events_idx ON events(entity_type, entity_id, event_id);
+CREATE INDEX events_published_idx ON events(published, event_id);
 
 create table entities (
   entity_type VARCHAR(1000),

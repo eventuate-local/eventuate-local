@@ -7,8 +7,7 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.local.java.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
 import io.eventuate.testutil.AsyncUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +23,15 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractTopicRelayTest {
   private Logger logger = LoggerFactory.getLogger(getClass());
+
   @Autowired
   private AggregateCrud eventuateJdbcEventStore;
+
   @Autowired
   private EventuateKafkaAggregateSubscriptions eventuateKafkaAggregateSubscriptions;
+
+  @Autowired
+  private EventTableChangesToAggregateTopicRelay eventTableChangesToAggregateTopicRelay;
 
   @Test
   public void shouldCaptureAndPublishChange() throws ExecutionException, InterruptedException {
@@ -62,6 +66,9 @@ public abstract class AbstractTopicRelayTest {
     long endTime = System.currentTimeMillis();
 
     logger.debug("got the event I just published in msecs {}", endTime - publishTime);
+
+    eventTableChangesToAggregateTopicRelay.stopCapturingChanges();
+    Thread.sleep(10000);
   }
 
   @Test

@@ -35,6 +35,9 @@ public class EventPollingDaoTest {
   @Autowired
   private EventPollingDao eventPollingDao;
 
+  @Autowired
+  private PollingBasedEventTableChangesToAggregateTopicRelay pollingBasedEventTableChangesToAggregateTopicRelay;
+
   @org.springframework.context.annotation.Configuration
   @Import({EventuateLocalConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
   @EnableAutoConfiguration
@@ -42,10 +45,11 @@ public class EventPollingDaoTest {
   }
 
   @Before
-  public void before() {
-    /*Or should it be moved to data either?*/
+  public void before() throws Exception{
+    pollingBasedEventTableChangesToAggregateTopicRelay.stopCapturingChanges();
+    Thread.sleep(10000);
 
-    jdbcTemplate.update("TRUNCATE events CASCADE");
+    jdbcTemplate.update("TRUNCATE events");
 
     jdbcTemplate.update("INSERT INTO events VALUES ('id1', 'type1', 'data1', 'entityType1', 'entityId1', 'triggeringEvent1', 'meta1', 0)");
     jdbcTemplate.update("INSERT INTO events VALUES ('id2', 'type2', 'data2', 'entityType2', 'entityId2', 'triggeringEvent2', NULL, 0)");

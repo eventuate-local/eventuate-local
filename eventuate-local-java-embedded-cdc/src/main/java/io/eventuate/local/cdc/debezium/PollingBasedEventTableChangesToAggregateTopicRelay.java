@@ -27,12 +27,12 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
   private boolean watcherRunning = false;
 
   public PollingBasedEventTableChangesToAggregateTopicRelay(
-    EventPollingDao eventPollingDao,
-    int requestPeriodInMilliseconds,
-    String kafkaBootstrapServers,
-    CuratorFramework client,
-    CdcStartupValidator cdcStartupValidator,
-    TakeLeadershipAttemptTracker takeLeadershipAttemptTracker) {
+          EventPollingDao eventPollingDao,
+          int requestPeriodInMilliseconds,
+          String kafkaBootstrapServers,
+          CuratorFramework client,
+          CdcStartupValidator cdcStartupValidator,
+          TakeLeadershipAttemptTracker takeLeadershipAttemptTracker) {
 
     super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker);
     this.eventPollingDao = eventPollingDao;
@@ -57,25 +57,32 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
 
             List<EventToPublish> eventToPublishes = eventPollingDao.findEventsToPublish();
 
+            if (!eventToPublishes.isEmpty())
+              logger.debug("Found {} events to publish", eventToPublishes.size());
+
             eventToPublishes.forEach(eventToPublish -> handleEvent(eventToPublish));
 
             if (!eventToPublishes.isEmpty()) {
 
+              logger.debug("Marking {} events as published", eventToPublishes.size());
+
               eventPollingDao.markEventsAsPublished(eventToPublishes
-                .stream()
-                .map(EventToPublish::getEventId)
-                .collect(Collectors.toList()));
+                      .stream()
+                      .map(EventToPublish::getEventId)
+                      .collect(Collectors.toList()));
             }
 
             completableFuture.complete(null);
 
-            try {
-              Thread.sleep(requestPeriodInMilliseconds);
-            } catch (Exception e) {
-              logger.error(e.getMessage(), e);
-            }
+            if (eventToPublishes.isEmpty())
+              try {
+                logger.debug("No events. Sleeping for {} msecs", requestPeriodInMilliseconds);
+                Thread.sleep(requestPeriodInMilliseconds);
+              } catch (Exception e) {
+                logger.error("error while sleeping", e);
+              }
           } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            logger.error("Exception in polling loop", e);
             completableFuture.completeExceptionally(new RuntimeException("Polling exception" + e.getMessage(), e));
           }
         }

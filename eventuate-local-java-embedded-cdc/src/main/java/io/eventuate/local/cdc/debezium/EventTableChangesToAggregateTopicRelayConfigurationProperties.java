@@ -13,14 +13,14 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
 
   private int pollingRequestPeriodInMilliseconds;
 
-  private int maxEventsPerPolling;
+  private int maxEventsPerPolling = 100;
 
-  private int maxAttemptsForPolling;
+  private int maxAttemptsForPolling = 1000;
 
   private int delayPerPollingAttemptInMilliseconds;
 
   private int maxRetries = 5;
-  private long retryPeriodInMilliseconds = 60 * 1000;
+  private long retryPeriodInMilliseconds = 500;
 
 
   public String getDbUserName() {

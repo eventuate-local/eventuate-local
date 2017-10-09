@@ -68,7 +68,6 @@ public abstract class AbstractTopicRelayTest {
     logger.debug("got the event I just published in msecs {}", endTime - publishTime);
 
     eventTableChangesToAggregateTopicRelay.stopCapturingChanges();
-    Thread.sleep(10000);
   }
 
   @Test

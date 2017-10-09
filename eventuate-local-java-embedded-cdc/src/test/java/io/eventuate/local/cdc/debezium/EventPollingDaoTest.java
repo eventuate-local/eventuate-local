@@ -1,6 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 
+import com.google.common.collect.ImmutableList;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import org.junit.After;
 import org.junit.Assert;
@@ -18,8 +19,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ActiveProfiles("EventuatePolling")
@@ -36,7 +38,7 @@ public class EventPollingDaoTest {
   private EventPollingDao eventPollingDao;
 
   @Autowired
-  private PollingBasedEventTableChangesToAggregateTopicRelay pollingBasedEventTableChangesToAggregateTopicRelay;
+  private EventTableChangesToAggregateTopicRelay eventTableChangesToAggregateTopicRelay;
 
   @org.springframework.context.annotation.Configuration
   @Import({EventuateLocalConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
@@ -45,28 +47,29 @@ public class EventPollingDaoTest {
   }
 
   @Before
-  public void before() throws Exception{
-    pollingBasedEventTableChangesToAggregateTopicRelay.stopCapturingChanges();
-    Thread.sleep(10000);
-
-    jdbcTemplate.update("TRUNCATE events");
-
-    jdbcTemplate.update("INSERT INTO events VALUES ('id1', 'type1', 'data1', 'entityType1', 'entityId1', 'triggeringEvent1', 'meta1', 0)");
-    jdbcTemplate.update("INSERT INTO events VALUES ('id2', 'type2', 'data2', 'entityType2', 'entityId2', 'triggeringEvent2', NULL, 0)");
-    jdbcTemplate.update("INSERT INTO events VALUES ('id3', 'type3', 'data3', 'entityType3', 'entityId3', 'triggeringEvent3', 'meta3', 1)");
+  public void init() throws Exception {
+    eventTableChangesToAggregateTopicRelay.stopCapturingChanges();
   }
 
   @Test
-  public void testFindAndPublish() {
+  public void testFindAndPublish() throws Exception {
+    String idPrefix = createEvents();
+
     eventPollingDao.setMaxEventsPerPolling(1000);
 
-    List<EventToPublish> eventsToPublish = eventPollingDao.findEventsToPublish();
+    List<EventToPublish> eventsToTest = new ArrayList<>();
 
-    Assert.assertEquals(2, eventsToPublish.size());
+    List<EventToPublish> accumulator;
+    while (!(accumulator = eventPollingDao.findEventsToPublish()).isEmpty()) {
+      eventsToTest.addAll(accumulator.stream().filter(eventToPublish -> eventToPublish.getEventId().startsWith(idPrefix)).collect(Collectors.toList()));
+      eventPollingDao.markEventsAsPublished(accumulator.stream().map(EventToPublish::getEventId).collect(Collectors.toList()));
+    }
 
-    EventToPublish event1 = eventsToPublish.get(0);
+    Assert.assertEquals(2, eventsToTest.size());
 
-    Assert.assertEquals("id1", event1.getEventId());
+    EventToPublish event1 = eventsToTest.get(0);
+
+    Assert.assertEquals(idPrefix + "_1", event1.getEventId());
     Assert.assertEquals("type1", event1.getEventType());
     Assert.assertEquals("data1", event1.getEventData());
     Assert.assertEquals("entityType1", event1.getEntityType());
@@ -75,29 +78,36 @@ public class EventPollingDaoTest {
     Assert.assertEquals("meta1", event1.getMetadata());
 
 
-    EventToPublish event2 = eventsToPublish.get(1);
+    EventToPublish event2 = eventsToTest.get(1);
 
-    Assert.assertEquals("id2", event2.getEventId());
+    Assert.assertEquals(idPrefix + "_2", event2.getEventId());
     Assert.assertEquals("type2", event2.getEventType());
     Assert.assertEquals("data2", event2.getEventData());
     Assert.assertEquals("entityType2", event2.getEntityType());
     Assert.assertEquals("entityId2", event2.getEntityId());
     Assert.assertEquals("triggeringEvent2", event2.getTriggeringEvent());
     Assert.assertNull(event2.getMetadata());
-
-    eventPollingDao.markEventsAsPublished(eventsToPublish.stream().map(eventToPublish ->
-        eventToPublish.getEventId()).collect(Collectors.toList()));
-
-    Assert.assertTrue(eventPollingDao.findEventsToPublish().isEmpty());
   }
 
-    @Test
-  public void testLimit() {
+  @Test
+  public void testLimit() throws Exception {
+    createEvents();
+
     eventPollingDao.setMaxEventsPerPolling(1);
 
     List<EventToPublish> eventsToPublish = eventPollingDao.findEventsToPublish();
 
     Assert.assertEquals(1, eventsToPublish.size());
+  }
+
+  private String createEvents() throws Exception {
+    String idPrefix = UUID.randomUUID().toString();
+
+    jdbcTemplate.update("INSERT INTO events VALUES (?, 'type1', 'data1', 'entityType1', 'entityId1', 'triggeringEvent1', 'meta1', 0)", idPrefix + "_1");
+    jdbcTemplate.update("INSERT INTO events VALUES (?, 'type2', 'data2', 'entityType2', 'entityId2', 'triggeringEvent2', NULL, 0)", idPrefix + "_2");
+    jdbcTemplate.update("INSERT INTO events VALUES (?, 'type3', 'data3', 'entityType3', 'entityId3', 'triggeringEvent3', 'meta3', 1)", idPrefix + "_3");
+
+    return idPrefix;
   }
 
 }

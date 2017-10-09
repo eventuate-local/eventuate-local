@@ -25,6 +25,11 @@ public class EventPollingDao {
     int maxAttemptsForPolling,
     int delayPerPollingAttemptInMilliseconds
   ) {
+
+    if (maxEventsPerPolling <= 0) {
+      throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
+    }
+
     this.dataSource = dataSource;
     this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     this.maxEventsPerPolling = maxEventsPerPolling;

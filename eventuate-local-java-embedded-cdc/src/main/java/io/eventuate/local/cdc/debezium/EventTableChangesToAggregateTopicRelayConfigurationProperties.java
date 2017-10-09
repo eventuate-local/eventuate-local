@@ -11,13 +11,13 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
 
   private String dbPassword;
 
-  private int pollingRequestPeriodInMilliseconds;
+  private int pollingRequestPeriodInMilliseconds = 500;
 
-  private int maxEventsPerPolling = 100;
+  private int maxEventsPerPolling = 1000;
 
-  private int maxAttemptsForPolling = 1000;
+  private int maxAttemptsForPolling = 100;
 
-  private int delayPerPollingAttemptInMilliseconds;
+  private int delayPerPollingAttemptInMilliseconds = 500;
 
   private int maxRetries = 5;
   private long retryPeriodInMilliseconds = 500;

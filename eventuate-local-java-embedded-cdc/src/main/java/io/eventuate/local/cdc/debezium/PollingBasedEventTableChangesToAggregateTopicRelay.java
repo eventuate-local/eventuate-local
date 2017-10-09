@@ -14,6 +14,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -24,7 +28,8 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
   private Logger logger = LoggerFactory.getLogger(getClass());
   private EventPollingDao eventPollingDao;
   private int requestPeriodInMilliseconds;
-  private boolean watcherRunning = false;
+  private final AtomicBoolean watcherRunning = new AtomicBoolean();
+  private volatile CompletableFuture<Void> watcherFuture = new CompletableFuture<>();
 
   public PollingBasedEventTableChangesToAggregateTopicRelay(
           EventPollingDao eventPollingDao,
@@ -41,18 +46,18 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
 
   public CompletableFuture<Object> startCapturingChanges() throws InterruptedException {
     logger.debug("Starting to capture changes");
+    watcherRunning.set(true);
 
     cdcStartupValidator.validateEnvironment();
-
-    watcherRunning = true;
-    CompletableFuture<Object> completableFuture = new CompletableFuture<>();
     producer = new EventuateKafkaProducer(kafkaBootstrapServers);
+
+    CompletableFuture<Object> completableFuture = new CompletableFuture<>();
 
     new Thread() {
       @Override
       public void run() {
 
-        while (watcherRunning) {
+        while (watcherRunning.get()) {
           try {
 
             List<EventToPublish> eventToPublishes = eventPollingDao.findEventsToPublish();
@@ -86,6 +91,8 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
             completableFuture.completeExceptionally(new RuntimeException("Polling exception" + e.getMessage(), e));
           }
         }
+        watcherFuture.complete(null);
+        watcherFuture = new CompletableFuture<>();
       }
     }.start();
 
@@ -97,10 +104,21 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
 
     logger.debug("Stopping to capture changes");
 
+    if (!watcherRunning.get()) {
+      return;
+    }
+
+    watcherRunning.set(false);
+
     if (producer != null)
       producer.close();
 
-    watcherRunning = false;
+    try {
+      watcherFuture.get(60, TimeUnit.SECONDS);
+    } catch (ExecutionException | TimeoutException e) {
+      logger.error(e.getMessage(), e);
+      throw new RuntimeException(e);
+    }
   }
 
 }

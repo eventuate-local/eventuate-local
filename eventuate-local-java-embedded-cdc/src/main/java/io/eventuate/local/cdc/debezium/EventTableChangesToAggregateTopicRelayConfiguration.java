@@ -50,7 +50,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
     CdcStartupValidator cdcStartupValidator) {
 
     return new PollingBasedEventTableChangesToAggregateTopicRelay(eventPollingDao,
-        eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRequestPeriodInMilliseconds(),
+        eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingIntervalInMilliseconds(),
         eventuateKafkaConfigurationProperties.getBootstrapServers(),
         client,
         cdcStartupValidator,
@@ -99,7 +99,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
     return new EventPollingDao(dataSource,
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxEventsPerPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxAttemptsForPolling(),
-      eventTableChangesToAggregateTopicRelayConfigurationProperties.getDelayPerPollingAttemptInMilliseconds());
+      eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRetryIntervalInMilliseconds());
   }
 
   @Bean(destroyMethod = "close")

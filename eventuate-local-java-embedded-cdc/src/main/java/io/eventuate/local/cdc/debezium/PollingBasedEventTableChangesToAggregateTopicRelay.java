@@ -1,18 +1,12 @@
 package io.eventuate.local.cdc.debezium;
 
 
-import com.google.common.collect.ImmutableMap;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-import javax.sql.DataSource;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -27,13 +21,13 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
 
   private Logger logger = LoggerFactory.getLogger(getClass());
   private EventPollingDao eventPollingDao;
-  private int requestPeriodInMilliseconds;
+  private int pollingIntervalInMilliseconds;
   private final AtomicBoolean watcherRunning = new AtomicBoolean();
   private volatile CompletableFuture<Void> watcherFuture = new CompletableFuture<>();
 
   public PollingBasedEventTableChangesToAggregateTopicRelay(
           EventPollingDao eventPollingDao,
-          int requestPeriodInMilliseconds,
+          int pollingIntervalInMilliseconds,
           String kafkaBootstrapServers,
           CuratorFramework client,
           CdcStartupValidator cdcStartupValidator,
@@ -41,7 +35,7 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
 
     super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker);
     this.eventPollingDao = eventPollingDao;
-    this.requestPeriodInMilliseconds = requestPeriodInMilliseconds;
+    this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
   }
 
   public CompletableFuture<Object> startCapturingChanges() throws InterruptedException {
@@ -81,8 +75,8 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
 
             if (eventToPublishes.isEmpty())
               try {
-                logger.debug("No events. Sleeping for {} msecs", requestPeriodInMilliseconds);
-                Thread.sleep(requestPeriodInMilliseconds);
+                logger.debug("No events. Sleeping for {} msecs", pollingIntervalInMilliseconds);
+                Thread.sleep(pollingIntervalInMilliseconds);
               } catch (Exception e) {
                 logger.error("error while sleeping", e);
               }

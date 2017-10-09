@@ -1,8 +1,6 @@
 package io.eventuate.local.cdc.debezium;
 
-import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Profile;
 
 @ConfigurationProperties("eventuateLocal.cdc")
 public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
@@ -11,13 +9,13 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
 
   private String dbPassword;
 
-  private int pollingRequestPeriodInMilliseconds = 500;
+  private int pollingIntervalInMilliseconds = 500;
 
   private int maxEventsPerPolling = 1000;
 
   private int maxAttemptsForPolling = 100;
 
-  private int delayPerPollingAttemptInMilliseconds = 500;
+  private int pollingRetryIntervalInMilliseconds = 500;
 
   private int maxRetries = 5;
   private long retryPeriodInMilliseconds = 500;
@@ -39,12 +37,12 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
     this.dbPassword = dbPassword;
   }
 
-  public int getPollingRequestPeriodInMilliseconds() {
-    return pollingRequestPeriodInMilliseconds;
+  public int getPollingIntervalInMilliseconds() {
+    return pollingIntervalInMilliseconds;
   }
 
-  public void setPollingRequestPeriodInMilliseconds(int pollingRequestPeriodInMilliseconds) {
-    this.pollingRequestPeriodInMilliseconds = pollingRequestPeriodInMilliseconds;
+  public void setPollingIntervalInMilliseconds(int pollingIntervalInMilliseconds) {
+    this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
   }
 
   public void setMaxRetries(int maxRetries) {
@@ -79,11 +77,11 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
     this.maxAttemptsForPolling = maxAttemptsForPolling;
   }
 
-  public int getDelayPerPollingAttemptInMilliseconds() {
-    return delayPerPollingAttemptInMilliseconds;
+  public int getPollingRetryIntervalInMilliseconds() {
+    return pollingRetryIntervalInMilliseconds;
   }
 
-  public void setDelayPerPollingAttemptInMilliseconds(int delayPerPollingAttemptInMilliseconds) {
-    this.delayPerPollingAttemptInMilliseconds = delayPerPollingAttemptInMilliseconds;
+  public void setPollingRetryIntervalInMilliseconds(int pollingRetryIntervalInMilliseconds) {
+    this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
   }
 }

@@ -18,12 +18,12 @@ public class EventPollingDao {
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private int maxEventsPerPolling;
   private int maxAttemptsForPolling;
-  private int delayPerPollingAttemptInMilliseconds;
+  private int pollingRetryIntervalInMilliseconds;
 
   public EventPollingDao(DataSource dataSource,
     int maxEventsPerPolling,
     int maxAttemptsForPolling,
-    int delayPerPollingAttemptInMilliseconds
+    int pollingRetryIntervalInMilliseconds
   ) {
 
     if (maxEventsPerPolling <= 0) {
@@ -34,7 +34,7 @@ public class EventPollingDao {
     this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     this.maxEventsPerPolling = maxEventsPerPolling;
     this.maxAttemptsForPolling = maxAttemptsForPolling;
-    this.delayPerPollingAttemptInMilliseconds = delayPerPollingAttemptInMilliseconds;
+    this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
   }
 
   public int getMaxEventsPerPolling() {
@@ -70,7 +70,7 @@ public class EventPollingDao {
         }
 
         try {
-          Thread.sleep(delayPerPollingAttemptInMilliseconds);
+          Thread.sleep(pollingRetryIntervalInMilliseconds);
         } catch (InterruptedException ie) {
           logger.error(ie.getMessage(), ie);
         }

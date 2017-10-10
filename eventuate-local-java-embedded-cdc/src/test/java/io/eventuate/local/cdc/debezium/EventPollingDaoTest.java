@@ -45,11 +45,11 @@ public class EventPollingDaoTest {
   @EnableAutoConfiguration
   public static class EventPollingTestConfiguration {
   }
-
-  @Before
-  public void init() throws Exception {
-    eventTableChangesToAggregateTopicRelay.stopCapturingChanges();
-  }
+//
+//  @Before
+//  public void init() throws Exception {
+//    eventTableChangesToAggregateTopicRelay.stopCapturingChanges();
+//  }
 
   @Test
   public void testFindAndPublish() throws Exception {

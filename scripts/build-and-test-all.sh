@@ -15,7 +15,7 @@ docker-compose rm --force -v
 docker-compose build
 docker-compose up -d
 
-sleep 60
+./scripts/wait-for-mysql.sh
 
 ./gradlew $* build
 

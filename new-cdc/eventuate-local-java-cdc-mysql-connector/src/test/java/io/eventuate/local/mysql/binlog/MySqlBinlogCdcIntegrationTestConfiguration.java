@@ -98,7 +98,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Profile("EventuatePolling")
   public PollingCdcProcessor<PublishedEventBean, PublishedEvent, String> pollingCdcProcessor(MySqlBinaryLogClientConfigurationProperties mySqlBinaryLogClientConfigurationProperties,
     PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
-    return new PollingCdcProcessor<>(pollingDao, mySqlBinaryLogClientConfigurationProperties.getPollingRequestPeriodInMilliseconds());
+    return new PollingCdcProcessor<>(pollingDao, mySqlBinaryLogClientConfigurationProperties.getPollingIntervalInMilliseconds());
   }
 
   @Bean
@@ -117,6 +117,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
       dataSource,
       mySqlBinaryLogClientConfigurationProperties.getMaxEventsPerPolling(),
       mySqlBinaryLogClientConfigurationProperties.getMaxAttemptsForPolling(),
-      mySqlBinaryLogClientConfigurationProperties.getDelayPerPollingAttemptInMilliseconds());
+      mySqlBinaryLogClientConfigurationProperties.getPollingRetryIntervalInMilliseconds());
   }
 }

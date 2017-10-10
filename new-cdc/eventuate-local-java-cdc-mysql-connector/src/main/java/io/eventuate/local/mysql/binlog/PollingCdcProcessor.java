@@ -4,28 +4,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> implements CdcProcessor<EVENT> {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
   private PollingDao pollingDao;
-  private int requestPeriodInMilliseconds;
-  private boolean watcherRunning = false;
+  private int pollingIntervalInMilliseconds;
+  private AtomicBoolean watcherRunning = new AtomicBoolean(false);
 
-  public PollingCdcProcessor(PollingDao<EVENT_BEAN, EVENT, ID> pollingDao, int requestPeriodInMilliseconds) {
+  public PollingCdcProcessor(PollingDao<EVENT_BEAN, EVENT, ID> pollingDao, int pollingIntervalInMilliseconds) {
     this.pollingDao = pollingDao;
-    this.requestPeriodInMilliseconds = requestPeriodInMilliseconds;
+    this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
   }
 
   public void start(Consumer<EVENT> eventConsumer) {
-    watcherRunning = true;
+    watcherRunning.set(true);
 
     new Thread() {
       @Override
       public void run() {
 
-        while (watcherRunning) {
+        while (watcherRunning.get()) {
           try {
 
             List<EVENT> eventsToPublish = pollingDao.findEventsToPublish();
@@ -38,7 +39,7 @@ public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> implements CdcProcessor<
             }
 
             try {
-              Thread.sleep(requestPeriodInMilliseconds);
+              Thread.sleep(pollingIntervalInMilliseconds);
             } catch (Exception e) {
               logger.error(e.getMessage(), e);
             }
@@ -51,6 +52,6 @@ public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> implements CdcProcessor<
   }
 
   public void stop() {
-    watcherRunning = false;
+    watcherRunning.set(false);
   }
 }

@@ -17,13 +17,13 @@ public class MySqlBinaryLogClientConfigurationProperties {
 
   private String sourceTableName;
 
-  private int pollingRequestPeriodInMilliseconds;
+  private int pollingIntervalInMilliseconds = 500;
 
-  private int maxEventsPerPolling;
+  private int maxEventsPerPolling = 1000;
 
-  private int maxAttemptsForPolling;
+  private int maxAttemptsForPolling = 100;
 
-  private int delayPerPollingAttemptInMilliseconds;
+  private int pollingRetryIntervalInMilliseconds = 500;
 
   public String getDbUserName() {
     return dbUserName;
@@ -66,12 +66,12 @@ public class MySqlBinaryLogClientConfigurationProperties {
     return sourceTableName;
   }
 
-  public int getPollingRequestPeriodInMilliseconds() {
-    return pollingRequestPeriodInMilliseconds;
+  public int getPollingIntervalInMilliseconds() {
+    return pollingIntervalInMilliseconds;
   }
 
-  public void setPollingRequestPeriodInMilliseconds(int pollingRequestPeriodInMilliseconds) {
-    this.pollingRequestPeriodInMilliseconds = pollingRequestPeriodInMilliseconds;
+  public void setPollingIntervalInMilliseconds(int pollingIntervalInMilliseconds) {
+    this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
   }
 
   public int getMaxEventsPerPolling() {
@@ -90,11 +90,11 @@ public class MySqlBinaryLogClientConfigurationProperties {
     this.maxAttemptsForPolling = maxAttemptsForPolling;
   }
 
-  public int getDelayPerPollingAttemptInMilliseconds() {
-    return delayPerPollingAttemptInMilliseconds;
+  public int getPollingRetryIntervalInMilliseconds() {
+    return pollingRetryIntervalInMilliseconds;
   }
 
-  public void setDelayPerPollingAttemptInMilliseconds(int delayPerPollingAttemptInMilliseconds) {
-    this.delayPerPollingAttemptInMilliseconds = delayPerPollingAttemptInMilliseconds;
+  public void setPollingRetryIntervalInMilliseconds(int pollingRetryIntervalInMilliseconds) {
+    this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
   }
 }

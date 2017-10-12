@@ -1,5 +1,5 @@
 cdcservice:
-  build: ./new-cdc/eventuate-local-java-cdc-mysql-service
+  build: ./new-cdc/eventuate-local-java-cdc-service
   ports:
     - "8099:8080"
   links:

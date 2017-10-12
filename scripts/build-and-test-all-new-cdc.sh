@@ -11,7 +11,7 @@ fi
 
 export GRADLE_OPTIONS="-P excludeCdcLibs=true"
 
-./gradlew $GRADLE_OPTIONS $* :new-cdc:eventuate-local-java-cdc-mysql-service:clean :new-cdc:eventuate-local-java-cdc-mysql-service:assemble
+./gradlew $GRADLE_OPTIONS $* :new-cdc:eventuate-local-java-cdc-service:clean :new-cdc:eventuate-local-java-cdc-service:assemble
 
 . ./scripts/set-env.sh
 

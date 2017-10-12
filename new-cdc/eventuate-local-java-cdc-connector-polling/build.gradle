@@ -1,0 +1,11 @@
+dependencies {
+    compile project(":new-cdc:eventuate-local-java-cdc-connector-common")
+
+    testCompile project(":new-cdc:eventuate-local-java-cdc-connector-test-util")
+    testCompile "junit:junit:4.11"
+    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+}
+
+test {
+    forkEvery 1
+}

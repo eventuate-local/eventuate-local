@@ -1,0 +1,8 @@
+dependencies {
+    compile project(":new-cdc:eventuate-local-java-cdc-connector-common")
+    compile "io.eventuate.client.java:eventuate-client-java-tests-common:$eventuateClientVersion"
+}
+
+test {
+    forkEvery 1
+}

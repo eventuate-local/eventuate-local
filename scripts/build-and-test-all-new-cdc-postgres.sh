@@ -11,7 +11,7 @@ fi
 
 export GRADLE_OPTIONS="-P excludeCdcLibs=true"
 
-./gradlew $GRADLE_OPTIONS $* :new-cdc:eventuate-local-java-cdc-service:clean :new-cdc:eventuate-local-java-cdc-service:assemble
+./gradlew $GRADLE_OPTIONS $* :new-cdc:eventuate-local-java-cdc-sql-service:clean :new-cdc:eventuate-local-java-cdc-sql-service:assemble
 
 . ./scripts/set-env-postgres.sh
 

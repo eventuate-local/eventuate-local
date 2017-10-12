@@ -12,6 +12,6 @@ include ':new-cdc:eventuate-local-java-cdc-connector-common'
 include ':new-cdc:eventuate-local-java-cdc-connector-mysql-binlog'
 include ':new-cdc:eventuate-local-java-cdc-connector-polling'
 include ':new-cdc:eventuate-local-java-cdc-connector-test-util'
-include ':new-cdc:eventuate-local-java-cdc-service'
+include ':new-cdc:eventuate-local-java-cdc-sql-service'
 
 rootProject.name = 'eventuate-local-java'

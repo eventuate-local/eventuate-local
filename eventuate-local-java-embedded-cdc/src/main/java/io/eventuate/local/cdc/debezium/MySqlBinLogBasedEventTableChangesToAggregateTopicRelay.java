@@ -28,14 +28,14 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
   private EmbeddedEngine engine;
 
   public MySqlBinLogBasedEventTableChangesToAggregateTopicRelay(String kafkaBootstrapServers,
-    JdbcUrl jdbcUrl,
-    String dbUser,
-    String dbPassword,
-    CuratorFramework client,
-    CdcStartupValidator cdcStartupValidator,
-    TakeLeadershipAttemptTracker takeLeadershipAttemptTracker) {
+                                                                JdbcUrl jdbcUrl,
+                                                                String dbUser,
+                                                                String dbPassword,
+                                                                CuratorFramework client,
+                                                                CdcStartupValidator cdcStartupValidator,
+                                                                TakeLeadershipAttemptTracker takeLeadershipAttemptTracker, String leadershipLockPath) {
 
-    super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker);
+    super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker, leadershipLockPath);
 
     this.jdbcUrl = jdbcUrl;
     this.dbUser = dbUser;

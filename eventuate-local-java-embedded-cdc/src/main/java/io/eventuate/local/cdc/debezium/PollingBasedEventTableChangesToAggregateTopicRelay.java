@@ -31,9 +31,9 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
           String kafkaBootstrapServers,
           CuratorFramework client,
           CdcStartupValidator cdcStartupValidator,
-          TakeLeadershipAttemptTracker takeLeadershipAttemptTracker) {
+          TakeLeadershipAttemptTracker takeLeadershipAttemptTracker, String leadershipLockPath) {
 
-    super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker);
+    super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker, leadershipLockPath);
     this.eventPollingDao = eventPollingDao;
     this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
   }

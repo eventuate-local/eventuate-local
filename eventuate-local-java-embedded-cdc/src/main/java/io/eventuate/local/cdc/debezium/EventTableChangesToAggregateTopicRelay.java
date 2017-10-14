@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,17 +39,17 @@ public abstract class EventTableChangesToAggregateTopicRelay {
 
   private final TakeLeadershipAttemptTracker takeLeadershipAttemptTracker;
 
-  public EventTableChangesToAggregateTopicRelay(String kafkaBootstrapServers,
-    CuratorFramework client,
-    CdcStartupValidator cdcStartupValidator,
-    TakeLeadershipAttemptTracker takeLeadershipAttemptTracker) {
+  protected EventTableChangesToAggregateTopicRelay(String kafkaBootstrapServers,
+                                                CuratorFramework client,
+                                                CdcStartupValidator cdcStartupValidator,
+                                                TakeLeadershipAttemptTracker takeLeadershipAttemptTracker, String leadershipLockPath) {
 
     this.kafkaBootstrapServers = kafkaBootstrapServers;
 
     this.cdcStartupValidator = cdcStartupValidator;
     this.takeLeadershipAttemptTracker = takeLeadershipAttemptTracker;
 
-    leaderSelector = new LeaderSelector(client, "/eventuatelocal/cdc/leader", new LeaderSelectorListener() {
+    leaderSelector = new LeaderSelector(client, leadershipLockPath, new LeaderSelectorListener() {
 
       @Override
       public void takeLeadership(CuratorFramework client) throws Exception {

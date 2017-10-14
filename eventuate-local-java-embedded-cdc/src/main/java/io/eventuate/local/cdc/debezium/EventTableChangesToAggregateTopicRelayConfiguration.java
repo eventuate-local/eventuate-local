@@ -38,7 +38,8 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
             client,
             cdcStartupValidator,
             new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
-                    eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()));
+                    eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
+            eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath());
   }
 
   @Bean
@@ -55,7 +56,9 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
         client,
         cdcStartupValidator,
         new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
-            eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()));
+            eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
+            eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath()
+            );
   }
 
   @Bean

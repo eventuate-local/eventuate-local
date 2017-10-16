@@ -36,9 +36,14 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
   @Bean
   public EventTableChangesToAggregateTopicTranslator<PublishedEvent> mySqlEventTableChangesToAggregateTopicTranslator(CdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher,
           CdcProcessor<PublishedEvent> mySQLCdcProcessor,
-          CuratorFramework curatorFramework) {
+          CuratorFramework curatorFramework,
+          EventuateConfigurationProperties eventuateConfigurationProperties) {
 
-    return new EventTableChangesToAggregateTopicTranslator<>(mySQLCdcKafkaPublisher, mySQLCdcProcessor, curatorFramework);
+
+    return new EventTableChangesToAggregateTopicTranslator<>(mySQLCdcKafkaPublisher,
+            mySQLCdcProcessor,
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath());
   }
 
   static CuratorFramework makeStartedCuratorClient(String connectionString) {

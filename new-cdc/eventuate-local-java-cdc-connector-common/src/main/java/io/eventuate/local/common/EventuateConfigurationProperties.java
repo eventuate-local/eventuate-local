@@ -25,6 +25,8 @@ public class EventuateConfigurationProperties {
 
   private int pollingRetryIntervalInMilliseconds = 500;
 
+  private String leadershipLockPath = "/eventuatelocal/cdc/leader";
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -96,5 +98,13 @@ public class EventuateConfigurationProperties {
 
   public void setPollingRetryIntervalInMilliseconds(int pollingRetryIntervalInMilliseconds) {
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
+  }
+
+  public String getLeadershipLockPath() {
+    return leadershipLockPath;
+  }
+
+  public void setLeadershipLockPath(String leadershipLockPath) {
+    this.leadershipLockPath = leadershipLockPath;
   }
 }

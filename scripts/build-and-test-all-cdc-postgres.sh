@@ -28,7 +28,7 @@ $DOCKER_COMPOSE up -d
 
 echo waiting for Postgres
 
-sleep 10
+./scripts/wait-for-postgres.sh
 
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test
 
@@ -42,7 +42,7 @@ sleep 10
 
 docker start $(echo ${PWD##*/} | sed -e 's/-//g')_postgres_1
 
-sleep 10
+./scripts/wait-for-postgres.sh
 
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:cleanTest :eventuate-local-java-jdbc-tests:test
 

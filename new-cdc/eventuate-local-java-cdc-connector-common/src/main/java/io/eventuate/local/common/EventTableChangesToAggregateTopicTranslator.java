@@ -19,11 +19,12 @@ public class EventTableChangesToAggregateTopicTranslator<EVENT> {
 
   public EventTableChangesToAggregateTopicTranslator(CdcKafkaPublisher<EVENT> cdcKafkaPublisher,
           CdcProcessor<EVENT> cdcProcessor,
-          CuratorFramework client) {
+          CuratorFramework client,
+          String leadershipLockPath) {
 
     this.cdcKafkaPublisher = cdcKafkaPublisher;
     this.cdcProcessor = cdcProcessor;
-    this.leaderSelector = new LeaderSelector(client, "/eventuatelocal/cdc/leader",
+    this.leaderSelector = new LeaderSelector(client, leadershipLockPath,
         new EventuateLeaderSelectorListener(this));
   }
 

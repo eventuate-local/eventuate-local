@@ -47,7 +47,8 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
             jdbcUrl.getHost(),
             jdbcUrl.getPort(),
             eventuateConfigurationProperties.getBinlogClientId(),
-            sourceTableNameSupplier.getSourceTableName());
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateConfigurationProperties.getMySqlBinLogClientName());
   }
 
   @Bean

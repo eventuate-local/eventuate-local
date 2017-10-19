@@ -27,6 +27,8 @@ public class EventuateConfigurationProperties {
 
   private String leadershipLockPath = "/eventuatelocal/cdc/leader";
 
+  private String mySqlBinLogClientName = "MySqlBinLog";
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -106,5 +108,13 @@ public class EventuateConfigurationProperties {
 
   public void setLeadershipLockPath(String leadershipLockPath) {
     this.leadershipLockPath = leadershipLockPath;
+  }
+
+  public String getMySqlBinLogClientName() {
+    return mySqlBinLogClientName;
+  }
+
+  public void setMySqlBinLogClientName(String mySqlBinLogClientName) {
+    this.mySqlBinLogClientName = mySqlBinLogClientName;
   }
 }

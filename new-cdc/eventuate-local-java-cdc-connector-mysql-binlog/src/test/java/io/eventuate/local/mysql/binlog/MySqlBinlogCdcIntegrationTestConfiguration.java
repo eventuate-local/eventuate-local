@@ -45,7 +45,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             jdbcUrl.getHost(),
             jdbcUrl.getPort(),
             eventuateConfigurationProperties.getBinlogClientId(),
-            sourceTableNameSupplier.getSourceTableName());
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateConfigurationProperties.getMySqlBinLogClientName());
   }
 
   @Bean

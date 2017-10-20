@@ -29,6 +29,8 @@ public class EventuateConfigurationProperties {
 
   private String oldDbHistoryTopicName = "eventuate.local.cdc.my-sql-connector.offset.storage";
 
+  private String mySqlBinLogClientName = "MySqlBinLog";
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -116,5 +118,13 @@ public class EventuateConfigurationProperties {
 
   public void setOldDbHistoryTopicName(String oldDbHistoryTopicName) {
     this.oldDbHistoryTopicName = oldDbHistoryTopicName;
+  }
+
+  public String getMySqlBinLogClientName() {
+    return mySqlBinLogClientName;
+  }
+
+  public void setMySqlBinLogClientName(String mySqlBinLogClientName) {
+    this.mySqlBinLogClientName = mySqlBinLogClientName;
   }
 }

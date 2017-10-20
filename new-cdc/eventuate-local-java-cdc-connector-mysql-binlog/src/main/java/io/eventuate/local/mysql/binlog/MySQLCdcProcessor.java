@@ -11,22 +11,35 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> implements CdcProcesso
 
   private MySqlBinaryLogClient<EVENT> mySqlBinaryLogClient;
   private DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore;
+  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
-  public MySQLCdcProcessor(MySqlBinaryLogClient<EVENT> mySqlBinaryLogClient, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore) {
+  public MySQLCdcProcessor(MySqlBinaryLogClient<EVENT> mySqlBinaryLogClient,
+          DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore,
+          DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+
     this.mySqlBinaryLogClient = mySqlBinaryLogClient;
     this.binlogOffsetKafkaStore = binlogOffsetKafkaStore;
+    this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
   }
 
   public void start(Consumer<EVENT> eventConsumer) {
-    Optional<BinlogFileOffset> startingbinlogFileOffset = binlogOffsetKafkaStore.getLastBinlogFileOffset();
+
+    Optional<BinlogFileOffset> binlogFileOffset = binlogOffsetKafkaStore.getLastBinlogFileOffset();
+
+    if (!binlogFileOffset.isPresent()) {
+      binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
+    }
+
+    Optional<BinlogFileOffset> startingBinlogFileOffset = binlogFileOffset;
+
     try {
-      mySqlBinaryLogClient.start(startingbinlogFileOffset, new Consumer<EVENT>() {
+      mySqlBinaryLogClient.start(startingBinlogFileOffset, new Consumer<EVENT>() {
         private boolean couldReadDuplicateEntries = true;
 
         @Override
         public void accept(EVENT publishedEvent) {
           if (couldReadDuplicateEntries) {
-            if (startingbinlogFileOffset.map(s -> s.isSameOrAfter(publishedEvent.getBinlogFileOffset())).orElse(false)) {
+            if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(publishedEvent.getBinlogFileOffset())).orElse(false)) {
               return;
             } else {
               couldReadDuplicateEntries = false;

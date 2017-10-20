@@ -80,12 +80,28 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("!EventuatePolling")
-  public CdcProcessor<PublishedEvent> mySQLCdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore) {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore);
+  public CdcProcessor<PublishedEvent> mySQLCdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient,
+          DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore,
+          DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore, debeziumBinlogOffsetKafkaStore);
   }
 
   @Bean
   public PublishingStrategy<PublishedEvent> publishingStrategy() {
     return new PublishedEventPublishingStrategy();
+  }
+
+  @Bean
+  @Profile("!EventuatePolling")
+  public DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties, EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
+
+    return new DebeziumBinlogOffsetKafkaStore(eventuateConfigurationProperties.getOldDbHistoryTopicName(), eventuateKafkaConfigurationProperties);
+  }
+
+  @Bean
+  @Profile("!EventuatePolling")
+  public CdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore, PublishingStrategy<PublishedEvent> publishingStrategy) {
+    return new MySQLCdcKafkaPublisher<>(binlogOffsetKafkaStore, eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
   }
 }

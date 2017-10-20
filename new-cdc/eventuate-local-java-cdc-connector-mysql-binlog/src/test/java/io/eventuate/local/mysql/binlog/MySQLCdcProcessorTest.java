@@ -20,10 +20,12 @@ public class MySQLCdcProcessorTest extends CdcProcessorTest {
   @Autowired
   private DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore;
 
+  @Autowired
+  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore, debeziumBinlogOffsetKafkaStore);
   }
 
   @Override

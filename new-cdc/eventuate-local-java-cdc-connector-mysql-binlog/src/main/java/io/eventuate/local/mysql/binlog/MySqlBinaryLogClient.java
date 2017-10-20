@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 
 public class MySqlBinaryLogClient<M extends BinLogEvent> {
 
-  private final UUID name = UUID.randomUUID();
+  private static final String name = "MySqlBinaryLogClient";
 
   private BinaryLogClient client;
   private long binlogClientUniqueId;
@@ -56,6 +56,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
   }
 
   public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<M> eventConsumer) throws IOException, TimeoutException {
+
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
     client.setServerId(binlogClientUniqueId);
 
@@ -138,7 +139,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
   }
 
   public String getName() {
-    return name.toString();
+    return name;
   }
 
 }

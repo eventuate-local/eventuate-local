@@ -58,8 +58,10 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   @Profile("!EventuatePolling")
-  public CdcProcessor<PublishedEvent> mySQLCdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore) {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore);
+  public CdcProcessor<PublishedEvent> mySQLCdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient,
+          DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore,
+          DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore, debeziumBinlogOffsetKafkaStore);
   }
 
   @Bean
@@ -70,5 +72,13 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
           EventuateKafkaProducer eventuateKafkaProducer) {
 
     return new DatabaseBinlogOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), mySqlBinaryLogClient.getName(), eventuateKafkaProducer, eventuateKafkaConfigurationProperties);
+  }
+
+  @Bean
+  @Profile("!EventuatePolling")
+  public DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
+          EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
+
+    return new DebeziumBinlogOffsetKafkaStore(eventuateConfigurationProperties.getOldDbHistoryTopicName(), eventuateKafkaConfigurationProperties);
   }
 }

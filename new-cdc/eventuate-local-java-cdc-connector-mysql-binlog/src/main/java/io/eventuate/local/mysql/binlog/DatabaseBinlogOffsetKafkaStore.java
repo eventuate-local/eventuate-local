@@ -5,12 +5,8 @@ import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.springframework.scheduling.annotation.Scheduled;
 
-import java.io.Closeable;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
@@ -18,24 +14,22 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class DatabaseBinlogOffsetKafkaStore {
+public class DatabaseBinlogOffsetKafkaStore extends OffsetKafkaStore {
 
-  private final String dbHistoryTopicName;
   private final String mySqlBinaryLogClientName;
 
   private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
   private EventuateKafkaProducer eventuateKafkaProducer;
-  private EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
 
   private final static int N = 20;
 
   private Optional<BinlogFileOffset> recordToSave = Optional.empty();
 
   public DatabaseBinlogOffsetKafkaStore(String dbHistoryTopicName, String mySqlBinaryLogClientName, EventuateKafkaProducer eventuateKafkaProducer, EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
-    this.dbHistoryTopicName = dbHistoryTopicName;
+    super(dbHistoryTopicName, eventuateKafkaConfigurationProperties);
+
     this.mySqlBinaryLogClientName = mySqlBinaryLogClientName;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
-    this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
 
     scheduledExecutorService.scheduleAtFixedRate(this::scheduledBinlogFilenameAndOffsetUpdate, 5, 5, TimeUnit.SECONDS);
   }
@@ -49,31 +43,12 @@ public class DatabaseBinlogOffsetKafkaStore {
     this.recordToSave = Optional.of(binlogFileOffset);
   }
 
-  public Optional<BinlogFileOffset> getLastBinlogFileOffset() {
-    try (KafkaConsumer<String, String> consumer = createConsumer()) {
-      consumer.partitionsFor(dbHistoryTopicName);
-      consumer.subscribe(Arrays.asList(dbHistoryTopicName));
-
-      int count = N;
-      BinlogFileOffset result = null;
-      boolean lastRecordFound = false;
-      while (!lastRecordFound) {
-        ConsumerRecords<String, String> records = consumer.poll(100);
-        if (records.isEmpty()) {
-          count--;
-          if (count == 0)
-            lastRecordFound = true;
-        } else {
-          count = N;
-          for (ConsumerRecord<String, String> record : records) {
-            if (record.key().equals(mySqlBinaryLogClientName)) {
-              result = JSonMapper.fromJson(record.value(), BinlogFileOffset.class);
-            }
-          }
-        }
-      }
-      return Optional.ofNullable(result);
+  @Override
+  protected BinlogFileOffset handleRecord(ConsumerRecord<String, String> record) {
+    if (record.key().equals(mySqlBinaryLogClientName)) {
+      return JSonMapper.fromJson(record.value(), BinlogFileOffset.class);
     }
+    return null;
   }
 
   public synchronized void stop() {

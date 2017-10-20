@@ -27,6 +27,8 @@ public class EventuateConfigurationProperties {
 
   private String leadershipLockPath = "/eventuatelocal/cdc/leader";
 
+  private String oldDbHistoryTopicName = "eventuate.local.cdc.my-sql-connector.offset.storage";
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -106,5 +108,13 @@ public class EventuateConfigurationProperties {
 
   public void setLeadershipLockPath(String leadershipLockPath) {
     this.leadershipLockPath = leadershipLockPath;
+  }
+
+  public String getOldDbHistoryTopicName() {
+    return oldDbHistoryTopicName;
+  }
+
+  public void setOldDbHistoryTopicName(String oldDbHistoryTopicName) {
+    this.oldDbHistoryTopicName = oldDbHistoryTopicName;
   }
 }

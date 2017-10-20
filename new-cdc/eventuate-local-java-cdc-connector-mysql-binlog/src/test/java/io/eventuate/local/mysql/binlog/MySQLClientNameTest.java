@@ -54,6 +54,9 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
   private DatabaseBinlogOffsetKafkaStore databaseBinlogOffsetKafkaStore;
 
+  @Autowired
+  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
+
   @Test
   public void test() throws Exception {
 
@@ -100,7 +103,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
   private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() throws IOException, TimeoutException{
     MySqlBinaryLogClient mySqlBinaryLogClient = createMySqlBinaryLogClient();
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, createBinlogOffsetKafkaStore(mySqlBinaryLogClient));
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, createBinlogOffsetKafkaStore(mySqlBinaryLogClient), debeziumBinlogOffsetKafkaStore);
   }
 
   public DatabaseBinlogOffsetKafkaStore createBinlogOffsetKafkaStore(MySqlBinaryLogClient mySqlBinaryLogClient) {

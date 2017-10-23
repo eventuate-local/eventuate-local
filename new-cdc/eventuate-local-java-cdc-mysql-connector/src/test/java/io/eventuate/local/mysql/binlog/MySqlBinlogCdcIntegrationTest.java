@@ -46,7 +46,8 @@ public class MySqlBinlogCdcIntegrationTest extends AbstractCdcTest {
             jdbcUrl.getHost(),
             jdbcUrl.getPort(),
             mySqlBinaryLogClientConfigurationProperties.getBinlogClientId(),
-            sourceTableNameSupplier.getSourceTableName());
+            sourceTableNameSupplier.getSourceTableName(),
+            mySqlBinaryLogClientConfigurationProperties.getMySqlBinLogClientName());
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 

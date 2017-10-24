@@ -20,6 +20,9 @@ $DOCKER_COMPOSE rm --force -v
 
 $DOCKER_COMPOSE build
 $DOCKER_COMPOSE up -d mysql
+
+./scripts/wait-for-mysql.sh
+
 $DOCKER_COMPOSE up -d
 
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:cleanTest

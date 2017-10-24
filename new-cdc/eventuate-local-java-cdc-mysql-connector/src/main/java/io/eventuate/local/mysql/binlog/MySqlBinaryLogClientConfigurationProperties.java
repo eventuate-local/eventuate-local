@@ -17,6 +17,8 @@ public class MySqlBinaryLogClientConfigurationProperties {
 
   private String sourceTableName;
 
+  private String mySqlBinLogClientName = "MySqlBinLog";
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -56,5 +58,13 @@ public class MySqlBinaryLogClientConfigurationProperties {
   public String getSourceTableName() {
 
     return sourceTableName;
+  }
+
+  public String getMySqlBinLogClientName() {
+    return mySqlBinLogClientName;
+  }
+
+  public void setMySqlBinLogClientName(String mySqlBinLogClientName) {
+    this.mySqlBinLogClientName = mySqlBinLogClientName;
   }
 }

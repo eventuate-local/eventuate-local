@@ -6,8 +6,14 @@ set -e
 
 . ./scripts/set-env.sh
 
-./gradlew clean
-./gradlew $* testClasses
+GRADLE_OPTS=""
+
+if [ "$1" = "--clean" ] ; then
+  GRADLE_OPTS="clean"
+  shift
+fi
+
+./gradlew ${GRADLE_OPTS} $* testClasses
 
 docker-compose stop
 docker-compose rm --force -v

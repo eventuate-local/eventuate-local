@@ -1,0 +1,18 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./gradlew testClasses
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./scripts/build-and-test-all.sh
+      - store_test_results:
+          path: "*/build/test-results"
+

@@ -25,6 +25,7 @@ $DOCKER_COMPOSE up -d mysql
 
 $DOCKER_COMPOSE up -d
 
+
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:cleanTest
 
 # wait for MySQL
@@ -33,6 +34,8 @@ echo waiting for MySQL
 ./scripts/wait-for-mysql.sh
 
 ./scripts/mysql-cli.sh  -i < eventuate-local-java-embedded-cdc/src/test/resources/cdc-test-schema.sql
+
+./scripts/wait-for-services.sh $DOCKER_HOST_IP 8099
 
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test
 

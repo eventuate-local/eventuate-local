@@ -22,6 +22,7 @@ $DOCKER_COMPOSE build
 $DOCKER_COMPOSE up -d postgres
 $DOCKER_COMPOSE up -d
 
+
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:cleanTest
 
 # wait for Postgres
@@ -29,6 +30,7 @@ $DOCKER_COMPOSE up -d
 echo waiting for Postgres
 
 ./scripts/wait-for-postgres.sh
+./scripts/wait-for-services.sh $DOCKER_HOST_IP 8099
 
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test
 

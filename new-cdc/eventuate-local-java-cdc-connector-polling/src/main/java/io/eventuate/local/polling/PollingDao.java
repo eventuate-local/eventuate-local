@@ -76,10 +76,13 @@ public class PollingDao<EVENT_BEAN, EVENT, ID> {
 
     while(true) {
       try {
-        return query.call();
+        T result = query.call();
+        if (attempt > 0)
+          logger.info("Reconnected to database");
+        return result;
       } catch (DataAccessResourceFailureException e) {
 
-        logger.error(e.getMessage(), e);
+        logger.error(String.format("Could not access database %s - retrying in %s milliseconds", e.getMessage(), pollingRetryIntervalInMilliseconds), e);
 
         if (attempt++ >= maxAttemptsForPolling) {
           throw e;

@@ -1,6 +1,6 @@
 
 cdcservice:
-  image: test-eventuateio-local-cdc-service
+  image: test-eventuateio-local-cdc-sql-service
 
 mysql:
   image: test-eventuateio-local-mysql

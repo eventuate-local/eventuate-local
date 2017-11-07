@@ -50,9 +50,9 @@ public class PollingDao<EVENT_BEAN, EVENT, ID> {
 
   public List<EVENT> findEventsToPublish() {
 
-    String query = "SELECT * FROM " + pollingDataParser.table() +
-        " WHERE " + pollingDataParser.publishedField() + " = 0 " +
-        "ORDER BY " + pollingDataParser.idField() + " ASC limit :limit";
+
+    String query = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
+      pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
 
     List<EVENT_BEAN> messageBeans = handleConnectionLost(() -> namedParameterJdbcTemplate.query(query,
       ImmutableMap.of("limit", maxEventsPerPolling), new BeanPropertyRowMapper(pollingDataParser.eventBeanClass())));
@@ -64,9 +64,8 @@ public class PollingDao<EVENT_BEAN, EVENT, ID> {
 
     List<ID> ids = events.stream().map(message -> pollingDataParser.getId(message)).collect(Collectors.toList());
 
-    String query = "UPDATE " + pollingDataParser.table() +
-        " SET " + pollingDataParser.publishedField() + " = 1 " +
-        "WHERE " + pollingDataParser.idField() + " in (:ids)";
+    String query = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
+        pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
 
     handleConnectionLost(() -> namedParameterJdbcTemplate.update(query, ImmutableMap.of("ids", ids)));
   }

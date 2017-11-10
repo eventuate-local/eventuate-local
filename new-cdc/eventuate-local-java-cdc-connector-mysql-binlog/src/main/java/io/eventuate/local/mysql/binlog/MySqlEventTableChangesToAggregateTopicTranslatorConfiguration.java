@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 @Configuration
@@ -29,8 +30,8 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   @Profile("!EventuatePolling")
-  public IWriteRowsEventDataParser eventDataParser(DataSource dataSource, SourceTableNameSupplier sourceTableNameSupplier) {
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName());
+  public IWriteRowsEventDataParser eventDataParser(EventuateConfigurationProperties eventuateConfigurationProperties, DataSource dataSource, SourceTableNameSupplier sourceTableNameSupplier) {
+    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), Optional.ofNullable(eventuateConfigurationProperties.getEventuateDatabase()));
   }
 
   @Bean

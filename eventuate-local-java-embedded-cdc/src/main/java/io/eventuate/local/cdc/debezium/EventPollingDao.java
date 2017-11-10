@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import javax.sql.DataSource;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 public class EventPollingDao {
@@ -19,12 +20,13 @@ public class EventPollingDao {
   private int maxEventsPerPolling;
   private int maxAttemptsForPolling;
   private int pollingRetryIntervalInMilliseconds;
+  private String eventTable;
 
   public EventPollingDao(DataSource dataSource,
-    int maxEventsPerPolling,
-    int maxAttemptsForPolling,
-    int pollingRetryIntervalInMilliseconds
-  ) {
+          int maxEventsPerPolling,
+          int maxAttemptsForPolling,
+          int pollingRetryIntervalInMilliseconds,
+          Optional<String> eventuateDatabase) {
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
@@ -35,6 +37,8 @@ public class EventPollingDao {
     this.maxEventsPerPolling = maxEventsPerPolling;
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
+
+    eventTable = eventuateDatabase.map(db -> db + ".").orElse("") + "events";
   }
 
   public int getMaxEventsPerPolling() {
@@ -46,12 +50,13 @@ public class EventPollingDao {
   }
 
   public List<EventToPublish> findEventsToPublish() {
-    return handleConnectionLost(() -> namedParameterJdbcTemplate.query("SELECT * FROM events WHERE published = 0 ORDER BY event_id ASC limit :limit",
+    return handleConnectionLost(() ->
+            namedParameterJdbcTemplate.query(String.format("SELECT * FROM %s WHERE published = 0 ORDER BY event_id ASC limit :limit", eventTable),
             ImmutableMap.of("limit", maxEventsPerPolling), new BeanPropertyRowMapper(EventToPublish.class)));
   }
 
   public void markEventsAsPublished(List<String> ids) {
-    handleConnectionLost(() -> namedParameterJdbcTemplate.update("UPDATE events SET published = 1 WHERE event_id in (:ids)",
+    handleConnectionLost(() -> namedParameterJdbcTemplate.update(String.format("UPDATE %s SET published = 1 WHERE event_id in (:ids)", eventTable),
         ImmutableMap.of("ids", ids)));
   }
 

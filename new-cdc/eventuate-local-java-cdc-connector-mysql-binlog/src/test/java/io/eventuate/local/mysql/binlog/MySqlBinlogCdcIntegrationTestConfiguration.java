@@ -17,6 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 @Configuration
@@ -51,17 +52,18 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("!EventuatePolling")
-  public EventuateJdbcAccess eventuateJdbcAccess(DataSource db) {
+  public EventuateJdbcAccess eventuateJdbcAccess(DataSource db, EventuateConfigurationProperties eventuateConfigurationProperties) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate);
+    return new EventuateLocalJdbcAccess(jdbcTemplate, Optional.ofNullable(eventuateConfigurationProperties.getEventuateDatabase()));
   }
 
   @Bean
   @Profile("!EventuatePolling")
   public IWriteRowsEventDataParser<PublishedEvent> eventDataParser(DataSource dataSource,
-          SourceTableNameSupplier sourceTableNameSupplier) {
+          SourceTableNameSupplier sourceTableNameSupplier,
+          EventuateConfigurationProperties eventuateConfigurationProperties) {
 
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName());
+    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), Optional.ofNullable(eventuateConfigurationProperties.getEventuateDatabase()));
   }
 
   @Bean

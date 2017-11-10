@@ -31,9 +31,12 @@ public class WriteRowsEventDataParser implements IWriteRowsEventDataParser<Publi
 
   private Map<String, Integer> columnOrders = new HashMap<>();
 
-  public WriteRowsEventDataParser(DataSource dataSource, String sourceTableName) {
+  private Optional<String> database;
+
+  public WriteRowsEventDataParser(DataSource dataSource, String sourceTableName, Optional<String> database) {
     this.dataSource = dataSource;
     this.sourceTableName = sourceTableName;
+    this.database = database;
   }
 
   @Override
@@ -75,7 +78,7 @@ public class WriteRowsEventDataParser implements IWriteRowsEventDataParser<Publi
       DatabaseMetaData metaData = connection.getMetaData();
 
       try (ResultSet columnResultSet =
-                   metaData.getColumns(null, "public", sourceTableName.toLowerCase(), null)) {
+                   metaData.getColumns(database.orElse(null), "public", sourceTableName.toLowerCase(), null)) {
 
         while (columnResultSet.next()) {
           columnOrders.put(columnResultSet.getString("COLUMN_NAME").toLowerCase(),

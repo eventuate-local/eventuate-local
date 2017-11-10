@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 
 @Configuration
 @EnableConfigurationProperties({EventuateConfigurationProperties.class})
@@ -33,8 +34,8 @@ public class PollingEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider() {
-    return new EventPollingDataProvider();
+  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateConfigurationProperties eventuateConfigurationProperties) {
+    return new EventPollingDataProvider(Optional.ofNullable(eventuateConfigurationProperties.getEventuateDatabase()));
   }
 
   @Bean

@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 
 @Configuration
 @EnableConfigurationProperties({EventTableChangesToAggregateTopicRelayConfigurationProperties.class,
@@ -39,7 +40,8 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
             cdcStartupValidator,
             new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
                     eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
-            eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath());
+            eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath(),
+            Optional.ofNullable(eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase()));
   }
 
   @Bean
@@ -102,7 +104,8 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
     return new EventPollingDao(dataSource,
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxEventsPerPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxAttemptsForPolling(),
-      eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRetryIntervalInMilliseconds());
+      eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRetryIntervalInMilliseconds(),
+      Optional.ofNullable(eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase()));
   }
 
   @Bean(destroyMethod = "close")

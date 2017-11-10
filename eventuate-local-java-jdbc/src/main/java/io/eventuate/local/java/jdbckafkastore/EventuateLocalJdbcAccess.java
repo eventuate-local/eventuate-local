@@ -6,13 +6,18 @@ import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccessImpl;
 import io.eventuate.javaclient.spring.jdbc.LoadedSnapshot;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
 public class EventuateLocalJdbcAccess extends EventuateJdbcAccessImpl {
 
   public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate) {
-    super(jdbcTemplate);
+    super(jdbcTemplate, Optional.empty());
+  }
+
+  public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate, Optional<String> database) {
+    super(jdbcTemplate, database);
   }
 
   @Override

@@ -20,6 +20,7 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
   private int maxRetries = 5;
   private long retryPeriodInMilliseconds = 500;
   private String leadershipLockPath = "/eventuatelocal/cdc/leader";
+  private String eventuateDatabase;
 
 
   public String getDbUserName() {
@@ -92,5 +93,14 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
 
   public void setLeadershipLockPath(String leadershipLockPath) {
     this.leadershipLockPath = leadershipLockPath;
+  }
+
+
+  public String getEventuateDatabase() {
+    return eventuateDatabase;
+  }
+
+  public void setEventuateDatabase(String eventuateDatabase) {
+    this.eventuateDatabase = eventuateDatabase;
   }
 }

@@ -27,19 +27,25 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
 
   private EmbeddedEngine engine;
 
+  private Optional<String> eventuateDatabase;
+
   public MySqlBinLogBasedEventTableChangesToAggregateTopicRelay(String kafkaBootstrapServers,
                                                                 JdbcUrl jdbcUrl,
                                                                 String dbUser,
                                                                 String dbPassword,
                                                                 CuratorFramework client,
                                                                 CdcStartupValidator cdcStartupValidator,
-                                                                TakeLeadershipAttemptTracker takeLeadershipAttemptTracker, String leadershipLockPath) {
+                                                                TakeLeadershipAttemptTracker takeLeadershipAttemptTracker,
+                                                                String leadershipLockPath,
+                                                                Optional<String> eventuateDatabase) {
 
     super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker, leadershipLockPath);
 
     this.jdbcUrl = jdbcUrl;
     this.dbUser = dbUser;
     this.dbPassword = dbPassword;
+
+    this.eventuateDatabase = eventuateDatabase;
   }
 
   public CompletableFuture<Object> startCapturingChanges() throws InterruptedException {
@@ -70,7 +76,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
             .with("database.server.id", 85744)
             .with("database.server.name", "my-app-connector")
             // Unnecessary.with("database.whitelist", jdbcUrl.getDatabase())
-            .with("table.whitelist", jdbcUrl.getDatabase() + ".events")
+            .with("table.whitelist", eventuateDatabase.orElse(jdbcUrl.getDatabase()) + ".events")
             .with("database.history",
                     io.debezium.relational.history.KafkaDatabaseHistory.class.getName())
             .with("database.history.kafka.topic",
@@ -132,7 +138,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
   private void receiveEvent(SourceRecord sourceRecord) {
     logger.trace("Got record");
     String topic = sourceRecord.topic();
-    if ("my-app-connector.eventuate.events".equals(topic)) {
+    if (String.format("my-app-connector.%s.events", eventuateDatabase.orElse(jdbcUrl.database)).equals(topic)) {
       Struct value = (Struct) sourceRecord.value();
       Struct after = value.getStruct("after");
 

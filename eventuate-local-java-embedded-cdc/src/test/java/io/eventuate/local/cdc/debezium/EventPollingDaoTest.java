@@ -3,6 +3,7 @@ package io.eventuate.local.cdc.debezium;
 
 import com.google.common.collect.ImmutableList;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
+import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -39,6 +40,9 @@ public class EventPollingDaoTest {
 
   @Autowired
   private EventTableChangesToAggregateTopicRelay eventTableChangesToAggregateTopicRelay;
+
+  @Autowired
+  private EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties;
 
   @org.springframework.context.annotation.Configuration
   @Import({EventuateLocalConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
@@ -103,9 +107,13 @@ public class EventPollingDaoTest {
   private String createEvents() throws Exception {
     String idPrefix = UUID.randomUUID().toString();
 
-    jdbcTemplate.update("INSERT INTO events VALUES (?, 'type1', 'data1', 'entityType1', 'entityId1', 'triggeringEvent1', 'meta1', 0)", idPrefix + "_1");
-    jdbcTemplate.update("INSERT INTO events VALUES (?, 'type2', 'data2', 'entityType2', 'entityId2', 'triggeringEvent2', NULL, 0)", idPrefix + "_2");
-    jdbcTemplate.update("INSERT INTO events VALUES (?, 'type3', 'data3', 'entityType3', 'entityId3', 'triggeringEvent3', 'meta3', 1)", idPrefix + "_3");
+    String db = eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase();
+
+    String eventTable = StringUtils.isBlank(db) ? "events" : String.format("%s.events", db);
+
+    jdbcTemplate.update(String.format("INSERT INTO %s VALUES (?, 'type1', 'data1', 'entityType1', 'entityId1', 'triggeringEvent1', 'meta1', 0)", eventTable), idPrefix + "_1");
+    jdbcTemplate.update(String.format("INSERT INTO %s VALUES (?, 'type2', 'data2', 'entityType2', 'entityId2', 'triggeringEvent2', NULL, 0)", eventTable), idPrefix + "_2");
+    jdbcTemplate.update(String.format("INSERT INTO %s VALUES (?, 'type3', 'data3', 'entityType3', 'entityId3', 'triggeringEvent3', 'meta3', 1)", eventTable), idPrefix + "_3");
 
     return idPrefix;
   }

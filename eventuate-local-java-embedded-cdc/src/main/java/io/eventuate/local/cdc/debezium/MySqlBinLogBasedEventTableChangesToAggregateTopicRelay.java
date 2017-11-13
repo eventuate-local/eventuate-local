@@ -27,7 +27,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
 
   private EmbeddedEngine engine;
 
-  private Optional<String> eventuateDatabase;
+  private String eventuateDatabase;
 
   public MySqlBinLogBasedEventTableChangesToAggregateTopicRelay(String kafkaBootstrapServers,
                                                                 JdbcUrl jdbcUrl,
@@ -37,7 +37,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
                                                                 CdcStartupValidator cdcStartupValidator,
                                                                 TakeLeadershipAttemptTracker takeLeadershipAttemptTracker,
                                                                 String leadershipLockPath,
-                                                                Optional<String> eventuateDatabase) {
+                                                                String eventuateDatabase) {
 
     super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker, leadershipLockPath);
 
@@ -76,7 +76,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
             .with("database.server.id", 85744)
             .with("database.server.name", "my-app-connector")
             // Unnecessary.with("database.whitelist", jdbcUrl.getDatabase())
-            .with("table.whitelist", eventuateDatabase.orElse(jdbcUrl.getDatabase()) + ".events")
+            .with("table.whitelist", eventuateDatabase + ".events")
             .with("database.history",
                     io.debezium.relational.history.KafkaDatabaseHistory.class.getName())
             .with("database.history.kafka.topic",
@@ -138,7 +138,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
   private void receiveEvent(SourceRecord sourceRecord) {
     logger.trace("Got record");
     String topic = sourceRecord.topic();
-    if (String.format("my-app-connector.%s.events", eventuateDatabase.orElse(jdbcUrl.database)).equals(topic)) {
+    if (String.format("my-app-connector.%s.events", eventuateDatabase).equals(topic)) {
       Struct value = (Struct) sourceRecord.value();
       Struct after = value.getStruct("after");
 

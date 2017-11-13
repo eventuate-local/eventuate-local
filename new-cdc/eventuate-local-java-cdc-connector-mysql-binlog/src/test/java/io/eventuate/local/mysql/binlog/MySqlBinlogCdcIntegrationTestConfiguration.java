@@ -54,7 +54,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Profile("!EventuatePolling")
   public EventuateJdbcAccess eventuateJdbcAccess(DataSource db, EventuateConfigurationProperties eventuateConfigurationProperties) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate, Optional.ofNullable(eventuateConfigurationProperties.getEventuateDatabase()));
+    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateConfigurationProperties.getEventuateDatabase());
   }
 
   @Bean
@@ -63,7 +63,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
           SourceTableNameSupplier sourceTableNameSupplier,
           EventuateConfigurationProperties eventuateConfigurationProperties) {
 
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), Optional.ofNullable(eventuateConfigurationProperties.getEventuateDatabase()));
+    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateConfigurationProperties.getEventuateDatabase());
   }
 
   @Bean

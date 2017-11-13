@@ -41,7 +41,7 @@ public class PollingIntegrationTestConfiguration {
   @Bean
   @Profile("EventuatePolling")
   public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new EventPollingDataProvider(Optional.ofNullable(eventuateConfigurationProperties.getEventuateDatabase()));
+    return new EventPollingDataProvider(eventuateConfigurationProperties.getEventuateDatabase());
   }
 
   @Bean

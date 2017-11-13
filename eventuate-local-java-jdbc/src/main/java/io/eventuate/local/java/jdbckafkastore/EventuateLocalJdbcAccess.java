@@ -13,10 +13,10 @@ import java.util.Optional;
 public class EventuateLocalJdbcAccess extends EventuateJdbcAccessImpl {
 
   public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate) {
-    super(jdbcTemplate, Optional.empty());
+    super(jdbcTemplate);
   }
 
-  public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate, Optional<String> database) {
+  public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate, String database) {
     super(jdbcTemplate, database);
   }
 

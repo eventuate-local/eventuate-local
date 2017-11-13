@@ -41,7 +41,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
             new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
                     eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath(),
-            Optional.ofNullable(eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase()));
+            eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase());
   }
 
   @Bean
@@ -105,7 +105,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxEventsPerPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxAttemptsForPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRetryIntervalInMilliseconds(),
-      Optional.ofNullable(eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase()));
+      eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase());
   }
 
   @Bean(destroyMethod = "close")

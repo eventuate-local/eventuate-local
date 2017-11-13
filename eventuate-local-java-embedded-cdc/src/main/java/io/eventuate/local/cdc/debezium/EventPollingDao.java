@@ -26,7 +26,7 @@ public class EventPollingDao {
           int maxEventsPerPolling,
           int maxAttemptsForPolling,
           int pollingRetryIntervalInMilliseconds,
-          Optional<String> eventuateDatabase) {
+          String eventuateDatabase) {
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
@@ -38,7 +38,7 @@ public class EventPollingDao {
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
 
-    eventTable = eventuateDatabase.map(db -> db + ".").orElse("") + "events";
+    eventTable = eventuateDatabase + ".events";
   }
 
   public int getMaxEventsPerPolling() {

@@ -109,7 +109,7 @@ public class EventPollingDaoTest {
 
     String db = eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase();
 
-    String eventTable = StringUtils.isBlank(db) ? "events" : String.format("%s.events", db);
+    String eventTable = String.format("%s.events", db);
 
     jdbcTemplate.update(String.format("INSERT INTO %s VALUES (?, 'type1', 'data1', 'entityType1', 'entityId1', 'triggeringEvent1', 'meta1', 0)", eventTable), idPrefix + "_1");
     jdbcTemplate.update(String.format("INSERT INTO %s VALUES (?, 'type2', 'data2', 'entityType2', 'entityId2', 'triggeringEvent2', NULL, 0)", eventTable), idPrefix + "_2");

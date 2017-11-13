@@ -6,19 +6,19 @@ import java.util.Optional;
 
 public class EventPollingDataProvider implements PollingDataProvider<PublishedEventBean, PublishedEvent, String> {
 
-  private Optional<String> database;
+  private String database;
 
   public EventPollingDataProvider() {
-    this(Optional.empty());
+    this("eventuate");
   }
 
-  public EventPollingDataProvider(Optional<String> database) {
+  public EventPollingDataProvider(String database) {
     this.database = database;
   }
 
   @Override
   public String table() {
-    return database.map(db -> db + ".").orElse("") + "events";
+    return database + ".events";
   }
 
   @Override

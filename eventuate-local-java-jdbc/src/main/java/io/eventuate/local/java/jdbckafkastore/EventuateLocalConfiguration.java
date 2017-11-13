@@ -30,7 +30,7 @@ import java.util.Optional;
 @Import(EventuateCommonConfiguration.class)
 public class EventuateLocalConfiguration {
 
-  @Value("${eventuateLocal.cdc.eventuate.database:#{null}}")
+  @Value("${eventuateLocal.cdc.eventuate.database:#{\"eventuate\"}}")
   private String eventuateDatabase;
 
   @Autowired(required=false)
@@ -44,7 +44,7 @@ public class EventuateLocalConfiguration {
   @Bean
   public EventuateJdbcAccess eventuateJdbcAccess(DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate, Optional.ofNullable(eventuateDatabase));
+    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateDatabase);
   }
 
   @Bean

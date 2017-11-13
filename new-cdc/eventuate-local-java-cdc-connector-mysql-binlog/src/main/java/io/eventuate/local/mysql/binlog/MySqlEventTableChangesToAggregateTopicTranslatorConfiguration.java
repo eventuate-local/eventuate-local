@@ -31,7 +31,7 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   @Bean
   @Profile("!EventuatePolling")
   public IWriteRowsEventDataParser eventDataParser(EventuateConfigurationProperties eventuateConfigurationProperties, DataSource dataSource, SourceTableNameSupplier sourceTableNameSupplier) {
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), Optional.ofNullable(eventuateConfigurationProperties.getEventuateDatabase()));
+    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateConfigurationProperties.getEventuateDatabase());
   }
 
   @Bean

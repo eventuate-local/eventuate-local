@@ -1,8 +1,10 @@
-DROP TABLE IF EXISTS events CASCADE;
-DROP TABLE IF EXISTS entities CASCADE;
-DROP TABLE IF EXISTS snapshots CASCADE;
+CREATE SCHEMA eventuate;
 
-CREATE TABLE events (
+DROP TABLE IF EXISTS eventuate.events CASCADE;
+DROP TABLE IF EXISTS eventuate.entities CASCADE;
+DROP TABLE IF EXISTS eventuate.snapshots CASCADE;
+
+CREATE TABLE eventuate.events (
   event_id VARCHAR(1000) PRIMARY KEY,
   event_type VARCHAR(1000),
   event_data VARCHAR(1000) NOT NULL,
@@ -13,19 +15,19 @@ CREATE TABLE events (
   published SMALLINT DEFAULT 0
 );
 
-CREATE INDEX events_idx ON events(entity_type, entity_id, event_id);
-CREATE INDEX events_published_idx ON events(published, event_id);
+CREATE INDEX events_idx ON eventuate.events(entity_type, entity_id, event_id);
+CREATE INDEX events_published_idx ON eventuate.events(published, event_id);
 
-CREATE TABLE entities (
+CREATE TABLE eventuate.entities (
   entity_type VARCHAR(1000),
   entity_id VARCHAR(1000),
   entity_version VARCHAR(1000) NOT NULL,
   PRIMARY KEY(entity_type, entity_id)
 );
 
-CREATE INDEX entities_idx ON events(entity_type, entity_id);
+CREATE INDEX entities_idx ON eventuate.events(entity_type, entity_id);
 
-CREATE TABLE snapshots (
+CREATE TABLE eventuate.snapshots (
   entity_type VARCHAR(1000),
   entity_id VARCHAR(1000),
   entity_version VARCHAR(1000),

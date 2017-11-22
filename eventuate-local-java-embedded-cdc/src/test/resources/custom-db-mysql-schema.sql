@@ -1,10 +1,4 @@
-create database custom;
-GRANT ALL PRIVILEGES ON custom.* TO 'mysqluser'@'%' WITH GRANT OPTION;
-
-create database eventuate;
-GRANT ALL PRIVILEGES ON eventuate.* TO 'mysqluser'@'%' WITH GRANT OPTION;
-
-USE eventuate;
+USE custom;
 
 DROP table IF EXISTS events;
 DROP table IF EXISTS  entities;

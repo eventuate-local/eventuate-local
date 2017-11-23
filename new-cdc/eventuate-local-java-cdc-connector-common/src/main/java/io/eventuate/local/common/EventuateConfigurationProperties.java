@@ -31,8 +31,6 @@ public class EventuateConfigurationProperties {
 
   private String mySqlBinLogClientName = "MySqlBinLog";
 
-  private String eventuateDatabase = "eventuate";
-
   public String getDbUserName() {
     return dbUserName;
   }
@@ -128,13 +126,5 @@ public class EventuateConfigurationProperties {
 
   public void setMySqlBinLogClientName(String mySqlBinLogClientName) {
     this.mySqlBinLogClientName = mySqlBinLogClientName;
-  }
-
-  public String getEventuateDatabase() {
-    return eventuateDatabase;
-  }
-
-  public void setEventuateDatabase(String eventuateDatabase) {
-    this.eventuateDatabase = eventuateDatabase;
   }
 }

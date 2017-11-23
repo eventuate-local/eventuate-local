@@ -1,5 +1,6 @@
 package io.eventuate.local.cdc.debezium;
 
+import io.eventuate.local.common.EventuateConstants;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -12,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
-import java.util.Optional;
 
 @Configuration
 @EnableConfigurationProperties({EventTableChangesToAggregateTopicRelayConfigurationProperties.class,
@@ -20,6 +20,9 @@ import java.util.Optional;
         EventuateLocalZookeperConfigurationProperties.class,
         CdcStartupValidatorConfigurationProperties.class})
 public class EventTableChangesToAggregateTopicRelayConfiguration {
+
+  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA + "\"}}")
+  private String eventuateDatabaseSchema;
 
   @Bean
   @Profile("!EventuatePolling")
@@ -41,7 +44,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
             new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
                     eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath(),
-            eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase());
+            eventuateDatabaseSchema);
   }
 
   @Bean
@@ -105,7 +108,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxEventsPerPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxAttemptsForPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRetryIntervalInMilliseconds(),
-      eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase());
+      eventuateDatabaseSchema);
   }
 
   @Bean(destroyMethod = "close")

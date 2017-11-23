@@ -4,6 +4,7 @@ import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -12,13 +13,15 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
-import java.util.Optional;
 
 @Configuration
 @EnableAutoConfiguration
 @EnableConfigurationProperties({EventuateConfigurationProperties.class, EventuateLocalZookeperConfigurationProperties.class})
 @Import(EventuateDriverConfiguration.class)
 public class PollingIntegrationTestConfiguration {
+
+  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA +"\"}}")
+  private String eventuateDatabaseSchema;
 
   @Bean
   public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
@@ -41,7 +44,7 @@ public class PollingIntegrationTestConfiguration {
   @Bean
   @Profile("EventuatePolling")
   public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new EventPollingDataProvider(eventuateConfigurationProperties.getEventuateDatabase());
+    return new EventPollingDataProvider(eventuateDatabaseSchema);
   }
 
   @Bean

@@ -17,7 +17,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 @Configuration
@@ -25,6 +24,9 @@ import java.util.concurrent.TimeoutException;
 @EnableConfigurationProperties({EventuateConfigurationProperties.class, EventuateLocalZookeperConfigurationProperties.class})
 @Import(EventuateDriverConfiguration.class)
 public class MySqlBinlogCdcIntegrationTestConfiguration {
+
+  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA +"\"}}")
+  private String eventuateDatabaseSchema;
 
   @Bean
   @Profile("!EventuatePolling")
@@ -54,7 +56,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Profile("!EventuatePolling")
   public EventuateJdbcAccess eventuateJdbcAccess(DataSource db, EventuateConfigurationProperties eventuateConfigurationProperties) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateConfigurationProperties.getEventuateDatabase());
+    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateDatabaseSchema);
   }
 
   @Bean
@@ -63,7 +65,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
           SourceTableNameSupplier sourceTableNameSupplier,
           EventuateConfigurationProperties eventuateConfigurationProperties) {
 
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateConfigurationProperties.getEventuateDatabase());
+    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateDatabaseSchema);
   }
 
   @Bean

@@ -1,6 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 import com.google.common.collect.ImmutableMap;
+import io.eventuate.local.common.EventuateConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -9,7 +10,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import javax.sql.DataSource;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 
 public class EventPollingDao {
@@ -38,7 +38,7 @@ public class EventPollingDao {
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
 
-    eventTable = eventuateDatabase + ".events";
+    eventTable = EventuateConstants.EMPTY_DATABASE_SCHEMA.equals(eventuateDatabase) ? "events" : eventuateDatabase + ".events";
   }
 
   public int getMaxEventsPerPolling() {

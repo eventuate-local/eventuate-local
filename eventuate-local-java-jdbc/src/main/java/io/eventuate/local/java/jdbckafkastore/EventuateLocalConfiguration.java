@@ -8,6 +8,7 @@ import io.eventuate.javaclient.commonimpl.adapters.AsyncToSyncTimeoutOptions;
 import io.eventuate.javaclient.commonimpl.adapters.SyncToAsyncAggregateCrudAdapter;
 import io.eventuate.javaclient.spring.common.EventuateCommonConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
+import io.eventuate.local.common.EventuateConstants;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
-import java.util.Optional;
 
 /**
  * Defines the Spring beans for the JDBC-based aggregate store
@@ -30,8 +30,8 @@ import java.util.Optional;
 @Import(EventuateCommonConfiguration.class)
 public class EventuateLocalConfiguration {
 
-  @Value("${eventuateLocal.cdc.eventuate.database:#{\"eventuate\"}}")
-  private String eventuateDatabase;
+  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA +"\"}}")
+  private String eventuateDatabaseSchema;
 
   @Autowired(required=false)
   private SerializedEventDeserializer serializedEventDeserializer;
@@ -44,7 +44,7 @@ public class EventuateLocalConfiguration {
   @Bean
   public EventuateJdbcAccess eventuateJdbcAccess(DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateDatabase);
+    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateDatabaseSchema);
   }
 
   @Bean

@@ -1,28 +1,25 @@
 package io.eventuate.local.cdc.debezium;
 
 
-import com.google.common.collect.ImmutableList;
+import io.eventuate.local.common.EventuateConstants;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
-import org.apache.commons.lang.StringUtils;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @ActiveProfiles("EventuatePolling")
@@ -32,17 +29,14 @@ import java.util.stream.Collectors;
 @IntegrationTest
 public class EventPollingDaoTest {
 
+  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA +"\"}}")
+  private String eventuateDatabaseSchema;
+
   @Autowired
   private JdbcTemplate jdbcTemplate;
 
   @Autowired
   private EventPollingDao eventPollingDao;
-
-  @Autowired
-  private EventTableChangesToAggregateTopicRelay eventTableChangesToAggregateTopicRelay;
-
-  @Autowired
-  private EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties;
 
   @org.springframework.context.annotation.Configuration
   @Import({EventuateLocalConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
@@ -107,9 +101,7 @@ public class EventPollingDaoTest {
   private String createEvents() throws Exception {
     String idPrefix = UUID.randomUUID().toString();
 
-    String db = eventTableChangesToAggregateTopicRelayConfigurationProperties.getEventuateDatabase();
-
-    String eventTable = String.format("%s.events", db);
+    String eventTable = EventuateConstants.EMPTY_DATABASE_SCHEMA.equals(eventuateDatabaseSchema) ? "events" : eventuateDatabaseSchema + ".events";
 
     jdbcTemplate.update(String.format("INSERT INTO %s VALUES (?, 'type1', 'data1', 'entityType1', 'entityId1', 'triggeringEvent1', 'meta1', 0)", eventTable), idPrefix + "_1");
     jdbcTemplate.update(String.format("INSERT INTO %s VALUES (?, 'type2', 'data2', 'entityType2', 'entityId2', 'triggeringEvent2', NULL, 0)", eventTable), idPrefix + "_2");

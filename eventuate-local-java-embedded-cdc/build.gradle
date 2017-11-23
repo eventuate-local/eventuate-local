@@ -32,6 +32,7 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
 
+    testCompile project(":eventuate-local-java-test-util")
     testCompile project(":eventuate-local-java-jdbc")
     testCompile "io.eventuate.client.java:eventuate-client-java-test-util:$eventuateClientVersion"
     testCompile "junit:junit:4.11"

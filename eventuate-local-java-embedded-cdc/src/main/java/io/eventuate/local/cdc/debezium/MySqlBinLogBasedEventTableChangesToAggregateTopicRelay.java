@@ -3,6 +3,7 @@ package io.eventuate.local.cdc.debezium;
 
 import io.debezium.config.Configuration;
 import io.debezium.embedded.EmbeddedEngine;
+import io.eventuate.local.common.EventuateConstants;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.kafka.connect.data.Struct;
@@ -76,7 +77,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
             .with("database.server.id", 85744)
             .with("database.server.name", "my-app-connector")
             // Unnecessary.with("database.whitelist", jdbcUrl.getDatabase())
-            .with("table.whitelist", eventuateDatabase + ".events")
+            .with("table.whitelist", EventuateConstants.EMPTY_DATABASE_SCHEMA.equals(eventuateDatabase) ? jdbcUrl.getDatabase() + ".events" : eventuateDatabase + ".events")
             .with("database.history",
                     io.debezium.relational.history.KafkaDatabaseHistory.class.getName())
             .with("database.history.kafka.topic",
@@ -138,7 +139,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
   private void receiveEvent(SourceRecord sourceRecord) {
     logger.trace("Got record");
     String topic = sourceRecord.topic();
-    if (String.format("my-app-connector.%s.events", eventuateDatabase).equals(topic)) {
+    if (String.format("my-app-connector.%s.events", EventuateConstants.EMPTY_DATABASE_SCHEMA.equals(eventuateDatabase) ? jdbcUrl.getDatabase() : eventuateDatabase).equals(topic)) {
       Struct value = (Struct) sourceRecord.value();
       Struct after = value.getStruct("after");
 

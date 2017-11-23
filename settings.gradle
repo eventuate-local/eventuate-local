@@ -1,4 +1,5 @@
 include 'eventuate-local-java-common'
+include 'eventuate-local-java-test-util'
 include 'eventuate-local-java-jdbc'
 include 'eventuate-local-java-jdbc-autoconfigure'
 include 'eventuate-local-java-jdbc-tests'

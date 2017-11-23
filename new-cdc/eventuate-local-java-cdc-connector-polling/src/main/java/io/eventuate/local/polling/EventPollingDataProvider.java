@@ -1,24 +1,23 @@
 package io.eventuate.local.polling;
 
+import io.eventuate.local.common.EventuateConstants;
 import io.eventuate.local.common.PublishedEvent;
-
-import java.util.Optional;
 
 public class EventPollingDataProvider implements PollingDataProvider<PublishedEventBean, PublishedEvent, String> {
 
-  private String database;
+  private String table;
 
   public EventPollingDataProvider() {
     this("eventuate");
   }
 
   public EventPollingDataProvider(String database) {
-    this.database = database;
+    table = EventuateConstants.EMPTY_DATABASE_SCHEMA.equals(database) ? "events" : database + ".events";
   }
 
   @Override
   public String table() {
-    return database + ".events";
+    return table;
   }
 
   @Override

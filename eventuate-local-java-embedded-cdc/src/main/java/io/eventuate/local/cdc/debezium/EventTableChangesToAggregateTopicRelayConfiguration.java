@@ -1,6 +1,6 @@
 package io.eventuate.local.cdc.debezium;
 
-import io.eventuate.local.common.EventuateConstants;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -21,12 +21,15 @@ import javax.sql.DataSource;
         CdcStartupValidatorConfigurationProperties.class})
 public class EventTableChangesToAggregateTopicRelayConfiguration {
 
-  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA + "\"}}")
-  private String eventuateDatabaseSchema;
+  @Bean
+  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
+    return new EventuateSchema(eventuateDatabaseSchema);
+  }
 
   @Bean
   @Profile("!EventuatePolling")
-  public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL,
+  public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(EventuateSchema eventuateSchema,
+    @Value("${spring.datasource.url}") String dataSourceURL,
     EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
     EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
     CuratorFramework client,
@@ -44,7 +47,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
             new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
                     eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath(),
-            eventuateDatabaseSchema);
+            eventuateSchema);
   }
 
   @Bean
@@ -101,14 +104,15 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public EventPollingDao eventPollingDao(DataSource dataSource,
+  public EventPollingDao eventPollingDao(EventuateSchema eventuateSchema,
+    DataSource dataSource,
     EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties) {
 
     return new EventPollingDao(dataSource,
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxEventsPerPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxAttemptsForPolling(),
       eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingRetryIntervalInMilliseconds(),
-      eventuateDatabaseSchema);
+      eventuateSchema);
   }
 
   @Bean(destroyMethod = "close")

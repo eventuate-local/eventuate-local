@@ -1,6 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -31,7 +32,6 @@ public class TableWithDashInNameRelayTest extends AbstractTopicRelayTest {
   @EnableAutoConfiguration
   public static class TableWithDashInNameRelayTestConfiguration extends EventTableChangesToAggregateTopicRelayConfiguration {
 
-
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -52,7 +52,8 @@ public class TableWithDashInNameRelayTest extends AbstractTopicRelayTest {
     }
 
     @Override
-    public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(@Value("${spring.datasource.url}") String dataSourceURL,
+    public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(EventuateSchema eventuateSchema,
+      @Value("${spring.datasource.url}") String dataSourceURL,
       EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
       CuratorFramework client,
@@ -61,7 +62,12 @@ public class TableWithDashInNameRelayTest extends AbstractTopicRelayTest {
       ResourceDatabasePopulator rdp = new ResourceDatabasePopulator(new ClassPathResource("/cdc-test-schema.sql"));
       rdp.execute(makeDataSource());
 
-      return super.embeddedDebeziumCDC(dataSourceURL, eventTableChangesToAggregateTopicRelayConfigurationProperties, eventuateKafkaConfigurationProperties, client, cdcStartupValidator);
+      return super.embeddedDebeziumCDC(eventuateSchema,
+              dataSourceURL,
+              eventTableChangesToAggregateTopicRelayConfigurationProperties,
+              eventuateKafkaConfigurationProperties,
+              client,
+              cdcStartupValidator);
     }
 
     @Override

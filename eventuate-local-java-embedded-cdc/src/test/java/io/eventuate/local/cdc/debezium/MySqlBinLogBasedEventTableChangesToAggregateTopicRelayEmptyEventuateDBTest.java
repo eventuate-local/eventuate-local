@@ -1,7 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 
-import io.eventuate.local.common.EventuateConstants;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import io.eventuate.local.testutil.EmptyDBTestConfiguration;
 import org.junit.Assert;
@@ -32,6 +32,6 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelayEmptyEventuat
 
   @Test
   public void testProperty() {
-    Assert.assertEquals(EventuateConstants.EMPTY_DATABASE_SCHEMA, eventuateDatabaseSchema);
+    Assert.assertEquals(EventuateSchema.EMPTY_SCHEMA, eventuateDatabaseSchema);
   }
 }

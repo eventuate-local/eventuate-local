@@ -1,6 +1,6 @@
 package io.eventuate.local.polling;
 
-import io.eventuate.local.common.EventuateConstants;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.PublishedEvent;
 
 public class EventPollingDataProvider implements PollingDataProvider<PublishedEventBean, PublishedEvent, String> {
@@ -8,11 +8,11 @@ public class EventPollingDataProvider implements PollingDataProvider<PublishedEv
   private String table;
 
   public EventPollingDataProvider() {
-    this("eventuate");
+    this(new EventuateSchema());
   }
 
-  public EventPollingDataProvider(String database) {
-    table = EventuateConstants.EMPTY_DATABASE_SCHEMA.equals(database) ? "events" : database + ".events";
+  public EventPollingDataProvider(EventuateSchema eventuateSchema) {
+    table = eventuateSchema.qualifyTable("events");
   }
 
   @Override

@@ -2,15 +2,20 @@ package io.eventuate.local.cdc.debezium;
 
 
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
+import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
+import org.apache.curator.framework.CuratorFramework;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -26,18 +31,31 @@ public class PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest exte
   @Import({CustomDBTestConfiguration.class, EventuateLocalConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
   @EnableAutoConfiguration
   public static class EventTableChangesToAggregateTopicRelayTestConfiguration {
-  }
 
-  private boolean createCustomDb = true;
+    @Autowired
+    private CustomDBCreator customDBCreator;
 
-  @Autowired
-  private CustomDBCreator customDBCreator;
+    @Bean
+    @Primary
+    @Profile("EventuatePolling")
+    public EventTableChangesToAggregateTopicRelay pollingCDC(EventPollingDao eventPollingDao,
+            EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+            CuratorFramework client,
+            CdcStartupValidator cdcStartupValidator) {
 
-  @Before
-  public void createCustomDB() {
-    if (createCustomDb) {
       customDBCreator.create();
-      createCustomDb = false;
+
+      return new PollingBasedEventTableChangesToAggregateTopicRelay(eventPollingDao,
+              eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingIntervalInMilliseconds(),
+              eventuateKafkaConfigurationProperties.getBootstrapServers(),
+              client,
+              cdcStartupValidator,
+              new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
+                      eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
+              eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath()
+      );
     }
   }
+
 }

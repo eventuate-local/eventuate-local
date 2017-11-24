@@ -1,6 +1,7 @@
 package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -20,8 +21,9 @@ import javax.sql.DataSource;
 @Import(EventuateDriverConfiguration.class)
 public class PollingIntegrationTestConfiguration {
 
-  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA +"\"}}")
-  private String eventuateDatabaseSchema;
+  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
+    return new EventuateSchema(eventuateDatabaseSchema);
+  }
 
   @Bean
   public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
@@ -43,8 +45,9 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new EventPollingDataProvider(eventuateDatabaseSchema);
+  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateSchema eventuateSchema,
+          EventuateConfigurationProperties eventuateConfigurationProperties) {
+    return new EventPollingDataProvider(eventuateSchema);
   }
 
   @Bean

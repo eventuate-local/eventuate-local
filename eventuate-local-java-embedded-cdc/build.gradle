@@ -26,6 +26,7 @@ dependencies {
 
     compile "ch.qos.logback:logback-classic:1.1.5"
     compile "io.eventuate.client.java:eventuate-client-java-common-impl:$eventuateClientVersion"
+    compile "io.eventuate.client.java:eventuate-client-java-jdbc-common:$eventuateClientVersion"
 
     compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
     compile ('org.postgresql:postgresql:9.4-1200-jdbc41') {

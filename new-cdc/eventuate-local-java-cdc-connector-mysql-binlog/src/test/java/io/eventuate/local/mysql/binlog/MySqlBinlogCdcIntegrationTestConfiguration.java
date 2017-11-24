@@ -2,6 +2,7 @@ package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -25,8 +26,10 @@ import java.util.concurrent.TimeoutException;
 @Import(EventuateDriverConfiguration.class)
 public class MySqlBinlogCdcIntegrationTestConfiguration {
 
-  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA +"\"}}")
-  private String eventuateDatabaseSchema;
+  @Bean
+  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
+    return new EventuateSchema(eventuateDatabaseSchema);
+  }
 
   @Bean
   @Profile("!EventuatePolling")
@@ -54,18 +57,21 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("!EventuatePolling")
-  public EventuateJdbcAccess eventuateJdbcAccess(DataSource db, EventuateConfigurationProperties eventuateConfigurationProperties) {
+  public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema,
+          DataSource db,
+          EventuateConfigurationProperties eventuateConfigurationProperties) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateDatabaseSchema);
+    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema);
   }
 
   @Bean
   @Profile("!EventuatePolling")
-  public IWriteRowsEventDataParser<PublishedEvent> eventDataParser(DataSource dataSource,
+  public IWriteRowsEventDataParser<PublishedEvent> eventDataParser(EventuateSchema eventuateSchema,
+          DataSource dataSource,
           SourceTableNameSupplier sourceTableNameSupplier,
           EventuateConfigurationProperties eventuateConfigurationProperties) {
 
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateDatabaseSchema);
+    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
   }
 
   @Bean

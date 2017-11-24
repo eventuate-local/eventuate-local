@@ -1,7 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 import com.google.common.collect.ImmutableMap;
-import io.eventuate.local.common.EventuateConstants;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -23,10 +23,10 @@ public class EventPollingDao {
   private String eventTable;
 
   public EventPollingDao(DataSource dataSource,
-          int maxEventsPerPolling,
-          int maxAttemptsForPolling,
-          int pollingRetryIntervalInMilliseconds,
-          String eventuateDatabase) {
+        int maxEventsPerPolling,
+        int maxAttemptsForPolling,
+        int pollingRetryIntervalInMilliseconds,
+        EventuateSchema eventuateSchema) {
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
@@ -38,7 +38,7 @@ public class EventPollingDao {
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
 
-    eventTable = EventuateConstants.EMPTY_DATABASE_SCHEMA.equals(eventuateDatabase) ? "events" : eventuateDatabase + ".events";
+    eventTable = eventuateSchema.qualifyTable("events");
   }
 
   public int getMaxEventsPerPolling() {

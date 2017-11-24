@@ -1,6 +1,7 @@
 package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -20,8 +21,9 @@ import java.util.concurrent.TimeoutException;
 @Import({EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
 public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
-  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA +"\"}}")
-  private String eventuateDatabaseSchema;
+  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
+    return new EventuateSchema(eventuateDatabaseSchema);
+  }
 
   @Bean
   @Profile("!EventuatePolling")
@@ -31,8 +33,11 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   @Profile("!EventuatePolling")
-  public IWriteRowsEventDataParser eventDataParser(EventuateConfigurationProperties eventuateConfigurationProperties, DataSource dataSource, SourceTableNameSupplier sourceTableNameSupplier) {
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateDatabaseSchema);
+  public IWriteRowsEventDataParser eventDataParser(EventuateSchema eventuateSchema,
+          EventuateConfigurationProperties eventuateConfigurationProperties,
+          DataSource dataSource,
+          SourceTableNameSupplier sourceTableNameSupplier) {
+    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
   }
 
   @Bean

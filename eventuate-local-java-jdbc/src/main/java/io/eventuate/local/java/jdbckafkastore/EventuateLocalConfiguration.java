@@ -8,7 +8,7 @@ import io.eventuate.javaclient.commonimpl.adapters.AsyncToSyncTimeoutOptions;
 import io.eventuate.javaclient.commonimpl.adapters.SyncToAsyncAggregateCrudAdapter;
 import io.eventuate.javaclient.spring.common.EventuateCommonConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
-import io.eventuate.local.common.EventuateConstants;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,9 +30,6 @@ import javax.sql.DataSource;
 @Import(EventuateCommonConfiguration.class)
 public class EventuateLocalConfiguration {
 
-  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA +"\"}}")
-  private String eventuateDatabaseSchema;
-
   @Autowired(required=false)
   private SerializedEventDeserializer serializedEventDeserializer;
 
@@ -42,9 +39,14 @@ public class EventuateLocalConfiguration {
   // CRUD
 
   @Bean
-  public EventuateJdbcAccess eventuateJdbcAccess(DataSource db) {
+  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
+    return new EventuateSchema(eventuateDatabaseSchema);
+  }
+
+  @Bean
+  public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema, DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateDatabaseSchema);
+    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema);
   }
 
   @Bean
@@ -76,6 +78,4 @@ public class EventuateLocalConfiguration {
 
   // Aggregate Store
   // Why @ConditionalOnMissingBean(EventuateAggregateStore.class)??
-
-
 }

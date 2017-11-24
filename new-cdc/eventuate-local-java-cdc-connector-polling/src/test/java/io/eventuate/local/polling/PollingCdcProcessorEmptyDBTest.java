@@ -1,14 +1,10 @@
 package io.eventuate.local.polling;
 
-import io.eventuate.local.common.EventuateConstants;
-import io.eventuate.local.testutil.CustomDBCreator;
-import io.eventuate.local.testutil.CustomDBTestConfiguration;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.testutil.EmptyDBTestConfiguration;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -26,6 +22,6 @@ public class PollingCdcProcessorEmptyDBTest extends AbstractPollingCdcProcessorT
 
   @Test
   public void testProperty() {
-    Assert.assertEquals(EventuateConstants.EMPTY_DATABASE_SCHEMA, eventuateDatabaseSchema);
+    Assert.assertEquals(EventuateSchema.EMPTY_SCHEMA, eventuateDatabaseSchema);
   }
 }

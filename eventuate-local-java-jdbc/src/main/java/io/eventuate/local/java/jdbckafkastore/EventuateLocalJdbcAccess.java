@@ -3,6 +3,7 @@ package io.eventuate.local.java.jdbckafkastore;
 import io.eventuate.EventContext;
 import io.eventuate.javaclient.spring.jdbc.EventAndTrigger;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccessImpl;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.javaclient.spring.jdbc.LoadedSnapshot;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -16,8 +17,8 @@ public class EventuateLocalJdbcAccess extends EventuateJdbcAccessImpl {
     super(jdbcTemplate);
   }
 
-  public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate, String database) {
-    super(jdbcTemplate, database);
+  public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate, EventuateSchema eventuateSchema) {
+    super(jdbcTemplate, eventuateSchema);
   }
 
   @Override

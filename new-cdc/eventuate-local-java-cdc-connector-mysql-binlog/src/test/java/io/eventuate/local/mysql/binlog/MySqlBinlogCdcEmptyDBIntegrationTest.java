@@ -1,6 +1,6 @@
 package io.eventuate.local.mysql.binlog;
 
-import io.eventuate.local.common.EventuateConstants;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.testutil.EmptyDBTestConfiguration;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,6 +20,6 @@ public class MySqlBinlogCdcEmptyDBIntegrationTest extends AbstractMySqlBinlogCdc
 
   @Test
   public void testProperty() {
-    Assert.assertEquals(EventuateConstants.EMPTY_DATABASE_SCHEMA, eventuateDatabaseSchema);
+    Assert.assertEquals(EventuateSchema.EMPTY_SCHEMA, eventuateDatabaseSchema);
   }
 }

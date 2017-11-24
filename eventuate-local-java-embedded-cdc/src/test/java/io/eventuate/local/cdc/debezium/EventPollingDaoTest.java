@@ -1,7 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 
-import io.eventuate.local.common.EventuateConstants;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
@@ -29,8 +30,8 @@ import java.util.stream.Collectors;
 @IntegrationTest
 public class EventPollingDaoTest {
 
-  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA +"\"}}")
-  private String eventuateDatabaseSchema;
+  @Autowired
+  private EventuateSchema eventuateSchema;
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -42,6 +43,11 @@ public class EventPollingDaoTest {
   @Import({EventuateLocalConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
   @EnableAutoConfiguration
   public static class EventPollingTestConfiguration {
+
+    @Bean
+    public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchem) {
+      return new EventuateSchema(eventuateDatabaseSchem);
+    }
   }
 //
 //  @Before
@@ -101,7 +107,7 @@ public class EventPollingDaoTest {
   private String createEvents() throws Exception {
     String idPrefix = UUID.randomUUID().toString();
 
-    String eventTable = EventuateConstants.EMPTY_DATABASE_SCHEMA.equals(eventuateDatabaseSchema) ? "events" : eventuateDatabaseSchema + ".events";
+    String eventTable = eventuateSchema.qualifyTable("events");
 
     jdbcTemplate.update(String.format("INSERT INTO %s VALUES (?, 'type1', 'data1', 'entityType1', 'entityId1', 'triggeringEvent1', 'meta1', 0)", eventTable), idPrefix + "_1");
     jdbcTemplate.update(String.format("INSERT INTO %s VALUES (?, 'type2', 'data2', 'entityType2', 'entityId2', 'triggeringEvent2', NULL, 0)", eventTable), idPrefix + "_2");

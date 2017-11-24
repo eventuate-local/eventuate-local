@@ -1,6 +1,7 @@
 package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -19,9 +20,10 @@ import java.util.Optional;
 @Import({EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
 public class PollingEventTableChangesToAggregateTopicTranslatorConfiguration {
 
-  @Value("${eventuate.database.schema:#{\"" + EventuateConstants.DEFAULT_DATABASE_SCHEMA + "\"}}")
-  private String eventuateDatabaseSchema;
-
+  @Bean
+  private EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
+    return new EventuateSchema(eventuateDatabaseSchema);
+  }
 
   @Bean
   @Profile("EventuatePolling")
@@ -39,8 +41,9 @@ public class PollingEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new EventPollingDataProvider(eventuateDatabaseSchema);
+  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateConfigurationProperties eventuateConfigurationProperties,
+          EventuateSchema eventuateSchema) {
+    return new EventPollingDataProvider(eventuateSchema);
   }
 
   @Bean

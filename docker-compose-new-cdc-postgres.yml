@@ -1,4 +1,4 @@
-cdcservice:
+newcdcservice:
   build: ./new-cdc/eventuate-local-java-cdc-sql-service
   ports:
     - "8099:8080"

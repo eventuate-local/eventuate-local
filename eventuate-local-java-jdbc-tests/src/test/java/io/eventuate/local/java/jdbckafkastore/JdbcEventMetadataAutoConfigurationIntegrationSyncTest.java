@@ -10,6 +10,7 @@ import io.eventuate.example.banking.domain.AccountCommand;
 import io.eventuate.example.banking.domain.CreateAccountCommand;
 import io.eventuate.example.banking.domain.DebitAccountCommand;
 import io.eventuate.sync.AggregateRepository;
+import io.eventuate.testutil.ReceivedEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,10 +56,10 @@ public class JdbcEventMetadataAutoConfigurationIntegrationSyncTest {
 
     assertEquals(Optional.of(updateMetadata), findResult2.getEvents().get(1).getMetadata());
 
-    EventHandlerContext<?> createEvent = accountMetadataEventHandler.getEvents().eventuallyContains(ctx -> ctx.getEventId().equals(saveResult.getEntityVersion()));
+    ReceivedEvent createEvent = accountMetadataEventHandler.eventuallyContains("accountMetadataEventHandler - save", saveResult.getEntityVersion());
     assertEquals(Optional.of(saveMetadata), createEvent.getEventMetadata());
 
-    EventHandlerContext<?> updateEvent = accountMetadataEventHandler.getEvents().eventuallyContains(ctx -> ctx.getEventId().equals(updateResult.getEntityVersion()));
+    ReceivedEvent updateEvent = accountMetadataEventHandler.eventuallyContains("accountMetadataEventHandler - update", updateResult.getEntityVersion());
     assertEquals(Optional.of(updateMetadata), updateEvent.getEventMetadata());
 
   }

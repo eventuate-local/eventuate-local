@@ -21,7 +21,7 @@ import java.util.Optional;
 public class PollingEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
-  private EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
+  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
     return new EventuateSchema(eventuateDatabaseSchema);
   }
 

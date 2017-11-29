@@ -21,6 +21,7 @@ import javax.sql.DataSource;
 @Import(EventuateDriverConfiguration.class)
 public class PollingIntegrationTestConfiguration {
 
+  @Bean
   public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
     return new EventuateSchema(eventuateDatabaseSchema);
   }

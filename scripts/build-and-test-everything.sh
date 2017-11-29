@@ -1,5 +1,6 @@
 #! /bin/bash -e
 
+set -o pipefail
 
 SCRIPTS="./scripts/build-and-test-all.sh ./scripts/build-and-test-all-cdc.sh ./scripts/build-and-test-all-new-cdc.sh ./scripts/build-and-test-all-new-cdc-postgres.sh"
 

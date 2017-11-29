@@ -50,7 +50,7 @@ public abstract class AbstractTopicRelayTest {
 
     logger.debug("Looking for eventId {}", expectedEventId);
 
-    eventuateKafkaAggregateSubscriptions.subscribe("testSubscriber",
+    eventuateKafkaAggregateSubscriptions.subscribe("testSubscriber-" + getClass().getName(),
             Collections.singletonMap(aggregateType, Collections.singleton(eventType)),
             SubscriberOptions.DEFAULTS,
             se -> {
@@ -60,7 +60,7 @@ public abstract class AbstractTopicRelayTest {
               return CompletableFuture.completedFuture(null);
             }).get();
 
-    Assert.assertNotNull(result.poll(30, TimeUnit.SECONDS));
+    Assert.assertNotNull("Failed to find eventId: " + expectedEventId, result.poll(30, TimeUnit.SECONDS));
     Assert.assertNull(result.poll(30, TimeUnit.SECONDS));
 
     long endTime = System.currentTimeMillis();

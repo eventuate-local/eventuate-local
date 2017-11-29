@@ -30,4 +30,9 @@ public class CustomDBTestConfiguration {
   public CustomDBCreator customDBCreator() {
     return new CustomDBCreator(dataFile, dataSourceURL, driverClassName, rootUserName, rootUserPassword);
   }
+
+  @Bean
+  public SqlScriptEditor eventuateLocalCustomDBSqlEditor() {
+    return new EventuateLocalCustomDBSqlEditor();
+  }
 }

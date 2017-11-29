@@ -5,6 +5,7 @@ import io.eventuate.local.common.EventuateConfigurationProperties;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
+import io.eventuate.local.testutil.SqlScriptEditor;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.IntegrationTest;
@@ -15,6 +16,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.Optional;
 
 @ActiveProfiles("EventuatePolling")
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -29,12 +32,15 @@ public class PollingCdcProcessorCustomDBTest extends AbstractPollingCdcProcessor
     @Autowired
     private CustomDBCreator customDBCreator;
 
+    @Autowired
+    private SqlScriptEditor eventuateLocalCustomDBSqlEditor;
+
     @Bean
     @Primary
     public CdcProcessor<PublishedEvent> pollingCdcProcessor(EventuateConfigurationProperties eventuateConfigurationProperties,
             PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
 
-      customDBCreator.create();
+      customDBCreator.create(Optional.of(eventuateLocalCustomDBSqlEditor));
       return new PollingCdcProcessor<>(pollingDao, eventuateConfigurationProperties.getPollingIntervalInMilliseconds());
     }
   }

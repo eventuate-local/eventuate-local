@@ -1,6 +1,6 @@
 #! /bin/bash -e
 
-DOCKER_COMPOSE_PREFIX=eventuatelocal_
+DOCKER_COMPOSE_PREFIX=$(echo ${PWD##*/} | sed -e 's/-//g')_
 
 DOCKER_REPO=eventuateio
 REMOTE_PREFIX=eventuate-local

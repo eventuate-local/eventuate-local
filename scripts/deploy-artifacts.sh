@@ -32,5 +32,5 @@ function tagAndPush() {
 $PREFIX docker login -u ${DOCKER_USER_ID?} -p ${DOCKER_PASSWORD?}
 
 for image in $IMAGES ; do
-    tagAndPush $(echo $image | sed -e 's/-//')  $image
+    tagAndPush $(echo $image | sed -e 's/-//g')  $image
 done

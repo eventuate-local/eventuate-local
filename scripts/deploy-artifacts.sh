@@ -1,6 +1,6 @@
 #! /bin/bash -e
 
-DOCKER_COMPOSE_PREFIX=eventuatelocal_
+DOCKER_COMPOSE_PREFIX=$(echo ${PWD##*/} | sed -e 's/-//g')_
 
 DOCKER_REPO=eventuateio
 REMOTE_PREFIX=eventuate-local
@@ -32,5 +32,5 @@ function tagAndPush() {
 $PREFIX docker login -u ${DOCKER_USER_ID?} -p ${DOCKER_PASSWORD?}
 
 for image in $IMAGES ; do
-    tagAndPush $(echo $image | sed -e 's/-//')  $image
+    tagAndPush $(echo $image | sed -e 's/-//g')  $image
 done

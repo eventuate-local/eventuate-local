@@ -15,8 +15,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.Optional;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MySqlBinLogBasedEventTableChangesToAggregateTopicRelayCustomEventuateDBTest.EventTableChangesToAggregateTopicRelayTestConfiguration.class)
 @DirtiesContext
@@ -37,6 +35,6 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelayCustomEventua
 
   @Before
   public void createCustomDB() {
-    customDBCreator.create(Optional.of(eventuateLocalCustomDBSqlEditor));
+    customDBCreator.create(eventuateLocalCustomDBSqlEditor);
   }
 }

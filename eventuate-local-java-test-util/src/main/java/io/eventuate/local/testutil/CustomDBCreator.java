@@ -28,7 +28,15 @@ public class CustomDBCreator {
     this.rootUserPassword = rootUserPassword;
   }
 
-  public void create(Optional<SqlScriptEditor> editor) {
+  public void create() {
+    create(Optional.empty());
+  }
+
+  public void create(SqlScriptEditor sqlScriptEditor) {
+    create(Optional.of(sqlScriptEditor));
+  }
+
+  private void create(Optional<SqlScriptEditor> editor) {
     dataSource = DataSourceBuilder
             .create()
             .url(dataSourceURL)
@@ -40,10 +48,8 @@ public class CustomDBCreator {
     jdbcTemplate = new JdbcTemplate(dataSource);
 
     List<String> sqlList = loadSqlScriptAsListOfLines(dataFile);
-    if (editor.isPresent()) {
-      sqlList = editor.get().edit(sqlList);
-    }
-    executeSql(sqlList);
+
+    executeSql(editor.map(sqlScriptEditor -> sqlScriptEditor.edit(sqlList)).orElse(sqlList));
   }
 
 

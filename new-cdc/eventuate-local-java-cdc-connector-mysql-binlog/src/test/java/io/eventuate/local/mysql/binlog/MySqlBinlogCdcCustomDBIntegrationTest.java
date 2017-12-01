@@ -10,8 +10,6 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.Optional;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {CustomDBTestConfiguration.class, MySqlBinlogCdcIntegrationTestConfiguration.class})
 @IntegrationTest
@@ -25,6 +23,6 @@ public class MySqlBinlogCdcCustomDBIntegrationTest extends AbstractMySqlBinlogCd
 
   @Before
   public void createCustomDB() {
-    customDBCreator.create(Optional.of(eventuateLocalCustomDBSqlEditor));
+    customDBCreator.create(eventuateLocalCustomDBSqlEditor);
   }
 }

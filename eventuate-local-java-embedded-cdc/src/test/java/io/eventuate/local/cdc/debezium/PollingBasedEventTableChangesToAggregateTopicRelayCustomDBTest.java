@@ -49,7 +49,7 @@ public class PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest exte
             CuratorFramework client,
             CdcStartupValidator cdcStartupValidator) {
 
-      customDBCreator.create(Optional.of(eventuateLocalCustomDBSqlEditor));
+      customDBCreator.create(eventuateLocalCustomDBSqlEditor);
 
       return new PollingBasedEventTableChangesToAggregateTopicRelay(eventPollingDao,
               eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingIntervalInMilliseconds(),

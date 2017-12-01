@@ -4,6 +4,7 @@ package io.eventuate.local.cdc.debezium;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
+import io.eventuate.local.testutil.SqlScriptEditor;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.Optional;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MySqlBinLogBasedEventTableChangesToAggregateTopicRelayCustomEventuateDBTest.EventTableChangesToAggregateTopicRelayTestConfiguration.class)
@@ -29,8 +32,11 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelayCustomEventua
   @Autowired
   private CustomDBCreator customDBCreator;
 
+  @Autowired
+  private SqlScriptEditor eventuateLocalCustomDBSqlEditor;
+
   @Before
   public void createCustomDB() {
-    customDBCreator.create();
+    customDBCreator.create(Optional.of(eventuateLocalCustomDBSqlEditor));
   }
 }

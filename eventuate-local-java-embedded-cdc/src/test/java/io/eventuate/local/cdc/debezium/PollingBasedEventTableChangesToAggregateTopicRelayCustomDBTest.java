@@ -5,8 +5,8 @@ import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
+import io.eventuate.local.testutil.SqlScriptEditor;
 import org.apache.curator.framework.CuratorFramework;
-import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -19,6 +19,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.Optional;
 
 @ActiveProfiles("EventuatePolling")
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -35,6 +37,9 @@ public class PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest exte
     @Autowired
     private CustomDBCreator customDBCreator;
 
+    @Autowired
+    private SqlScriptEditor eventuateLocalCustomDBSqlEditor;
+
     @Bean
     @Primary
     @Profile("EventuatePolling")
@@ -44,7 +49,7 @@ public class PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest exte
             CuratorFramework client,
             CdcStartupValidator cdcStartupValidator) {
 
-      customDBCreator.create();
+      customDBCreator.create(Optional.of(eventuateLocalCustomDBSqlEditor));
 
       return new PollingBasedEventTableChangesToAggregateTopicRelay(eventPollingDao,
               eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingIntervalInMilliseconds(),

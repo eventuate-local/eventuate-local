@@ -1,11 +1,14 @@
 package io.eventuate.local.testutil;
 
 import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import java.io.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CustomDBCreator {
 
@@ -14,6 +17,8 @@ public class CustomDBCreator {
   private String driverClassName;
   private String rootUserName;
   private String rootUserPassword;
+  private DataSource dataSource;
+  private JdbcTemplate jdbcTemplate;
 
   public CustomDBCreator(String dataFile, String dataSourceURL, String driverClassName, String rootUserName, String rootUserPassword) {
     this.dataFile = dataFile;
@@ -23,8 +28,8 @@ public class CustomDBCreator {
     this.rootUserPassword = rootUserPassword;
   }
 
-  public void create() {
-    DataSource dataSource = DataSourceBuilder
+  public void create(Optional<SqlScriptEditor> editor) {
+    dataSource = DataSourceBuilder
             .create()
             .url(dataSourceURL)
             .driverClassName(driverClassName)
@@ -32,8 +37,25 @@ public class CustomDBCreator {
             .password(rootUserPassword)
             .build();
 
-    Resource resource = new ClassPathResource(dataFile);
-    ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator(resource);
-    databasePopulator.execute(dataSource);
+    jdbcTemplate = new JdbcTemplate(dataSource);
+
+    List<String> sqlList = loadSqlScriptAsListOfLines(dataFile);
+    if (editor.isPresent()) {
+      sqlList = editor.get().edit(sqlList);
+    }
+    executeSql(sqlList);
+  }
+
+
+  public List<String> loadSqlScriptAsListOfLines(String script) {
+    try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(script)))) {
+      return Arrays.asList(bufferedReader.lines().collect(Collectors.joining("\n")).split(";"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void executeSql(List<String> sqlList) {
+    sqlList.forEach(jdbcTemplate::execute);
   }
 }

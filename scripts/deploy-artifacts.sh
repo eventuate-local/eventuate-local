@@ -3,8 +3,8 @@
 DOCKER_COMPOSE_PREFIX=$(echo ${PWD##*/} | sed -e 's/-//g')_
 
 DOCKER_REPO=eventuateio
-REMOTE_PREFIX=eventuate-local
-IMAGES="cdc-service new-cdc-service mysql postgres"
+REMOTE_PREFIX=eventuateio-local
+IMAGES="cdc-service new-cdc-service mysql postgres zookeeper kafka"
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 

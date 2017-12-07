@@ -62,7 +62,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
   }
 
-  public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<M> eventConsumer) throws IOException {
+  public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<M> eventConsumer) {
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
     client.setServerId(binlogClientUniqueId);
@@ -115,11 +115,16 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
         client.connect(connectionTimeoutInMilliseconds);
         logger.debug("connection to mysql binlog succeed");
         break;
-      } catch (TimeoutException e) {
+      } catch (TimeoutException | IOException e) {
         logger.debug("connection to mysql binlog failed");
         if (i == maxAttemptsForBinlogConnection) {
           logger.debug("connection attempts exceeded");
           throw new RuntimeException(e);
+        }
+        try {
+          Thread.sleep(connectionTimeoutInMilliseconds);
+        } catch (InterruptedException ex) {
+          throw new RuntimeException(ex);
         }
       }
     }

@@ -31,6 +31,10 @@ public class EventuateConfigurationProperties {
 
   private String mySqlBinLogClientName = "MySqlBinLog";
 
+  private int binlogConnectionTimeoutInMilliseconds = 5000;
+
+  private int maxAttemptsForBinlogConnection = 100;
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -126,5 +130,21 @@ public class EventuateConfigurationProperties {
 
   public void setMySqlBinLogClientName(String mySqlBinLogClientName) {
     this.mySqlBinLogClientName = mySqlBinLogClientName;
+  }
+
+  public int getBinlogConnectionTimeoutInMilliseconds() {
+    return binlogConnectionTimeoutInMilliseconds;
+  }
+
+  public void setBinlogConnectionTimeoutInMilliseconds(int binlogConnectionTimeoutInMilliseconds) {
+    this.binlogConnectionTimeoutInMilliseconds = binlogConnectionTimeoutInMilliseconds;
+  }
+
+  public int getMaxAttemptsForBinlogConnection() {
+    return maxAttemptsForBinlogConnection;
+  }
+
+  public void setMaxAttemptsForBinlogConnection(int maxAttemptsForBinlogConnection) {
+    this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
   }
 }

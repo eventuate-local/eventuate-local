@@ -35,6 +35,9 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
   private String binlogFilename;
   private long offset;
 
+  private int connectionTimeoutInMilliseconds;
+  private int maxAttemptsForBinlogConnection;
+
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
   public MySqlBinaryLogClient(IWriteRowsEventDataParser<M> writeRowsEventDataParser,
@@ -44,7 +47,9 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
                               int port,
                               long binlogClientUniqueId,
                               String sourceTableName,
-                              String clientName) {
+                              String clientName,
+                              int connectionTimeoutInMilliseconds,
+                              int maxAttemptsForBinlogConnection) {
     this.writeRowsEventDataParser = writeRowsEventDataParser;
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.dbUserName = dbUserName;
@@ -53,9 +58,11 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
     this.port = port;
     this.sourceTableName = sourceTableName;
     this.name = clientName;
+    this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
+    this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
   }
 
-  public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<M> eventConsumer) throws IOException, TimeoutException {
+  public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<M> eventConsumer) throws IOException {
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
     client.setServerId(binlogClientUniqueId);
@@ -101,7 +108,21 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
         }
       }
     });
-    client.connect(5 * 1000);
+
+    for (int i = 1;; i++) {
+      try {
+        logger.debug("trying to connect to mysql binlog");
+        client.connect(connectionTimeoutInMilliseconds);
+        logger.debug("connection to mysql binlog succeed");
+        break;
+      } catch (TimeoutException e) {
+        logger.debug("connection to mysql binlog failed");
+        if (i == maxAttemptsForBinlogConnection) {
+          logger.debug("connection attempts exceeded");
+          throw new RuntimeException(e);
+        }
+      }
+    }
   }
 
   private EventDeserializer getEventDeserializer() {

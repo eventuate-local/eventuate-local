@@ -109,16 +109,20 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
       }
     });
 
+    connectWithRetriesOnFail();
+  }
+
+  private void connectWithRetriesOnFail() {
     for (int i = 1;; i++) {
       try {
-        logger.debug("trying to connect to mysql binlog");
+        logger.info("trying to connect to mysql binlog");
         client.connect(connectionTimeoutInMilliseconds);
-        logger.debug("connection to mysql binlog succeed");
+        logger.info("connection to mysql binlog succeed");
         break;
       } catch (TimeoutException | IOException e) {
-        logger.debug("connection to mysql binlog failed");
+        logger.error("connection to mysql binlog failed");
         if (i == maxAttemptsForBinlogConnection) {
-          logger.debug("connection attempts exceeded");
+          logger.error("connection attempts exceeded");
           throw new RuntimeException(e);
         }
         try {

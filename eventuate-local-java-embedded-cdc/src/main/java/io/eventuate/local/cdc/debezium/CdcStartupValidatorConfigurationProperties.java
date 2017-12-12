@@ -1,13 +1,21 @@
 package io.eventuate.local.cdc.debezium;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("eventuateLocal.startup.validator")
+@ConfigurationProperties
 public class CdcStartupValidatorConfigurationProperties {
 
+  @Value("${eventuatelocal.startup.validator.mysql.validation.timeout.millis:#{1000}}")
   private long mySqlValidationTimeoutMillis = 1000;
+
+  @Value("${eventuatelocal.startup.validator.mysql.validation.max.attempts:#{100}}")
   private int mySqlValidationMaxAttempts = 100;
+
+  @Value("${eventuatelocal.startup.validator.kafka.validation.timeout.millis:#{1000}}")
   private long kafkaValidationTimeoutMillis = 1000;
+
+  @Value("${eventuatelocal.startup.validator.kafka.validation.max.attempts:#{100}}")
   private int kafkaValidationMaxAttempts = 100;
 
   public long getMySqlValidationTimeoutMillis() {

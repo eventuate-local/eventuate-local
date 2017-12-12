@@ -1,39 +1,52 @@
 package io.eventuate.local.common;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("eventuateLocal.cdc")
+@ConfigurationProperties
 public class EventuateConfigurationProperties {
 
-  //  @NotBlank
+  @Value("${eventuatelocal.cdc.db.user.name:#{null}}")
   private String dbUserName;
 
-  //  @NotBlank
+  @Value("${eventuatelocal.cdc.db.password:#{null}}")
   private String dbPassword;
 
-  private String dbHistoryTopicName = "db.history.topic";
+  @Value("${eventuatelocal.cdc.db.history.topic.name:#{\"db.history.topic\"}}")
+  private String dbHistoryTopicName;
 
-  private long binlogClientId = System.currentTimeMillis();
+  @Value("${eventuatelocal.cdc.binlog.client.id:#{T(java.lang.System).currentTimeMillis()}}")
+  private long binlogClientId;
 
+  @Value("${eventuatelocal.cdc.source.table.name:#{null}}")
   private String sourceTableName;
 
-  private int pollingIntervalInMilliseconds = 500;
+  @Value("${eventuatelocal.cdc.polling.interval.in.milliseconds:#{500}}")
+  private int pollingIntervalInMilliseconds;
 
-  private int maxEventsPerPolling = 1000;
+  @Value("${eventuatelocal.cdc.max.events.per.polling:#{1000}}")
+  private int maxEventsPerPolling;
 
-  private int maxAttemptsForPolling = 100;
+  @Value("${eventuatelocal.cdc.max.attempts.for.polling:#{100}}")
+  private int maxAttemptsForPolling;
 
-  private int pollingRetryIntervalInMilliseconds = 500;
+  @Value("${eventuatelocal.cdc.polling.retry.interval.in.milleseconds:#{500}}")
+  private int pollingRetryIntervalInMilliseconds;
 
-  private String leadershipLockPath = "/eventuatelocal/cdc/leader";
+  @Value("${eventuatelocal.cdc.leadership.lock.path:#{\"/eventuatelocal/cdc/leader\"}}")
+  private String leadershipLockPath;
 
-  private String oldDbHistoryTopicName = "eventuate.local.cdc.my-sql-connector.offset.storage";
+  @Value("${eventuatelocal.cdc.old.db.history.topic.name:#{\"eventuate.local.cdc.my-sql-connector.offset.storage\"}}")
+  private String oldDbHistoryTopicName;
 
-  private String mySqlBinLogClientName = "MySqlBinLog";
+  @Value("${eventuatelocal.cdc.my.sql.bin.log.client.name:#{\"MySqlBinLog\"}}")
+  private String mySqlBinLogClientName;
 
-  private int binlogConnectionTimeoutInMilliseconds = 5000;
+  @Value("${eventuatelocal.cdc.binlog.connection.timeout.in.milliseconds:#{5000}}")
+  private int binlogConnectionTimeoutInMilliseconds;
 
-  private int maxAttemptsForBinlogConnection = 100;
+  @Value("${eventuatelocal.cdc.max.attempts.for.binlog.connection:#{100}}")
+  private int maxAttemptsForBinlogConnection;
 
   public String getDbUserName() {
     return dbUserName;

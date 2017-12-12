@@ -1,6 +1,5 @@
 package io.eventuate.local.testutil;
 
-import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -36,14 +35,14 @@ public class CustomDBCreator {
     create(Optional.of(sqlScriptEditor));
   }
 
-  private void create(Optional<SqlScriptEditor> editor) {
-    dataSource = DataSourceBuilder
-            .create()
+  public void create(Optional<SqlScriptEditor> editor) {
+    dataSource = new DataSourceBuilderAdapter()
             .url(dataSourceURL)
             .driverClassName(driverClassName)
             .username(rootUserName)
             .password(rootUserPassword)
             .build();
+
 
     jdbcTemplate = new JdbcTemplate(dataSource);
 

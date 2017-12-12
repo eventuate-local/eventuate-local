@@ -9,16 +9,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = MySqlBinLogBasedEventTableChangesToAggregateTopicRelayEmptyEventuateDBTest.EventTableChangesToAggregateTopicRelayTestConfiguration.class)
+@SpringBootTest(classes = MySqlBinLogBasedEventTableChangesToAggregateTopicRelayEmptyEventuateDBTest.EventTableChangesToAggregateTopicRelayTestConfiguration.class)
 @DirtiesContext
-@IntegrationTest
 public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelayEmptyEventuateDBTest extends AbstractTopicRelayTest {
 
   @org.springframework.context.annotation.Configuration

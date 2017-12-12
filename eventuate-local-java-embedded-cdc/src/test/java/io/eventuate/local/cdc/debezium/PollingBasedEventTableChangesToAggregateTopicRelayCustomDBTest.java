@@ -10,8 +10,8 @@ import org.apache.curator.framework.CuratorFramework;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
@@ -24,9 +24,8 @@ import java.util.Optional;
 
 @ActiveProfiles("EventuatePolling")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest.EventTableChangesToAggregateTopicRelayTestConfiguration.class)
+@SpringBootTest(classes = PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest.EventTableChangesToAggregateTopicRelayTestConfiguration.class)
 @DirtiesContext
-@IntegrationTest
 public class PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest extends AbstractTopicRelayTest {
 
   @org.springframework.context.annotation.Configuration

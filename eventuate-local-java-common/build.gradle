@@ -1,3 +1,11 @@
+repositories {
+    mavenCentral()
+
+    maven {
+        url "http://repo.spring.io/milestone/"
+    }
+}
+
 apply plugin: PrivateModulePlugin
 
 dependencies {

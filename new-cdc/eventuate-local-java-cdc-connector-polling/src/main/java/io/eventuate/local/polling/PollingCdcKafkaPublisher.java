@@ -33,18 +33,16 @@ public class PollingCdcKafkaPublisher<EVENT> extends CdcKafkaPublisher<EVENT> {
                 json
         ).get(10, TimeUnit.SECONDS);
 
-        if (gaugeService != null)
-          publishingStrategy.getCreateTime(event).ifPresent(time ->
-              gaugeService.submit("histogram.event.age", System.currentTimeMillis() - time));
+        publishingStrategy.getCreateTime(event).ifPresent(time -> histogramEventAge.set(System.currentTimeMillis() - time));
 
-        if (counterService != null)
-          counterService.increment("meter.events.published");
+        if (meterEventsPublished != null) meterEventsPublished.increment();
 
         return;
       } catch (Exception e) {
         logger.warn("error publishing to " + aggregateTopic, e);
-        if (counterService != null)
-          counterService.increment("meter.events.retries");
+
+        if (meterEventsRetries != null) meterEventsRetries.increment();
+
         lastException = e;
 
         try {

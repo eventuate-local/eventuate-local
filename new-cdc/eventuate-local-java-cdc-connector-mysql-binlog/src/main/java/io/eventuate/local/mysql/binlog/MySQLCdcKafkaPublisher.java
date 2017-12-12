@@ -40,23 +40,19 @@ public class MySQLCdcKafkaPublisher<EVENT extends BinLogEvent> extends CdcKafkaP
                   json
           ).get(10, TimeUnit.SECONDS);
 
-          if (gaugeService != null)
-            publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> gaugeService.submit("histogram.event.age", System.currentTimeMillis() - time));
+          publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> histogramEventAge.set(System.currentTimeMillis() - time));
 
-          if (counterService != null)
-            counterService.increment("meter.events.published");
+          if (meterEventsPublished != null) meterEventsPublished.increment();
 
           binlogOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
         } else {
           logger.debug("Duplicate event {}", publishedEvent);
-          if (counterService != null)
-            counterService.increment("meter.events.duplicates");
+          if (meterEventsDuplicates != null) meterEventsDuplicates.increment();
         }
         return;
       } catch (Exception e) {
         logger.warn("error publishing to " + aggregateTopic, e);
-        if (counterService != null)
-          counterService.increment("meter.events.retries");
+        if (meterEventsRetries != null) meterEventsRetries.increment();
         lastException = e;
 
         try {

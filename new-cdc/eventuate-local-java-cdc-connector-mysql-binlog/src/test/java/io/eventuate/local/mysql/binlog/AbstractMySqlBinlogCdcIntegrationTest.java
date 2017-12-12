@@ -47,7 +47,9 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
             jdbcUrl.getPort(),
             eventuateConfigurationProperties.getBinlogClientId(),
             sourceTableNameSupplier.getSourceTableName(),
-            eventuateConfigurationProperties.getMySqlBinLogClientName());
+            eventuateConfigurationProperties.getMySqlBinLogClientName(),
+            eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
+            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 

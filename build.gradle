@@ -1,6 +1,10 @@
 buildscript {
     repositories {
         mavenCentral()
+
+        maven {
+            url "http://repo.spring.io/milestone/"
+        }
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
@@ -44,6 +48,9 @@ subprojects {
     }
 
     repositories {
+        maven {
+            url "http://repo.spring.io/milestone/"
+        }
         mavenCentral()
         jcenter()
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
@@ -72,7 +79,7 @@ subprojects {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = "2.11"
+    gradleVersion = "4.4"
 }
 
 gradle.projectsEvaluated {

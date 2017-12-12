@@ -1,12 +1,12 @@
 package io.eventuate.local.common;
 
-import org.hibernate.validator.constraints.NotBlank;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("eventuateLocal.zookeeper")
+@ConfigurationProperties
 public class EventuateLocalZookeperConfigurationProperties {
 
-  @NotBlank
+  @Value("${eventuatelocal.zookeeper.connection.string}")
   private String connectionString;
 
   public String getConnectionString() {

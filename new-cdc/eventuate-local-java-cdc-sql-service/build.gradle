@@ -1,13 +1,17 @@
 buildscript {
     repositories {
         mavenCentral()
+
+        maven {
+            url "http://repo.spring.io/milestone/"
+        }
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
     }
 }
 
-apply plugin: 'spring-boot'
+apply plugin: 'org.springframework.boot'
 apply plugin: PrivateModulePlugin
 
 dependencies {
@@ -17,5 +21,5 @@ dependencies {
     compile "io.dropwizard.metrics:metrics-servlets:$dropwizardMetricsVersion"
 }
 
-uploadArchives.dependsOn(bootRepackage)
-bintrayUpload.dependsOn(bootRepackage)
+uploadArchives.dependsOn(tasks.findByName('bootRepackage') == null ? tasks['bootJar'] : tasks['bootRepackage'])
+bintrayUpload.dependsOn(tasks.findByName('bootRepackage') == null ? tasks['bootJar'] : tasks['bootRepackage'])

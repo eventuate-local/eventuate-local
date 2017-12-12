@@ -6,15 +6,14 @@ import io.eventuate.local.testutil.SqlScriptEditor;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.Optional;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {CustomDBTestConfiguration.class, MySqlBinlogCdcIntegrationTestConfiguration.class})
-@IntegrationTest
+@SpringBootTest(classes = {CustomDBTestConfiguration.class, MySqlBinlogCdcIntegrationTestConfiguration.class})
 public class MySQLCdcProcessorCustomDBTest extends AbstractMySQLCdcProcessorTest {
 
   @Autowired

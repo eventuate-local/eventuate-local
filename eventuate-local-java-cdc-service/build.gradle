@@ -1,14 +1,26 @@
 buildscript {
     repositories {
         mavenCentral()
+
+        maven {
+            url "http://repo.spring.io/milestone/"
+        }
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
     }
 }
 
-apply plugin: 'spring-boot'
+repositories {
+    mavenCentral()
+
+    maven {
+        url "http://repo.spring.io/milestone/"
+    }
+}
+
 apply plugin: PrivateModulePlugin
+apply plugin: 'org.springframework.boot'
 
 dependencies {
     compile "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
@@ -16,5 +28,5 @@ dependencies {
     compile project(":eventuate-local-java-embedded-cdc-autoconfigure")
 }
 
-uploadArchives.dependsOn(bootRepackage)
-bintrayUpload.dependsOn(bootRepackage)
+uploadArchives.dependsOn(tasks.findByName('bootRepackage') == null ? tasks['bootJar'] : tasks['bootRepackage'])
+bintrayUpload.dependsOn(tasks.findByName('bootRepackage') == null ? tasks['bootJar'] : tasks['bootRepackage'])

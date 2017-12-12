@@ -1,15 +1,16 @@
 package io.eventuate.local.java.kafka;
 
-import org.hibernate.validator.constraints.NotBlank;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("eventuateLocal.kafka")
+@ConfigurationProperties
 public class EventuateKafkaConfigurationProperties {
 
-  @NotBlank
+  @Value("${eventuatelocal.kafka.bootstrap.servers}")
   private String bootstrapServers;
 
-  private long connectionValidationTimeout=1000;
+  @Value("${eventuatelocal.kafka.connection.validation.timeout:#{1000}}")
+  private long connectionValidationTimeout;
 
   public String getBootstrapServers() {
     return bootstrapServers;

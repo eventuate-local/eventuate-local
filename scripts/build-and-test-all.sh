@@ -27,6 +27,7 @@ docker-compose up -d
 
 #test spring compatibility
 
+./gradlew -a :eventuate-local-java-jdbc-tests:cleanTest
 ./gradlew -a :eventuate-local-java-jdbc-tests:test --tests "io.eventuate.local.java.jdbckafkastore.JdbcAutoConfigurationIntegrationTest" -P springBootVersion=2.0.0.M7
 
 docker-compose stop

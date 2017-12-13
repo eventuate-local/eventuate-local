@@ -7,7 +7,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootPluginVersion")
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
@@ -79,7 +79,7 @@ subprojects {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = "4.4"
+    gradleVersion = "3.5"
 }
 
 gradle.projectsEvaluated {

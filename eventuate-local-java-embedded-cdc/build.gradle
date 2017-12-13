@@ -7,15 +7,6 @@
 //    all*.exclude group: "org.eclipse.jetty", module: "jetty-server"
 //    all*.exclude module: "slf4j-log4j12"
 //}
-
-repositories {
-    mavenCentral()
-
-    maven {
-        url "http://repo.spring.io/milestone/"
-    }
-}
-
 apply plugin: PrivateModulePlugin
 
 dependencies {

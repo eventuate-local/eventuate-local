@@ -1,9 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties
 public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
 
   @Value("${eventuatelocal.cdc.db.user.name:#{null}}")
@@ -33,37 +31,28 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
   @Value("${eventuatelocal.cdc.leadership.lock.path:#{\"/eventuatelocal/cdc/leader\"}}")
   private String leadershipLockPath = "/eventuatelocal/cdc/leader";
 
-
   public String getDbUserName() {
     return dbUserName;
-  }
-
-  public void setDbUserName(String dbUserName) {
-    this.dbUserName = dbUserName;
   }
 
   public String getDbPassword() {
     return dbPassword;
   }
 
-  public void setDbPassword(String dbPassword) {
-    this.dbPassword = dbPassword;
-  }
-
   public int getPollingIntervalInMilliseconds() {
     return pollingIntervalInMilliseconds;
   }
 
-  public void setPollingIntervalInMilliseconds(int pollingIntervalInMilliseconds) {
-    this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
+  public int getMaxEventsPerPolling() {
+    return maxEventsPerPolling;
   }
 
-  public void setMaxRetries(int maxRetries) {
-    this.maxRetries = maxRetries;
+  public int getMaxAttemptsForPolling() {
+    return maxAttemptsForPolling;
   }
 
-  public void setRetryPeriodInMilliseconds(long retryPeriodInMilliseconds) {
-    this.retryPeriodInMilliseconds = retryPeriodInMilliseconds;
+  public int getPollingRetryIntervalInMilliseconds() {
+    return pollingRetryIntervalInMilliseconds;
   }
 
   public int getMaxRetries() {
@@ -74,35 +63,7 @@ public class EventTableChangesToAggregateTopicRelayConfigurationProperties {
     return retryPeriodInMilliseconds;
   }
 
-  public int getMaxEventsPerPolling() {
-    return maxEventsPerPolling;
-  }
-
-  public void setMaxEventsPerPolling(int maxEventsPerPolling) {
-    this.maxEventsPerPolling = maxEventsPerPolling;
-  }
-
-  public int getMaxAttemptsForPolling() {
-    return maxAttemptsForPolling;
-  }
-
-  public void setMaxAttemptsForPolling(int maxAttemptsForPolling) {
-    this.maxAttemptsForPolling = maxAttemptsForPolling;
-  }
-
-  public int getPollingRetryIntervalInMilliseconds() {
-    return pollingRetryIntervalInMilliseconds;
-  }
-
-  public void setPollingRetryIntervalInMilliseconds(int pollingRetryIntervalInMilliseconds) {
-    this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
-  }
-
   public String getLeadershipLockPath() {
     return leadershipLockPath;
-  }
-
-  public void setLeadershipLockPath(String leadershipLockPath) {
-    this.leadershipLockPath = leadershipLockPath;
   }
 }

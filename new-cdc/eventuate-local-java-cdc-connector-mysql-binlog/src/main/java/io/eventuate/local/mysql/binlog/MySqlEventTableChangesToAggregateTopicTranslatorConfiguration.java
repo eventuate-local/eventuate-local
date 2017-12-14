@@ -6,7 +6,6 @@ import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -17,10 +16,15 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 @Configuration
-@EnableConfigurationProperties({EventuateConfigurationProperties.class})
 @Import({EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
 public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
+  @Bean
+  public EventuateConfigurationProperties eventuateConfigurationProperties() {
+    return new EventuateConfigurationProperties();
+  }
+
+  @Bean
   public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
     return new EventuateSchema(eventuateDatabaseSchema);
   }

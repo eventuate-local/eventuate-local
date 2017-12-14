@@ -1,9 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties
 public class EventuateLocalZookeperConfigurationProperties {
 
   @Value("${eventuatelocal.zookeeper.connection.string}")
@@ -11,9 +9,5 @@ public class EventuateLocalZookeperConfigurationProperties {
 
   public String getConnectionString() {
     return connectionString;
-  }
-
-  public void setConnectionString(String connectionString) {
-    this.connectionString = connectionString;
   }
 }

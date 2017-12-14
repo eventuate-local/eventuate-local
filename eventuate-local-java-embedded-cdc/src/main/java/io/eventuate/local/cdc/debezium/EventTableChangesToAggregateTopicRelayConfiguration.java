@@ -7,7 +7,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -15,11 +14,27 @@ import org.springframework.context.annotation.Profile;
 import javax.sql.DataSource;
 
 @Configuration
-@EnableConfigurationProperties({EventTableChangesToAggregateTopicRelayConfigurationProperties.class,
-        EventuateKafkaConfigurationProperties.class,
-        EventuateLocalZookeperConfigurationProperties.class,
-        CdcStartupValidatorConfigurationProperties.class})
 public class EventTableChangesToAggregateTopicRelayConfiguration {
+
+  @Bean
+  public EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties() {
+    return new EventuateKafkaConfigurationProperties();
+  }
+
+  @Bean
+  public EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties() {
+    return new EventuateLocalZookeperConfigurationProperties();
+  }
+
+  @Bean
+  public CdcStartupValidatorConfigurationProperties cdcStartupValidatorConfigurationProperties() {
+    return new CdcStartupValidatorConfigurationProperties();
+  }
+
+  @Bean
+  public EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties() {
+    return new EventTableChangesToAggregateTopicRelayConfigurationProperties();
+  }
 
   @Bean
   public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {

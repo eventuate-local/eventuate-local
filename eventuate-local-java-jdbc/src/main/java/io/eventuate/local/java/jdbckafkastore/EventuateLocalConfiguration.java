@@ -12,7 +12,6 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -25,7 +24,6 @@ import javax.sql.DataSource;
  * Defines the Spring beans for the JDBC-based aggregate store
  */
 @Configuration
-@EnableConfigurationProperties(EventuateKafkaConfigurationProperties.class)
 @EnableTransactionManagement
 @Import(EventuateCommonConfiguration.class)
 public class EventuateLocalConfiguration {
@@ -37,6 +35,11 @@ public class EventuateLocalConfiguration {
   private AsyncToSyncTimeoutOptions timeoutOptions;
 
   // CRUD
+
+  @Bean
+  public EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties() {
+    return new EventuateKafkaConfigurationProperties();
+  }
 
   @Bean
   public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {

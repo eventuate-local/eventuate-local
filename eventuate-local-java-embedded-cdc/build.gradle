@@ -29,7 +29,7 @@ dependencies {
     compile "io.eventuate.client.java:eventuate-client-java-jdbc-common:$eventuateClientVersion"
 
     compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
-    compile ('org.postgresql:postgresql:9.4-1200-jdbc41') {
+    compile ('org.postgresql:postgresql:42.1.4') {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
 

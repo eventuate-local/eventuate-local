@@ -7,10 +7,8 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.*;
+
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -26,13 +24,13 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  @Profile("!EventuatePolling")
+  @Conditional(MysqlBinlogCondition.class)
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
     return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "EVENTS");
   }
 
   @Bean
-  @Profile("!EventuatePolling")
+  @Conditional(MysqlBinlogCondition.class)
   public IWriteRowsEventDataParser eventDataParser(EventuateSchema eventuateSchema,
           EventuateConfigurationProperties eventuateConfigurationProperties,
           DataSource dataSource,
@@ -41,7 +39,7 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  @Profile("!EventuatePolling")
+  @Conditional(MysqlBinlogCondition.class)
   public MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
           EventuateConfigurationProperties eventuateConfigurationProperties,
           SourceTableNameSupplier sourceTableNameSupplier,
@@ -61,13 +59,13 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  @Profile("!EventuatePolling")
+  @Conditional(MysqlBinlogCondition.class)
   public CdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore, PublishingStrategy<PublishedEvent> publishingStrategy) {
     return new MySQLCdcKafkaPublisher<>(binlogOffsetKafkaStore, eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
   }
 
   @Bean
-  @Profile("!EventuatePolling")
+  @Conditional(MysqlBinlogCondition.class)
   public CdcProcessor<PublishedEvent> mySQLCdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient,
           DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore,
           DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
@@ -75,7 +73,7 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  @Profile("!EventuatePolling")
+  @Conditional(MysqlBinlogCondition.class)
   public DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
           EventuateConfigurationProperties eventuateConfigurationProperties,
           MySqlBinaryLogClient mySqlBinaryLogClient,
@@ -85,7 +83,7 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  @Profile("!EventuatePolling")
+  @Conditional(MysqlBinlogCondition.class)
   public DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
           EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
 

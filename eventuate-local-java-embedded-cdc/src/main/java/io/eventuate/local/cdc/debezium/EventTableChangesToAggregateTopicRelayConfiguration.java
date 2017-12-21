@@ -1,6 +1,7 @@
 package io.eventuate.local.cdc.debezium;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.MysqlBinlogCondition;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -9,6 +10,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
@@ -27,7 +29,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
   }
 
   @Bean
-  @Profile("!EventuatePolling")
+  @Conditional(MysqlBinlogCondition.class)
   public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(EventuateSchema eventuateSchema,
     @Value("${spring.datasource.url}") String dataSourceURL,
     EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
@@ -70,7 +72,7 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
   }
 
   @Bean
-  @Profile("!EventuatePolling")
+  @Conditional(MysqlBinlogCondition.class)
   public CdcStartupValidator debeziumCdcStartupValidator(@Value("${spring.datasource.url}") String dataSourceURL,
     EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
     EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,

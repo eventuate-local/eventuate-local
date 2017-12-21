@@ -13,8 +13,16 @@ apply plugin: PrivateModulePlugin
 dependencies {
     compile "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
     compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+
     compile project(":new-cdc:eventuate-local-java-cdc-autoconfigure")
+
     compile "io.dropwizard.metrics:metrics-servlets:$dropwizardMetricsVersion"
+
+    compile ('org.postgresql:postgresql:42.1.4') {
+        exclude group: "org.slf4j", module: "slf4j-simple"
+    }
+
+    compile('log4j:log4j:1.2.17')
 }
 
 uploadArchives.dependsOn(bootRepackage)

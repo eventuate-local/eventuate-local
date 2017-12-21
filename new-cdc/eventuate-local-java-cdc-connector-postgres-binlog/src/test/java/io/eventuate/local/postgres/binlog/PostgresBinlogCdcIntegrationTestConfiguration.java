@@ -12,8 +12,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
-import javax.sql.DataSource;
-
 @Configuration
 @EnableAutoConfiguration
 @Import(EventuateDriverConfiguration.class)
@@ -31,9 +29,11 @@ public class PostgresBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("PostgresWal")
-  public PostgresBinaryLogClient<PublishedEvent> postgresBinaryLogClien(DataSource dataSource,
+  public PostgresBinaryLogClient<PublishedEvent> postgresBinaryLogClien(EventuateConfigurationProperties eventuateConfigurationProperties,
           PostgresReplicationMessageParser<PublishedEvent> postgresReplicationMessageParser) {
-    return new PostgresBinaryLogClient<>(dataSource, postgresReplicationMessageParser);
+    return new PostgresBinaryLogClient<>(postgresReplicationMessageParser,
+            eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
+            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
   }
 
   @Bean

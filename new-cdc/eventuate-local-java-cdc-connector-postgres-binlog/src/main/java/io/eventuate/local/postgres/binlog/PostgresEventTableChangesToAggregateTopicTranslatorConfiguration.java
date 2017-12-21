@@ -29,9 +29,11 @@ public class PostgresEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   @Profile("PostgresWal")
-  public PostgresBinaryLogClient<PublishedEvent> postgresBinaryLogClien(DataSource dataSource,
+  public PostgresBinaryLogClient<PublishedEvent> postgresBinaryLogClien(EventuateConfigurationProperties eventuateConfigurationProperties,
           PostgresReplicationMessageParser<PublishedEvent> postgresReplicationMessageParser) {
-    return new PostgresBinaryLogClient<>(dataSource, postgresReplicationMessageParser);
+    return new PostgresBinaryLogClient<>(postgresReplicationMessageParser,
+            eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
+            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
   }
 
   @Bean

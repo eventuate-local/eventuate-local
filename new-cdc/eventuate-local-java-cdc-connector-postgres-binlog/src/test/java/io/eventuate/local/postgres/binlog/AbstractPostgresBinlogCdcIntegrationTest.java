@@ -37,7 +37,9 @@ public abstract class AbstractPostgresBinlogCdcIntegrationTest extends AbstractC
   @Test
   public void shouldGetEvents() throws IOException, TimeoutException, InterruptedException, ExecutionException {
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
-    PostgresBinaryLogClient<PublishedEvent> postgresBinaryLogClient = new PostgresBinaryLogClient<>(null, postgresReplicationMessageParser);
+    PostgresBinaryLogClient<PublishedEvent> postgresBinaryLogClient = new PostgresBinaryLogClient<>(postgresReplicationMessageParser,
+            eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
+            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 

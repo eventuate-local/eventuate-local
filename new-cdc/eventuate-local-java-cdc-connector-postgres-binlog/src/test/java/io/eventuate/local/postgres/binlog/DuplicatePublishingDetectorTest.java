@@ -1,4 +1,4 @@
-package io.eventuate.local.mysql.binlog;
+package io.eventuate.local.postgres.binlog;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogFileOffset;
@@ -10,7 +10,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -20,7 +19,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = MySqlBinlogCdcIntegrationTestConfiguration.class)
+@SpringBootTest(classes = PostgresBinlogCdcIntegrationTestConfiguration.class)
 public class DuplicatePublishingDetectorTest extends AbstractCdcTest {
 
   @Autowired
@@ -38,27 +37,29 @@ public class DuplicatePublishingDetectorTest extends AbstractCdcTest {
   @Test
   public void shouldBePublishedTest() {
     String topicName = generateUniqueTopicName();
+    String binlogFilename = "binlog.file." + System.currentTimeMillis();
     DuplicatePublishingDetector duplicatePublishingDetector = new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers());
 
     Producer<String, String> producer = createProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
-    floodTopic(producer, null, topicName);
+    floodTopic(producer, binlogFilename, topicName);
     producer.close();
 
-    assertFalse(duplicatePublishingDetector.shouldBePublished(new BinlogFileOffset(null, 1L), topicName));
-    assertTrue(duplicatePublishingDetector.shouldBePublished(new BinlogFileOffset(null, 10L), topicName));
+    assertFalse(duplicatePublishingDetector.shouldBePublished(new BinlogFileOffset(binlogFilename, 1L), topicName));
+    assertTrue(duplicatePublishingDetector.shouldBePublished(new BinlogFileOffset(binlogFilename, 10L), topicName));
   }
 
   @Test
   public void shouldHandlePublishCheckForOldEntires() {
     String topicName = generateUniqueTopicName();
+    String binlogFilename = "binlog.file." + System.currentTimeMillis();
     DuplicatePublishingDetector duplicatePublishingDetector = new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers());
 
     Producer<String, String> producer = createProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
-    floodTopic(producer, null, topicName);
+    floodTopic(producer, binlogFilename, topicName);
     sendOldPublishedEvent(producer, topicName);
     producer.close();
 
-    assertTrue(duplicatePublishingDetector.shouldBePublished(new BinlogFileOffset(null, 10L), topicName));
+    assertTrue(duplicatePublishingDetector.shouldBePublished(new BinlogFileOffset(binlogFilename, 10L), topicName));
   }
 
   private void floodTopic(Producer<String, String> producer, String binlogFilename, String topicName) {

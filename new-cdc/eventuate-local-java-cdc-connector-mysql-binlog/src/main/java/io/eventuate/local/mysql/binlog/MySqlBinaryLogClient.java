@@ -68,7 +68,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
     client.setServerId(binlogClientUniqueId);
     client.setKeepAliveInterval(5 * 1000);
 
-    BinlogFileOffset bfo = binlogFileOffset.orElse(new BinlogFileOffset("", 4));
+    BinlogFileOffset bfo = binlogFileOffset.orElse(new BinlogFileOffset("", 4L));
     logger.debug("Starting with {}", bfo);
     client.setBinlogFilename(bfo.getBinlogFilename());
     client.setBinlogPosition(bfo.getOffset());

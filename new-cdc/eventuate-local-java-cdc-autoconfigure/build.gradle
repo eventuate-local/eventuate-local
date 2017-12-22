@@ -1,5 +1,5 @@
 dependencies {
     compile project(":new-cdc:eventuate-local-java-cdc-connector-mysql-binlog")
     compile project(":new-cdc:eventuate-local-java-cdc-connector-polling")
-    compile project(":new-cdc:eventuate-local-java-cdc-connector-postgres-binlog")
+    compile project(":new-cdc:eventuate-local-java-cdc-connector-postgres-wal")
 }

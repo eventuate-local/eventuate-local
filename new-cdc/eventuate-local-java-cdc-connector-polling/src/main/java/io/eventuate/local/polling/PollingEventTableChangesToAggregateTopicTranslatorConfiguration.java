@@ -21,11 +21,6 @@ import java.util.Optional;
 public class PollingEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
-  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
-    return new EventuateSchema(eventuateDatabaseSchema);
-  }
-
-  @Bean
   @Profile("EventuatePolling")
   public CdcKafkaPublisher<PublishedEvent> pollingCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
     PublishingStrategy<PublishedEvent> publishingStrategy) {

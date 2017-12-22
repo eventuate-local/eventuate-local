@@ -8,6 +8,7 @@ import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeseria
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.db.log.common.ReplicationLogClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-public class MySqlBinaryLogClient<M extends BinLogEvent> {
+public class MySqlBinaryLogClient<M extends BinLogEvent> implements ReplicationLogClient<M> {
 
   private String name;
 

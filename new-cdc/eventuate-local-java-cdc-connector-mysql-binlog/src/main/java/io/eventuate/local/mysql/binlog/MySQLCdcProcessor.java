@@ -3,6 +3,7 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.CdcProcessor;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -10,11 +11,11 @@ import java.util.function.Consumer;
 public class MySQLCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
 
   private MySqlBinaryLogClient<EVENT> mySqlBinaryLogClient;
-  private DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore;
+  private DatabaseOffsetKafkaStore binlogOffsetKafkaStore;
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
   public MySQLCdcProcessor(MySqlBinaryLogClient<EVENT> mySqlBinaryLogClient,
-          DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore,
+          DatabaseOffsetKafkaStore binlogOffsetKafkaStore,
           DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
     this.mySqlBinaryLogClient = mySqlBinaryLogClient;

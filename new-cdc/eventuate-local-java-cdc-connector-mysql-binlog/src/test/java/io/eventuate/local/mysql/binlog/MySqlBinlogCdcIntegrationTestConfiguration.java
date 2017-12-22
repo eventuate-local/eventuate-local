@@ -7,18 +7,15 @@ import io.eventuate.local.common.*;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
+import io.eventuate.local.db.log.common.ReplicationLogBasedCdcKafkaPublisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 @Configuration
 @EnableAutoConfiguration
@@ -42,7 +39,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   public MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
           EventuateConfigurationProperties eventuateConfigurationProperties,
           SourceTableNameSupplier sourceTableNameSupplier,
-          IWriteRowsEventDataParser<PublishedEvent> eventDataParser) throws IOException, TimeoutException {
+          IWriteRowsEventDataParser<PublishedEvent> eventDataParser) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     return new MySqlBinaryLogClient<>(eventDataParser,
@@ -60,8 +57,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Bean
   @Conditional(MysqlBinlogCondition.class)
   public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema,
-          DataSource db,
-          EventuateConfigurationProperties eventuateConfigurationProperties) {
+          DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
     return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema);
   }
@@ -70,8 +66,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Conditional(MysqlBinlogCondition.class)
   public IWriteRowsEventDataParser<PublishedEvent> eventDataParser(EventuateSchema eventuateSchema,
           DataSource dataSource,
-          SourceTableNameSupplier sourceTableNameSupplier,
-          EventuateConfigurationProperties eventuateConfigurationProperties) {
+          SourceTableNameSupplier sourceTableNameSupplier) {
 
     return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
   }
@@ -83,18 +78,18 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Conditional(MysqlBinlogCondition.class)
-  public DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+  public DatabaseOffsetKafkaStore binlogOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
           EventuateConfigurationProperties eventuateConfigurationProperties,
           MySqlBinaryLogClient mySqlBinaryLogClient,
           EventuateKafkaProducer eventuateKafkaProducer) {
 
-    return new DatabaseBinlogOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), mySqlBinaryLogClient.getName(), eventuateKafkaProducer, eventuateKafkaConfigurationProperties);
+    return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), mySqlBinaryLogClient.getName(), eventuateKafkaProducer, eventuateKafkaConfigurationProperties);
   }
 
   @Bean
   @Conditional(MysqlBinlogCondition.class)
   public CdcProcessor<PublishedEvent> mySQLCdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient,
-          DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore,
+          DatabaseOffsetKafkaStore binlogOffsetKafkaStore,
           DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
     return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore, debeziumBinlogOffsetKafkaStore);
@@ -114,7 +109,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Conditional(MysqlBinlogCondition.class)
-  public CdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties, DatabaseBinlogOffsetKafkaStore binlogOffsetKafkaStore, PublishingStrategy<PublishedEvent> publishingStrategy) {
-    return new MySQLCdcKafkaPublisher<>(binlogOffsetKafkaStore, eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
+  public CdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+          DatabaseOffsetKafkaStore binlogOffsetKafkaStore, PublishingStrategy<PublishedEvent> publishingStrategy) {
+    return new ReplicationLogBasedCdcKafkaPublisher<>(binlogOffsetKafkaStore, eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
   }
 }

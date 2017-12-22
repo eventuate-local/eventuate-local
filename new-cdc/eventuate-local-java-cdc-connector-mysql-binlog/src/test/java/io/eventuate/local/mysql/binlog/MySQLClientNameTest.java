@@ -7,6 +7,7 @@ import io.eventuate.local.common.*;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,14 +18,12 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MySqlBinlogCdcIntegrationTestConfiguration.class)
@@ -52,7 +51,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
   @Autowired
   private EventuateKafkaProducer eventuateKafkaProducer;
 
-  private DatabaseBinlogOffsetKafkaStore databaseBinlogOffsetKafkaStore;
+  private DatabaseOffsetKafkaStore databaseBinlogOffsetKafkaStore;
 
   @Autowired
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
@@ -60,7 +59,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
   @Test
   public void test() throws Exception {
 
-    databaseBinlogOffsetKafkaStore = createBinlogOffsetKafkaStore(createMySqlBinaryLogClient());
+    databaseBinlogOffsetKafkaStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
     CdcProcessor<PublishedEvent> cdcProcessor = createMySQLCdcProcessor();
@@ -88,7 +87,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     /*waiting while offset is storing in kafka*/
     Thread.sleep(10000);
 
-    databaseBinlogOffsetKafkaStore = createBinlogOffsetKafkaStore(createMySqlBinaryLogClient());
+    databaseBinlogOffsetKafkaStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
     cdcProcessor = createMySQLCdcProcessor();
     cdcProcessor.start(event -> {
@@ -101,20 +100,20 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     }
   }
 
-  private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() throws IOException, TimeoutException{
+  private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() {
     MySqlBinaryLogClient mySqlBinaryLogClient = createMySqlBinaryLogClient();
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, createBinlogOffsetKafkaStore(mySqlBinaryLogClient), debeziumBinlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, createDatabaseOffsetKafkaStore(mySqlBinaryLogClient), debeziumBinlogOffsetKafkaStore);
   }
 
-  public DatabaseBinlogOffsetKafkaStore createBinlogOffsetKafkaStore(MySqlBinaryLogClient mySqlBinaryLogClient) {
+  public DatabaseOffsetKafkaStore createDatabaseOffsetKafkaStore(MySqlBinaryLogClient mySqlBinaryLogClient) {
 
-    return new DatabaseBinlogOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
+    return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
         mySqlBinaryLogClient.getName(),
         eventuateKafkaProducer,
         eventuateKafkaConfigurationProperties);
   }
 
-  private MySqlBinaryLogClient<PublishedEvent> createMySqlBinaryLogClient() throws IOException, TimeoutException {
+  private MySqlBinaryLogClient<PublishedEvent> createMySqlBinaryLogClient() {
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     return new MySqlBinaryLogClient<>(eventDataParser,
             eventuateConfigurationProperties.getDbUserName(),

@@ -6,6 +6,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,14 +17,12 @@ import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = MySqlBinlogCdcIntegrationTestConfiguration.class)
@@ -37,7 +36,7 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   EventuateJdbcAccess eventuateJdbcAccess;
 
   @Autowired
-  private DatabaseBinlogOffsetKafkaStore databaseBinlogOffsetKafkaStore;
+  private DatabaseOffsetKafkaStore databaseBinlogOffsetKafkaStore;
 
   @Autowired
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
@@ -71,7 +70,7 @@ public class MySQLMigrationTest extends AbstractCdcTest {
     Assert.assertEquals(entityIdVersionAndEventIds.getEntityVersion().asString(), publishedEvent.getId());
   }
 
-  private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() throws IOException, TimeoutException{
+  private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() {
     return new MySQLCdcProcessor<>(mySqlBinaryLogClient, databaseBinlogOffsetKafkaStore, debeziumBinlogOffsetKafkaStore);
   }
 }

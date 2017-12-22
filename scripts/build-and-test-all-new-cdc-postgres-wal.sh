@@ -24,8 +24,6 @@ $DOCKER_COMPOSE up -d postgres
 # wait for Postgres
 echo waiting for Postgres
 ./scripts/wait-for-postgres.sh
-#create replication slot
-docker exec $(echo ${PWD##*/} | sed -e 's/-//g')_postgres_1 /bin/sh -c "pg_recvlogical -U eventuate -d eventuate --slot test_slot --create-slot -P wal2json"
 
 $DOCKER_COMPOSE up -d
 

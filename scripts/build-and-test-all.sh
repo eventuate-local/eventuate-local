@@ -23,7 +23,7 @@ docker-compose up -d
 
 ./scripts/wait-for-mysql.sh
 
-./gradlew $* build
+./gradlew $* build -x :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
 
 #test spring compatibility
 
@@ -33,5 +33,14 @@ docker-compose up -d
 docker-compose stop
 docker-compose rm --force -v
 
+echo testing postgres wal
 
+. ./scripts/set-env-postgres-wal.sh
 
+docker-compose -f docker-compose-postgres-wal.yml build
+docker-compose -f docker-compose-postgres-wal.yml  up -d
+
+./gradlew $* :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:cleanTest :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
+
+docker-compose -f docker-compose-postgres-wal.yml  stop
+docker-compose -f docker-compose-postgres-wal.yml  rm --force -v

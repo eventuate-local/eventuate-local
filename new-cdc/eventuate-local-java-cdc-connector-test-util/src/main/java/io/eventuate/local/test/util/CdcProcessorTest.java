@@ -66,11 +66,11 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
 
-    CdcProcessor<PublishedEvent> mySQLCdcProcessor = createCdcProcessor();
-    mySQLCdcProcessor.start(publishedEvents::add);
+    CdcProcessor<PublishedEvent> cdcProcessor = createCdcProcessor();
+    cdcProcessor.start(publishedEvents::add);
 
     waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData);
-    mySQLCdcProcessor.stop();
+    cdcProcessor.stop();
   }
 
   private PublishedEvent waitForEventExcluding(BlockingQueue<PublishedEvent> publishedEvents, Int128 eventId, LocalDateTime deadline, String eventData, List<String> excludedIds) throws InterruptedException {

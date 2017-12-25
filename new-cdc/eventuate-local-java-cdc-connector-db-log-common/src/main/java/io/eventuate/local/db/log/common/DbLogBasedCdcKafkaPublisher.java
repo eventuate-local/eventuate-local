@@ -11,13 +11,13 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class ReplicationLogBasedCdcKafkaPublisher<EVENT extends BinLogEvent> extends CdcKafkaPublisher<EVENT> {
+public class DbLogBasedCdcKafkaPublisher<EVENT extends BinLogEvent> extends CdcKafkaPublisher<EVENT> {
 
   private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
   private DuplicatePublishingDetector duplicatePublishingDetector;
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public ReplicationLogBasedCdcKafkaPublisher(DatabaseOffsetKafkaStore databaseOffsetKafkaStore, String kafkaBootstrapServers, PublishingStrategy<EVENT> publishingStrategy) {
+  public DbLogBasedCdcKafkaPublisher(DatabaseOffsetKafkaStore databaseOffsetKafkaStore, String kafkaBootstrapServers, PublishingStrategy<EVENT> publishingStrategy) {
     super(kafkaBootstrapServers, publishingStrategy);
 
     this.databaseOffsetKafkaStore = databaseOffsetKafkaStore;

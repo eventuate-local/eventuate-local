@@ -5,8 +5,8 @@ import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
+import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,7 +35,7 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   EventuateJdbcAccess eventuateJdbcAccess;
 
   @Autowired
-  private DatabaseOffsetKafkaStore databaseBinlogOffsetKafkaStore;
+  private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
 
   @Autowired
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
@@ -50,7 +50,7 @@ public class MySQLMigrationTest extends AbstractCdcTest {
     CdcProcessor<PublishedEvent> cdcProcessor = createMySQLCdcProcessor();
     cdcProcessor.start(publishedEvent -> {
       publishedEvents.add(publishedEvent);
-      databaseBinlogOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
+      databaseOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
     });
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
@@ -70,6 +70,6 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   }
 
   private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, databaseBinlogOffsetKafkaStore, debeziumBinlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, databaseOffsetKafkaStore, debeziumBinlogOffsetKafkaStore);
   }
 }

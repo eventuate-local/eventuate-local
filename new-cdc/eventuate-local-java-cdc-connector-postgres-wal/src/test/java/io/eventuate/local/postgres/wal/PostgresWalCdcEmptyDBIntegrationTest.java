@@ -13,9 +13,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @ActiveProfiles("PostgresWal")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {EmptyDBTestConfiguration.class, PostgresBinlogCdcIntegrationTestConfiguration.class})
+@SpringApplicationConfiguration(classes = {EmptyDBTestConfiguration.class, PostgresWalCdcIntegrationTestConfiguration.class})
 @IntegrationTest
-public class PostgresBinlogCdcEmptyDBIntegrationTest extends AbstractPostgresBinlogCdcIntegrationTest {
+public class PostgresWalCdcEmptyDBIntegrationTest extends AbstractPostgresWalCdcIntegrationTest {
 
   @Value("${eventuate.database.schema}")
   private String eventuateDatabaseSchema;

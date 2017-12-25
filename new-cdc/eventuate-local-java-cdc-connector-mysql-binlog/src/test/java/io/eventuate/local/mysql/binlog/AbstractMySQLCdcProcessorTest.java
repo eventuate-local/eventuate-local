@@ -12,18 +12,18 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
   private MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient;
 
   @Autowired
-  private DatabaseOffsetKafkaStore binlogOffsetKafkaStore;
+  private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
 
   @Autowired
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, binlogOffsetKafkaStore, debeziumBinlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, databaseOffsetKafkaStore, debeziumBinlogOffsetKafkaStore);
   }
 
   @Override
   protected void onEventSent(PublishedEvent publishedEvent) {
-    binlogOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
+    databaseOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
   }
 }

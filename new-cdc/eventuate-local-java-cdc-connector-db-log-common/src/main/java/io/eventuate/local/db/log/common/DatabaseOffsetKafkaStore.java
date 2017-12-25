@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
 
-  private final String mySqlBinaryLogClientName;
+  private final String dbLogClientName;
 
   private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
   private EventuateKafkaProducer eventuateKafkaProducer;
@@ -21,13 +21,13 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
   private Optional<BinlogFileOffset> recordToSave = Optional.empty();
 
   public DatabaseOffsetKafkaStore(String dbHistoryTopicName,
-                                  String mySqlBinaryLogClientName,
+                                  String dbLogClientName,
                                   EventuateKafkaProducer eventuateKafkaProducer,
                                   EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
 
     super(dbHistoryTopicName, eventuateKafkaConfigurationProperties);
 
-    this.mySqlBinaryLogClientName = mySqlBinaryLogClientName;
+    this.dbLogClientName = dbLogClientName;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
     scheduledExecutorService.scheduleAtFixedRate(this::scheduledBinlogFilenameAndOffsetUpdate, 5, 5, TimeUnit.SECONDS);
   }
@@ -43,7 +43,7 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
 
   @Override
   protected BinlogFileOffset handleRecord(ConsumerRecord<String, String> record) {
-    if (record.key().equals(mySqlBinaryLogClientName)) {
+    if (record.key().equals(dbLogClientName)) {
       return JSonMapper.fromJson(record.value(), BinlogFileOffset.class);
     }
     return null;
@@ -59,7 +59,7 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
     try {
       eventuateKafkaProducer.send(
               dbHistoryTopicName,
-              mySqlBinaryLogClientName,
+              dbLogClientName,
               JSonMapper.toJson(
                       binlogFileOffset
               )

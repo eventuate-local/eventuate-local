@@ -3,8 +3,6 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.JdbcUrl;
-import io.eventuate.local.common.JdbcUrlParser;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
@@ -12,18 +10,21 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeoutException;
 
-public abstract class AbstractPostgresBinlogCdcIntegrationTest extends AbstractCdcTest {
+public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcTest {
 
   @Value("${spring.datasource.url}")
   private String dataSourceURL;
+
+  @Value("${spring.datasource.username}")
+  private String dbUserName;
+
+  @Value("${spring.datasource.password}")
+  private String dbPassword;
 
   @Autowired
   EventuateJdbcAccess eventuateJdbcAccess;
@@ -35,11 +36,16 @@ public abstract class AbstractPostgresBinlogCdcIntegrationTest extends AbstractC
   private PostgresWalMessageParser postgresWalMessageParser;
 
   @Test
-  public void shouldGetEvents() throws IOException, TimeoutException, InterruptedException, ExecutionException {
-    JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
+  public void shouldGetEvents() throws InterruptedException{
     PostgresWalClient<PublishedEvent> postgresWalClient = new PostgresWalClient<>(postgresWalMessageParser,
+            dataSourceURL,
+            dbUserName,
+            dbPassword,
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
+            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
+            eventuateConfigurationProperties.getPostresWalIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getPostgresReplicationSlotName());
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 

@@ -4,20 +4,20 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PostgresWalMessage {
-    private PostgresWalChange[] change;
+  private PostgresWalChange[] change;
 
-    public PostgresWalMessage() {
-    }
+  public PostgresWalMessage() {
+  }
 
-    public PostgresWalMessage(PostgresWalChange[] change) {
-        this.change = change;
-    }
+  public PostgresWalMessage(PostgresWalChange[] change) {
+    this.change = change;
+  }
 
-    public PostgresWalChange[] getChange() {
-        return change;
-    }
+  public PostgresWalChange[] getChange() {
+    return change;
+  }
 
-    public void setChange(PostgresWalChange[] change) {
-        this.change = change;
-    }
+  public void setChange(PostgresWalChange[] change) {
+    this.change = change;
+  }
 }

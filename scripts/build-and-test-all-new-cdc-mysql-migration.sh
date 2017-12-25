@@ -4,15 +4,15 @@ export TERM=dumb
 
 set -e
 
-. ./scripts/set-env.sh
+. ./scripts/set-env-mysql.sh
 
 ./gradlew clean
 
-docker-compose stop
-docker-compose rm --force -v
+docker-compose -f docker-compose-mysql.yml stop
+docker-compose -f docker-compose-mysql.yml rm --force -v
 
-docker-compose build
-docker-compose up -d
+docker-compose -f docker-compose-mysql.yml build
+docker-compose -f docker-compose-mysql.yml up -d
 
 ./scripts/wait-for-mysql.sh
 
@@ -20,5 +20,5 @@ docker-compose up -d
 ./gradlew new-cdc:eventuate-local-java-cdc-connector-mysql-binlog:test --tests "io.eventuate.local.mysql.binlog.MySQLMigrationTest"
 
 
-docker-compose stop
-docker-compose rm --force -v
+docker-compose -f docker-compose-mysql.yml stop
+docker-compose -f docker-compose-mysql.yml rm --force -v

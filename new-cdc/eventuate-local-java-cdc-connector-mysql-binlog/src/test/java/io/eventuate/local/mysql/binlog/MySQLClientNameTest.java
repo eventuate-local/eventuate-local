@@ -4,10 +4,10 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.*;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
   @Autowired
   private EventuateKafkaProducer eventuateKafkaProducer;
 
-  private DatabaseOffsetKafkaStore databaseBinlogOffsetKafkaStore;
+  private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
 
   @Autowired
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
@@ -59,13 +59,13 @@ public class MySQLClientNameTest extends AbstractCdcTest {
   @Test
   public void test() throws Exception {
 
-    databaseBinlogOffsetKafkaStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
+    databaseOffsetKafkaStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
     CdcProcessor<PublishedEvent> cdcProcessor = createMySQLCdcProcessor();
     cdcProcessor.start(publishedEvent -> {
       publishedEvents.add(publishedEvent);
-      databaseBinlogOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
+      databaseOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
     });
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
@@ -87,12 +87,12 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     /*waiting while offset is storing in kafka*/
     Thread.sleep(10000);
 
-    databaseBinlogOffsetKafkaStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
+    databaseOffsetKafkaStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
     cdcProcessor = createMySQLCdcProcessor();
     cdcProcessor.start(event -> {
       publishedEvents.add(event);
-      databaseBinlogOffsetKafkaStore.save(event.getBinlogFileOffset());
+      databaseOffsetKafkaStore.save(event.getBinlogFileOffset());
     });
 
     while((publishedEvent = publishedEvents.poll(10, TimeUnit.SECONDS)) != null) {

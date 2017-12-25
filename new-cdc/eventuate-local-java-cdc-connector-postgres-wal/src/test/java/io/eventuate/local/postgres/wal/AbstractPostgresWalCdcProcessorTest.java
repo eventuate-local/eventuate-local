@@ -6,7 +6,7 @@ import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class AbstractReplicationLogBasedCdcProcessorTest extends CdcProcessorTest {
+public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTest {
 
   @Autowired
   private PostgresWalClient<PublishedEvent> postgresWalClient;

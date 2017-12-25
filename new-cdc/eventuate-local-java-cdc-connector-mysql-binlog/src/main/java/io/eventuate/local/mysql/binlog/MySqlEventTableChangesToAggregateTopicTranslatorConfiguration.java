@@ -3,12 +3,14 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
+import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
-import io.eventuate.local.db.log.common.ReplicationLogClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.*;
-
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import javax.sql.DataSource;
 
@@ -34,10 +36,10 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   @Conditional(MysqlBinlogCondition.class)
-  public ReplicationLogClient<PublishedEvent> mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
-                                                                   EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                                   SourceTableNameSupplier sourceTableNameSupplier,
-                                                                   IWriteRowsEventDataParser<PublishedEvent> eventDataParser) {
+  public DbLogClient<PublishedEvent> dbLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
+                                                 EventuateConfigurationProperties eventuateConfigurationProperties,
+                                                 SourceTableNameSupplier sourceTableNameSupplier,
+                                                 IWriteRowsEventDataParser<PublishedEvent> eventDataParser) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     return new MySqlBinaryLogClient<>(eventDataParser,

@@ -1,5 +1,6 @@
 package io.eventuate.local.postgres.wal;
 
+
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
 import org.junit.Before;
@@ -12,9 +13,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @ActiveProfiles("PostgresWal")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {CustomDBTestConfiguration.class, PostgresBinlogCdcIntegrationTestConfiguration.class})
+@SpringApplicationConfiguration(classes = {CustomDBTestConfiguration.class, PostgresWalCdcIntegrationTestConfiguration.class})
 @IntegrationTest
-public class PostgresBinlogCdcCustomDBIntegrationTest extends AbstractPostgresBinlogCdcIntegrationTest {
+public class PostgresWalCdcProcessorCustomDBTest extends AbstractPostgresWalCdcProcessorTest {
 
   @Autowired
   private CustomDBCreator customDBCreator;

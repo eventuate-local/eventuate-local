@@ -4,28 +4,28 @@ import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
+import io.eventuate.local.db.log.common.DbLogClient;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
 public class MySQLCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
 
-  private MySqlBinaryLogClient<EVENT> mySqlBinaryLogClient;
-  private DatabaseOffsetKafkaStore binlogOffsetKafkaStore;
+  private DbLogClient<EVENT> dbLogClient;
+  private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
-  public MySQLCdcProcessor(MySqlBinaryLogClient<EVENT> mySqlBinaryLogClient,
-          DatabaseOffsetKafkaStore binlogOffsetKafkaStore,
-          DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+  public MySQLCdcProcessor(DbLogClient<EVENT> dbLogClient,
+                           DatabaseOffsetKafkaStore databaseOffsetKafkaStore,
+                           DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
-    this.mySqlBinaryLogClient = mySqlBinaryLogClient;
-    this.binlogOffsetKafkaStore = binlogOffsetKafkaStore;
+    this.dbLogClient = dbLogClient;
+    this.databaseOffsetKafkaStore = databaseOffsetKafkaStore;
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
   }
 
   public void start(Consumer<EVENT> eventConsumer) {
-
-    Optional<BinlogFileOffset> binlogFileOffset = binlogOffsetKafkaStore.getLastBinlogFileOffset();
+    Optional<BinlogFileOffset> binlogFileOffset = databaseOffsetKafkaStore.getLastBinlogFileOffset();
 
     if (!binlogFileOffset.isPresent()) {
       binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
@@ -33,29 +33,25 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> implements CdcProcesso
 
     Optional<BinlogFileOffset> startingBinlogFileOffset = binlogFileOffset;
 
-    try {
-      mySqlBinaryLogClient.start(startingBinlogFileOffset, new Consumer<EVENT>() {
-        private boolean couldReadDuplicateEntries = true;
+    dbLogClient.start(startingBinlogFileOffset, new Consumer<EVENT>() {
+      private boolean couldReadDuplicateEntries = true;
 
-        @Override
-        public void accept(EVENT publishedEvent) {
-          if (couldReadDuplicateEntries) {
-            if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(publishedEvent.getBinlogFileOffset())).orElse(false)) {
-              return;
-            } else {
-              couldReadDuplicateEntries = false;
-            }
+      @Override
+      public void accept(EVENT publishedEvent) {
+        if (couldReadDuplicateEntries) {
+          if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(publishedEvent.getBinlogFileOffset())).orElse(false)) {
+            return;
+          } else {
+            couldReadDuplicateEntries = false;
           }
-          eventConsumer.accept(publishedEvent);
         }
-      });
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+        eventConsumer.accept(publishedEvent);
+      }
+    });
   }
 
   public void stop() {
-    mySqlBinaryLogClient.stop();
-    binlogOffsetKafkaStore.stop();
+    dbLogClient.stop();
+    databaseOffsetKafkaStore.stop();
   }
 }

@@ -15,7 +15,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
-public class AbstractDatabaseBinlogOffsetKafkaStoreTest extends AbstractCdcTest {
+public class AbstractDatabaseOffsetKafkaStoreTest extends AbstractCdcTest {
 
   @Autowired
   EventuateKafkaProducer eventuateKafkaProducer;
@@ -34,7 +34,7 @@ public class AbstractDatabaseBinlogOffsetKafkaStoreTest extends AbstractCdcTest 
 
   @Test
   public void shouldGetEmptyOptionalFromEmptyTopic() {
-    DatabaseOffsetKafkaStore databaseOffsetKafkaStore = getDatabaseLastSequenceNumberKafkaStore(UUID.randomUUID().toString(), "mySqlBinaryLogClientName");
+    DatabaseOffsetKafkaStore databaseOffsetKafkaStore = getDatabaseOffsetKafkaStore(UUID.randomUUID().toString(), "mySqlBinaryLogClientName");
     databaseOffsetKafkaStore.getLastBinlogFileOffset().isPresent();
     databaseOffsetKafkaStore.stop();
   }
@@ -62,13 +62,13 @@ public class AbstractDatabaseBinlogOffsetKafkaStoreTest extends AbstractCdcTest 
     producer.close();
   }
 
-  public DatabaseOffsetKafkaStore getDatabaseLastSequenceNumberKafkaStore(String topicName, String key) {
+  public DatabaseOffsetKafkaStore getDatabaseOffsetKafkaStore(String topicName, String key) {
     return new DatabaseOffsetKafkaStore(topicName, key, eventuateKafkaProducer, eventuateKafkaConfigurationProperties);
   }
 
   private BinlogFileOffset generateAndSaveBinlogFileOffset() throws InterruptedException {
     BinlogFileOffset bfo = generateBinlogFileOffset();
-    DatabaseOffsetKafkaStore binlogOffsetKafkaStore = getDatabaseLastSequenceNumberKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
+    DatabaseOffsetKafkaStore binlogOffsetKafkaStore = getDatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
     binlogOffsetKafkaStore.save(bfo);
 
     Thread.sleep(5000);
@@ -80,7 +80,7 @@ public class AbstractDatabaseBinlogOffsetKafkaStoreTest extends AbstractCdcTest 
   }
 
   private void assertLastRecordEquals(BinlogFileOffset binlogFileOffset) {
-    DatabaseOffsetKafkaStore binlogOffsetKafkaStore = getDatabaseLastSequenceNumberKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
+    DatabaseOffsetKafkaStore binlogOffsetKafkaStore = getDatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
 
     BinlogFileOffset lastRecord = binlogOffsetKafkaStore.getLastBinlogFileOffset().get();
     assertEquals(binlogFileOffset, lastRecord);

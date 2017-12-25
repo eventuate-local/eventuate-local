@@ -6,7 +6,7 @@ import io.eventuate.local.common.BinlogFileOffset;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public interface ReplicationLogClient<EVENT extends BinLogEvent> {
+public interface DbLogClient<EVENT extends BinLogEvent> {
   void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<EVENT> eventConsumer);
   void stop();
 }

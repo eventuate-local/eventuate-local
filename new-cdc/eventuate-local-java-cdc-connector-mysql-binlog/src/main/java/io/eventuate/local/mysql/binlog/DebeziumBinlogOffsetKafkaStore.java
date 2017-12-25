@@ -2,8 +2,8 @@ package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogFileOffset;
-import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.db.log.common.OffsetKafkaStore;
+import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.util.Map;

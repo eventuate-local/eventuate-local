@@ -4,7 +4,7 @@ export TERM=dumb
 
 set -e
 
-. ./scripts/set-env.sh
+. ./scripts/set-env-mysql.sh
 
 GRADLE_OPTS=""
 
@@ -15,18 +15,18 @@ fi
 
 ./gradlew ${GRADLE_OPTS} $* testClasses
 
-docker-compose stop
-docker-compose rm --force -v
+docker-compose -f docker-compose-mysql.yml stop
+docker-compose -f docker-compose-mysql.yml rm --force -v
 
-docker-compose build
-docker-compose up -d
+docker-compose -f docker-compose-mysql.yml build
+docker-compose -f docker-compose-mysql.yml up -d
 
 ./scripts/wait-for-mysql.sh
 
 ./gradlew $* build -x :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
 
-docker-compose stop
-docker-compose rm --force -v
+docker-compose -f docker-compose-mysql.yml stop
+docker-compose -f docker-compose-mysql.yml rm --force -v
 
 echo testing postgres wal
 

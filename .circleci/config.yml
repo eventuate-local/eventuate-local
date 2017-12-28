@@ -13,9 +13,10 @@ jobs:
             - ~/.gradle
           key: eventuate-local-java-{{ checksum "build.gradle" }}
       - run: TERM=dumb ./scripts/build-and-test-all.sh
-      - run: TERM=dumb ./scripts/build-and-test-all-cdc.sh
-      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc.sh
-      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-postgres.sh
+      - run: TERM=dumb ./scripts/build-and-test-all-cdc-mysql.sh
+      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-mysql.sh
+      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-postgres-polling.sh
+      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-postgres-wal.sh
       - run:
           name: Save test results
           command: |

@@ -11,16 +11,12 @@ import java.util.stream.Collectors;
 public class PostgresWalJsonMessageParser implements PostgresWalMessageParser<PublishedEvent> {
 
   @Override
-  public List<PublishedEvent> parse(PostgresWalMessage message, long lastSequenceNumber) {
+  public List<PublishedEvent> parse(PostgresWalMessage message, long lastSequenceNumber, String slotName) {
     List<PostgresWalChange> changes = Arrays.asList(message.getChange());
 
-    List<PostgresWalChange> insertedEvents = changes
+    return changes
             .stream()
             .filter(change -> change.getKind().equals("insert") && change.getTable().equals("events"))
-            .collect(Collectors.toList());
-
-    return insertedEvents
-            .stream()
             .map(insertedEvent -> {
               List<String> columns = Arrays.asList(insertedEvent.getColumnnames());
 
@@ -38,7 +34,7 @@ public class PostgresWalJsonMessageParser implements PostgresWalMessageParser<Pu
                       values.get(entityType),
                       values.get(eventDate),
                       values.get(eventType),
-                      new BinlogFileOffset(lastSequenceNumber),
+                      new BinlogFileOffset(slotName, lastSequenceNumber),
                       Optional.ofNullable(values.get(metadata)));
             })
             .collect(Collectors.toList());

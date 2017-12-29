@@ -35,7 +35,7 @@ public class EventuateConfigurationProperties {
 
   private int maxAttemptsForBinlogConnection = 100;
 
-  private int postresWalIntervalInMilliseconds = 10;
+  private int postgresWalIntervalInMilliseconds = 10;
 
   private int postgresReplicationStatusIntervalInMilliseconds = 1000;
 
@@ -154,12 +154,12 @@ public class EventuateConfigurationProperties {
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
   }
 
-  public int getPostresWalIntervalInMilliseconds() {
-    return postresWalIntervalInMilliseconds;
+  public int getPostgresWalIntervalInMilliseconds() {
+    return postgresWalIntervalInMilliseconds;
   }
 
-  public void setPostresWalIntervalInMilliseconds(int postresWalIntervalInMilliseconds) {
-    this.postresWalIntervalInMilliseconds = postresWalIntervalInMilliseconds;
+  public void setPostgresWalIntervalInMilliseconds(int postgresWalIntervalInMilliseconds) {
+    this.postgresWalIntervalInMilliseconds = postgresWalIntervalInMilliseconds;
   }
 
   public int getPostgresReplicationStatusIntervalInMilliseconds() {

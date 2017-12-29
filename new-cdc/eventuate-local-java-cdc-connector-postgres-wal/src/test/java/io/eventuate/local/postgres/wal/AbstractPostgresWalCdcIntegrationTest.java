@@ -43,7 +43,7 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
             dbPassword,
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
-            eventuateConfigurationProperties.getPostresWalIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationSlotName());
 

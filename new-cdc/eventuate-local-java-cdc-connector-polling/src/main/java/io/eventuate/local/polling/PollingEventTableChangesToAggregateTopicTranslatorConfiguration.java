@@ -18,31 +18,28 @@ import java.util.Optional;
 @Configuration
 @EnableConfigurationProperties({EventuateConfigurationProperties.class})
 @Import({EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
+@Profile("EventuatePolling")
 public class PollingEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
-  @Profile("EventuatePolling")
   public CdcKafkaPublisher<PublishedEvent> pollingCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
     PublishingStrategy<PublishedEvent> publishingStrategy) {
     return new PollingCdcKafkaPublisher<>(eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
   }
 
   @Bean
-  @Profile("EventuatePolling")
   public CdcProcessor<PublishedEvent> pollingCdcProcessor(EventuateConfigurationProperties eventuateConfigurationProperties,
     PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
     return new PollingCdcProcessor<>(pollingDao, eventuateConfigurationProperties.getPollingIntervalInMilliseconds());
   }
 
   @Bean
-  @Profile("EventuatePolling")
   public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateConfigurationProperties eventuateConfigurationProperties,
           EventuateSchema eventuateSchema) {
     return new EventPollingDataProvider(eventuateSchema);
   }
 
   @Bean
-  @Profile("EventuatePolling")
   public PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao(EventuateConfigurationProperties eventuateConfigurationProperties,
           PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider,
           DataSource dataSource) {

@@ -6,18 +6,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class BinlogFileOffset {
   private String binlogFilename;
-  private Long offset;
+  private long offset;
 
   public BinlogFileOffset() {
   }
 
-  public BinlogFileOffset(String binlogFilename, Long offset) {
+  public BinlogFileOffset(String binlogFilename, long offset) {
    this.binlogFilename = binlogFilename;
    this.offset = offset;
-  }
-
-  public BinlogFileOffset(Long offset) {
-    this(null, offset);
   }
 
   public String getBinlogFilename() {
@@ -28,33 +24,26 @@ public class BinlogFileOffset {
     this.binlogFilename = binlogFilename;
   }
 
-  public Long getOffset() {
+  public long getOffset() {
     return offset;
   }
 
-  public void setOffset(Long offset) {
+  public void setOffset(long offset) {
     this.offset = offset;
   }
 
   public boolean isSameOrAfter(BinlogFileOffset binlogFileOffset) {
-
     if(this.equals(binlogFileOffset))
       return true;
-
-    if(this.getBinlogFilename() == null || binlogFileOffset.getBinlogFilename() == null || this.getBinlogFilename().equals(binlogFileOffset.getBinlogFilename())) {
-      if (binlogFileOffset.getOffset() == null)
-        return true;
-      else if (this.getOffset() == null)
-        return true;
-      else if(this.getOffset() > binlogFileOffset.getOffset()) {
+    if(this.getBinlogFilename().equals(binlogFileOffset.getBinlogFilename())) {
+      if(this.getOffset()>binlogFileOffset.getOffset()) {
         return true;
       }
     } else {
-      if(this.getBinlogFilename().compareTo(binlogFileOffset.getBinlogFilename()) > 0) {
+      if(this.getBinlogFilename().compareTo(binlogFileOffset.getBinlogFilename())>0) {
         return true;
       }
     }
-
     return false;
   }
 

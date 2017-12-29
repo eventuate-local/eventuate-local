@@ -3,6 +3,7 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
+import io.eventuate.local.db.log.common.CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +15,8 @@ import org.springframework.context.annotation.Conditional;
 import javax.sql.DataSource;
 
 @Configuration
-@Import({EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
+@Import({CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration.class, EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
+@Conditional(MySqlBinlogCondition.class)
 public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
@@ -28,13 +30,11 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  @Conditional(MysqlBinlogCondition.class)
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
     return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "EVENTS");
   }
 
   @Bean
-  @Conditional(MysqlBinlogCondition.class)
   public IWriteRowsEventDataParser eventDataParser(EventuateSchema eventuateSchema,
                                                    DataSource dataSource,
                                                    SourceTableNameSupplier sourceTableNameSupplier) {
@@ -43,7 +43,6 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  @Conditional(MysqlBinlogCondition.class)
   public DbLogClient<PublishedEvent> dbLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
                                                  EventuateConfigurationProperties eventuateConfigurationProperties,
                                                  SourceTableNameSupplier sourceTableNameSupplier,
@@ -63,7 +62,6 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  @Conditional(MysqlBinlogCondition.class)
   public DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
                                                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
 

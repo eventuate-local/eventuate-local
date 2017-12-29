@@ -1,7 +1,7 @@
 package io.eventuate.local.postgres.wal;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.db.log.common.DbLogClient;
@@ -120,24 +120,20 @@ public class PostgresWalClient<EVENT extends BinLogEvent> implements DbLogClient
     logger.info("connection to postgres wal succeed");
 
     while (running) {
-      ByteBuffer msg = stream.readPending();
+      ByteBuffer messageBuffer = stream.readPending();
 
-      if (msg == null) {
+      if (messageBuffer == null) {
         logger.info("Got empty message, sleeping");
         TimeUnit.MILLISECONDS.sleep(walIntervalInMilliseconds);
         continue;
       }
 
-      int offset = msg.arrayOffset();
-      byte[] source = msg.array();
-      int length = source.length - offset;
+      String messageString = extractStringFromBuffer(messageBuffer);
 
-      String msgString = new String(source, offset, length);
-
-      logger.info("Got message: " + msgString);
+      logger.info("Got message: " + messageString);
 
       postgresWalMessageParser
-                .parse(new ObjectMapper().readValue(msgString, PostgresWalMessage.class), stream.getLastReceiveLSN().asLong())
+                .parse(JSonMapper.fromJson(messageString, PostgresWalMessage.class), stream.getLastReceiveLSN().asLong(), replicationSlotName)
                 .forEach(eventConsumer);
 
       stream.setAppliedLSN(stream.getLastReceiveLSN());
@@ -161,5 +157,13 @@ public class PostgresWalClient<EVENT extends BinLogEvent> implements DbLogClient
       logger.error(e.getMessage(), e);
       throw new RuntimeException(e);
     }
+  }
+
+  private String extractStringFromBuffer(ByteBuffer byteBuffer) {
+    int offset = byteBuffer.arrayOffset();
+    byte[] source = byteBuffer.array();
+    int length = source.length - offset;
+
+    return new String(source, offset, length);
   }
 }

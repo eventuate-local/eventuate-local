@@ -10,11 +10,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
+@Profile("!EventuatePolling")
 @Import({EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
 public class CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
-  @Profile("!EventuatePolling")
   public DatabaseOffsetKafkaStore databaseOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
                                                            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                            EventuateKafkaProducer eventuateKafkaProducer) {
@@ -26,7 +26,6 @@ public class CommonReplicationEventTableChangesToAggregateTopicTranslatorConfigu
   }
 
   @Bean
-  @Profile("!EventuatePolling")
   public CdcKafkaPublisher<PublishedEvent> cdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                              DatabaseOffsetKafkaStore databaseOffsetKafkaStore,
                                                              PublishingStrategy<PublishedEvent> publishingStrategy) {
@@ -37,7 +36,6 @@ public class CommonReplicationEventTableChangesToAggregateTopicTranslatorConfigu
   }
 
   @Bean
-  @Profile("!EventuatePolling")
   public CdcProcessor<PublishedEvent> cdcProcessor(DbLogClient<PublishedEvent> dbLogClient,
                                                    DatabaseOffsetKafkaStore databaseOffsetKafkaStore) {
 

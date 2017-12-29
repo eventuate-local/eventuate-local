@@ -20,13 +20,6 @@ RUN apt-get update \
         libprotobuf-c-dev=1.2.* \
     && rm -rf /var/lib/apt/lists/*             
 
-# Compile the plugin from sources and install it
-RUN git clone https://github.com/debezium/postgres-decoderbufs -b $PLUGIN_VERSION --single-branch \
-    && cd /postgres-decoderbufs \ 
-    && make && make install \
-    && cd / \ 
-    && rm -rf postgres-decoderbufs
-
 RUN git clone https://github.com/eulerto/wal2json -b master --single-branch \
     && cd /wal2json \
     && git checkout $WAL2JSON_COMMIT_ID \

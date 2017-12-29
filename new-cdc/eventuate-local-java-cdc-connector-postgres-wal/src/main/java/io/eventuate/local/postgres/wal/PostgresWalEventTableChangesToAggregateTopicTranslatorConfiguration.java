@@ -14,10 +14,10 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 @EnableConfigurationProperties({EventuateConfigurationProperties.class})
 @Import({CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration.class})
+@Profile("PostgresWal")
 public class PostgresWalEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
-  @Profile("PostgresWal")
   public DbLogClient<PublishedEvent> dbLogClient(@Value("${spring.datasource.url}") String dbUrl,
                                                  @Value("${spring.datasource.username}") String dbUserName,
                                                  @Value("${spring.datasource.password}") String dbPassword,
@@ -30,13 +30,12 @@ public class PostgresWalEventTableChangesToAggregateTopicTranslatorConfiguration
             dbPassword,
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
-            eventuateConfigurationProperties.getPostresWalIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationSlotName());
   }
 
   @Bean
-  @Profile("PostgresWal")
   public PostgresWalMessageParser<PublishedEvent> postgresReplicationMessageParser() {
     return new PostgresWalJsonMessageParser();
   }

@@ -35,6 +35,8 @@ echo testing postgres wal
 docker-compose -f docker-compose-postgres-wal.yml build
 docker-compose -f docker-compose-postgres-wal.yml  up -d
 
+./scripts/wait-for-postgres.sh
+
 ./gradlew $* :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:cleanTest :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
 
 docker-compose -f docker-compose-postgres-wal.yml  stop

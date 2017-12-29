@@ -12,7 +12,8 @@ jobs:
           paths:
             - ~/.gradle
           key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-all.sh
+      - run: TERM=dumb ./scripts/build-and-test-mysql.sh
+      - run: TERM=dumb ./scripts/build-and-test-postgres-wal.sh
       - run: TERM=dumb ./scripts/build-and-test-all-cdc-mysql.sh
       - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-mysql.sh
       - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-postgres-polling.sh

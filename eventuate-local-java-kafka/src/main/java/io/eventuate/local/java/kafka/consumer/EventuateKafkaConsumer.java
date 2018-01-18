@@ -28,6 +28,7 @@ public class EventuateKafkaConsumer {
   private final List<String> topics;
   private AtomicBoolean stopFlag = new AtomicBoolean(false);
   private Properties consumerProperties;
+  private KafkaConsumer<String, String> consumer;
 
   public EventuateKafkaConsumer(String subscriberId, BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler, List<String> topics, String bootstrapServers) {
     this.subscriberId = subscriberId;
@@ -59,10 +60,14 @@ public class EventuateKafkaConsumer {
     }
   }
 
+  public String getSubscriberId() {
+    return subscriberId;
+  }
+
   public void start() {
     try {
 
-      KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProperties);
+      consumer = new KafkaConsumer<>(consumerProperties);
 
       KafkaMessageProcessor processor = new KafkaMessageProcessor(subscriberId, handler);
 
@@ -102,6 +107,7 @@ public class EventuateKafkaConsumer {
           }
 
           maybeCommitOffsets(consumer, processor);
+          consumer.close();
 
         } catch (Throwable e) {
           logger.error("Got exception: ", e);

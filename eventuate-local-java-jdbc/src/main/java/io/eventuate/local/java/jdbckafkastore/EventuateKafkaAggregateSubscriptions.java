@@ -88,6 +88,18 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
 
   }
 
+  public void unsubscribe(String subscriberId) {
+    synchronized (consumers) {
+      for (int i = 0; i < consumers.size(); i++) {
+        if (subscriberId.equals(consumers.get(i).getSubscriberId())) {
+          consumers.get(i).stop();
+          consumers.remove(i);
+          break;
+        }
+      }
+    }
+  }
+
   private SerializedEvent toSerializedEvent(ConsumerRecord<String, String> record) {
     PublishedEvent pe = JSonMapper.fromJson(record.value(), PublishedEvent.class);
     return new SerializedEvent(

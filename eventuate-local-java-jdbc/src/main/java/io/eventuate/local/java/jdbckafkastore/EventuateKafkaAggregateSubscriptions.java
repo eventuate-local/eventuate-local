@@ -10,15 +10,13 @@ import io.eventuate.local.common.AggregateTopicMapping;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumer;
+import io.eventuate.local.java.kafka.consumer.SaveOffsetStrategy;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -33,9 +31,21 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration;
+  private Optional<SaveOffsetStrategy> saveOffsetStrategy;
 
   public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration) {
+    this(eventuateLocalAggregateStoreConfiguration, Optional.empty());
+  }
+
+  public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
+                                              SaveOffsetStrategy saveOffsetStrategy) {
+    this(eventuateLocalAggregateStoreConfiguration, Optional.of(saveOffsetStrategy));
+  }
+
+  public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
+                                              Optional<SaveOffsetStrategy> saveOffsetStrategy) {
     this.eventuateLocalAggregateStoreConfiguration = eventuateLocalAggregateStoreConfiguration;
+    this.saveOffsetStrategy = saveOffsetStrategy;
   }
 
   private final List<EventuateKafkaConsumer> consumers = new ArrayList<>();
@@ -79,7 +89,7 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
         callback.accept(null, null);
       }
 
-    }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers());
+    }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers(), saveOffsetStrategy);
 
     addConsumer(consumer);
     consumer.start();

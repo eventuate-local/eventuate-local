@@ -1,18 +1,12 @@
 package io.eventuate.local.java.kafka.consumer;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
@@ -29,11 +23,32 @@ public class EventuateKafkaConsumer {
   private AtomicBoolean stopFlag = new AtomicBoolean(false);
   private Properties consumerProperties;
   private KafkaConsumer<String, String> consumer;
+  private Optional<SaveOffsetStrategy> saveOffsetStrategy;
 
-  public EventuateKafkaConsumer(String subscriberId, BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler, List<String> topics, String bootstrapServers) {
+  public EventuateKafkaConsumer(String subscriberId,
+                                BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler,
+                                List<String> topics,
+                                String bootstrapServers) {
+    this(subscriberId, handler, topics, bootstrapServers, Optional.empty());
+  }
+
+  public EventuateKafkaConsumer(String subscriberId,
+                                BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler,
+                                List<String> topics,
+                                String bootstrapServers,
+                                SaveOffsetStrategy saveOffsetStrategy) {
+    this(subscriberId, handler, topics, bootstrapServers, Optional.of(saveOffsetStrategy));
+  }
+
+  public EventuateKafkaConsumer(String subscriberId,
+                                BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler,
+                                List<String> topics,
+                                String bootstrapServers,
+                                Optional<SaveOffsetStrategy> saveOffsetStrategy) {
     this.subscriberId = subscriberId;
     this.handler = handler;
     this.topics = topics;
+    this.saveOffsetStrategy = saveOffsetStrategy;
 
     this.consumerProperties = ConsumerPropertiesFactory.makeConsumerProperties(bootstrapServers, subscriberId);
   }
@@ -55,6 +70,11 @@ public class EventuateKafkaConsumer {
     if (!offsetsToCommit.isEmpty()) {
       logger.debug("Committing offsets {} {}", subscriberId, offsetsToCommit);
       consumer.commitSync(offsetsToCommit);
+      saveOffsetStrategy.ifPresent(strategy -> {
+        for (TopicPartition partition : offsetsToCommit.keySet()) {
+          strategy.save(subscriberId, partition, offsetsToCommit.get(partition).offset());
+        }
+      });
       logger.debug("Committed offsets {}", subscriberId);
       processor.noteOffsetsCommitted(offsetsToCommit);
     }
@@ -77,7 +97,23 @@ public class EventuateKafkaConsumer {
 
       logger.debug("Subscribing to {} {}", subscriberId, topics);
 
-      consumer.subscribe(new ArrayList<>(topics));
+      List<String> topicList = new ArrayList<>(topics);
+
+      if (!saveOffsetStrategy.isPresent()) {
+        consumer.subscribe(topicList);
+      } else {
+        consumer.subscribe(topicList, new ConsumerRebalanceListener() {
+          @Override
+          public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+            partitions.forEach(part -> saveOffsetStrategy.get().save(subscriberId, part, consumer.position(part)));
+          }
+
+          @Override
+          public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+            partitions.forEach(part -> consumer.seek(part, saveOffsetStrategy.get().load(subscriberId, part)));
+          }
+        });
+      }
 
       logger.debug("Subscribed to {} {}", subscriberId, topics);
 

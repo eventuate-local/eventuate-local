@@ -9,6 +9,7 @@ import io.eventuate.javaclient.commonimpl.SerializedEvent;
 import io.eventuate.local.common.AggregateTopicMapping;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.DefaultSaveOffsetStrategy;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumer;
 import io.eventuate.local.java.kafka.consumer.SaveOffsetStrategy;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -31,19 +32,14 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration;
-  private Optional<SaveOffsetStrategy> saveOffsetStrategy;
+  private SaveOffsetStrategy saveOffsetStrategy;
 
   public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration) {
-    this(eventuateLocalAggregateStoreConfiguration, Optional.empty());
+    this(eventuateLocalAggregateStoreConfiguration, new DefaultSaveOffsetStrategy());
   }
 
   public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
                                               SaveOffsetStrategy saveOffsetStrategy) {
-    this(eventuateLocalAggregateStoreConfiguration, Optional.of(saveOffsetStrategy));
-  }
-
-  public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
-                                              Optional<SaveOffsetStrategy> saveOffsetStrategy) {
     this.eventuateLocalAggregateStoreConfiguration = eventuateLocalAggregateStoreConfiguration;
     this.saveOffsetStrategy = saveOffsetStrategy;
   }
@@ -95,7 +91,6 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
     consumer.start();
 
     return CompletableFuture.completedFuture(null);
-
   }
 
   public void unsubscribe(String subscriberId) {

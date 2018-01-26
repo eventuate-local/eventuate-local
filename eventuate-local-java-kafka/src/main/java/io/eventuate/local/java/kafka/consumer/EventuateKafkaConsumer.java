@@ -23,28 +23,13 @@ public class EventuateKafkaConsumer {
   private AtomicBoolean stopFlag = new AtomicBoolean(false);
   private Properties consumerProperties;
   private KafkaConsumer<String, String> consumer;
-  private Optional<SaveOffsetStrategy> saveOffsetStrategy;
-
-  public EventuateKafkaConsumer(String subscriberId,
-                                BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler,
-                                List<String> topics,
-                                String bootstrapServers) {
-    this(subscriberId, handler, topics, bootstrapServers, Optional.empty());
-  }
+  private SaveOffsetStrategy saveOffsetStrategy;
 
   public EventuateKafkaConsumer(String subscriberId,
                                 BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler,
                                 List<String> topics,
                                 String bootstrapServers,
                                 SaveOffsetStrategy saveOffsetStrategy) {
-    this(subscriberId, handler, topics, bootstrapServers, Optional.of(saveOffsetStrategy));
-  }
-
-  public EventuateKafkaConsumer(String subscriberId,
-                                BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler,
-                                List<String> topics,
-                                String bootstrapServers,
-                                Optional<SaveOffsetStrategy> saveOffsetStrategy) {
     this.subscriberId = subscriberId;
     this.handler = handler;
     this.topics = topics;
@@ -69,12 +54,7 @@ public class EventuateKafkaConsumer {
     Map<TopicPartition, OffsetAndMetadata> offsetsToCommit = processor.offsetsToCommit();
     if (!offsetsToCommit.isEmpty()) {
       logger.debug("Committing offsets {} {}", subscriberId, offsetsToCommit);
-      consumer.commitSync(offsetsToCommit);
-      saveOffsetStrategy.ifPresent(strategy -> {
-        for (TopicPartition partition : offsetsToCommit.keySet()) {
-          strategy.save(subscriberId, partition, offsetsToCommit.get(partition).offset());
-        }
-      });
+      saveOffsetStrategy.saveOffsets(consumer, subscriberId, offsetsToCommit);
       logger.debug("Committed offsets {}", subscriberId);
       processor.noteOffsetsCommitted(offsetsToCommit);
     }
@@ -99,27 +79,11 @@ public class EventuateKafkaConsumer {
 
       List<String> topicList = new ArrayList<>(topics);
 
-      if (!saveOffsetStrategy.isPresent()) {
-        consumer.subscribe(topicList);
-      } else {
-        consumer.subscribe(topicList, new ConsumerRebalanceListener() {
-          @Override
-          public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-            partitions.forEach(part -> saveOffsetStrategy.get().save(subscriberId, part, consumer.position(part)));
-          }
-
-          @Override
-          public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-            partitions.forEach(part -> consumer.seek(part, saveOffsetStrategy.get().load(subscriberId, part)));
-          }
-        });
-      }
+      consumer.subscribe(topicList, saveOffsetStrategy.getConsumerRebalanceListener(subscriberId, consumer));
 
       logger.debug("Subscribed to {} {}", subscriberId, topics);
 
       new Thread(() -> {
-
-
         try {
           while (!stopFlag.get()) {
             ConsumerRecords<String, String> records = consumer.poll(100);

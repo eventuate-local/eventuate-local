@@ -39,13 +39,7 @@ public class EventTableChangesToAggregateTopicTranslator<EVENT> {
 
     cdcKafkaPublisher.start();
     try {
-      cdcProcessor.start(publishedEvent -> {
-        try {
-          cdcKafkaPublisher.handleEvent(publishedEvent);
-        } catch (EventuateLocalPublishingException e) {
-          throw new RuntimeException(e);
-        }
-      });
+      cdcProcessor.start(cdcKafkaPublisher::handleEvent);
     } catch (Exception e) {
       if (e.getCause() instanceof EventuateLocalPublishingException) {
         logger.error("Stopping capturing changes due to exception:", e);

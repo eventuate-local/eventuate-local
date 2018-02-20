@@ -45,13 +45,7 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
 
     cdcKafkaPublisher.start();
 
-    cdcProcessor.start(publishedEvent -> {
-      try {
-        cdcKafkaPublisher.handleEvent(publishedEvent);
-      } catch (EventuateLocalPublishingException e) {
-        throw new RuntimeException(e);
-      }
-    });
+    cdcProcessor.start(cdcKafkaPublisher::handleEvent);
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
@@ -60,7 +54,7 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
     consumer.partitionsFor(getEventTopicName());
     consumer.subscribe(Collections.singletonList(getEventTopicName()));
 
-    waitForEventInKafka(consumer, entityIdVersionAndEventIds.getEntityId(), LocalDateTime.now().plusSeconds(20));
+    waitForEventInKafka(consumer, entityIdVersionAndEventIds.getEntityId(), LocalDateTime.now().plusSeconds(40));
     cdcKafkaPublisher.stop();
   }
 

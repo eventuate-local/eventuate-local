@@ -3,6 +3,7 @@ package io.eventuate.local.polling;
 import io.eventuate.local.common.CdcKafkaPublisher;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
+import io.micrometer.core.instrument.Counter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,15 +34,14 @@ public class PollingCdcKafkaPublisher<EVENT> extends CdcKafkaPublisher<EVENT> {
                 json
         ).get(10, TimeUnit.SECONDS);
 
-        publishingStrategy.getCreateTime(event).ifPresent(time -> histogramEventAge.set(System.currentTimeMillis() - time));
-
-        if (meterEventsPublished != null) meterEventsPublished.increment();
+        publishingStrategy.getCreateTime(event).ifPresent(time -> histogramEventAge.ifPresent(x -> x.set(System.currentTimeMillis() - time)));
+        meterEventsPublished.ifPresent(Counter::increment);
 
         return;
       } catch (Exception e) {
         logger.warn("error publishing to " + aggregateTopic, e);
 
-        if (meterEventsRetries != null) meterEventsRetries.increment();
+        meterEventsRetries.ifPresent(Counter::increment);
 
         lastException = e;
 

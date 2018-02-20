@@ -4,9 +4,11 @@ import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.CdcKafkaPublisher;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
+import io.micrometer.core.instrument.Counter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class MySQLCdcKafkaPublisher<EVENT extends BinLogEvent> extends CdcKafkaPublisher<EVENT> {
@@ -24,6 +26,8 @@ public class MySQLCdcKafkaPublisher<EVENT extends BinLogEvent> extends CdcKafkaP
 
   @Override
   public void handleEvent(EVENT publishedEvent) throws EventuateLocalPublishingException {
+    Objects.requireNonNull(publishedEvent);
+
     logger.trace("Got record " + publishedEvent.toString());
 
     String aggregateTopic = publishingStrategy.topicFor(publishedEvent);
@@ -40,19 +44,18 @@ public class MySQLCdcKafkaPublisher<EVENT extends BinLogEvent> extends CdcKafkaP
                   json
           ).get(10, TimeUnit.SECONDS);
 
-          publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> histogramEventAge.set(System.currentTimeMillis() - time));
-
-          if (meterEventsPublished != null) meterEventsPublished.increment();
+          publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> histogramEventAge.ifPresent(x -> x.set(System.currentTimeMillis() - time)));
+          meterEventsPublished.ifPresent(Counter::increment);
 
           binlogOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
         } else {
           logger.debug("Duplicate event {}", publishedEvent);
-          if (meterEventsDuplicates != null) meterEventsDuplicates.increment();
+          meterEventsDuplicates.ifPresent(Counter::increment);
         }
         return;
       } catch (Exception e) {
         logger.warn("error publishing to " + aggregateTopic, e);
-        if (meterEventsRetries != null) meterEventsRetries.increment();
+        meterEventsRetries.ifPresent(Counter::increment);
         lastException = e;
 
         try {

@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-@EnableConfigurationProperties({EventuateConfigurationProperties.class})
 @Import({CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration.class})
 @Profile("PostgresWal")
 public class PostgresWalEventTableChangesToAggregateTopicTranslatorConfiguration {

@@ -22,8 +22,12 @@ import java.util.stream.Collectors;
 @Configuration
 @EnableAutoConfiguration
 @Import(EventuateDriverConfiguration.class)
-@EnableConfigurationProperties({EventuateConfigurationProperties.class})
 public class PostgresWalCdcIntegrationTestConfiguration {
+
+  @Bean
+  public EventuateConfigurationProperties eventuateConfigurationProperties() {
+    return new EventuateConfigurationProperties();
+  }
 
   @Bean
   public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {

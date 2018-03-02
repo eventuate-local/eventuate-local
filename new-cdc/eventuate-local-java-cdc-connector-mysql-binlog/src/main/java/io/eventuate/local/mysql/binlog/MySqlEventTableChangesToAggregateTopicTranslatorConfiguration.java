@@ -20,11 +20,6 @@ import javax.sql.DataSource;
 public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
-  public EventuateConfigurationProperties eventuateConfigurationProperties() {
-    return new EventuateConfigurationProperties();
-  }
-
-  @Bean
   public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
     return new EventuateSchema(eventuateDatabaseSchema);
   }

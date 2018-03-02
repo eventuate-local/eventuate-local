@@ -18,6 +18,11 @@ import org.springframework.context.annotation.Import;
 public class EventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
+  public EventuateConfigurationProperties eventuateConfigurationProperties() {
+    return new EventuateConfigurationProperties();
+  }
+
+  @Bean
   public EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties() {
     return new EventuateLocalZookeperConfigurationProperties();
   }

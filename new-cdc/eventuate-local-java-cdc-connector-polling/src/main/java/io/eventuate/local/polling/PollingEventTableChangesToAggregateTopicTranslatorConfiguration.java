@@ -1,6 +1,5 @@
 package io.eventuate.local.polling;
 
-import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -13,7 +12,7 @@ import org.springframework.context.annotation.Profile;
 import javax.sql.DataSource;
 
 @Configuration
-@Import({EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
+@Import(EventTableChangesToAggregateTopicTranslatorConfiguration.class)
 @Profile("EventuatePolling")
 public class PollingEventTableChangesToAggregateTopicTranslatorConfiguration {
 

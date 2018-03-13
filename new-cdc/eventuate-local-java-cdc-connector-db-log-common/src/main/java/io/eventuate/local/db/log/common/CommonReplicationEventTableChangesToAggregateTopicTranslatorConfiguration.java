@@ -1,6 +1,5 @@
 package io.eventuate.local.db.log.common;
 
-import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -11,7 +10,7 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @Profile("!EventuatePolling")
-@Import({EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
+@Import(EventTableChangesToAggregateTopicTranslatorConfiguration.class)
 public class CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean

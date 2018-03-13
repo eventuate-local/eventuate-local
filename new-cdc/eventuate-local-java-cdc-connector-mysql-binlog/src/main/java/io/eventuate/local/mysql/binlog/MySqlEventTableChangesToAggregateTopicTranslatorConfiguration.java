@@ -1,6 +1,5 @@
 package io.eventuate.local.mysql.binlog;
 
-import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration;
@@ -15,7 +14,7 @@ import org.springframework.context.annotation.Conditional;
 import javax.sql.DataSource;
 
 @Configuration
-@Import({CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration.class, EventuateDriverConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
+@Import({CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
 @Conditional(MySqlBinlogCondition.class)
 public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 

@@ -46,6 +46,12 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.max.attempts.for.binlog.connection:#{100}}")
   private int maxAttemptsForBinlogConnection;
 
+  private int postgresWalIntervalInMilliseconds = 10;
+
+  private int postgresReplicationStatusIntervalInMilliseconds = 1000;
+
+  private String postgresReplicationSlotName = "eventuate_slot";
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -100,5 +106,33 @@ public class EventuateConfigurationProperties {
 
   public int getMaxAttemptsForBinlogConnection() {
     return maxAttemptsForBinlogConnection;
+  }
+
+  public void setMaxAttemptsForBinlogConnection(int maxAttemptsForBinlogConnection) {
+    this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
+  }
+
+  public int getPostgresWalIntervalInMilliseconds() {
+    return postgresWalIntervalInMilliseconds;
+  }
+
+  public void setPostgresWalIntervalInMilliseconds(int postgresWalIntervalInMilliseconds) {
+    this.postgresWalIntervalInMilliseconds = postgresWalIntervalInMilliseconds;
+  }
+
+  public int getPostgresReplicationStatusIntervalInMilliseconds() {
+    return postgresReplicationStatusIntervalInMilliseconds;
+  }
+
+  public void setPostgresReplicationStatusIntervalInMilliseconds(int postgresReplicationStatusIntervalInMilliseconds) {
+    this.postgresReplicationStatusIntervalInMilliseconds = postgresReplicationStatusIntervalInMilliseconds;
+  }
+
+  public String getPostgresReplicationSlotName() {
+    return postgresReplicationSlotName;
+  }
+
+  public void setPostgresReplicationSlotName(String postgresReplicationSlotName) {
+    this.postgresReplicationSlotName = postgresReplicationSlotName;
   }
 }

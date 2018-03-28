@@ -8,15 +8,19 @@ import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeseria
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.db.log.common.DbLogClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-public class MySqlBinaryLogClient<M extends BinLogEvent> {
+public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<M> {
 
   private String name;
 
@@ -68,7 +72,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> {
     client.setServerId(binlogClientUniqueId);
     client.setKeepAliveInterval(5 * 1000);
 
-    BinlogFileOffset bfo = binlogFileOffset.orElse(new BinlogFileOffset("", 4));
+    BinlogFileOffset bfo = binlogFileOffset.orElse(new BinlogFileOffset("", 4L));
     logger.debug("Starting with {}", bfo);
     client.setBinlogFilename(bfo.getBinlogFilename());
     client.setBinlogPosition(bfo.getOffset());

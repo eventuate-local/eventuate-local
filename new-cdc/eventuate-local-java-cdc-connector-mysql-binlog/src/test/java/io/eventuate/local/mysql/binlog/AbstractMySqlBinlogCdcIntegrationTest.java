@@ -12,13 +12,10 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeoutException;
 
 public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcTest {
 
@@ -38,7 +35,7 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   private SourceTableNameSupplier sourceTableNameSupplier;
 
   @Test
-  public void shouldGetEvents() throws IOException, TimeoutException, InterruptedException, ExecutionException {
+  public void shouldGetEvents() throws InterruptedException {
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient = new MySqlBinaryLogClient<>(eventDataParser,
             eventuateConfigurationProperties.getDbUserName(),

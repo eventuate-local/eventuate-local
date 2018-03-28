@@ -5,7 +5,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class BinlogFileOffset {
-
   private String binlogFilename;
   private long offset;
 
@@ -13,8 +12,8 @@ public class BinlogFileOffset {
   }
 
   public BinlogFileOffset(String binlogFilename, long offset) {
-    this.binlogFilename = binlogFilename;
-    this.offset = offset;
+   this.binlogFilename = binlogFilename;
+   this.offset = offset;
   }
 
   public String getBinlogFilename() {

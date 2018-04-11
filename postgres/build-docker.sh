@@ -1,3 +1,1 @@
-#! /bin/bash -e
-
-docker build -t test-eventuateio-local-postgres .
+docker build -t test-postgres-wal .

@@ -102,11 +102,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
     return sqlList -> {
       sqlList.set(0, sqlList.get(0).replace("CREATE SCHEMA", "CREATE SCHEMA IF NOT EXISTS"));
 
-      return sqlList
-              .stream()
-              .limit(sqlList.size() - 1)
-              .map(s -> s.replace("eventuate", "custom"))
-              .collect(Collectors.toList());
+      return sqlList.stream().map(s -> s.replace("eventuate", "custom")).collect(Collectors.toList());
     };
   }
 }

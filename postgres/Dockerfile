@@ -35,4 +35,5 @@ COPY postgresql.conf.sample /usr/share/postgresql/postgresql.conf.sample
 COPY docker-entrypoint-initdb.d /docker-entrypoint-initdb.d
 
 # Initialize schema
-COPY initialize-database.sql /docker-entrypoint-initdb.d
+COPY 1.initialize-database.sql /docker-entrypoint-initdb.d
+COPY 2.create-replication-slot.sql /docker-entrypoint-initdb.d

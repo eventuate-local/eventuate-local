@@ -1,9 +1,10 @@
 package io.eventuate.local.db.log.common;
 
 import io.eventuate.local.common.BinLogEvent;
-import io.eventuate.local.common.CdcKafkaPublisher;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.Counter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,14 +12,14 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class DbLogBasedCdcKafkaPublisher<EVENT extends BinLogEvent> extends CdcKafkaPublisher<EVENT> {
+public class DbLogBasedCdcDataPublisher<EVENT extends BinLogEvent> extends CdcDataPublisher<EVENT> {
 
   private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
   private DuplicatePublishingDetector duplicatePublishingDetector;
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public DbLogBasedCdcKafkaPublisher(DatabaseOffsetKafkaStore databaseOffsetKafkaStore, String kafkaBootstrapServers, PublishingStrategy<EVENT> publishingStrategy) {
-    super(kafkaBootstrapServers, publishingStrategy);
+  public DbLogBasedCdcDataPublisher(DataProducerFactory dataProducerFactory, DatabaseOffsetKafkaStore databaseOffsetKafkaStore, String kafkaBootstrapServers, PublishingStrategy<EVENT> publishingStrategy) {
+    super(dataProducerFactory, publishingStrategy);
 
     this.databaseOffsetKafkaStore = databaseOffsetKafkaStore;
     this.duplicatePublishingDetector = new DuplicatePublishingDetector(kafkaBootstrapServers);

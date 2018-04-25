@@ -2,6 +2,7 @@ package io.eventuate.local.common;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.apache.curator.RetryPolicy;
@@ -16,6 +17,11 @@ import org.springframework.context.annotation.Import;
 @Configuration
 @Import(EventuateDriverConfiguration.class)
 public class EventTableChangesToAggregateTopicTranslatorConfiguration {
+
+  @Bean
+  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
+    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
+  }
 
   @Bean
   public EventuateConfigurationProperties eventuateConfigurationProperties() {
@@ -49,13 +55,13 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  public EventTableChangesToAggregateTopicTranslator<PublishedEvent> mySqlEventTableChangesToAggregateTopicTranslator(CdcKafkaPublisher<PublishedEvent> mySQLCdcKafkaPublisher,
+  public EventTableChangesToAggregateTopicTranslator<PublishedEvent> mySqlEventTableChangesToAggregateTopicTranslator(CdcDataPublisher<PublishedEvent> mySQLCdcDataPublisher,
           CdcProcessor<PublishedEvent> mySQLCdcProcessor,
           CuratorFramework curatorFramework,
           EventuateConfigurationProperties eventuateConfigurationProperties) {
 
 
-    return new EventTableChangesToAggregateTopicTranslator<>(mySQLCdcKafkaPublisher,
+    return new EventTableChangesToAggregateTopicTranslator<>(mySQLCdcDataPublisher,
             mySQLCdcProcessor,
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath());

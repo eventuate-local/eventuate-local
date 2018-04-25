@@ -1,6 +1,7 @@
 package io.eventuate.local.db.log.common;
 
 import io.eventuate.local.common.*;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.springframework.context.annotation.Bean;
@@ -25,13 +26,15 @@ public class CommonReplicationEventTableChangesToAggregateTopicTranslatorConfigu
   }
 
   @Bean
-  public CdcKafkaPublisher<PublishedEvent> cdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                             DatabaseOffsetKafkaStore databaseOffsetKafkaStore,
-                                                             PublishingStrategy<PublishedEvent> publishingStrategy) {
+  public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducerFactory dataProducerFactory,
+                                                            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                            DatabaseOffsetKafkaStore databaseOffsetKafkaStore,
+                                                            PublishingStrategy<PublishedEvent> publishingStrategy) {
 
-    return new DbLogBasedCdcKafkaPublisher<>(databaseOffsetKafkaStore,
-              eventuateKafkaConfigurationProperties.getBootstrapServers(),
-              publishingStrategy);
+    return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
+            databaseOffsetKafkaStore,
+            eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            publishingStrategy);
   }
 
   @Bean

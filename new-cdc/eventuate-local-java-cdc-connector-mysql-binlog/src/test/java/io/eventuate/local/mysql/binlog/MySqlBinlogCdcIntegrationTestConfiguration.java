@@ -5,7 +5,8 @@ import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DbLogBasedCdcKafkaPublisher;
+import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -87,6 +88,11 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
+  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
+    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
+  }
+
+  @Bean
   @Conditional(MySqlBinlogCondition.class)
   public DatabaseOffsetKafkaStore databaseOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                            EventuateConfigurationProperties eventuateConfigurationProperties,
@@ -123,10 +129,14 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Conditional(MySqlBinlogCondition.class)
-  public CdcKafkaPublisher<PublishedEvent> cdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                             DatabaseOffsetKafkaStore binlogOffsetKafkaStore,
-                                                             PublishingStrategy<PublishedEvent> publishingStrategy) {
+  public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducerFactory dataProducerFactory,
+                                                            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                            DatabaseOffsetKafkaStore binlogOffsetKafkaStore,
+                                                            PublishingStrategy<PublishedEvent> publishingStrategy) {
 
-    return new DbLogBasedCdcKafkaPublisher<>(binlogOffsetKafkaStore, eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
+    return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
+            binlogOffsetKafkaStore,
+            eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            publishingStrategy);
   }
 }

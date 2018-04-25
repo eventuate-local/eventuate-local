@@ -4,19 +4,18 @@ import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DbLogBasedCdcKafkaPublisher;
+import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.testutil.SqlScriptEditor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -82,16 +81,24 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("PostgresWal")
-  public DbLogBasedCdcKafkaPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                             DatabaseOffsetKafkaStore databaseOffsetKafkaStore,
-                                                             PublishingStrategy<PublishedEvent> publishingStrategy) {
+  public DbLogBasedCdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducerFactory dataProducerFactory,
+                                                                                EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                                DatabaseOffsetKafkaStore databaseOffsetKafkaStore,
+                                                                                PublishingStrategy<PublishedEvent> publishingStrategy) {
 
-    return new DbLogBasedCdcKafkaPublisher<>(databaseOffsetKafkaStore, eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
+    return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
+            databaseOffsetKafkaStore,
+            eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            publishingStrategy);
   }
 
   @Bean
   public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
     return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
+  }
+
+  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
+    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
   }
 
   @Bean

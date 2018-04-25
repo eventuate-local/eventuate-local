@@ -12,17 +12,17 @@ import javax.annotation.PreDestroy;
 public class EventTableChangesToAggregateTopicTranslator<EVENT> {
 
   private final LeaderSelector leaderSelector;
-  private CdcKafkaPublisher<EVENT> cdcKafkaPublisher;
+  private CdcDataPublisher<EVENT> cdcDataPublisher;
   private CdcProcessor<EVENT> cdcProcessor;
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
-  public EventTableChangesToAggregateTopicTranslator(CdcKafkaPublisher<EVENT> cdcKafkaPublisher,
+  public EventTableChangesToAggregateTopicTranslator(CdcDataPublisher<EVENT> cdcDataPublisher,
           CdcProcessor<EVENT> cdcProcessor,
           CuratorFramework client,
           String leadershipLockPath) {
 
-    this.cdcKafkaPublisher = cdcKafkaPublisher;
+    this.cdcDataPublisher = cdcDataPublisher;
     this.cdcProcessor = cdcProcessor;
     this.leaderSelector = new LeaderSelector(client, leadershipLockPath,
         new EventuateLeaderSelectorListener(this));
@@ -37,9 +37,9 @@ public class EventTableChangesToAggregateTopicTranslator<EVENT> {
   public void startCapturingChanges() throws InterruptedException {
     logger.debug("Starting to capture changes");
 
-    cdcKafkaPublisher.start();
+    cdcDataPublisher.start();
     try {
-      cdcProcessor.start(cdcKafkaPublisher::handleEvent);
+      cdcProcessor.start(cdcDataPublisher::handleEvent);
     } catch (Exception e) {
       if (e.getCause() instanceof EventuateLocalPublishingException) {
         logger.error("Stopping capturing changes due to exception:", e);
@@ -59,7 +59,7 @@ public class EventTableChangesToAggregateTopicTranslator<EVENT> {
   public void stopCapturingChanges() throws InterruptedException {
     logger.debug("Stopping to capture changes");
 
-    cdcKafkaPublisher.stop();
+    cdcDataPublisher.stop();
     cdcProcessor.stop();
   }
 }

@@ -1,20 +1,21 @@
 package io.eventuate.local.polling;
 
-import io.eventuate.local.common.CdcKafkaPublisher;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.Counter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public class PollingCdcKafkaPublisher<EVENT> extends CdcKafkaPublisher<EVENT> {
+public class PollingCdcDataPublisher<EVENT> extends CdcDataPublisher<EVENT> {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public PollingCdcKafkaPublisher(String kafkaBootstrapServers, PublishingStrategy<EVENT> publishingStrategy) {
-    super(kafkaBootstrapServers, publishingStrategy);
+  public PollingCdcDataPublisher(DataProducerFactory dataProducerFactory, PublishingStrategy<EVENT> publishingStrategy) {
+    super(dataProducerFactory, publishingStrategy);
   }
 
   @Override

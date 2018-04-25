@@ -1,10 +1,11 @@
 package io.eventuate.local.db.log.test.util;
 
-import io.eventuate.local.common.CdcKafkaPublisher;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DbLogBasedCdcKafkaPublisher;
+import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.test.util.CdcKafkaPublisherTest;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +22,10 @@ public class AbstractDbLogBasedCdcKafkaPublisherTest extends CdcKafkaPublisherTe
   }
 
   @Override
-  protected CdcKafkaPublisher<PublishedEvent> createCdcKafkaPublisher() {
-    return new DbLogBasedCdcKafkaPublisher<>(databaseOffsetKafkaStore,
+  protected CdcDataPublisher<PublishedEvent> createCdcKafkaPublisher() {
+    return new DbLogBasedCdcDataPublisher<>(() ->
+            new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers()),
+            databaseOffsetKafkaStore,
             eventuateKafkaConfigurationProperties.getBootstrapServers(),
             publishingStrategy);
   }

@@ -14,14 +14,14 @@ import java.util.concurrent.TimeUnit;
 
 public class DbLogBasedCdcDataPublisher<EVENT extends BinLogEvent> extends CdcDataPublisher<EVENT> {
 
-  private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
+  private OffsetStore offsetStore;
   private DuplicatePublishingDetector duplicatePublishingDetector;
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public DbLogBasedCdcDataPublisher(DataProducerFactory dataProducerFactory, DatabaseOffsetKafkaStore databaseOffsetKafkaStore, String kafkaBootstrapServers, PublishingStrategy<EVENT> publishingStrategy) {
+  public DbLogBasedCdcDataPublisher(DataProducerFactory dataProducerFactory, OffsetStore offsetStore, String kafkaBootstrapServers, PublishingStrategy<EVENT> publishingStrategy) {
     super(dataProducerFactory, publishingStrategy);
 
-    this.databaseOffsetKafkaStore = databaseOffsetKafkaStore;
+    this.offsetStore = offsetStore;
     this.duplicatePublishingDetector = new DuplicatePublishingDetector(kafkaBootstrapServers);
   }
 
@@ -48,7 +48,7 @@ public class DbLogBasedCdcDataPublisher<EVENT extends BinLogEvent> extends CdcDa
           publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> histogramEventAge.ifPresent(x -> x.set(System.currentTimeMillis() - time)));
           meterEventsPublished.ifPresent(Counter::increment);
 
-          databaseOffsetKafkaStore.save(publishedEvent.getBinlogFileOffset());
+          offsetStore.save(publishedEvent.getBinlogFileOffset());
         } else {
           logger.debug("Duplicate event {}", publishedEvent);
           meterEventsDuplicates.ifPresent(Counter::increment);

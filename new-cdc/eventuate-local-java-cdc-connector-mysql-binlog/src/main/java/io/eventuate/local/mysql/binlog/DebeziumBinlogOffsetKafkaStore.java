@@ -20,4 +20,12 @@ public class DebeziumBinlogOffsetKafkaStore extends OffsetKafkaStore {
     Object pos = map.get("pos");
     return new BinlogFileOffset((String)map.get("file"), pos instanceof Long ? ((Long) pos) : ((Integer) pos));
   }
+
+  @Override
+  public void save(BinlogFileOffset binlogFileOffset) {
+  }
+
+  @Override
+  public void stop() {
+  }
 }

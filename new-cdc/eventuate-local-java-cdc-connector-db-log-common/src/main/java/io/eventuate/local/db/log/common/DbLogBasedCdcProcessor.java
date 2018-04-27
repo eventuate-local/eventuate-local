@@ -10,17 +10,17 @@ import java.util.function.Consumer;
 public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
 
   private DbLogClient<EVENT> dbLogClient;
-  private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
+  private OffsetStore offsetStore;
 
   public DbLogBasedCdcProcessor(DbLogClient<EVENT> dbLogClient,
-                                DatabaseOffsetKafkaStore databaseOffsetKafkaStore) {
+                                OffsetStore offsetStore) {
 
     this.dbLogClient = dbLogClient;
-    this.databaseOffsetKafkaStore = databaseOffsetKafkaStore;
+    this.offsetStore = offsetStore;
   }
 
   public void start(Consumer<EVENT> eventConsumer) {
-    Optional<BinlogFileOffset> startingBinlogFileOffset = databaseOffsetKafkaStore.getLastBinlogFileOffset();
+    Optional<BinlogFileOffset> startingBinlogFileOffset = offsetStore.getLastBinlogFileOffset();
 
     try {
       dbLogClient.start(startingBinlogFileOffset, new Consumer<EVENT>() {
@@ -45,7 +45,7 @@ public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcPro
 
   @Override
   public void stop() {
-    databaseOffsetKafkaStore.stop();
+    offsetStore.stop();
     dbLogClient.stop();
   }
 }

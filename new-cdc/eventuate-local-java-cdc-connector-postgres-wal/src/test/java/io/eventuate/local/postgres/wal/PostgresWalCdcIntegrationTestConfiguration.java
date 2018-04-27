@@ -5,16 +5,14 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.testutil.SqlScriptEditor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.*;
 
 import java.util.stream.Collectors;
 
@@ -60,7 +58,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("PostgresWal")
-  public DatabaseOffsetKafkaStore databaseOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
+  @Primary
+  public OffsetStore databaseOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
                                                            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                            EventuateKafkaProducer eventuateKafkaProducer) {
 
@@ -74,20 +73,20 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   @Bean
   @Profile("PostgresWal")
   public CdcProcessor<PublishedEvent> cdcProcessor(PostgresWalClient<PublishedEvent> postgresWalClient,
-                                                   DatabaseOffsetKafkaStore databaseOffsetKafkaStore) {
+                                                   OffsetStore offsetStore) {
 
-    return new PostgresWalCdcProcessor<>(postgresWalClient, databaseOffsetKafkaStore);
+    return new PostgresWalCdcProcessor<>(postgresWalClient, offsetStore);
   }
 
   @Bean
   @Profile("PostgresWal")
   public DbLogBasedCdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducerFactory dataProducerFactory,
                                                                                 EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                                DatabaseOffsetKafkaStore databaseOffsetKafkaStore,
+                                                                                OffsetStore offsetStore,
                                                                                 PublishingStrategy<PublishedEvent> publishingStrategy) {
 
     return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
-            databaseOffsetKafkaStore,
+            offsetStore,
             eventuateKafkaConfigurationProperties.getBootstrapServers(),
             publishingStrategy);
   }
@@ -97,6 +96,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
     return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
   }
 
+  @Bean
   public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
     return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
   }

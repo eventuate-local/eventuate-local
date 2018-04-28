@@ -6,6 +6,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
@@ -135,7 +136,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
     return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
             offsetStore,
-            eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers()),
             publishingStrategy);
   }
 }

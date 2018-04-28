@@ -9,8 +9,8 @@ import java.util.function.Consumer;
 
 public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
 
-  private DbLogClient<EVENT> dbLogClient;
-  private OffsetStore offsetStore;
+  protected DbLogClient<EVENT> dbLogClient;
+  protected OffsetStore offsetStore;
 
   public DbLogBasedCdcProcessor(DbLogClient<EVENT> dbLogClient,
                                 OffsetStore offsetStore) {
@@ -22,6 +22,10 @@ public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcPro
   public void start(Consumer<EVENT> eventConsumer) {
     Optional<BinlogFileOffset> startingBinlogFileOffset = offsetStore.getLastBinlogFileOffset();
 
+    process(eventConsumer, startingBinlogFileOffset);
+  }
+
+  protected void process(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset) {
     try {
       dbLogClient.start(startingBinlogFileOffset, new Consumer<EVENT>() {
         private boolean couldReadDuplicateEntries = true;

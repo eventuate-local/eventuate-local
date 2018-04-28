@@ -3,6 +3,7 @@ package io.eventuate.local.db.log.test.util;
 import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -26,7 +27,7 @@ public class AbstractDbLogBasedCdcKafkaPublisherTest extends CdcKafkaPublisherTe
     return new DbLogBasedCdcDataPublisher<>(() ->
             new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers()),
             offsetStore,
-            eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers()),
             publishingStrategy);
   }
 }

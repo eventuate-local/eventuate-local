@@ -18,7 +18,7 @@ import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.toList;
 
-public class DuplicatePublishingDetector {
+public class DuplicatePublishingDetector implements PublishingFilter {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
   private Map<String, Optional<BinlogFileOffset>> maxOffsetsForTopics = new HashMap<>();
@@ -29,6 +29,7 @@ public class DuplicatePublishingDetector {
     this.kafkaBootstrapServers = kafkaBootstrapServers;
   }
 
+  @Override
   public boolean shouldBePublished(BinlogFileOffset sourceBinlogFileOffset, String destinationTopic) {
     if (okToProcess)
       return true;

@@ -2,28 +2,26 @@ package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
-import io.eventuate.local.common.CdcProcessor;
+import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class MySQLCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
+public class MySQLCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcProcessor<EVENT> {
 
-  private DbLogClient<EVENT> dbLogClient;
-  private OffsetStore offsetStore;
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
   public MySQLCdcProcessor(DbLogClient<EVENT> dbLogClient,
                            OffsetStore offsetStore,
                            DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
-    this.dbLogClient = dbLogClient;
-    this.offsetStore = offsetStore;
+    super(dbLogClient, offsetStore);
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
   }
 
+  @Override
   public void start(Consumer<EVENT> eventConsumer) {
     Optional<BinlogFileOffset> binlogFileOffset = offsetStore.getLastBinlogFileOffset();
 
@@ -33,21 +31,7 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> implements CdcProcesso
 
     Optional<BinlogFileOffset> startingBinlogFileOffset = binlogFileOffset;
 
-    dbLogClient.start(startingBinlogFileOffset, new Consumer<EVENT>() {
-      private boolean couldReadDuplicateEntries = true;
-
-      @Override
-      public void accept(EVENT publishedEvent) {
-        if (couldReadDuplicateEntries) {
-          if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(publishedEvent.getBinlogFileOffset())).orElse(false)) {
-            return;
-          } else {
-            couldReadDuplicateEntries = false;
-          }
-        }
-        eventConsumer.accept(publishedEvent);
-      }
-    });
+    process(eventConsumer, startingBinlogFileOffset);
   }
 
   public void stop() {

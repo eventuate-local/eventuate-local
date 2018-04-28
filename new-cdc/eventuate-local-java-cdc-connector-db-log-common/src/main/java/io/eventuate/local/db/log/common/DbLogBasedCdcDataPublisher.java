@@ -15,14 +15,14 @@ import java.util.concurrent.TimeUnit;
 public class DbLogBasedCdcDataPublisher<EVENT extends BinLogEvent> extends CdcDataPublisher<EVENT> {
 
   private OffsetStore offsetStore;
-  private DuplicatePublishingDetector duplicatePublishingDetector;
+  private PublishingFilter publishingFilter;
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public DbLogBasedCdcDataPublisher(DataProducerFactory dataProducerFactory, OffsetStore offsetStore, String kafkaBootstrapServers, PublishingStrategy<EVENT> publishingStrategy) {
+  public DbLogBasedCdcDataPublisher(DataProducerFactory dataProducerFactory, OffsetStore offsetStore, PublishingFilter publishingFilter, PublishingStrategy<EVENT> publishingStrategy) {
     super(dataProducerFactory, publishingStrategy);
 
     this.offsetStore = offsetStore;
-    this.duplicatePublishingDetector = new DuplicatePublishingDetector(kafkaBootstrapServers);
+    this.publishingFilter = publishingFilter;
   }
 
   @Override
@@ -38,7 +38,7 @@ public class DbLogBasedCdcDataPublisher<EVENT extends BinLogEvent> extends CdcDa
 
     for (int i = 0; i < 5; i++) {
       try {
-        if (duplicatePublishingDetector.shouldBePublished(publishedEvent.getBinlogFileOffset(), aggregateTopic)) {
+        if (publishingFilter.shouldBePublished(publishedEvent.getBinlogFileOffset(), aggregateTopic)) {
           producer.send(
                   aggregateTopic,
                   publishingStrategy.partitionKeyFor(publishedEvent),

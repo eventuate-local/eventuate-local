@@ -3,7 +3,9 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration;
+import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.DbLogClient;
+import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -61,5 +63,13 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
     return new DebeziumBinlogOffsetKafkaStore(eventuateConfigurationProperties.getOldDbHistoryTopicName(),
             eventuateKafkaConfigurationProperties);
+  }
+
+  @Bean
+  public CdcProcessor<PublishedEvent> cdcProcessor(DbLogClient<PublishedEvent> dbLogClient,
+                                                   OffsetStore offsetStore,
+                                                   DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+
+    return new MySQLCdcProcessor<>(dbLogClient, offsetStore, debeziumBinlogOffsetKafkaStore);
   }
 }

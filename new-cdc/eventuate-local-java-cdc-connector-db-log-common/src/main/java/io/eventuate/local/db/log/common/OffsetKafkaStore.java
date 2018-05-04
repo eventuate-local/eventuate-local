@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
 
-public abstract class OffsetKafkaStore {
+public abstract class OffsetKafkaStore implements OffsetStore {
 
   protected final String dbHistoryTopicName;
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
@@ -23,6 +23,7 @@ public abstract class OffsetKafkaStore {
     this.dbHistoryTopicName = dbHistoryTopicName;
   }
 
+  @Override
   public Optional<BinlogFileOffset> getLastBinlogFileOffset() {
     try (KafkaConsumer<String, String> consumer = createConsumer()) {
       consumer.partitionsFor(dbHistoryTopicName);

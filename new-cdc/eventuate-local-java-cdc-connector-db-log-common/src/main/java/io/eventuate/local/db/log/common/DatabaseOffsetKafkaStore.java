@@ -32,11 +32,12 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
     scheduledExecutorService.scheduleAtFixedRate(this::scheduledBinlogFilenameAndOffsetUpdate, 5, 5, TimeUnit.SECONDS);
   }
 
-  public synchronized void scheduledBinlogFilenameAndOffsetUpdate() {
+  private synchronized void scheduledBinlogFilenameAndOffsetUpdate() {
     this.recordToSave.ifPresent(this::store);
     this.recordToSave = Optional.empty();
   }
 
+  @Override
   public synchronized void save(BinlogFileOffset binlogFileOffset) {
     this.recordToSave = Optional.of(binlogFileOffset);
   }

@@ -1,9 +1,12 @@
 package io.eventuate.local.postgres.wal;
 
+import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.EventuateConfigurationProperties;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.db.log.common.CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration;
+import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.DbLogClient;
+import io.eventuate.local.db.log.common.OffsetStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -37,5 +40,12 @@ public class PostgresWalEventTableChangesToAggregateTopicTranslatorConfiguration
   @Bean
   public PostgresWalMessageParser<PublishedEvent> postgresReplicationMessageParser() {
     return new PostgresWalJsonMessageParser();
+  }
+
+  @Bean
+  public CdcProcessor<PublishedEvent> cdcProcessor(DbLogClient<PublishedEvent> dbLogClient,
+                                                   OffsetStore offsetStore) {
+
+    return new DbLogBasedCdcProcessor<>(dbLogClient, offsetStore);
   }
 }

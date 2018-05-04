@@ -3,8 +3,8 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.CdcProcessor;
-import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.DbLogClient;
+import io.eventuate.local.db.log.common.OffsetStore;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -12,17 +12,17 @@ import java.util.function.Consumer;
 public class PostgresWalCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
 
   private DbLogClient<EVENT> dbLogClient;
-  private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
+  private OffsetStore offsetStore;
 
   public PostgresWalCdcProcessor(DbLogClient<EVENT> dbLogClient,
-                                 DatabaseOffsetKafkaStore databaseOffsetKafkaStore) {
+                                 OffsetStore offsetStore) {
 
     this.dbLogClient = dbLogClient;
-    this.databaseOffsetKafkaStore = databaseOffsetKafkaStore;
+    this.offsetStore = offsetStore;
   }
 
   public void start(Consumer<EVENT> eventConsumer) {
-    Optional<BinlogFileOffset> startingBinlogFileOffset = databaseOffsetKafkaStore.getLastBinlogFileOffset();
+    Optional<BinlogFileOffset> startingBinlogFileOffset = offsetStore.getLastBinlogFileOffset();
 
     dbLogClient.start(startingBinlogFileOffset, new Consumer<EVENT>() {
       private boolean couldReadDuplicateEntries = true;
@@ -43,7 +43,7 @@ public class PostgresWalCdcProcessor<EVENT extends BinLogEvent> implements CdcPr
 
   @Override
   public void stop() {
-    databaseOffsetKafkaStore.stop();
+    offsetStore.stop();
     dbLogClient.stop();
   }
 }

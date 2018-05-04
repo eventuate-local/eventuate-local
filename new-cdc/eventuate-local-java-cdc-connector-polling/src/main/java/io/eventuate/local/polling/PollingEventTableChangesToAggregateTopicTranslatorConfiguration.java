@@ -2,7 +2,7 @@ package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,9 +22,9 @@ public class PollingEventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  public CdcKafkaPublisher<PublishedEvent> pollingCdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-    PublishingStrategy<PublishedEvent> publishingStrategy) {
-    return new PollingCdcKafkaPublisher<>(eventuateKafkaConfigurationProperties.getBootstrapServers(), publishingStrategy);
+  public CdcDataPublisher<PublishedEvent> pollingCdcKafkaPublisher(DataProducerFactory dataProducerFactory,
+                                                                   PublishingStrategy<PublishedEvent> publishingStrategy) {
+    return new PollingCdcDataPublisher<>(dataProducerFactory, publishingStrategy);
   }
 
   @Bean

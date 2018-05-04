@@ -1,7 +1,8 @@
 package io.eventuate.local.common;
 
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
-import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.java.common.broker.DataProducer;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -12,11 +13,11 @@ import javax.annotation.PostConstruct;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class CdcKafkaPublisher<EVENT> {
+public abstract class CdcDataPublisher<EVENT> {
 
-  private String kafkaBootstrapServers;
   protected PublishingStrategy<EVENT> publishingStrategy;
-  protected EventuateKafkaProducer producer;
+  protected DataProducerFactory dataProducerFactory;
+  protected DataProducer producer;
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
   @Autowired(required = false)
@@ -27,8 +28,8 @@ public abstract class CdcKafkaPublisher<EVENT> {
   protected Optional<Counter> meterEventsRetries = Optional.empty();
   protected Optional<AtomicLong> histogramEventAge = Optional.empty();
 
-  public CdcKafkaPublisher(String kafkaBootstrapServers, PublishingStrategy<EVENT> publishingStrategy) {
-    this.kafkaBootstrapServers = kafkaBootstrapServers;
+  public CdcDataPublisher(DataProducerFactory dataProducerFactory, PublishingStrategy<EVENT> publishingStrategy) {
+    this.dataProducerFactory = dataProducerFactory;
     this.publishingStrategy = publishingStrategy;
   }
 
@@ -44,15 +45,15 @@ public abstract class CdcKafkaPublisher<EVENT> {
   }
 
   public void start() {
-    logger.debug("Starting CdcKafkaPublisher");
-    producer = new EventuateKafkaProducer(kafkaBootstrapServers);
-    logger.debug("Starting CdcKafkaPublisher");
+    logger.debug("Starting CdcDataPublisher");
+    producer = dataProducerFactory.create();
+    logger.debug("Starting CdcDataPublisher");
   }
 
   public abstract void handleEvent(EVENT publishedEvent) throws EventuateLocalPublishingException;
 
   public void stop() {
-    logger.debug("Stopping kafka producer");
+    logger.debug("Stopping data producer");
     if (producer != null)
       producer.close();
   }

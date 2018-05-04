@@ -1,5 +1,6 @@
 package io.eventuate.local.java.kafka.producer;
 
+import io.eventuate.local.java.common.broker.DataProducer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -8,14 +9,12 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class EventuateKafkaProducer {
+public class EventuateKafkaProducer implements DataProducer {
 
   private Producer<String, String> producer;
-  private String bootstrapServers;
   private Properties producerProps;
 
   public EventuateKafkaProducer(String bootstrapServers) {
-    this.bootstrapServers = bootstrapServers;
     producerProps = new Properties();
     producerProps.put("bootstrap.servers", bootstrapServers);
     producerProps.put("acks", "all");
@@ -28,7 +27,7 @@ public class EventuateKafkaProducer {
     producer = new KafkaProducer<>(producerProps);
   }
 
-
+  @Override
   public CompletableFuture<?> send(String topic, String key, String body) {
     CompletableFuture<Object> result = new CompletableFuture<>();
     producer.send(new ProducerRecord<>(topic, key, body), (metadata, exception) -> {
@@ -40,6 +39,7 @@ public class EventuateKafkaProducer {
     return result;
   }
 
+  @Override
   public void close() {
     producer.close(1, TimeUnit.SECONDS);
   }

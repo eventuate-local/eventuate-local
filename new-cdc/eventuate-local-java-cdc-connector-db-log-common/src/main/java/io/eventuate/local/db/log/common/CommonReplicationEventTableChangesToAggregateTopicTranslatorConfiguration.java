@@ -1,12 +1,10 @@
 package io.eventuate.local.db.log.common;
 
 import io.eventuate.local.common.*;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.*;
 
 @Configuration
 @Profile("!EventuatePolling")
@@ -14,7 +12,8 @@ import org.springframework.context.annotation.Profile;
 public class CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
-  public DatabaseOffsetKafkaStore databaseOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
+  @Primary
+  public OffsetStore databaseOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
                                                            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                            EventuateKafkaProducer eventuateKafkaProducer) {
 
@@ -25,19 +24,14 @@ public class CommonReplicationEventTableChangesToAggregateTopicTranslatorConfigu
   }
 
   @Bean
-  public CdcKafkaPublisher<PublishedEvent> cdcKafkaPublisher(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                             DatabaseOffsetKafkaStore databaseOffsetKafkaStore,
-                                                             PublishingStrategy<PublishedEvent> publishingStrategy) {
+  public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducerFactory dataProducerFactory,
+                                                            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                            OffsetStore offsetStore,
+                                                            PublishingStrategy<PublishedEvent> publishingStrategy) {
 
-    return new DbLogBasedCdcKafkaPublisher<>(databaseOffsetKafkaStore,
-              eventuateKafkaConfigurationProperties.getBootstrapServers(),
-              publishingStrategy);
-  }
-
-  @Bean
-  public CdcProcessor<PublishedEvent> cdcProcessor(DbLogClient<PublishedEvent> dbLogClient,
-                                                   DatabaseOffsetKafkaStore databaseOffsetKafkaStore) {
-
-    return new DbLogBasedCdcProcessor<>(dbLogClient, databaseOffsetKafkaStore);
+    return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
+            offsetStore,
+            new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers()),
+            publishingStrategy);
   }
 }

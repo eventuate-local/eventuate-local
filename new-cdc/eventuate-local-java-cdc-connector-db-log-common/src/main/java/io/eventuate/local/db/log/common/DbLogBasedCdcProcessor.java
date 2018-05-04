@@ -9,19 +9,23 @@ import java.util.function.Consumer;
 
 public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
 
-  private DbLogClient<EVENT> dbLogClient;
-  private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
+  protected DbLogClient<EVENT> dbLogClient;
+  protected OffsetStore offsetStore;
 
   public DbLogBasedCdcProcessor(DbLogClient<EVENT> dbLogClient,
-                                DatabaseOffsetKafkaStore databaseOffsetKafkaStore) {
+                                OffsetStore offsetStore) {
 
     this.dbLogClient = dbLogClient;
-    this.databaseOffsetKafkaStore = databaseOffsetKafkaStore;
+    this.offsetStore = offsetStore;
   }
 
   public void start(Consumer<EVENT> eventConsumer) {
-    Optional<BinlogFileOffset> startingBinlogFileOffset = databaseOffsetKafkaStore.getLastBinlogFileOffset();
+    Optional<BinlogFileOffset> startingBinlogFileOffset = offsetStore.getLastBinlogFileOffset();
 
+    process(eventConsumer, startingBinlogFileOffset);
+  }
+
+  protected void process(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset) {
     try {
       dbLogClient.start(startingBinlogFileOffset, new Consumer<EVENT>() {
         private boolean couldReadDuplicateEntries = true;
@@ -45,7 +49,7 @@ public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcPro
 
   @Override
   public void stop() {
-    databaseOffsetKafkaStore.stop();
+    offsetStore.stop();
     dbLogClient.stop();
   }
 }

@@ -2,11 +2,10 @@ package io.eventuate.local.test.util;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
-import io.eventuate.local.common.CdcKafkaPublisher;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.PublishingStrategy;
-import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -41,11 +40,11 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
 
   @Test
   public void shouldSendPublishedEventsToKafka() throws InterruptedException {
-    CdcKafkaPublisher<PublishedEvent> cdcKafkaPublisher = createCdcKafkaPublisher();
+    CdcDataPublisher<PublishedEvent> cdcDataPublisher = createCdcKafkaPublisher();
 
-    cdcKafkaPublisher.start();
+    cdcDataPublisher.start();
 
-    cdcProcessor.start(cdcKafkaPublisher::handleEvent);
+    cdcProcessor.start(cdcDataPublisher::handleEvent);
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
@@ -55,8 +54,8 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
     consumer.subscribe(Collections.singletonList(getEventTopicName()));
 
     waitForEventInKafka(consumer, entityIdVersionAndEventIds.getEntityId(), LocalDateTime.now().plusSeconds(40));
-    cdcKafkaPublisher.stop();
+    cdcDataPublisher.stop();
   }
 
-  protected abstract CdcKafkaPublisher<PublishedEvent> createCdcKafkaPublisher();
+  protected abstract CdcDataPublisher<PublishedEvent> createCdcKafkaPublisher();
 }

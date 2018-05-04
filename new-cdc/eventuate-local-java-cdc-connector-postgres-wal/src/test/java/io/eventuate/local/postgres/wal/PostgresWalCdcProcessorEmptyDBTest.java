@@ -6,15 +6,13 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @ActiveProfiles("PostgresWal")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {EmptyDBTestConfiguration.class, PostgresWalCdcIntegrationTestConfiguration.class})
-@IntegrationTest
+@SpringBootTest(classes = {EmptyDBTestConfiguration.class, PostgresWalCdcIntegrationTestConfiguration.class})
 public class PostgresWalCdcProcessorEmptyDBTest extends AbstractPostgresWalCdcProcessorTest {
 
   @Value("${eventuate.database.schema}")

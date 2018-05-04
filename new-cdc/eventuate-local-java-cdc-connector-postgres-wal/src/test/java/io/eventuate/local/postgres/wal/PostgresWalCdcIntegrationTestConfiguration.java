@@ -10,13 +10,11 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.testutil.SqlScriptEditor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -103,6 +101,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   public SqlScriptEditor sqlScriptEditor() {
     return sqlList -> {
       sqlList.set(0, sqlList.get(0).replace("CREATE SCHEMA", "CREATE SCHEMA IF NOT EXISTS"));
+
       return sqlList.stream().map(s -> s.replace("eventuate", "custom")).collect(Collectors.toList());
     };
   }

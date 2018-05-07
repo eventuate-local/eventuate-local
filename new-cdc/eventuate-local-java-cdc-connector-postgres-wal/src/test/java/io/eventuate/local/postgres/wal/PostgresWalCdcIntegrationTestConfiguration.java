@@ -9,10 +9,13 @@ import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.testutil.SqlScriptEditor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -24,6 +27,8 @@ import java.util.stream.Collectors;
 @Configuration
 @EnableAutoConfiguration
 @Import(EventuateDriverConfiguration.class)
+@EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
+        EventuateKafkaConsumerConfigurationProperties.class})
 public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
@@ -66,13 +71,14 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   @Primary
   public OffsetStore databaseOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
                                                            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                           EventuateKafkaProducer eventuateKafkaProducer) {
+                                                           EventuateKafkaProducer eventuateKafkaProducer,
+                                                           EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateKafkaProducer,
-            eventuateKafkaConfigurationProperties
-    );
+            eventuateKafkaConfigurationProperties,
+            eventuateKafkaConsumerConfigurationProperties);
   }
 
   @Bean
@@ -87,23 +93,28 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   @Profile("PostgresWal")
   public DbLogBasedCdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducerFactory dataProducerFactory,
                                                                                 EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                                EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                                                 OffsetStore offsetStore,
                                                                                 PublishingStrategy<PublishedEvent> publishingStrategy) {
 
     return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
             offsetStore,
-            new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers()),
+            new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy);
   }
 
   @Bean
-  public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
-    return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
+  public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                       EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
+    return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            eventuateKafkaProducerConfigurationProperties);
   }
 
   @Bean
-  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
-    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
+  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                 EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
+    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            eventuateKafkaProducerConfigurationProperties);
   }
 
   @Bean

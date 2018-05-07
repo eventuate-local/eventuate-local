@@ -28,7 +28,9 @@ public abstract class CdcDataPublisher<EVENT> {
   protected Optional<Counter> meterEventsRetries = Optional.empty();
   protected Optional<AtomicLong> histogramEventAge = Optional.empty();
 
-  public CdcDataPublisher(DataProducerFactory dataProducerFactory, PublishingStrategy<EVENT> publishingStrategy) {
+  public CdcDataPublisher(DataProducerFactory dataProducerFactory,
+                          PublishingStrategy<EVENT> publishingStrategy) {
+
     this.dataProducerFactory = dataProducerFactory;
     this.publishingStrategy = publishingStrategy;
   }

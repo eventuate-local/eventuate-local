@@ -5,6 +5,7 @@ import io.debezium.config.Configuration;
 import io.debezium.embedded.EmbeddedEngine;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -29,6 +30,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
   private EmbeddedEngine engine;
 
   private EventuateSchema eventuateSchema;
+  private EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties;
 
   public MySqlBinLogBasedEventTableChangesToAggregateTopicRelay(String kafkaBootstrapServers,
                                                                 JdbcUrl jdbcUrl,
@@ -38,7 +40,8 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
                                                                 CdcStartupValidator cdcStartupValidator,
                                                                 TakeLeadershipAttemptTracker takeLeadershipAttemptTracker,
                                                                 String leadershipLockPath,
-                                                                EventuateSchema eventuateSchema) {
+                                                                EventuateSchema eventuateSchema,
+                                                                EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
 
     super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker, leadershipLockPath);
 
@@ -47,6 +50,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
     this.dbPassword = dbPassword;
 
     this.eventuateSchema = eventuateSchema;
+    this.eventuateKafkaProducerConfigurationProperties = eventuateKafkaProducerConfigurationProperties;
   }
 
   public CompletableFuture<Object> startCapturingChanges() throws InterruptedException {
@@ -54,7 +58,7 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
 
     cdcStartupValidator.validateEnvironment();
 
-    producer = new EventuateKafkaProducer(kafkaBootstrapServers);
+    producer = new EventuateKafkaProducer(kafkaBootstrapServers, eventuateKafkaProducerConfigurationProperties);
 
     String connectorName = "my-sql-connector";
     Configuration config = Configuration.create()

@@ -5,6 +5,7 @@ import io.eventuate.local.common.EventuateConfigurationProperties;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.apache.kafka.clients.producer.Producer;
@@ -35,7 +36,7 @@ public class AbstractDatabaseOffsetKafkaStoreTest extends AbstractCdcTest {
 
   @Test
   public void shouldGetEmptyOptionalFromEmptyTopic() {
-    OffsetStore offsetStore = getOffsetStore(UUID.randomUUID().toString(), "mySqlBinaryLogClientName");
+    OffsetStore offsetStore = getDatabaseOffsetKafkaStore(UUID.randomUUID().toString(), "mySqlBinaryLogClientName");
     offsetStore.getLastBinlogFileOffset().isPresent();
     offsetStore.stop();
   }
@@ -63,13 +64,17 @@ public class AbstractDatabaseOffsetKafkaStoreTest extends AbstractCdcTest {
     producer.close();
   }
 
-  public OffsetStore getOffsetStore(String topicName, String key) {
-    return new DatabaseOffsetKafkaStore(topicName, key, eventuateKafkaProducer, eventuateKafkaConfigurationProperties);
+  public DatabaseOffsetKafkaStore getDatabaseOffsetKafkaStore(String topicName, String key) {
+    return new DatabaseOffsetKafkaStore(topicName,
+            key,
+            eventuateKafkaProducer,
+            eventuateKafkaConfigurationProperties,
+            EventuateKafkaConsumerConfigurationProperties.empty());
   }
 
   private BinlogFileOffset generateAndSaveBinlogFileOffset() throws InterruptedException {
     BinlogFileOffset bfo = generateBinlogFileOffset();
-    OffsetStore offsetStore = getOffsetStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
+    OffsetStore offsetStore = getDatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
     offsetStore.save(bfo);
 
     Thread.sleep(5000);
@@ -81,7 +86,7 @@ public class AbstractDatabaseOffsetKafkaStoreTest extends AbstractCdcTest {
   }
 
   private void assertLastRecordEquals(BinlogFileOffset binlogFileOffset) {
-    OffsetStore offsetStore = getOffsetStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
+    OffsetStore offsetStore = getDatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
 
     BinlogFileOffset lastRecord = offsetStore.getLastBinlogFileOffset().get();
     assertEquals(binlogFileOffset, lastRecord);

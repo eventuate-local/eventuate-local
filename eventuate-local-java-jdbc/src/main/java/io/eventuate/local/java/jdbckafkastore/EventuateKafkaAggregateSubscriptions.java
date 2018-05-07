@@ -10,6 +10,7 @@ import io.eventuate.local.common.AggregateTopicMapping;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumer;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +34,13 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration;
+  private EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
 
-  public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration) {
+  public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
+                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+
     this.eventuateLocalAggregateStoreConfiguration = eventuateLocalAggregateStoreConfiguration;
+    this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
   }
 
   private final List<EventuateKafkaConsumer> consumers = new ArrayList<>();
@@ -79,7 +84,7 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
         callback.accept(null, null);
       }
 
-    }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers());
+    }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties);
 
     addConsumer(consumer);
     consumer.start();

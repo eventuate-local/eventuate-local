@@ -3,6 +3,7 @@ package io.eventuate.local.db.log.common;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -23,9 +24,10 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
   public DatabaseOffsetKafkaStore(String dbHistoryTopicName,
                                   String dbLogClientName,
                                   EventuateKafkaProducer eventuateKafkaProducer,
-                                  EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
+                                  EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                  EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
-    super(dbHistoryTopicName, eventuateKafkaConfigurationProperties);
+    super(dbHistoryTopicName, eventuateKafkaConfigurationProperties, eventuateKafkaConsumerConfigurationProperties);
 
     this.dbLogClientName = dbLogClientName;
     this.eventuateKafkaProducer = eventuateKafkaProducer;

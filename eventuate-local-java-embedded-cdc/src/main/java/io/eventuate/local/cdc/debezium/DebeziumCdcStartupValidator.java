@@ -4,6 +4,7 @@ import io.debezium.config.Configuration;
 import io.debezium.connector.mysql.MySqlConnectorConfig;
 import io.debezium.connector.mysql.MySqlJdbcContext;
 import io.debezium.jdbc.JdbcConnection;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +22,12 @@ public class DebeziumCdcStartupValidator extends CdcStartupValidator {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public DebeziumCdcStartupValidator(JdbcUrl jdbcUrl, String dbUser, String dbPassword, String bootstrapServers) {
-    super(bootstrapServers);
+  public DebeziumCdcStartupValidator(JdbcUrl jdbcUrl,
+                                     String dbUser,
+                                     String dbPassword,
+                                     String bootstrapServers,
+                                     EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+    super(bootstrapServers, eventuateKafkaConsumerConfigurationProperties);
     this.jdbcUrl = jdbcUrl;
     this.dbUser = dbUser;
     this.dbPassword = dbPassword;

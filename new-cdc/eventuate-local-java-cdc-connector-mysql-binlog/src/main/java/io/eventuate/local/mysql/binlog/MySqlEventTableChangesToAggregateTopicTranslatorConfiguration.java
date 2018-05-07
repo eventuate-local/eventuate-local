@@ -7,7 +7,9 @@ import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -18,6 +20,7 @@ import javax.sql.DataSource;
 @Configuration
 @Import({CommonReplicationEventTableChangesToAggregateTopicTranslatorConfiguration.class, EventTableChangesToAggregateTopicTranslatorConfiguration.class})
 @Conditional(MySqlBinlogCondition.class)
+@EnableConfigurationProperties(EventuateKafkaConsumerConfigurationProperties.class)
 public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
@@ -59,10 +62,12 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
   public DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
+                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     return new DebeziumBinlogOffsetKafkaStore(eventuateConfigurationProperties.getOldDbHistoryTopicName(),
-            eventuateKafkaConfigurationProperties);
+            eventuateKafkaConfigurationProperties,
+            eventuateKafkaConsumerConfigurationProperties);
   }
 
   @Bean

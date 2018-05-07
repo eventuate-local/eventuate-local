@@ -4,6 +4,7 @@ import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.test.util.CdcKafkaPublisherTest;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -26,7 +27,8 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
   @Override
   protected CdcDataPublisher<PublishedEvent> createCdcKafkaPublisher() {
     return new PollingCdcDataPublisher<>(() ->
-            new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers()),
+            new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+                    EventuateKafkaProducerConfigurationProperties.empty()),
             publishingStrategy);
   }
 }

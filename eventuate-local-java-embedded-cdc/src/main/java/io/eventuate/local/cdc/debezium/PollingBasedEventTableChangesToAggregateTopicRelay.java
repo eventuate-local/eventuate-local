@@ -2,6 +2,7 @@ package io.eventuate.local.cdc.debezium;
 
 
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
   private int pollingIntervalInMilliseconds;
   private final AtomicBoolean watcherRunning = new AtomicBoolean();
   private volatile CompletableFuture<Void> watcherFuture = new CompletableFuture<>();
+  private EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties;
 
   public PollingBasedEventTableChangesToAggregateTopicRelay(
           EventPollingDao eventPollingDao,
@@ -31,11 +33,14 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
           String kafkaBootstrapServers,
           CuratorFramework client,
           CdcStartupValidator cdcStartupValidator,
-          TakeLeadershipAttemptTracker takeLeadershipAttemptTracker, String leadershipLockPath) {
+          TakeLeadershipAttemptTracker takeLeadershipAttemptTracker,
+          String leadershipLockPath,
+          EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
 
     super(kafkaBootstrapServers, client, cdcStartupValidator, takeLeadershipAttemptTracker, leadershipLockPath);
     this.eventPollingDao = eventPollingDao;
     this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
+    this.eventuateKafkaProducerConfigurationProperties = eventuateKafkaProducerConfigurationProperties;
   }
 
   public CompletableFuture<Object> startCapturingChanges() throws InterruptedException {
@@ -43,7 +48,7 @@ public class PollingBasedEventTableChangesToAggregateTopicRelay extends EventTab
     watcherRunning.set(true);
 
     cdcStartupValidator.validateEnvironment();
-    producer = new EventuateKafkaProducer(kafkaBootstrapServers);
+    producer = new EventuateKafkaProducer(kafkaBootstrapServers, eventuateKafkaProducerConfigurationProperties);
 
     CompletableFuture<Object> completableFuture = new CompletableFuture<>();
 

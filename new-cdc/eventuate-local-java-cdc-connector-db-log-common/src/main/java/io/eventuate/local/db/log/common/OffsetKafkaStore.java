@@ -2,6 +2,7 @@ package io.eventuate.local.db.log.common;
 
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -15,12 +16,16 @@ public abstract class OffsetKafkaStore implements OffsetStore {
 
   protected final String dbHistoryTopicName;
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
+  private EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
 
   private final static int N = 20;
 
-  public OffsetKafkaStore(String dbHistoryTopicName, EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
+  public OffsetKafkaStore(String dbHistoryTopicName,
+                          EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                          EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
     this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
     this.dbHistoryTopicName = dbHistoryTopicName;
+    this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
   }
 
   @Override
@@ -62,6 +67,8 @@ public abstract class OffsetKafkaStore implements OffsetStore {
     props.put("session.timeout.ms", "30000");
     props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+    props.putAll(eventuateKafkaConsumerConfigurationProperties.getProperties());
 
     return new KafkaConsumer<>(props);
   }

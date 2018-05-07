@@ -3,11 +3,14 @@ package io.eventuate.local.cdc.debezium;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.MySqlBinlogCondition;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +19,8 @@ import org.springframework.context.annotation.Profile;
 import javax.sql.DataSource;
 
 @Configuration
+@EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
+        EventuateKafkaConsumerConfigurationProperties.class})
 public class EventTableChangesToAggregateTopicRelayConfiguration {
 
   @Bean
@@ -46,11 +51,12 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
   @Bean
   @Conditional(MySqlBinlogCondition.class)
   public EventTableChangesToAggregateTopicRelay embeddedDebeziumCDC(EventuateSchema eventuateSchema,
-    @Value("${spring.datasource.url}") String dataSourceURL,
-    EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
-    EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-    CuratorFramework client,
-    CdcStartupValidator cdcStartupValidator) {
+                                                                    @Value("${spring.datasource.url}") String dataSourceURL,
+                                                                    EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+                                                                    EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                    CuratorFramework client,
+                                                                    CdcStartupValidator cdcStartupValidator,
+                                                                    EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
 
@@ -64,16 +70,18 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
             new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
                     eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath(),
-            eventuateSchema);
+            eventuateSchema,
+            eventuateKafkaProducerConfigurationProperties);
   }
 
   @Bean
   @Profile("EventuatePolling")
   public EventTableChangesToAggregateTopicRelay pollingCDC(EventPollingDao eventPollingDao,
-    EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
-    EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-    CuratorFramework client,
-    CdcStartupValidator cdcStartupValidator) {
+                                                           EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+                                                           EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                           CuratorFramework client,
+                                                           CdcStartupValidator cdcStartupValidator,
+                                                           EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
 
     return new PollingBasedEventTableChangesToAggregateTopicRelay(eventPollingDao,
         eventTableChangesToAggregateTopicRelayConfigurationProperties.getPollingIntervalInMilliseconds(),
@@ -82,22 +90,25 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
         cdcStartupValidator,
         new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
-            eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath()
-            );
+            eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath(),
+            eventuateKafkaProducerConfigurationProperties);
   }
 
   @Bean
   @Conditional(MySqlBinlogCondition.class)
   public CdcStartupValidator debeziumCdcStartupValidator(@Value("${spring.datasource.url}") String dataSourceURL,
-    EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
-    EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-    CdcStartupValidatorConfigurationProperties cdcStartupValidatorConfigurationProperties) {
+                                                         EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+                                                         EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                         CdcStartupValidatorConfigurationProperties cdcStartupValidatorConfigurationProperties,
+                                                         EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
 
     DebeziumCdcStartupValidator cdcStartupValidator = new DebeziumCdcStartupValidator(jdbcUrl,
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getDbUserName(),
             eventTableChangesToAggregateTopicRelayConfigurationProperties.getDbPassword(),
-            eventuateKafkaConfigurationProperties.getBootstrapServers());
+            eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            eventuateKafkaConsumerConfigurationProperties);
 
     cdcStartupValidator.setMySqlValidationMaxAttempts(cdcStartupValidatorConfigurationProperties.getMySqlValidationMaxAttempts());
     cdcStartupValidator.setMySqlValidationTimeoutMillis(cdcStartupValidatorConfigurationProperties.getMySqlValidationTimeoutMillis());
@@ -110,8 +121,11 @@ public class EventTableChangesToAggregateTopicRelayConfiguration {
   @Bean
   @Profile("EventuatePolling")
   public CdcStartupValidator basicCdcStartupValidator(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-    CdcStartupValidatorConfigurationProperties cdcStartupValidatorConfigurationProperties) {
-    CdcStartupValidator cdcStartupValidator = new CdcStartupValidator(eventuateKafkaConfigurationProperties.getBootstrapServers());
+                                                      CdcStartupValidatorConfigurationProperties cdcStartupValidatorConfigurationProperties,
+                                                      EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+
+    CdcStartupValidator cdcStartupValidator = new CdcStartupValidator(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            eventuateKafkaConsumerConfigurationProperties);
 
     cdcStartupValidator.setKafkaValidationMaxAttempts(cdcStartupValidatorConfigurationProperties.getKafkaValidationMaxAttempts());
     cdcStartupValidator.setKafkaValidationTimeoutMillis(cdcStartupValidatorConfigurationProperties.getKafkaValidationTimeoutMillis());

@@ -45,6 +45,10 @@ public class DbLogBasedCdcDataPublisher<EVENT extends BinLogEvent> extends CdcDa
                   json
           ).get(10, TimeUnit.SECONDS);
 
+          if (statusService != null) {
+            statusService.addPublishedEvent(json);
+          }
+
           publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> histogramEventAge.ifPresent(x -> x.set(System.currentTimeMillis() - time)));
           meterEventsPublished.ifPresent(Counter::increment);
 

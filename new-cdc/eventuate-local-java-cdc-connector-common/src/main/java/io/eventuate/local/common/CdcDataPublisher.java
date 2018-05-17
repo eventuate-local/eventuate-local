@@ -3,6 +3,7 @@ package io.eventuate.local.common;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.java.common.broker.DataProducer;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
+import io.eventuate.local.common.status.StatusService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -22,6 +23,9 @@ public abstract class CdcDataPublisher<EVENT> {
 
   @Autowired(required = false)
   protected MeterRegistry meterRegistry;
+
+  @Autowired(required = false)
+  protected StatusService statusService;
 
   protected Optional<Counter> meterEventsPublished = Optional.empty();
   protected Optional<Counter> meterEventsDuplicates = Optional.empty();

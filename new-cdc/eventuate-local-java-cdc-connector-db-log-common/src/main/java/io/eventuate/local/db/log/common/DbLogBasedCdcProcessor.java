@@ -3,6 +3,8 @@ package io.eventuate.local.db.log.common;
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.CdcProcessor;
+import io.eventuate.local.common.status.StatusService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -11,6 +13,9 @@ public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcPro
 
   protected DbLogClient<EVENT> dbLogClient;
   protected OffsetStore offsetStore;
+
+  @Autowired(required = false)
+  private StatusService statusService;
 
   public DbLogBasedCdcProcessor(DbLogClient<EVENT> dbLogClient,
                                 OffsetStore offsetStore) {
@@ -42,6 +47,10 @@ public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcPro
           eventConsumer.accept(publishedEvent);
         }
       });
+
+      if (statusService != null) {
+        statusService.markAsStarted();
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

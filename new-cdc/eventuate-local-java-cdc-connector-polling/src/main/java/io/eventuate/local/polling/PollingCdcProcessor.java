@@ -1,16 +1,24 @@
 package io.eventuate.local.polling;
 
 import io.eventuate.local.common.CdcProcessor;
+import io.eventuate.local.common.status.CDCStatus;
+import io.eventuate.local.common.status.StatusService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> implements CdcProcessor<EVENT> {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
+
+  @Autowired(required = false)
+  private StatusService statusService;
+
   private PollingDao pollingDao;
   private int pollingIntervalInMilliseconds;
   private AtomicBoolean watcherRunning = new AtomicBoolean(false);
@@ -50,6 +58,10 @@ public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> implements CdcProcessor<
         }
       }
     }.start();
+
+    if (statusService != null) {
+      statusService.markAsStarted();
+    }
   }
 
   public void stop() {

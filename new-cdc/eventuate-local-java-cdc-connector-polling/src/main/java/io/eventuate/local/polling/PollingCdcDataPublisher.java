@@ -35,6 +35,10 @@ public class PollingCdcDataPublisher<EVENT> extends CdcDataPublisher<EVENT> {
                 json
         ).get(10, TimeUnit.SECONDS);
 
+        if (statusService != null) {
+          statusService.addPublishedEvent(json);
+        }
+
         publishingStrategy.getCreateTime(event).ifPresent(time -> histogramEventAge.ifPresent(x -> x.set(System.currentTimeMillis() - time)));
         meterEventsPublished.ifPresent(Counter::increment);
 

@@ -1,36 +1,27 @@
 package io.eventuate.local.common.status;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 public class StatusService {
-  private volatile CDCStatus status = CDCStatus.CONNECTING;
-  private volatile long processedEvents;
-  private volatile LinkedList<String> lastEvents = new LinkedList<>();
+  private CDCStatus status = CDCStatus.STARTING;
+  private long processedEvents;
+  private LinkedList<String> lastProcessedEvents = new LinkedList<>();
 
-  public CDCStatus getStatus() {
-    return status;
-  }
-
-  public List<String> getLastEvents() {
-    return lastEvents;
-  }
-
-  public long getProcessedEvents() {
-    return processedEvents;
-  }
-
-  public void markAsStarted() {
+  public synchronized void markAsStarted() {
     status = CDCStatus.STARTED;
   }
 
-  public void addPublishedEvent(String event) {
-    status = CDCStatus.PUBLISHING;
+  public synchronized void addPublishedEvent(String event) {
     processedEvents++;
-    lastEvents.add(event);
+    lastProcessedEvents.add(event);
 
-    while (lastEvents.size() > 10) {
-        lastEvents.poll();
+    if (lastProcessedEvents.size() == 11) {
+      lastProcessedEvents.poll();
     }
+  }
+
+  public synchronized StatusData getStatusData() {
+    return new StatusData(status, processedEvents, new ArrayList<>(lastProcessedEvents));
   }
 }

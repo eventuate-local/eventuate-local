@@ -4,7 +4,9 @@ import io.eventuate.local.java.common.broker.DataProducer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.PartitionInfo;
 
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +41,10 @@ public class EventuateKafkaProducer implements DataProducer {
     return result;
   }
 
-  @Override
+  public List<PartitionInfo> partitionsFor(String topic) {
+    return producer.partitionsFor(topic);
+  }
+
   public void close() {
     producer.close(1, TimeUnit.SECONDS);
   }

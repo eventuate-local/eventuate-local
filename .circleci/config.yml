@@ -13,7 +13,55 @@ jobs:
             - ~/.gradle
           key: eventuate-local-java-{{ checksum "build.gradle" }}
       - run: TERM=dumb ./scripts/build-and-test-mysql.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  build-postgres-wal:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./gradlew testClasses
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
       - run: TERM=dumb ./scripts/build-and-test-postgres-wal.sh
+      - run: TERM=dumb ./scripts/build-and-test-all-cdc-mysql.sh
+      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-mysql.sh
+      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-postgres-polling.sh
+      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-postgres-wal.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  build-rest:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./gradlew testClasses
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
       - run: TERM=dumb ./scripts/build-and-test-all-cdc-mysql.sh
       - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-mysql.sh
       - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-postgres-polling.sh
@@ -33,3 +81,35 @@ jobs:
           command: |
             TERM=dumb ./scripts/deploy-artifacts.sh
           when: on_success
+  publish:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./gradlew testClasses
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run:
+          name: Publish artifacts
+          command: |
+            TERM=dumb ./scripts/deploy-artifacts.sh
+          when: on_success
+workflows:
+  version: 2
+  build-test-and-deploy:
+    jobs:
+      - build
+      - build-postgres-wal:
+          requires:
+            - build
+      - build-rest:
+          requires:
+            - build
+      - publish:
+          requires:
+            - build-postgres-wal
+            - build-rest

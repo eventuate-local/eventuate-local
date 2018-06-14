@@ -13,7 +13,7 @@ if [ "$1" = "--clean" ] ; then
   shift
 fi
 
-./gradlew ${GRADLE_OPTS} $* testClasses
+./gradlew ${GRADLE_OPTS} testClasses
 
 docker-compose -f docker-compose-mysql.yml stop
 docker-compose -f docker-compose-mysql.yml rm --force -v

@@ -12,7 +12,7 @@ jobs:
           paths:
             - ~/.gradle
           key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mysql.sh
+      - run: TERM=dumb ./scripts/build-and-test-mysql-common.sh
       - run:
           name: Save test results
           command: |
@@ -31,6 +31,60 @@ jobs:
       - restore_cache:
           key: eventuate-local-java-{{ checksum "build.gradle" }}
       - run: TERM=dumb ./scripts/build-and-test-postgres-wal.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  build-mysql-embedded-cdc:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./scripts/build-and-test-mysql-embedded-cdc.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  build-mysql-cdc-connector-polling:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./scripts/build-and-test-mysql-cdc-connector-polling.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  build-mysql-cdc-connector-mysql-binlog:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./scripts/build-and-test-mysql-cdc-connector-mysql-binlog.sh
       - run:
           name: Save test results
           command: |
@@ -135,21 +189,30 @@ workflows:
   build-test-and-deploy:
     jobs:
       - build
+      - build-mysql-embedded-cdc:
+          requires:
+            - build
       - build-postgres-wal:
+          requires:
+            - build
+      - build-mysql-cdc-connector-polling:
+          requires:
+            - build
+      - build-mysql-cdc-connector-mysql-binlog:
           requires:
             - build
       - build-cdc-mysql:
           requires:
-            - build
+            - build-mysql-embedded-cdc
       - build-new-cdc-mysql:
           requires:
-            - build
+            - build-mysql-cdc-connector-mysql-binlog
       - build-new-cdc-postgres-wal:
           requires:
-            - build
+            - build-postgres-wal
       - build-new-cdc-postgres-polling:
           requires:
-            - build
+            - build-mysql-cdc-connector-polling
       - publish:
           requires:
             - build-postgres-wal

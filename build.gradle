@@ -78,6 +78,12 @@ subprojects {
     }
 }
 
+task aggregatedTestReport(type: TestReport) {
+  destinationDir = file("$buildDir/reports/allTests")
+  // Include the results from the 'test' task in all subprojects
+  reportOn subprojects*.test
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = "3.5"
 }

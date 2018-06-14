@@ -1,34 +1,8 @@
-#! /bin/bash
 
-export TERM=dumb
 
-set -e
+eventuate-local-java-embedded-cdc
 
-. ./scripts/set-env-mysql.sh
-
-GRADLE_OPTS=""
-
-if [ "$1" = "--clean" ] ; then
-  GRADLE_OPTS="clean"
-  shift
-fi
-
-./gradlew ${GRADLE_OPTS} $* testClasses
-
-docker-compose -f docker-compose-mysql.yml stop
-docker-compose -f docker-compose-mysql.yml rm --force -v
-
-docker-compose -f docker-compose-mysql.yml build
-docker-compose -f docker-compose-mysql.yml up -d
-
-./scripts/wait-for-mysql.sh
-
-./gradlew $* build -x :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
-
-#test spring compatibility
-
-./gradlew -a :eventuate-local-java-jdbc-tests:cleanTest
-./gradlew -a :eventuate-local-java-jdbc-tests:test --tests "io.eventuate.local.java.jdbckafkastore.JdbcAutoConfigurationIntegrationTest" -P springBootVersion=2.0.0.M7
-
-docker-compose -f docker-compose-mysql.yml stop
-docker-compose -f docker-compose-mysql.yml rm --force -v
+. ./scripts/build-and-test-mysql-common.sh
+. ./scripts/build-and-test-mysql-embedded-cdc.sh
+. ./scripts/build-and-test-mysql-cdc-connector-polling.sh
+. ./scripts/build-and-test-mysql-cdc-connector-mysql-binlog.sh

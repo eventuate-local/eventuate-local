@@ -37,11 +37,12 @@ $DOCKER_COMPOSE up -d
 
 echo testing restart Postgres restart scenario $(date)
 
-docker stop  $(echo ${PWD##*/} | sed -e 's/-//g')_postgres_1
+$DOCKER_COMPOSE stop postgres
 
 sleep 10
 
-docker start  $(echo ${PWD##*/} | sed -e 's/-//g')_postgres_1
+$DOCKER_COMPOSE start postgres
+
 
 ./scripts/wait-for-postgres.sh
 
@@ -49,6 +50,3 @@ docker start  $(echo ${PWD##*/} | sed -e 's/-//g')_postgres_1
 
 $DOCKER_COMPOSE stop
 $DOCKER_COMPOSE rm --force -v
-
-
-

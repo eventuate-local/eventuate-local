@@ -41,11 +41,11 @@ echo waiting for MySQL
 
 echo testing restart MySQL restart scenario $(date)
 
-docker stop $(echo ${PWD##*/} | sed -e 's/-//g')_mysql_1
+$DOCKER_COMPOSE stop mysql
 
 sleep 10
 
-docker start $(echo ${PWD##*/} | sed -e 's/-//g')_mysql_1
+$DOCKER_COMPOSE start mysql
 
 ./scripts/wait-for-mysql.sh
 
@@ -53,6 +53,3 @@ docker start $(echo ${PWD##*/} | sed -e 's/-//g')_mysql_1
 
 $DOCKER_COMPOSE stop
 $DOCKER_COMPOSE rm --force -v
-
-
-

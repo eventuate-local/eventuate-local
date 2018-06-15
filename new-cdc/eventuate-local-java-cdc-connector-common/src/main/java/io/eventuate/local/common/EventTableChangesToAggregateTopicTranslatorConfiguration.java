@@ -22,8 +22,11 @@ import org.springframework.context.annotation.Import;
 public class EventTableChangesToAggregateTopicTranslatorConfiguration {
 
   @Bean
-  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
-    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
+  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                 EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
+
+    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            eventuateKafkaProducerConfigurationProperties);
   }
 
   @Bean

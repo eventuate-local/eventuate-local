@@ -4,6 +4,7 @@ import io.debezium.config.Configuration;
 import io.debezium.connector.mysql.MySqlConnectorConfig;
 import io.debezium.connector.mysql.MySqlJdbcContext;
 import io.debezium.jdbc.JdbcConnection;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;
@@ -22,9 +23,12 @@ public class CdcStartupValidator {
   private String bootstrapServers;
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
+  private EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
 
-  public CdcStartupValidator(String bootstrapServers) {
+  public CdcStartupValidator(String bootstrapServers,
+                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
     this.bootstrapServers = bootstrapServers;
+    this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
   }
 
   public void validateEnvironment() {
@@ -65,6 +69,8 @@ public class CdcStartupValidator {
     consumerProperties.put("fetch.max.wait.ms", String.valueOf(kafkaValidationTimeoutMillis));
     consumerProperties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     consumerProperties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+    consumerProperties.putAll(eventuateKafkaConsumerConfigurationProperties.getProperties());
 
     return new KafkaConsumer<>(consumerProperties);
   }

@@ -10,8 +10,10 @@ import io.eventuate.javaclient.spring.common.EventuateCommonConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -26,6 +28,7 @@ import javax.sql.DataSource;
 @Configuration
 @EnableTransactionManagement
 @Import(EventuateCommonConfiguration.class)
+@EnableConfigurationProperties(EventuateKafkaConsumerConfigurationProperties.class)
 public class EventuateLocalConfiguration {
 
   @Autowired(required=false)
@@ -66,8 +69,9 @@ public class EventuateLocalConfiguration {
   // Events
 
   @Bean
-  public EventuateKafkaAggregateSubscriptions aggregateEvents(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration) {
-    return new EventuateKafkaAggregateSubscriptions(eventuateLocalAggregateStoreConfiguration);
+  public EventuateKafkaAggregateSubscriptions aggregateEvents(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
+                                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+    return new EventuateKafkaAggregateSubscriptions(eventuateLocalAggregateStoreConfiguration, eventuateKafkaConsumerConfigurationProperties);
   }
 
 

@@ -8,6 +8,7 @@ import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.junit.Assert;
@@ -110,7 +111,8 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
         mySqlBinaryLogClient.getName(),
         eventuateKafkaProducer,
-        eventuateKafkaConfigurationProperties);
+        eventuateKafkaConfigurationProperties,
+        EventuateKafkaConsumerConfigurationProperties.empty());
   }
 
   private MySqlBinaryLogClient<PublishedEvent> createMySqlBinaryLogClient() {

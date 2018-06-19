@@ -11,10 +11,17 @@ import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.*;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -22,6 +29,8 @@ import javax.sql.DataSource;
 @Configuration
 @EnableAutoConfiguration
 @Import(EventuateDriverConfiguration.class)
+@EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
+        EventuateKafkaConsumerConfigurationProperties.class})
 public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
@@ -82,13 +91,16 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
-    return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
+  public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                       EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
+    return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            eventuateKafkaProducerConfigurationProperties);
   }
 
   @Bean
-  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
-    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers());
+  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                 EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
+    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaProducerConfigurationProperties);
   }
 
   @Bean
@@ -97,12 +109,14 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   public OffsetStore databaseOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                            EventuateConfigurationProperties eventuateConfigurationProperties,
                                                            MySqlBinaryLogClient mySqlBinaryLogClient,
-                                                           EventuateKafkaProducer eventuateKafkaProducer) {
+                                                           EventuateKafkaProducer eventuateKafkaProducer,
+                                                           EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
             mySqlBinaryLogClient.getName(),
             eventuateKafkaProducer,
-            eventuateKafkaConfigurationProperties);
+            eventuateKafkaConfigurationProperties,
+            eventuateKafkaConsumerConfigurationProperties);
   }
 
   @Bean
@@ -122,21 +136,25 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Bean
   @Conditional(MySqlBinlogCondition.class)
   public DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
+                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
-    return new DebeziumBinlogOffsetKafkaStore(eventuateConfigurationProperties.getOldDbHistoryTopicName(), eventuateKafkaConfigurationProperties);
+    return new DebeziumBinlogOffsetKafkaStore(eventuateConfigurationProperties.getOldDbHistoryTopicName(),
+            eventuateKafkaConfigurationProperties,
+            eventuateKafkaConsumerConfigurationProperties);
   }
 
   @Bean
   @Conditional(MySqlBinlogCondition.class)
   public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducerFactory dataProducerFactory,
                                                             EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                            EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                             OffsetStore offsetStore,
                                                             PublishingStrategy<PublishedEvent> publishingStrategy) {
 
     return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
             offsetStore,
-            new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers()),
+            new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy);
   }
 }

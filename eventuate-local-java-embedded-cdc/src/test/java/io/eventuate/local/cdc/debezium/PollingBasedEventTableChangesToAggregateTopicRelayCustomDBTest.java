@@ -3,6 +3,7 @@ package io.eventuate.local.cdc.debezium;
 
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
 import io.eventuate.local.testutil.SqlScriptEditor;
@@ -11,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -31,6 +33,7 @@ public class PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest exte
   @org.springframework.context.annotation.Configuration
   @Import({CustomDBTestConfiguration.class, EventuateLocalConfiguration.class, EventTableChangesToAggregateTopicRelayConfiguration.class})
   @EnableAutoConfiguration
+  @EnableConfigurationProperties(EventuateKafkaProducerConfigurationProperties.class)
   public static class EventTableChangesToAggregateTopicRelayTestConfiguration {
 
     @Autowired
@@ -43,10 +46,11 @@ public class PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest exte
     @Primary
     @Profile("EventuatePolling")
     public EventTableChangesToAggregateTopicRelay pollingCDC(EventPollingDao eventPollingDao,
-            EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
-            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-            CuratorFramework client,
-            CdcStartupValidator cdcStartupValidator) {
+                                                             EventTableChangesToAggregateTopicRelayConfigurationProperties eventTableChangesToAggregateTopicRelayConfigurationProperties,
+                                                             EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                             CuratorFramework client,
+                                                             CdcStartupValidator cdcStartupValidator,
+                                                             EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
 
       customDBCreator.create(eventuateLocalCustomDBSqlEditor);
 
@@ -57,7 +61,8 @@ public class PollingBasedEventTableChangesToAggregateTopicRelayCustomDBTest exte
               cdcStartupValidator,
               new TakeLeadershipAttemptTracker(eventTableChangesToAggregateTopicRelayConfigurationProperties.getMaxRetries(),
                       eventTableChangesToAggregateTopicRelayConfigurationProperties.getRetryPeriodInMilliseconds()),
-              eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath()
+              eventTableChangesToAggregateTopicRelayConfigurationProperties.getLeadershipLockPath(),
+              eventuateKafkaProducerConfigurationProperties
       );
     }
   }

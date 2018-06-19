@@ -14,7 +14,8 @@ public class EventuateKafkaProducer implements DataProducer {
   private Producer<String, String> producer;
   private Properties producerProps;
 
-  public EventuateKafkaProducer(String bootstrapServers) {
+  public EventuateKafkaProducer(String bootstrapServers,
+                                EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
     producerProps = new Properties();
     producerProps.put("bootstrap.servers", bootstrapServers);
     producerProps.put("acks", "all");
@@ -24,6 +25,7 @@ public class EventuateKafkaProducer implements DataProducer {
     producerProps.put("buffer.memory", 33554432);
     producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
     producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+    producerProps.putAll(eventuateKafkaProducerConfigurationProperties.getProperties());
     producer = new KafkaProducer<>(producerProps);
   }
 

@@ -5,6 +5,7 @@ import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.kafka.consumer.ConsumerPropertiesFactory;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumer;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -24,9 +25,12 @@ public class DuplicatePublishingDetector implements PublishingFilter {
   private Map<String, Optional<BinlogFileOffset>> maxOffsetsForTopics = new HashMap<>();
   private boolean okToProcess = false;
   private String kafkaBootstrapServers;
+  private EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
 
-  public DuplicatePublishingDetector(String kafkaBootstrapServers) {
+  public DuplicatePublishingDetector(String kafkaBootstrapServers,
+                                     EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
     this.kafkaBootstrapServers = kafkaBootstrapServers;
+    this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
   }
 
   @Override
@@ -45,7 +49,8 @@ public class DuplicatePublishingDetector implements PublishingFilter {
 
   private Optional<BinlogFileOffset> fetchMaxOffsetFor(String destinationTopic) {
     String subscriberId = "duplicate-checker-" + destinationTopic + "-" + System.currentTimeMillis();
-    Properties consumerProperties = ConsumerPropertiesFactory.makeConsumerProperties(kafkaBootstrapServers, subscriberId);
+    Properties consumerProperties = ConsumerPropertiesFactory.makeDefaultConsumerProperties(kafkaBootstrapServers, subscriberId);
+    consumerProperties.putAll(eventuateKafkaConsumerConfigurationProperties.getProperties());
     KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProperties);
 
     List<PartitionInfo> partitions = EventuateKafkaConsumer.verifyTopicExistsBeforeSubscribing(consumer, destinationTopic);

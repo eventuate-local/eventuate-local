@@ -18,7 +18,10 @@ public class DbLogBasedCdcDataPublisher<EVENT extends BinLogEvent> extends CdcDa
   private PublishingFilter publishingFilter;
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public DbLogBasedCdcDataPublisher(DataProducerFactory dataProducerFactory, OffsetStore offsetStore, PublishingFilter publishingFilter, PublishingStrategy<EVENT> publishingStrategy) {
+  public DbLogBasedCdcDataPublisher(DataProducerFactory dataProducerFactory,
+                                    OffsetStore offsetStore,
+                                    PublishingFilter publishingFilter,
+                                    PublishingStrategy<EVENT> publishingStrategy) {
     super(dataProducerFactory, publishingStrategy);
 
     this.offsetStore = offsetStore;
@@ -68,5 +71,4 @@ public class DbLogBasedCdcDataPublisher<EVENT extends BinLogEvent> extends CdcDa
     }
     throw new EventuateLocalPublishingException("error publishing to " + aggregateTopic, lastException);
   }
-
 }

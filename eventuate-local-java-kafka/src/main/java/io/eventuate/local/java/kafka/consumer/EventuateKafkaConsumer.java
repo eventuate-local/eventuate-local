@@ -29,12 +29,17 @@ public class EventuateKafkaConsumer {
   private AtomicBoolean stopFlag = new AtomicBoolean(false);
   private Properties consumerProperties;
 
-  public EventuateKafkaConsumer(String subscriberId, BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler, List<String> topics, String bootstrapServers) {
+  public EventuateKafkaConsumer(String subscriberId,
+                                BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler,
+                                List<String> topics,
+                                String bootstrapServers,
+                                EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
     this.subscriberId = subscriberId;
     this.handler = handler;
     this.topics = topics;
 
-    this.consumerProperties = ConsumerPropertiesFactory.makeConsumerProperties(bootstrapServers, subscriberId);
+    this.consumerProperties = ConsumerPropertiesFactory.makeDefaultConsumerProperties(bootstrapServers, subscriberId);
+    this.consumerProperties.putAll(eventuateKafkaConsumerConfigurationProperties.getProperties());
   }
 
   public static List<PartitionInfo> verifyTopicExistsBeforeSubscribing(KafkaConsumer<String, String> consumer, String topic) {

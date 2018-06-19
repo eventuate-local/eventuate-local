@@ -4,6 +4,7 @@ import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.db.log.common.OffsetKafkaStore;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +16,10 @@ public class DebeziumBinlogOffsetKafkaStore extends OffsetKafkaStore {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
-  public DebeziumBinlogOffsetKafkaStore(String dbHistoryTopicName, EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties) {
-    super(dbHistoryTopicName, eventuateKafkaConfigurationProperties);
+  public DebeziumBinlogOffsetKafkaStore(String dbHistoryTopicName,
+                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+    super(dbHistoryTopicName, eventuateKafkaConfigurationProperties, eventuateKafkaConsumerConfigurationProperties);
   }
 
   @Override

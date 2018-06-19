@@ -3,7 +3,7 @@ package io.eventuate.local.java.kafka.consumer;
 import java.util.Properties;
 
 public class ConsumerPropertiesFactory {
-  public static Properties makeConsumerProperties(String bootstrapServers, String subscriberId) {
+  public static Properties makeDefaultConsumerProperties(String bootstrapServers, String subscriberId) {
     Properties consumerProperties = new Properties();
     consumerProperties.put("bootstrap.servers", bootstrapServers);
     consumerProperties.put("group.id", subscriberId);

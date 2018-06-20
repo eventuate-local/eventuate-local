@@ -50,8 +50,10 @@ function tagAndPush() {
   fi
 }
 
-$PREFIX docker login -u ${DOCKER_USER_ID?} -p ${DOCKER_PASSWORD?}
 
+if [ -z "$PUSH_DISABLED" ] ; then
+    $PREFIX docker login -u ${DOCKER_USER_ID?} -p ${DOCKER_PASSWORD?}
+fi
 
 for image in $IMAGES ; do
     tagAndPush $(echo $image | sed -e 's/-//g')  $image

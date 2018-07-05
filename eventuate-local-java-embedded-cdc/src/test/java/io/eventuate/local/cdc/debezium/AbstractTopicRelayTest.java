@@ -5,16 +5,17 @@ import io.eventuate.SubscriberOptions;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
 import io.eventuate.testutil.AsyncUtil;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import javax.sql.DataSource;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -33,11 +34,17 @@ public abstract class AbstractTopicRelayTest {
   @Autowired
   private EventTableChangesToAggregateTopicRelay eventTableChangesToAggregateTopicRelay;
 
+  @Autowired
+  private DataSource dataSource;
+
+  @Autowired
+  private EventuateSchema eventuateSchema;
+
   @Test
   public void shouldCaptureAndPublishChange() throws ExecutionException, InterruptedException {
 
-    String aggregateType = "TestAggregate";
-    String eventType = "TestEvent";
+    String aggregateType = "TestAggregate" + UUID.randomUUID().toString();
+    String eventType = "TestEvent" + UUID.randomUUID().toString();
 
     List<EventTypeAndData> myEvents = Collections.singletonList(new EventTypeAndData(eventType, "{}", Optional.empty()));
 
@@ -66,8 +73,41 @@ public abstract class AbstractTopicRelayTest {
     long endTime = System.currentTimeMillis();
 
     logger.debug("got the event I just published in msecs {}", endTime - publishTime);
+  }
 
-//    eventTableChangesToAggregateTopicRelay.stopCapturingChanges();
+  @Test
+  public void testDelete() throws ExecutionException, InterruptedException {
+
+    String aggregateType = "TestAggregate" + UUID.randomUUID().toString();
+    String eventType = "TestEvent" + UUID.randomUUID().toString();
+
+    List<EventTypeAndData> myEvents = Collections.singletonList(new EventTypeAndData(eventType, "{}", Optional.empty()));
+
+    EntityIdVersionAndEventIds ewidv = AsyncUtil.await(eventuateJdbcEventStore.save(aggregateType, myEvents, Optional.empty()));
+
+    Set<Int128> expectedEventIds = new HashSet<>();
+    expectedEventIds.add(ewidv.getEntityVersion());
+    BlockingQueue<Int128> result = new LinkedBlockingDeque<>();
+    eventuateKafkaAggregateSubscriptions.subscribe("testSubscriber-" + getClass().getName(),
+            Collections.singletonMap(aggregateType, Collections.singleton(eventType)),
+            SubscriberOptions.DEFAULTS,
+            se -> {
+              logger.debug("got se {}", se);
+              if (expectedEventIds.contains(se.getId()))
+                result.add(se.getId());
+              return CompletableFuture.completedFuture(null);
+            }).get();
+
+    Assert.assertNotNull(result.poll(30, TimeUnit.SECONDS));
+    Assert.assertNull(result.poll(30, TimeUnit.SECONDS));
+
+    new JdbcTemplate(dataSource).update(String.format("delete from %s", eventuateSchema.qualifyTable("events")));
+
+    ewidv = AsyncUtil.await(eventuateJdbcEventStore.save(aggregateType, myEvents, Optional.empty()));
+    expectedEventIds.add(ewidv.getEntityVersion());
+
+    Assert.assertNotNull(result.poll(30, TimeUnit.SECONDS));
+    Assert.assertNull(result.poll(30, TimeUnit.SECONDS));
   }
 
   @Test

@@ -145,6 +145,12 @@ public class MySqlBinLogBasedEventTableChangesToAggregateTopicRelay extends Even
     String topic = sourceRecord.topic();
     if (String.format("my-app-connector.%s.events", eventuateSchema.isEmpty() ? jdbcUrl.getDatabase() : eventuateSchema.getEventuateDatabaseSchema()).equals(topic)) {
       Struct value = (Struct) sourceRecord.value();
+
+      //event operation must be 'create'
+      if (value == null || !"c".equals(value.get("op"))) {
+        return;
+      }
+
       Struct after = value.getStruct("after");
 
       String eventId = after.getString("event_id");

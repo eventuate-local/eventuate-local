@@ -3,7 +3,6 @@ package io.eventuate.local.cdc.debezium;
 import io.eventuate.Int128;
 import io.eventuate.SubscriberOptions;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
-import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
@@ -43,32 +42,19 @@ public abstract class AbstractTopicRelayTest {
   @Test
   public void shouldCaptureAndPublishChange() throws ExecutionException, InterruptedException {
 
-    String aggregateType = "TestAggregate" + UUID.randomUUID().toString();
-    String eventType = "TestEvent" + UUID.randomUUID().toString();
+    String aggregateType = uniqueId("TestAggregate");
+    String eventType = uniqueId("TestEvent");
 
-    List<EventTypeAndData> myEvents = Collections.singletonList(new EventTypeAndData(eventType, "{}", Optional.empty()));
+    List<EventTypeAndData> events = createTestEvent(eventType);
 
     long publishTime = System.currentTimeMillis();
 
-    EntityIdVersionAndEventIds ewidv = AsyncUtil.await(eventuateJdbcEventStore.save(aggregateType, myEvents, Optional.empty()));
-
-    Int128 expectedEventId = ewidv.getEntityVersion();
-    BlockingQueue<Int128> result = new LinkedBlockingDeque<>();
+    Int128 expectedEventId = saveEvents(aggregateType, events);
 
     logger.debug("Looking for eventId {}", expectedEventId);
 
-    eventuateKafkaAggregateSubscriptions.subscribe("testSubscriber-" + getClass().getName(),
-            Collections.singletonMap(aggregateType, Collections.singleton(eventType)),
-            SubscriberOptions.DEFAULTS,
-            se -> {
-              logger.debug("got se {}", se);
-              if (se.getId().equals(expectedEventId))
-                result.add(se.getId());
-              return CompletableFuture.completedFuture(null);
-            }).get();
-
-    Assert.assertNotNull("Failed to find eventId: " + expectedEventId, result.poll(30, TimeUnit.SECONDS));
-    Assert.assertNull(result.poll(30, TimeUnit.SECONDS));
+    subscribe(uniqueId("testSubscriber-" + getClass().getName()), aggregateType, eventType, expectedEventId)
+            .assertEventReceived();
 
     long endTime = System.currentTimeMillis();
 
@@ -76,42 +62,75 @@ public abstract class AbstractTopicRelayTest {
   }
 
   @Test
-  public void testDelete() throws ExecutionException, InterruptedException {
+  public void testEventTableCleanUp() throws ExecutionException, InterruptedException {
 
-    String aggregateType = "TestAggregate" + UUID.randomUUID().toString();
-    String eventType = "TestEvent" + UUID.randomUUID().toString();
+    String aggregateType = uniqueId("TestAggregate");
+    String eventType = uniqueId("TestEvent");
+    List<EventTypeAndData> event = createTestEvent(eventType);
 
-    List<EventTypeAndData> myEvents = Collections.singletonList(new EventTypeAndData(eventType, "{}", Optional.empty()));
+    Int128 expectedEventId = saveEvents(aggregateType, event);
 
-    EntityIdVersionAndEventIds ewidv = AsyncUtil.await(eventuateJdbcEventStore.save(aggregateType, myEvents, Optional.empty()));
+    subscribe(uniqueId("testSubscriber-" + getClass().getName()), aggregateType, eventType, expectedEventId)
+            .assertEventReceived();
 
-    Set<Int128> expectedEventIds = new HashSet<>();
-    expectedEventIds.add(ewidv.getEntityVersion());
-    BlockingQueue<Int128> result = new LinkedBlockingDeque<>();
-    eventuateKafkaAggregateSubscriptions.subscribe("testSubscriber-" + getClass().getName(),
-            Collections.singletonMap(aggregateType, Collections.singleton(eventType)),
-            SubscriberOptions.DEFAULTS,
-            se -> {
-              logger.debug("got se {}", se);
-              if (expectedEventIds.contains(se.getId()))
-                result.add(se.getId());
-              return CompletableFuture.completedFuture(null);
-            }).get();
+    deleteAllEvents();
 
-    Assert.assertNotNull(result.poll(30, TimeUnit.SECONDS));
-    Assert.assertNull(result.poll(30, TimeUnit.SECONDS));
+    expectedEventId = saveEvents(aggregateType, event);
 
-    new JdbcTemplate(dataSource).update(String.format("delete from %s", eventuateSchema.qualifyTable("events")));
-
-    ewidv = AsyncUtil.await(eventuateJdbcEventStore.save(aggregateType, myEvents, Optional.empty()));
-    expectedEventIds.add(ewidv.getEntityVersion());
-
-    Assert.assertNotNull(result.poll(30, TimeUnit.SECONDS));
-    Assert.assertNull(result.poll(30, TimeUnit.SECONDS));
+    subscribe(uniqueId("testSubscriber-" + getClass().getName()), aggregateType, eventType, expectedEventId)
+            .assertEventReceived();
   }
 
   @Test
   public void shouldStartup() throws InterruptedException {
     TimeUnit.SECONDS.sleep(10);
+  }
+
+  private List<EventTypeAndData> createTestEvent(String eventType) {
+    return Collections.singletonList(new EventTypeAndData(eventType, "{}", Optional.empty()));
+  }
+
+  private Int128 saveEvents(String aggregateType, List<EventTypeAndData> events) {
+    return AsyncUtil.await(eventuateJdbcEventStore.save(aggregateType, events, Optional.empty())).getEntityVersion();
+  }
+
+  private String uniqueId(String prefix) {
+    return prefix + "-" + UUID.randomUUID();
+  }
+
+  private void deleteAllEvents() {
+    new JdbcTemplate(dataSource).update(String.format("delete from %s", eventuateSchema.qualifyTable("events")));
+  }
+
+  public TestSubscriber subscribe(String subscriber, String aggregateType, String eventType, Int128 expectedEventId)
+          throws InterruptedException, ExecutionException {
+
+    TestSubscriber testSubscriber = new TestSubscriber();
+
+    eventuateKafkaAggregateSubscriptions.cleanUp();
+
+    eventuateKafkaAggregateSubscriptions.subscribe(subscriber,
+            Collections.singletonMap(aggregateType, Collections.singleton(eventType)),
+            SubscriberOptions.DEFAULTS,
+            se -> {
+              logger.debug("got se {}", se);
+              if (expectedEventId.equals(se.getId()))
+                testSubscriber.addReceivedEventId(se.getId());
+              return CompletableFuture.completedFuture(null);
+            }).get();
+
+    return testSubscriber;
+  }
+
+  private static class TestSubscriber {
+    private BlockingQueue<Int128> eventIds = new LinkedBlockingDeque<>();
+
+    public void addReceivedEventId(Int128 id) {
+      eventIds.add(id);
+    }
+
+    public void assertEventReceived() throws InterruptedException {
+      Assert.assertNotNull(eventIds.poll(30, TimeUnit.SECONDS));
+    }
   }
 }

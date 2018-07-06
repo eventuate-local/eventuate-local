@@ -102,7 +102,7 @@ public abstract class AbstractTopicRelayTest {
     new JdbcTemplate(dataSource).update(String.format("delete from %s", eventuateSchema.qualifyTable("events")));
   }
 
-  public TestSubscriber subscribe(String subscriber, String aggregateType, String eventType, Int128 expectedEventId)
+  private TestSubscriber subscribe(String subscriber, String aggregateType, String eventType, Int128 expectedEventId)
           throws InterruptedException, ExecutionException {
 
     TestSubscriber testSubscriber = new TestSubscriber();

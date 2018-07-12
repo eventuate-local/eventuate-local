@@ -60,7 +60,7 @@ public class DebeziumCdcStartupValidator extends CdcStartupValidator {
           return;
         } catch (SQLException e) {
           lastException = e;
-          logger.error(String.format("Failed testing connection for %s:%s with user '%s'", jdbcContext.hostname(), jdbcContext.port(), mysql.username()), e);
+          logger.warn(String.format("Failed testing connection for %s:%s with user '%s'", jdbcContext.hostname(), jdbcContext.port(), mysql.username()), e);
           i--;
           try {
             Thread.sleep(mySqlValidationTimeoutMillis);
@@ -69,7 +69,7 @@ public class DebeziumCdcStartupValidator extends CdcStartupValidator {
           }
         }
       }
-      jdbcContext.shutdown();
+      logger.error(String.format("Could not connect to database for %s:%s with user '%s'", jdbcContext.hostname(), jdbcContext.port(), mysql.username()), lastException);
       throw new RuntimeException(lastException);
     }
   }

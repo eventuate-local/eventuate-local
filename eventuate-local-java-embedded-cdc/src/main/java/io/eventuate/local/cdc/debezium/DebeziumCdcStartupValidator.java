@@ -60,7 +60,7 @@ public class DebeziumCdcStartupValidator extends CdcStartupValidator {
           return;
         } catch (SQLException e) {
           lastException = e;
-          logger.info("Failed testing connection for {}:{} with user '{}'", jdbcContext.hostname(), jdbcContext.port(), mysql.username());
+          logger.error(String.format("Failed testing connection for %s:%s with user '%s'", jdbcContext.hostname(), jdbcContext.port(), mysql.username()), e);
           i--;
           try {
             Thread.sleep(mySqlValidationTimeoutMillis);

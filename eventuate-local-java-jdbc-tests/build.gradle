@@ -2,6 +2,8 @@ apply plugin: PrivateModulePlugin
 
 dependencies {
 
+    testCompile 'com.zaxxer:HikariCP:3.2.0'
+
     testCompile "io.eventuate.client.java:eventuate-client-java-tests-common:$eventuateClientVersion"
 
     testCompile project(":eventuate-local-java-jdbc-autoconfigure")

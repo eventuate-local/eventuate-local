@@ -26,11 +26,11 @@ public class MySqlBinlogCdcPipelineFactory extends CommonDBLogCdcPipelineFactory
                                        EventuateKafkaProducer eventuateKafkaProducer,
                                        PublishingStrategy<PublishedEvent> publishingStrategy) {
     super(curatorFramework,
+            publishingStrategy,
             dataProducerFactory,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer,
-            publishingStrategy);
+            eventuateKafkaProducer);
   }
 
   @Override
@@ -88,8 +88,8 @@ public class MySqlBinlogCdcPipelineFactory extends CommonDBLogCdcPipelineFactory
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(mySqlBinlogCdcPipelineProperties.getDataSourceUrl());
 
     return new MySqlBinaryLogClient<>(writeRowsEventDataParser,
-            mySqlBinlogCdcPipelineProperties.getDbUserName(),
-            mySqlBinlogCdcPipelineProperties.getDbPassword(),
+            mySqlBinlogCdcPipelineProperties.getCdcDbUserName(),
+            mySqlBinlogCdcPipelineProperties.getCdcDbPassword(),
             jdbcUrl.getHost(),
             jdbcUrl.getPort(),
             mySqlBinlogCdcPipelineProperties.getBinlogClientId(),
@@ -118,10 +118,10 @@ public class MySqlBinlogCdcPipelineFactory extends CommonDBLogCdcPipelineFactory
   private DataSource createDataSource(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties) {
       return DataSourceBuilder
               .create()
-              .username(mySqlBinlogCdcPipelineProperties.getDbUserName())
-              .password(mySqlBinlogCdcPipelineProperties.getDbPassword())
+              .username(mySqlBinlogCdcPipelineProperties.getDataSourceUserName())
+              .password(mySqlBinlogCdcPipelineProperties.getDataSourcePassword())
               .url(mySqlBinlogCdcPipelineProperties.getDataSourceUrl())
-              .driverClassName(mySqlBinlogCdcPipelineProperties.getDbDriverClassName())
+              .driverClassName(mySqlBinlogCdcPipelineProperties.getDataSourceDriverClassName())
               .build();
   }
 }

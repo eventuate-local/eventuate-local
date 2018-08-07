@@ -1,17 +1,28 @@
 package io.eventuate.local.unified.cdc.properties;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.springframework.util.Assert;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CdcPipelineProperties {
-  private String dataSourceUrl;
-  private String dbUserName;
-  private String dbPassword;
-  private String dbDriverClassName;
-
   private String type;
+
+  private String dataSourceUrl;
+  private String dataSourceUserName;
+  private String dataSourcePassword;
+  private String dataSourceDriverClassName;
   private String leadershipLockPath;
-  private String eventuateDatabaseSchema; //null is default //TODO: move schema in orgiginal configs to common configuraiton
+  private String eventuateDatabaseSchema = null;
+
+  public void validate() {
+    Assert.notNull(type, "type must not be null");
+    Assert.notNull(dataSourceUrl, "dataSourceUrl must not be null");
+    Assert.notNull(dataSourceUserName, "dataSourceUserName must not be null");
+    Assert.notNull(dataSourcePassword, "dataSourcePassword must not be null");
+    Assert.notNull(dataSourceDriverClassName, "dataSourceDriverClassName must not be null");
+    Assert.notNull(leadershipLockPath, "leadershipLockPath must not be null");
+  }
 
   public String getType() {
     return type;
@@ -46,27 +57,32 @@ public class CdcPipelineProperties {
     this.dataSourceUrl = dataSourceUrl;
   }
 
-  public String getDbUserName() {
-    return dbUserName;
+  public String getDataSourceUserName() {
+    return dataSourceUserName;
   }
 
-  public void setDbUserName(String dbUserName) {
-    this.dbUserName = dbUserName;
+  public void setDataSourceUserName(String dataSourceUserName) {
+    this.dataSourceUserName = dataSourceUserName;
   }
 
-  public String getDbPassword() {
-    return dbPassword;
+  public String getDataSourcePassword() {
+    return dataSourcePassword;
   }
 
-  public void setDbPassword(String dbPassword) {
-    this.dbPassword = dbPassword;
+  public void setDataSourcePassword(String dataSourcePassword) {
+    this.dataSourcePassword = dataSourcePassword;
   }
 
-  public String getDbDriverClassName() {
-    return dbDriverClassName;
+  public String getDataSourceDriverClassName() {
+    return dataSourceDriverClassName;
   }
 
-  public void setDbDriverClassName(String dbDriverClassName) {
-    this.dbDriverClassName = dbDriverClassName;
+  public void setDataSourceDriverClassName(String dataSourceDriverClassName) {
+    this.dataSourceDriverClassName = dataSourceDriverClassName;
+  }
+
+  @Override
+  public String toString() {
+    return ReflectionToStringBuilder.toString(this);
   }
 }

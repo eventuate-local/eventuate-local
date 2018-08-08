@@ -167,6 +167,24 @@ jobs:
           path: ~/junit
       - store_artifacts:
           path: ~/junit
+  build-new-cdc-unified:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-unified.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
   publish:
     machine: true
     working_directory: ~/eventuate-local-java

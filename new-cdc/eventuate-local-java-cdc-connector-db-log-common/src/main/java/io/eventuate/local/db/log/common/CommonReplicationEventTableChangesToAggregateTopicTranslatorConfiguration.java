@@ -46,11 +46,4 @@ public class CommonReplicationEventTableChangesToAggregateTopicTranslatorConfigu
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy);
   }
-
-  @Bean
-  public CdcProcessor<PublishedEvent> cdcProcessor(DbLogClient<PublishedEvent> dbLogClient,
-                                                   DatabaseOffsetKafkaStore databaseOffsetKafkaStore) {
-
-    return new DbLogBasedCdcProcessor<>(dbLogClient, databaseOffsetKafkaStore);
-  }
 }

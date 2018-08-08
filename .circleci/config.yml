@@ -231,6 +231,9 @@ workflows:
       - build-new-cdc-postgres-polling:
           requires:
             - build-mysql-cdc-connector-polling
+      - build-new-cdc-unified:
+          requires:
+            - build-postgres-wal
       - publish:
           requires:
             - build-postgres-wal
@@ -238,3 +241,4 @@ workflows:
             - build-new-cdc-mysql
             - build-new-cdc-postgres-wal
             - build-new-cdc-postgres-polling
+            - build-new-cdc-unified

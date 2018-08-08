@@ -61,7 +61,7 @@ public class PostgresWalCdcPipelineFactory extends CommonDBLogCdcPipelineFactory
   }
 
   private DbLogClient<PublishedEvent> createDbLogClient(PostgresWalCdcPipelineProperties postgresWalCdcPipelineProperties,
-                                                 PostgresWalMessageParser<PublishedEvent> postgresWalMessageParser) {
+                                                        PostgresWalMessageParser<PublishedEvent> postgresWalMessageParser) {
 
     return new PostgresWalClient<>(postgresWalMessageParser,
             postgresWalCdcPipelineProperties.getDataSourceUrl(),
@@ -79,7 +79,7 @@ public class PostgresWalCdcPipelineFactory extends CommonDBLogCdcPipelineFactory
   }
 
   private CdcProcessor<PublishedEvent> createCdcProcessor(DbLogClient<PublishedEvent> dbLogClient,
-                                                   OffsetStore offsetStore) {
+                                                          OffsetStore offsetStore) {
 
     return new DbLogBasedCdcProcessor<>(dbLogClient, offsetStore);
   }

@@ -9,9 +9,7 @@ else
     echo using existing DOCKER_COMPOSE = $DOCKER_COMPOSE
 fi
 
-export GRADLE_OPTIONS="-P excludeCdcLibs=true"
-
-./gradlew $GRADLE_OPTIONS assemble
+./gradlew assemble
 
 $DOCKER_COMPOSE stop
 $DOCKER_COMPOSE rm --force -v
@@ -20,8 +18,12 @@ $DOCKER_COMPOSE build
 $DOCKER_COMPOSE up -d mysql postgrespollingpipeline mysqlbinlogpipeline postgreswalpipeline
 
 ./scripts/wait-for-mysql.sh
+export MYSQL_PORT=3307
+./scripts/wait-for-mysql.sh
 
-sleep 30
+./scripts/wait-for-postgres.sh
+export POSTGRES_PORT=5433
+./scripts/wait-for-postgres.sh
 
 $DOCKER_COMPOSE up -d
 
@@ -30,14 +32,14 @@ $DOCKER_COMPOSE up -d
 . ./scripts/set-env-mysql.sh
 export SPRING_DATASOURCE_URL=jdbc:mysql://${DOCKER_HOST_IP}:3307/eventuate
 
-./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test
+./gradlew :eventuate-local-java-jdbc-tests:test
 
 . ./scripts/set-env-postgres-polling.sh
-./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test
+./gradlew :eventuate-local-java-jdbc-tests:test
 
 . ./scripts/set-env-postgres-wal.sh
 export SPRING_DATASOURCE_URL=jdbc:postgresql://${DOCKER_HOST_IP}:5433/eventuate
-./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test
+./gradlew :eventuate-local-java-jdbc-tests:test
 
 $DOCKER_COMPOSE stop
 $DOCKER_COMPOSE rm --force -v

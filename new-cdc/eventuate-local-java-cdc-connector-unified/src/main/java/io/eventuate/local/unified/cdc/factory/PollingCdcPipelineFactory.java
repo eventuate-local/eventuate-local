@@ -14,7 +14,8 @@ import javax.sql.DataSource;
 
 public class PollingCdcPipelineFactory extends CommonCdcPipelineFactory<PollingPipelineProperties> {
 
-  public PollingCdcPipelineFactory(CuratorFramework curatorFramework, PublishingStrategy<PublishedEvent> publishingStrategy, DataProducerFactory dataProducerFactory) {
+  public PollingCdcPipelineFactory(CuratorFramework curatorFramework, PublishingStrategy<PublishedEvent> publishingStrategy,
+                                   DataProducerFactory dataProducerFactory) {
     super(curatorFramework, publishingStrategy, dataProducerFactory);
   }
 

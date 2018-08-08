@@ -100,8 +100,8 @@ public class MySqlBinlogCdcPipelineFactory extends CommonDBLogCdcPipelineFactory
   }
 
   private DebeziumBinlogOffsetKafkaStore createDebeziumBinlogOffsetKafkaStore(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties,
-                                                                             EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+                                                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     return new DebeziumBinlogOffsetKafkaStore(mySqlBinlogCdcPipelineProperties.getOldDbHistoryTopicName(),
             eventuateKafkaConfigurationProperties,

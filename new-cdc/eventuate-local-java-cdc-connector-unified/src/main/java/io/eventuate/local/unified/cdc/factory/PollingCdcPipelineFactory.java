@@ -73,14 +73,4 @@ public class PollingCdcPipelineFactory extends CommonCdcPipelineFactory<PollingP
                                                           PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
     return new PollingCdcProcessor<>(pollingDao, pollingPipelineProperties.getPollingIntervalInMilliseconds());
   }
-
-  private DataSource createDataSource(PollingPipelineProperties pollingPipelineProperties) {
-    return DataSourceBuilder
-            .create()
-            .username(pollingPipelineProperties.getDataSourceUserName())
-            .password(pollingPipelineProperties.getDataSourcePassword())
-            .url(pollingPipelineProperties.getDataSourceUrl())
-            .driverClassName(pollingPipelineProperties.getDataSourceDriverClassName())
-            .build();
-  }
 }

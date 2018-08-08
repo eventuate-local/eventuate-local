@@ -14,7 +14,7 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.unified.cdc.properties.CommonDbLogCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
-abstract public class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbLogCdcPipelineProperties> extends CommonCdcPipelineFactory<PROPERTIES> {
+public abstract class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbLogCdcPipelineProperties> extends CommonCdcPipelineFactory<PROPERTIES> {
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
   protected EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
   protected EventuateKafkaProducer eventuateKafkaProducer;

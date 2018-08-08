@@ -1,6 +1,6 @@
 package io.eventuate.local.unified.cdc.properties;
 
-public class CommonDbLogCdcPipelineProperties extends CdcPipelineProperties {
+public abstract class CommonDbLogCdcPipelineProperties extends CdcPipelineProperties {
   private String dbHistoryTopicName = "db.history.topic";
   private String mySqlBinLogClientName = "MySqlBinLog";
   private Integer binlogConnectionTimeoutInMilliseconds = 5000;

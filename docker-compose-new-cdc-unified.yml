@@ -19,4 +19,25 @@ newcdcservice:
     EVENTUATELOCAL_CDC_DB_USER_NAME: root
     EVENTUATELOCAL_CDC_DB_PASSWORD: rootpassword
     EVENTUATELOCAL_CDC_BINLOG_CLIENT_ID: 1234567890
-    EVENTUATE_CDC_PIPELINE_PROPERTIES: '[{"type":"eventuate-local-mysql-binlog","dataSourceUrl":"jdbc:mysql://${DOCKER_HOST_IP}:3307/eventuate","dataSourceUserName":"mysqluser","dataSourcePassword":"mysqlpw","dataSourceDriverClassName":"com.mysql.jdbc.Driver","leadershipLockPath":"/eventuatelocal/cdc/leader/pipeline/1","mySqlBinLogClientName":"MySqlBinLog","cdcDbUserName":"root","cdcDbPassword":"rootpassword"}, {"type":"eventuate-local-event-polling","dataSourceUrl":"jdbc:postgresql://${DOCKER_HOST_IP}/eventuate","dataSourceUserName":"eventuate","dataSourcePassword":"eventuate","dataSourceDriverClassName":"org.postgresql.Driver","leadershipLockPath":"/eventuatelocal/cdc/leader/pipeline/2"}, {"type":"eventuate-local-postgres-wal","dataSourceUrl":"jdbc:postgresql://${DOCKER_HOST_IP}:5433/eventuate","dataSourceUserName":"eventuate","dataSourcePassword":"eventuate","dataSourceDriverClassName":"org.postgresql.Driver","leadershipLockPath":"/eventuatelocal/cdc/leader/pipeline/3"}]'
+    EVENTUATE_CDC_PIPELINE_PROPERTIES: >
+      [{"type":"eventuate-local-mysql-binlog",
+      "dataSourceUrl":"jdbc:mysql://${DOCKER_HOST_IP}:3307/eventuate",
+      "dataSourceUserName":"mysqluser",
+      "dataSourcePassword":"mysqlpw",
+      "dataSourceDriverClassName":"com.mysql.jdbc.Driver",
+      "leadershipLockPath":"/eventuatelocal/cdc/leader/pipeline/1",
+      "mySqlBinLogClientName":"MySqlBinLog",
+      "cdcDbUserName":"root",
+      "cdcDbPassword":"rootpassword"},
+      {"type":"eventuate-local-event-polling",
+      "dataSourceUrl":"jdbc:postgresql://${DOCKER_HOST_IP}/eventuate",
+      "dataSourceUserName":"eventuate",
+      "dataSourcePassword":"eventuate",
+      "dataSourceDriverClassName":"org.postgresql.Driver",
+      "leadershipLockPath":"/eventuatelocal/cdc/leader/pipeline/2"},
+      {"type":"eventuate-local-postgres-wal",
+      "dataSourceUrl":"jdbc:postgresql://${DOCKER_HOST_IP}:5433/eventuate",
+      "dataSourceUserName":"eventuate",
+      "dataSourcePassword":"eventuate",
+      "dataSourceDriverClassName":"org.postgresql.Driver",
+      "leadershipLockPath":"/eventuatelocal/cdc/leader/pipeline/3"}]

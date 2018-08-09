@@ -11,6 +11,8 @@ fi
 
 ./gradlew assemble
 
+. ./scripts/set-env-mysql.sh
+
 $DOCKER_COMPOSE stop
 $DOCKER_COMPOSE rm --force -v
 
@@ -29,7 +31,6 @@ $DOCKER_COMPOSE up -d
 
 ./scripts/wait-for-services.sh $DOCKER_HOST_IP 8099
 
-. ./scripts/set-env-mysql.sh
 export SPRING_DATASOURCE_URL=jdbc:mysql://${DOCKER_HOST_IP}:3307/eventuate
 
 ./gradlew :eventuate-local-java-jdbc-tests:test

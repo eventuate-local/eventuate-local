@@ -1,5 +1,6 @@
 package io.eventuate.local.unified.cdc.factory;
 
+import com.zaxxer.hikari.HikariDataSource;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
@@ -36,13 +37,18 @@ abstract public class CommonCdcPipelineFactory<PROPERTIES extends CdcPipelinePro
     return new EventuateSchema(properties.getEventuateDatabaseSchema());
   }
 
-  protected DataSource createDataSource(PollingPipelineProperties pollingPipelineProperties) {
-    return DataSourceBuilder
-            .create()
-            .username(pollingPipelineProperties.getDataSourceUserName())
-            .password(pollingPipelineProperties.getDataSourcePassword())
-            .url(pollingPipelineProperties.getDataSourceUrl())
-            .driverClassName(pollingPipelineProperties.getDataSourceDriverClassName())
-            .build();
+  protected DataSource createDataSource(PROPERTIES properties) {
+
+
+    HikariDataSource hikariDataSource = new HikariDataSource();
+    hikariDataSource.setUsername(properties.getDataSourceUserName());
+    hikariDataSource.setPassword(properties.getDataSourcePassword());
+    hikariDataSource.setJdbcUrl(properties.getDataSourceUrl());
+    hikariDataSource.setDriverClassName(properties.getDataSourceDriverClassName());
+
+
+    hikariDataSource.setConnectionTestQuery("select 1");
+
+    return hikariDataSource;
   }
 }

@@ -114,14 +114,4 @@ public class MySqlBinlogCdcPipelineFactory extends CommonDBLogCdcPipelineFactory
 
     return new MySQLCdcProcessor<>(dbLogClient, offsetStore, debeziumBinlogOffsetKafkaStore);
   }
-
-  private DataSource createDataSource(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties) {
-      return DataSourceBuilder
-              .create()
-              .username(mySqlBinlogCdcPipelineProperties.getDataSourceUserName())
-              .password(mySqlBinlogCdcPipelineProperties.getDataSourcePassword())
-              .url(mySqlBinlogCdcPipelineProperties.getDataSourceUrl())
-              .driverClassName(mySqlBinlogCdcPipelineProperties.getDataSourceDriverClassName())
-              .build();
-  }
 }

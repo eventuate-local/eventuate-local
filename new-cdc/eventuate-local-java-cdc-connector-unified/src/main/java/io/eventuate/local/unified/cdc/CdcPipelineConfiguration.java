@@ -1,9 +1,7 @@
 package io.eventuate.local.unified.cdc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.eventuate.local.common.EventTableChangesToAggregateTopicTranslatorConfiguration;
-import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.PublishingStrategy;
+import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -13,16 +11,17 @@ import io.eventuate.local.unified.cdc.factory.MySqlBinlogCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.factory.PollingCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.factory.PostgresWalCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.CdcPipeline;
-import io.eventuate.local.unified.cdc.properties.CdcPipelineProperties;
+import io.eventuate.local.unified.cdc.properties.*;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.context.annotation.*;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -30,8 +29,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Configuration
-@Import(EventTableChangesToAggregateTopicTranslatorConfiguration.class)
-@EnableConfigurationProperties(EventuateKafkaConsumerConfigurationProperties.class)
+@Import({CommonCdcPipelineConfiguration.class, CdcDefaultPipelinePropertiesConfiguration.class})
 public class CdcPipelineConfiguration {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -44,6 +42,9 @@ public class CdcPipelineConfiguration {
   @Autowired
   private Collection<CdcPipelineFactory> cdcPipelineFactories;
 
+  @Autowired
+  private CdcPipelineProperties defaultCdcPipelineProperties;
+
   @PostConstruct
   public void initialize() {
     logger.info("Starting unified cdc pipelines");
@@ -51,8 +52,11 @@ public class CdcPipelineConfiguration {
     Optional
             .ofNullable(cdcPipelineJsonProperties)
             .map(this::convertCdcPipelinePropertiesToListOfMaps)
-            .orElse(Collections.emptyList())
-            .forEach(properties -> createStartSaveCdcPipeline(cdcPipelineFactories, properties));
+            .orElseGet(() -> {
+              createStartSaveCdcDefaultPipeline(defaultCdcPipelineProperties);
+              return Collections.emptyList();
+            })
+            .forEach(this::createStartSaveCdcPipeline);
 
     logger.info("Unified cdc pipelines are started");
   }
@@ -110,21 +114,27 @@ public class CdcPipelineConfiguration {
     }
   }
 
-  private void createStartSaveCdcPipeline(Collection<CdcPipelineFactory> cdcPipelineFactories,
-                                          Map<String, Object> properties) {
+  private void createStartSaveCdcPipeline(Map<String, Object> properties) {
 
-    CdcPipeline cdcPipeline = createCdcPipeline(cdcPipelineFactories, properties);
+    CdcPipeline cdcPipeline = createCdcPipeline(properties);
     cdcPipeline.start();
     cdcPipelines.add(cdcPipeline);
   }
 
-  private CdcPipeline createCdcPipeline(Collection<CdcPipelineFactory> cdcPipelineFactories,
-                                        Map<String, Object> properties) {
+  private void createStartSaveCdcDefaultPipeline(CdcPipelineProperties cdcDefaultPipelineProperties) {
+
+    cdcDefaultPipelineProperties.validate();
+    CdcPipeline cdcPipeline = createCdcPipeline(cdcDefaultPipelineProperties);
+    cdcPipeline.start();
+    cdcPipelines.add(cdcPipeline);
+  }
+
+  private CdcPipeline createCdcPipeline(Map<String, Object> properties) {
 
     CdcPipelineProperties cdcPipelineProperties = objectMapper.convertValue(properties, CdcPipelineProperties.class);
     cdcPipelineProperties.validate();
 
-    CdcPipelineFactory<? extends CdcPipelineProperties> cdcPipelineFactory = findCdcPipelineFactory(cdcPipelineFactories, cdcPipelineProperties.getType());
+    CdcPipelineFactory<? extends CdcPipelineProperties> cdcPipelineFactory = findCdcPipelineFactory(cdcPipelineProperties.getType());
 
     CdcPipelineProperties exactCdcPipelineProperties = objectMapper.convertValue(properties, cdcPipelineFactory.propertyClass());
     exactCdcPipelineProperties.validate();
@@ -132,8 +142,13 @@ public class CdcPipelineConfiguration {
     return  ((CdcPipelineFactory)cdcPipelineFactory).create(exactCdcPipelineProperties);
   }
 
-  private CdcPipelineFactory<? extends CdcPipelineProperties> findCdcPipelineFactory(Collection<CdcPipelineFactory> cdcPipelineFactories,
-                                                                                     String type) {
+  private CdcPipeline createCdcPipeline(CdcPipelineProperties cdcPipelineProperties) {
+    CdcPipelineFactory<? extends CdcPipelineProperties> cdcPipelineFactory = findCdcPipelineFactory(cdcPipelineProperties.getType());
+
+    return  ((CdcPipelineFactory)cdcPipelineFactory).create(cdcPipelineProperties);
+  }
+
+  private CdcPipelineFactory<? extends CdcPipelineProperties> findCdcPipelineFactory(String type) {
     return cdcPipelineFactories
             .stream()
             .filter(factory ->  factory.supports(type))

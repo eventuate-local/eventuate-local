@@ -1,5 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-io.eventuate.local.postgres.wal.PostgresWalEventTableChangesToAggregateTopicTranslatorConfiguration,\
-io.eventuate.local.polling.PollingEventTableChangesToAggregateTopicTranslatorConfiguration,\
-io.eventuate.local.mysql.binlog.MySqlEventTableChangesToAggregateTopicTranslatorConfiguration,\
 io.eventuate.local.unified.cdc.CdcPipelineConfiguration

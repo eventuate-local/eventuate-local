@@ -1,25 +1,29 @@
-package io.eventuate.local.common;
+package io.eventuate.local.unified.cdc;
 
-import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+
 
 @Configuration
-@Import(EventuateDriverConfiguration.class)
-@EnableConfigurationProperties(EventuateKafkaProducerConfigurationProperties.class)
-public class EventTableChangesToAggregateTopicTranslatorConfiguration {
+@EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
+        EventuateKafkaConsumerConfigurationProperties.class})
+public class CommonCdcPipelineConfiguration {
+
+  @Bean
+  public EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties() {
+    return new EventuateKafkaConfigurationProperties();
+  }
 
   @Bean
   public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
@@ -40,11 +44,6 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
   }
 
   @Bean
-  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
-    return new EventuateSchema(eventuateDatabaseSchema);
-  }
-
-  @Bean
   public PublishingStrategy<PublishedEvent> publishingStrategy() {
     return new PublishedEventPublishingStrategy();
   }
@@ -61,19 +60,6 @@ public class EventTableChangesToAggregateTopicTranslatorConfiguration {
   public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
     String connectionString = eventuateLocalZookeperConfigurationProperties.getConnectionString();
     return makeStartedCuratorClient(connectionString);
-  }
-
-  @Bean
-  public EventTableChangesToAggregateTopicTranslator<PublishedEvent> mySqlEventTableChangesToAggregateTopicTranslator(CdcDataPublisher<PublishedEvent> mySQLCdcDataPublisher,
-          CdcProcessor<PublishedEvent> mySQLCdcProcessor,
-          CuratorFramework curatorFramework,
-          EventuateConfigurationProperties eventuateConfigurationProperties) {
-
-
-    return new EventTableChangesToAggregateTopicTranslator<>(mySQLCdcDataPublisher,
-            mySQLCdcProcessor,
-            curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath());
   }
 
   static CuratorFramework makeStartedCuratorClient(String connectionString) {

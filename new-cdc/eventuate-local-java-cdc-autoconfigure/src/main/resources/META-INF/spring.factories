@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-io.eventuate.local.unified.cdc.CdcPipelineConfiguration
+io.eventuate.local.unified.cdc.UnifiedCdcConfiguration

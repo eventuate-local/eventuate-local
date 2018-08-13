@@ -9,7 +9,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.*;
 
 @Configuration
-@Import(CommonCdcPipelineConfiguration.class)
 public class CdcDefaultPipelinePropertiesConfiguration {
   @Value("${spring.profiles.active:#{\"\"}}")
   private String springProfilesActive;

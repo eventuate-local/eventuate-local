@@ -6,10 +6,7 @@ import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import io.eventuate.local.unified.cdc.factory.CdcPipelineFactory;
-import io.eventuate.local.unified.cdc.factory.MySqlBinlogCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.factory.PollingCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.factory.PostgresWalCdcPipelineFactory;
+import io.eventuate.local.unified.cdc.factory.*;
 import io.eventuate.local.unified.cdc.pipeline.CdcPipeline;
 import io.eventuate.local.unified.cdc.properties.*;
 import org.apache.curator.framework.CuratorFramework;
@@ -17,10 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.*;
 
 import javax.annotation.PostConstruct;
@@ -29,7 +22,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Configuration
-@Import({CommonCdcPipelineConfiguration.class, CdcDefaultPipelinePropertiesConfiguration.class})
+@Import(CdcDefaultPipelinePropertiesConfiguration.class)
 public class CdcPipelineConfiguration {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -66,46 +59,6 @@ public class CdcPipelineConfiguration {
     cdcPipelines.forEach(CdcPipeline::stop);
   }
 
-  @Bean
-  public MySqlBinlogCdcPipelineFactory mySqlBinlogCdcPipelineFactory(CuratorFramework curatorFramework,
-                                                                     DataProducerFactory dataProducerFactory,
-                                                                     EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                     EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                     EventuateKafkaProducer eventuateKafkaProducer,
-                                                                     PublishingStrategy<PublishedEvent> publishingStrategy) {
-
-    return new MySqlBinlogCdcPipelineFactory(curatorFramework,
-            dataProducerFactory,
-            eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer,
-            publishingStrategy);
-  }
-
-  @Bean
-  public PostgresWalCdcPipelineFactory postgresWalCdcPipelineFactory(CuratorFramework curatorFramework,
-                                                                     PublishingStrategy<PublishedEvent> publishingStrategy,
-                                                                     DataProducerFactory dataProducerFactory,
-                                                                     EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                     EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                     EventuateKafkaProducer eventuateKafkaProducer) {
-
-    return new PostgresWalCdcPipelineFactory(curatorFramework,
-            publishingStrategy,
-            dataProducerFactory,
-            eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer);
-  }
-
-  @Bean
-  public PollingCdcPipelineFactory pollingCdcPipelineFactory(CuratorFramework curatorFramework,
-                                                             PublishingStrategy<PublishedEvent> publishingStrategy,
-                                                             DataProducerFactory dataProducerFactory) {
-
-    return new PollingCdcPipelineFactory(curatorFramework, publishingStrategy, dataProducerFactory);
-  }
-
   private List<Map<String, Object>> convertCdcPipelinePropertiesToListOfMaps(String properties) {
     try {
       return objectMapper.readValue(properties, List.class);
@@ -134,7 +87,7 @@ public class CdcPipelineConfiguration {
     CdcPipelineProperties cdcPipelineProperties = objectMapper.convertValue(properties, CdcPipelineProperties.class);
     cdcPipelineProperties.validate();
 
-    CdcPipelineFactory<? extends CdcPipelineProperties> cdcPipelineFactory = findCdcPipelineFactory(cdcPipelineProperties.getType());
+    CdcPipelineFactory<? extends CdcPipelineProperties, PublishedEvent> cdcPipelineFactory = findCdcPipelineFactory(cdcPipelineProperties.getType());
 
     CdcPipelineProperties exactCdcPipelineProperties = objectMapper.convertValue(properties, cdcPipelineFactory.propertyClass());
     exactCdcPipelineProperties.validate();
@@ -142,13 +95,13 @@ public class CdcPipelineConfiguration {
     return  ((CdcPipelineFactory)cdcPipelineFactory).create(exactCdcPipelineProperties);
   }
 
-  private CdcPipeline createCdcPipeline(CdcPipelineProperties cdcPipelineProperties) {
-    CdcPipelineFactory<? extends CdcPipelineProperties> cdcPipelineFactory = findCdcPipelineFactory(cdcPipelineProperties.getType());
+  private CdcPipeline<PublishedEvent> createCdcPipeline(CdcPipelineProperties cdcPipelineProperties) {
+    CdcPipelineFactory<? extends CdcPipelineProperties, PublishedEvent> cdcPipelineFactory = findCdcPipelineFactory(cdcPipelineProperties.getType());
 
     return  ((CdcPipelineFactory)cdcPipelineFactory).create(cdcPipelineProperties);
   }
 
-  private CdcPipelineFactory<? extends CdcPipelineProperties> findCdcPipelineFactory(String type) {
+  private CdcPipelineFactory<? extends CdcPipelineProperties, PublishedEvent> findCdcPipelineFactory(String type) {
     return cdcPipelineFactories
             .stream()
             .filter(factory ->  factory.supports(type))

@@ -4,7 +4,6 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.db.log.common.PublishingFilter;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
@@ -37,8 +36,6 @@ public class MySqlBinlogCdcPipelineFactory extends AbstractMySqlBinlogCdcPipelin
             publishingFilter);
   }
 
-  //createDebeziumBinlogOffsetKafkaStore override to empty when kafka is not used
-
   @Override
   protected IWriteRowsEventDataParser<PublishedEvent> createWriteRowsEventDataParser(EventuateSchema eventuateSchema,
                                                                                      DataSource dataSource,
@@ -53,7 +50,9 @@ public class MySqlBinlogCdcPipelineFactory extends AbstractMySqlBinlogCdcPipelin
   }
 
   @Override
-  protected OffsetStore createOffsetStore(MySqlBinlogCdcPipelineProperties properties) {
+  protected OffsetStore createOffsetStore(MySqlBinlogCdcPipelineProperties properties,
+                                          DataSource dataSource,
+                                          EventuateSchema eventuateSchema) {
 
     return new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
             properties.getMySqlBinLogClientName(),

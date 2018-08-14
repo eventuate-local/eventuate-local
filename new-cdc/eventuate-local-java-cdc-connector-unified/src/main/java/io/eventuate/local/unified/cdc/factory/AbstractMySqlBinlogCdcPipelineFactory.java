@@ -47,15 +47,15 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
 
   @Override
   public CdcPipeline<EVENT> create(MySqlBinlogCdcPipelineProperties cdcPipelineProperties) {
-    OffsetStore offsetStore = createOffsetStore(cdcPipelineProperties);
+    DataSource dataSource = createDataSource(cdcPipelineProperties);
+
+    EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
+
+    OffsetStore offsetStore = createOffsetStore(cdcPipelineProperties, dataSource, eventuateSchema);
 
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(offsetStore);
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
-
-    EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
-
-    DataSource dataSource = createDataSource(cdcPipelineProperties);
 
     IWriteRowsEventDataParser<EVENT> writeRowsEventDataParser = createWriteRowsEventDataParser(eventuateSchema, dataSource, sourceTableNameSupplier);
 

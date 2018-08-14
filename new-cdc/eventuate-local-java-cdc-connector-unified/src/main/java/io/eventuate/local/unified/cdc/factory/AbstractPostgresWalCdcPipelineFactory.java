@@ -1,5 +1,6 @@
 package io.eventuate.local.unified.cdc.factory;
 
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.DbLogClient;
@@ -10,12 +11,13 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
-import io.eventuate.local.postgres.wal.PostgresWalJsonMessageParser;
 import io.eventuate.local.postgres.wal.PostgresWalMessageParser;
 import io.eventuate.local.unified.cdc.CdcPipelineType;
 import io.eventuate.local.unified.cdc.pipeline.CdcPipeline;
 import io.eventuate.local.unified.cdc.properties.PostgresWalCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
+
+import javax.sql.DataSource;
 
 public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonDBLogCdcPipelineFactory<PostgresWalCdcPipelineProperties, EVENT> {
 
@@ -47,7 +49,11 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
 
   @Override
   public CdcPipeline<EVENT> create(PostgresWalCdcPipelineProperties cdcPipelineProperties) {
-    OffsetStore offsetStore = createOffsetStore(cdcPipelineProperties);
+    DataSource dataSource = createDataSource(cdcPipelineProperties);
+
+    EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
+
+    OffsetStore offsetStore = createOffsetStore(cdcPipelineProperties, dataSource, eventuateSchema);
 
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(offsetStore);
 

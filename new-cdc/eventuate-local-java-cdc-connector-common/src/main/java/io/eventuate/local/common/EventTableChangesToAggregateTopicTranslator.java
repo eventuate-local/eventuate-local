@@ -44,6 +44,8 @@ public class EventTableChangesToAggregateTopicTranslator<EVENT> {
       if (e.getCause() instanceof EventuateLocalPublishingException) {
         logger.error("Stopping capturing changes due to exception:", e);
         this.stopCapturingChanges();
+      } else {
+        logger.error(e.getMessage(), e);
       }
     }
 

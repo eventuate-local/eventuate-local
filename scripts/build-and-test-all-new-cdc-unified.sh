@@ -22,9 +22,6 @@ $DOCKER_COMPOSE build
 $DOCKER_COMPOSE up -d mysql postgrespollingpipeline mysqlbinlogpipeline postgreswalpipeline
 
 ./scripts/wait-for-mysql.sh
-export MYSQL_PORT=3307
-./scripts/wait-for-mysql.sh
-
 ./scripts/wait-for-postgres.sh
 export POSTGRES_PORT=5433
 ./scripts/wait-for-postgres.sh
@@ -33,8 +30,7 @@ $DOCKER_COMPOSE up -d
 
 ./scripts/wait-for-services.sh $DOCKER_HOST_IP 8099
 
-export SPRING_DATASOURCE_URL=jdbc:mysql://${DOCKER_HOST_IP}:3307/eventuate
-
+. ./scripts/set-env-mysql.sh
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test
 
 . ./scripts/set-env-postgres-polling.sh

@@ -3,12 +3,14 @@ package io.eventuate.local.unified.cdc.factory;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
-import io.eventuate.local.polling.*;
+import io.eventuate.local.polling.PollingCdcDataPublisher;
+import io.eventuate.local.polling.PollingCdcProcessor;
+import io.eventuate.local.polling.PollingDao;
+import io.eventuate.local.polling.PollingDataProvider;
 import io.eventuate.local.unified.cdc.CdcPipelineType;
 import io.eventuate.local.unified.cdc.pipeline.CdcPipeline;
 import io.eventuate.local.unified.cdc.properties.PollingPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 
 import javax.sql.DataSource;
 

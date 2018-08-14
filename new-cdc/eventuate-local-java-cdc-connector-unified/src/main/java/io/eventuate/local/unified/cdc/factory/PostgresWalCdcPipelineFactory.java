@@ -1,9 +1,9 @@
 package io.eventuate.local.unified.cdc.factory;
 
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.db.log.common.PublishingFilter;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
@@ -14,6 +14,8 @@ import io.eventuate.local.postgres.wal.PostgresWalJsonMessageParser;
 import io.eventuate.local.postgres.wal.PostgresWalMessageParser;
 import io.eventuate.local.unified.cdc.properties.PostgresWalCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
+
+import javax.sql.DataSource;
 
 public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelineFactory<PublishedEvent> {
 
@@ -39,7 +41,9 @@ public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelin
   }
 
   @Override
-  protected OffsetStore createOffsetStore(PostgresWalCdcPipelineProperties properties) {
+  protected OffsetStore createOffsetStore(PostgresWalCdcPipelineProperties properties,
+                                          DataSource dataSource,
+                                          EventuateSchema eventuateSchema) {
 
     return new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
             properties.getMySqlBinLogClientName(),

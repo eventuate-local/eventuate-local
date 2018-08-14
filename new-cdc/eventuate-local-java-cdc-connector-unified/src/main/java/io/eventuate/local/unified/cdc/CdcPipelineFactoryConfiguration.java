@@ -1,7 +1,5 @@
 package io.eventuate.local.unified.cdc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.db.log.common.PublishingFilter;
@@ -9,25 +7,13 @@ import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import io.eventuate.local.unified.cdc.factory.CdcPipelineFactory;
 import io.eventuate.local.unified.cdc.factory.MySqlBinlogCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.factory.PollingCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.factory.PostgresWalCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.pipeline.CdcPipeline;
-import io.eventuate.local.unified.cdc.properties.CdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.io.IOException;
-import java.util.*;
 
 @Configuration
 @Import(CommonCdcPipelineConfiguration.class)

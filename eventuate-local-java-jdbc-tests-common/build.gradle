@@ -1,0 +1,17 @@
+apply plugin: PrivateModulePlugin
+
+dependencies {
+
+    compile "io.eventuate.client.java:eventuate-client-java-tests-common:$eventuateClientVersion"
+
+    compile project(":eventuate-local-java-jdbc-autoconfigure")
+
+    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.2.0'
+
+    compile "junit:junit:4.11"
+    compile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+}
+
+test {
+    forkEvery 1
+}

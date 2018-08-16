@@ -1,6 +1,7 @@
 package io.eventuate.local.unified.cdc;
 
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.EventuateConfigurationProperties;
+import io.eventuate.local.common.EventuateLocalZookeperConfigurationProperties;
 import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.PublishingFilter;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
@@ -43,11 +44,6 @@ public class CommonCdcPipelineConfiguration {
   @Bean
   public EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties() {
     return new EventuateLocalZookeperConfigurationProperties();
-  }
-
-  @Bean
-  public PublishingStrategy<PublishedEvent> publishingStrategy() {
-    return new PublishedEventPublishingStrategy();
   }
 
   @Bean

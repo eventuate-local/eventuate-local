@@ -7,7 +7,6 @@ import io.eventuate.local.polling.PollingCdcDataPublisher;
 import io.eventuate.local.polling.PollingCdcProcessor;
 import io.eventuate.local.polling.PollingDao;
 import io.eventuate.local.polling.PollingDataProvider;
-import io.eventuate.local.unified.cdc.CdcPipelineType;
 import io.eventuate.local.unified.cdc.pipeline.CdcPipeline;
 import io.eventuate.local.unified.cdc.properties.PollingPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -16,15 +15,10 @@ import javax.sql.DataSource;
 
 public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEvent, EVENT_BEAN, ID> extends CommonCdcPipelineFactory<PollingPipelineProperties, EVENT> {
 
-  public AbstractPollingCdcPipelineFactory(CuratorFramework curatorFramework, PublishingStrategy<EVENT> publishingStrategy,
+  public AbstractPollingCdcPipelineFactory(CuratorFramework curatorFramework,
                                            DataProducerFactory dataProducerFactory) {
 
-    super(curatorFramework, publishingStrategy, dataProducerFactory);
-  }
-
-  @Override
-  public boolean supports(String type) {
-    return CdcPipelineType.EVENT_POLLING.stringRepresentation.equals(type);
+    super(curatorFramework, dataProducerFactory);
   }
 
   @Override
@@ -42,7 +36,7 @@ public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEven
 
     PollingDao<EVENT_BEAN, EVENT, ID> pollingDao = createPollingDao(cdcPipelineProperties, pollingDataProvider, dataSource);
 
-    CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(dataProducerFactory, publishingStrategy);
+    CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(dataProducerFactory, createPublishingStrategy());
 
     CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(cdcPipelineProperties, pollingDao);
 

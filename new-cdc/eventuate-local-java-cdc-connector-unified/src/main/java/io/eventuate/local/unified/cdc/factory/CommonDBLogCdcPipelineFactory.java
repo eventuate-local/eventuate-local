@@ -3,7 +3,6 @@ package io.eventuate.local.unified.cdc.factory;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.db.log.common.PublishingFilter;
@@ -25,14 +24,13 @@ public abstract class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbL
   protected PublishingFilter publishingFilter;
 
   public CommonDBLogCdcPipelineFactory(CuratorFramework curatorFramework,
-                                       PublishingStrategy<EVENT> publishingStrategy,
                                        DataProducerFactory dataProducerFactory,
                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                        EventuateKafkaProducer eventuateKafkaProducer,
                                        PublishingFilter publishingFilter) {
 
-    super(curatorFramework, publishingStrategy, dataProducerFactory);
+    super(curatorFramework, dataProducerFactory);
     this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
     this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
@@ -48,6 +46,6 @@ public abstract class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbL
     return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
             offsetStore,
             publishingFilter,
-            publishingStrategy);
+            createPublishingStrategy());
   }
 }

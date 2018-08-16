@@ -13,14 +13,14 @@ abstract public class CommonCdcPipelineFactory<PROPERTIES extends CdcPipelinePro
         implements CdcPipelineFactory<PROPERTIES, EVENT> {
 
   protected CuratorFramework curatorFramework;
-  protected PublishingStrategy<EVENT> publishingStrategy;
   protected DataProducerFactory dataProducerFactory;
 
-  public CommonCdcPipelineFactory(CuratorFramework curatorFramework, PublishingStrategy<EVENT> publishingStrategy, DataProducerFactory dataProducerFactory) {
+  public CommonCdcPipelineFactory(CuratorFramework curatorFramework, DataProducerFactory dataProducerFactory) {
     this.curatorFramework = curatorFramework;
-    this.publishingStrategy = publishingStrategy;
     this.dataProducerFactory = dataProducerFactory;
   }
+
+  protected abstract PublishingStrategy<EVENT> createPublishingStrategy();
 
   protected EventTableChangesToAggregateTopicTranslator<EVENT> createEventTableChangesToAggregateTopicTranslator(PROPERTIES properties,
                                                                                                                  CdcDataPublisher<EVENT> cdcDataPublisher,

@@ -19,7 +19,7 @@ $DOCKER_COMPOSE stop
 $DOCKER_COMPOSE rm --force -v
 
 $DOCKER_COMPOSE build
-$DOCKER_COMPOSE up -d mysql postgrespollingpipeline mysqlbinlogpipeline postgreswalpipeline
+$DOCKER_COMPOSE up -d postgrespollingpipeline mysqlbinlogpipeline postgreswalpipeline
 
 ./scripts/wait-for-mysql.sh
 ./scripts/wait-for-postgres.sh

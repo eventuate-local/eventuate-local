@@ -10,7 +10,6 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.mysql.binlog.*;
-import io.eventuate.local.unified.cdc.CdcPipelineType;
 import io.eventuate.local.unified.cdc.pipeline.CdcPipeline;
 import io.eventuate.local.unified.cdc.properties.MySqlBinlogCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -24,20 +23,13 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
                                                EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                EventuateKafkaProducer eventuateKafkaProducer,
-                                               PublishingStrategy<EVENT> publishingStrategy,
                                                PublishingFilter publishingFilter) {
     super(curatorFramework,
-          publishingStrategy,
           dataProducerFactory,
           eventuateKafkaConfigurationProperties,
           eventuateKafkaConsumerConfigurationProperties,
           eventuateKafkaProducer,
           publishingFilter);
-  }
-
-  @Override
-  public boolean supports(String type) {
-    return CdcPipelineType.MYSQL_BINLOG.stringRepresentation.equals(type);
   }
 
   @Override

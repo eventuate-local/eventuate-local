@@ -2,6 +2,7 @@ package io.eventuate.local.unified.cdc.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.PublishedEventPublishingStrategy;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -13,6 +14,7 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.mysql.binlog.IWriteRowsEventDataParser;
 import io.eventuate.local.mysql.binlog.SourceTableNameSupplier;
 import io.eventuate.local.mysql.binlog.WriteRowsEventDataParser;
+import io.eventuate.local.unified.cdc.CdcPipelineType;
 import io.eventuate.local.unified.cdc.properties.MySqlBinlogCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -25,15 +27,19 @@ public class MySqlBinlogCdcPipelineFactory extends AbstractMySqlBinlogCdcPipelin
                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                        EventuateKafkaProducer eventuateKafkaProducer,
-                                       PublishingStrategy<PublishedEvent> publishingStrategy,
                                        PublishingFilter publishingFilter) {
     super(curatorFramework,
             dataProducerFactory,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
-            publishingStrategy,
             publishingFilter);
+  }
+
+
+  @Override
+  public boolean supports(String type) {
+    return CdcPipelineType.MYSQL_BINLOG.stringRepresentation.equals(type);
   }
 
   @Override
@@ -59,5 +65,10 @@ public class MySqlBinlogCdcPipelineFactory extends AbstractMySqlBinlogCdcPipelin
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);
+  }
+
+  @Override
+  protected PublishingStrategy<PublishedEvent> createPublishingStrategy() {
+    return new PublishedEventPublishingStrategy();
   }
 }

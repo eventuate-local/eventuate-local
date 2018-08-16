@@ -1,7 +1,10 @@
 package io.eventuate.local.unified.cdc.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.local.common.CdcDataPublisher;
+import io.eventuate.local.common.CdcProcessor;
+import io.eventuate.local.common.EventTableChangesToAggregateTopicTranslator;
 import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -12,7 +15,6 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
 import io.eventuate.local.postgres.wal.PostgresWalMessageParser;
-import io.eventuate.local.unified.cdc.CdcPipelineType;
 import io.eventuate.local.unified.cdc.pipeline.CdcPipeline;
 import io.eventuate.local.unified.cdc.properties.PostgresWalCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -22,24 +24,17 @@ import javax.sql.DataSource;
 public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonDBLogCdcPipelineFactory<PostgresWalCdcPipelineProperties, EVENT> {
 
   public AbstractPostgresWalCdcPipelineFactory(CuratorFramework curatorFramework,
-                                               PublishingStrategy<EVENT> publishingStrategy,
                                                DataProducerFactory dataProducerFactory,
                                                EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                EventuateKafkaProducer eventuateKafkaProducer,
                                                PublishingFilter publishingFilter) {
     super(curatorFramework,
-            publishingStrategy,
             dataProducerFactory,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
             publishingFilter);
-  }
-
-  @Override
-  public boolean supports(String type) {
-    return CdcPipelineType.POSTGRES_WAL.stringRepresentation.equals(type);
   }
 
   @Override

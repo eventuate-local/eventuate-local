@@ -2,6 +2,7 @@ package io.eventuate.local.unified.cdc.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.PublishedEventPublishingStrategy;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -12,6 +13,7 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.postgres.wal.PostgresWalJsonMessageParser;
 import io.eventuate.local.postgres.wal.PostgresWalMessageParser;
+import io.eventuate.local.unified.cdc.CdcPipelineType;
 import io.eventuate.local.unified.cdc.properties.PostgresWalCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -20,19 +22,22 @@ import javax.sql.DataSource;
 public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelineFactory<PublishedEvent> {
 
   public PostgresWalCdcPipelineFactory(CuratorFramework curatorFramework,
-                                       PublishingStrategy<PublishedEvent> publishingStrategy,
                                        DataProducerFactory dataProducerFactory,
                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                        EventuateKafkaProducer eventuateKafkaProducer,
                                        PublishingFilter publishingFilter) {
     super(curatorFramework,
-            publishingStrategy,
             dataProducerFactory,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
             publishingFilter);
+  }
+
+  @Override
+  public boolean supports(String type) {
+    return CdcPipelineType.POSTGRES_WAL.stringRepresentation.equals(type);
   }
 
   @Override
@@ -50,5 +55,10 @@ public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelin
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);
+  }
+
+  @Override
+  protected PublishingStrategy<PublishedEvent> createPublishingStrategy() {
+    return new PublishedEventPublishingStrategy();
   }
 }

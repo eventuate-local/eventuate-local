@@ -18,7 +18,8 @@ newcdcservice:
       "dataSourcePassword":"mysqlpw",
       "dataSourceDriverClassName":"com.mysql.jdbc.Driver",
       "leadershipLockPath":"/eventuatelocal/cdc/leader/pipeline/1",
-      "mySqlBinLogClientName":"MySqlBinLog",
+      "mySqlBinLogClientName":"DbLog1",
+      "dbHistoryTopicName":"db.history.topic1",
       "cdcDbUserName":"root",
       "cdcDbPassword":"rootpassword"},
       {"type":"eventuate-local-event-polling",
@@ -32,4 +33,6 @@ newcdcservice:
       "dataSourceUserName":"eventuate",
       "dataSourcePassword":"eventuate",
       "dataSourceDriverClassName":"org.postgresql.Driver",
+      "mySqlBinLogClientName":"DbLog1",
+      "dbHistoryTopicName":"db.history.topic1",
       "leadershipLockPath":"/eventuatelocal/cdc/leader/pipeline/3"}]

@@ -31,6 +31,9 @@ public class CdcDefaultPipelinePropertiesConfiguration {
   private String eventuateDataBaseSchema;
 
   @Autowired
+  private DefaultCdcPipelineTypes defaultCdcPipelineTypes;
+
+  @Autowired
   private EventuateConfigurationProperties eventuateConfigurationProperties;
 
   @Profile("EventuatePolling")
@@ -68,7 +71,7 @@ public class CdcDefaultPipelinePropertiesConfiguration {
   private PollingPipelineProperties createPollingPipelineProperties() {
     PollingPipelineProperties pollingPipelineProperties = new PollingPipelineProperties();
 
-    pollingPipelineProperties.setType(CdcPipelineType.EVENT_POLLING.stringRepresentation);
+    pollingPipelineProperties.setType(defaultCdcPipelineTypes.eventPollingPipelineType());
     pollingPipelineProperties.setPollingIntervalInMilliseconds(eventuateConfigurationProperties.getPollingIntervalInMilliseconds());
     pollingPipelineProperties.setMaxEventsPerPolling(eventuateConfigurationProperties.getMaxEventsPerPolling());
     pollingPipelineProperties.setMaxAttemptsForPolling(eventuateConfigurationProperties.getMaxAttemptsForPolling());
@@ -80,7 +83,7 @@ public class CdcDefaultPipelinePropertiesConfiguration {
   private PostgresWalCdcPipelineProperties createPostgresWalCdcPipelineProperties() {
     PostgresWalCdcPipelineProperties postgresWalCdcPipelineProperties = new PostgresWalCdcPipelineProperties();
 
-    postgresWalCdcPipelineProperties.setType(CdcPipelineType.POSTGRES_WAL.stringRepresentation);
+    postgresWalCdcPipelineProperties.setType(defaultCdcPipelineTypes.postgresWalPipelineType());
     postgresWalCdcPipelineProperties.setPostgresReplicationStatusIntervalInMilliseconds(eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds());
     postgresWalCdcPipelineProperties.setPostgresReplicationSlotName(eventuateConfigurationProperties.getPostgresReplicationSlotName());
     postgresWalCdcPipelineProperties.setPostgresWalIntervalInMilliseconds(eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds());
@@ -91,7 +94,7 @@ public class CdcDefaultPipelinePropertiesConfiguration {
   private MySqlBinlogCdcPipelineProperties createMySqlBinlogCdcPipelineProperties() {
     MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties = new MySqlBinlogCdcPipelineProperties();
 
-    mySqlBinlogCdcPipelineProperties.setType(CdcPipelineType.MYSQL_BINLOG.stringRepresentation);
+    mySqlBinlogCdcPipelineProperties.setType(defaultCdcPipelineTypes.mySqlBinlogPipelineType());
     mySqlBinlogCdcPipelineProperties.setCdcDbUserName(eventuateConfigurationProperties.getDbUserName());
     mySqlBinlogCdcPipelineProperties.setCdcDbPassword(eventuateConfigurationProperties.getDbPassword());
     mySqlBinlogCdcPipelineProperties.setSourceTableName(eventuateConfigurationProperties.getSourceTableName());

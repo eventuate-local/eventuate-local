@@ -24,6 +24,26 @@ import org.springframework.context.annotation.Configuration;
 public class CommonCdcPipelineConfiguration {
 
   @Bean
+  public DefaultCdcPipelineTypes defaultCdcPipelineTypes() {
+    return new DefaultCdcPipelineTypes() {
+      @Override
+      public String mySqlBinlogPipelineType() {
+        return CdcPipelineType.MYSQL_BINLOG.stringRepresentation;
+      }
+
+      @Override
+      public String eventPollingPipelineType() {
+        return CdcPipelineType.EVENT_POLLING.stringRepresentation;
+      }
+
+      @Override
+      public String postgresWalPipelineType() {
+        return CdcPipelineType.POSTGRES_WAL.stringRepresentation;
+      }
+    };
+  }
+
+  @Bean
   public EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties() {
     return new EventuateKafkaConfigurationProperties();
   }

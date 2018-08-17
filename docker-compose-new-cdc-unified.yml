@@ -33,6 +33,6 @@ newcdcservice:
       "dataSourceUserName":"eventuate",
       "dataSourcePassword":"eventuate",
       "dataSourceDriverClassName":"org.postgresql.Driver",
-      "mySqlBinLogClientName":"DbLog1",
-      "dbHistoryTopicName":"db.history.topic1",
+      "mySqlBinLogClientName":"DbLog2",
+      "dbHistoryTopicName":"db.history.topic2",
       "leadershipLockPath":"/eventuatelocal/cdc/leader/pipeline/3"}]

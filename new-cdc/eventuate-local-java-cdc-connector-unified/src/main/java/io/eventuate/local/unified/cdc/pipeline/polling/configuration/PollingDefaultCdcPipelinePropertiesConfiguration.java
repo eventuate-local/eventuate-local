@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-public class PollingCdcDefaultPipelinePropertiesConfiguration extends CommonCdcDefaultPipelinePropertiesConfiguration {
+public class PollingDefaultCdcPipelinePropertiesConfiguration extends CommonCdcDefaultPipelinePropertiesConfiguration {
 
   @Profile("EventuatePolling")
   @Bean

@@ -1,7 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 
 import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.unified.cdc.pipeline.common.DefaultPipelineTypeSupplier;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,11 +27,8 @@ public class CommonCdcDefaultPipelinePropertiesConfiguration {
   @Autowired
   protected EventuateConfigurationProperties eventuateConfigurationProperties;
 
-  @Autowired
-  private DefaultPipelineTypeSupplier defaultPipelineTypeSupplier;
-
   protected void initCdcPipelineProperties(CdcPipelineProperties cdcPipelineProperties) {
-    cdcPipelineProperties.setType(defaultPipelineTypeSupplier.getType());
+    cdcPipelineProperties.setType("default");
     cdcPipelineProperties.setDataSourceUrl(dataSourceURL);
     cdcPipelineProperties.setDataSourceUserName(dataSourceUserName);
     cdcPipelineProperties.setDataSourcePassword(dataSourcePassword);

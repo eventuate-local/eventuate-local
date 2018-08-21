@@ -10,16 +10,18 @@ import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.Postgre
 import org.apache.curator.framework.CuratorFramework;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
-public class PostgresWalCdcPipelineFactoryConfiguration {
-  @Bean("eventuateLocalPostgresWal")
-  public CdcPipelineFactory postgresWalCdcPipelineFactory(CuratorFramework curatorFramework,
-                                                          DataProducerFactory dataProducerFactory,
-                                                          EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                          EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                          EventuateKafkaProducer eventuateKafkaProducer,
-                                                          PublishingFilter publishingFilter) {
+public class PostgresWalDefaultCdcPipelineFactoryConfiguration {
+  @Profile("PostgresWal")
+  @Bean("default")
+  public CdcPipelineFactory defaultPostgresWalCdcPipelineFactory(CuratorFramework curatorFramework,
+                                                                 DataProducerFactory dataProducerFactory,
+                                                                 EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                 EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
+                                                                 EventuateKafkaProducer eventuateKafkaProducer,
+                                                                 PublishingFilter publishingFilter) {
 
     return new PostgresWalCdcPipelineFactory(curatorFramework,
             dataProducerFactory,

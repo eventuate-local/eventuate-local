@@ -6,12 +6,14 @@ import io.eventuate.local.unified.cdc.pipeline.polling.factory.PollingCdcPipelin
 import org.apache.curator.framework.CuratorFramework;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
-public class PollingCdcPipelineFactoryConfiguration {
-  @Bean("evenutateLocalPolling")
-  public CdcPipelineFactory pollingCdcPipelineFactory(CuratorFramework curatorFramework,
-                                                      DataProducerFactory dataProducerFactory) {
+public class PollingDefaultCdcPipelineFactoryConfiguration {
+  @Profile("EventuatePolling")
+  @Bean("default")
+  public CdcPipelineFactory defaultPollingCdcPipelineFactory(CuratorFramework curatorFramework,
+                                                             DataProducerFactory dataProducerFactory) {
 
     return new PollingCdcPipelineFactory(curatorFramework, dataProducerFactory);
   }

@@ -8,6 +8,7 @@ import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProp
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,6 +29,10 @@ public class CdcPipelineConfiguration {
 
   @Autowired
   private Collection<CdcPipelineFactory> cdcPipelineFactories;
+
+  @Autowired
+  @Qualifier("default")
+  private CdcPipelineFactory defaultCdcPipelineFactory;
 
   @Autowired
   private CdcPipelineProperties defaultCdcPipelineProperties;
@@ -71,7 +76,7 @@ public class CdcPipelineConfiguration {
   private void createStartSaveCdcDefaultPipeline(CdcPipelineProperties cdcDefaultPipelineProperties) {
 
     cdcDefaultPipelineProperties.validate();
-    CdcPipeline cdcPipeline = createCdcPipeline(cdcDefaultPipelineProperties);
+    CdcPipeline cdcPipeline = defaultCdcPipelineFactory.create(cdcDefaultPipelineProperties);
     cdcPipeline.start();
     cdcPipelines.add(cdcPipeline);
   }
@@ -87,12 +92,6 @@ public class CdcPipelineConfiguration {
     exactCdcPipelineProperties.validate();
 
     return  ((CdcPipelineFactory)cdcPipelineFactory).create(exactCdcPipelineProperties);
-  }
-
-  private CdcPipeline<PublishedEvent> createCdcPipeline(CdcPipelineProperties cdcPipelineProperties) {
-    CdcPipelineFactory<? extends CdcPipelineProperties, PublishedEvent> cdcPipelineFactory = findCdcPipelineFactory(cdcPipelineProperties.getType());
-
-    return  ((CdcPipelineFactory)cdcPipelineFactory).create(cdcPipelineProperties);
   }
 
   private CdcPipelineFactory<? extends CdcPipelineProperties, PublishedEvent> findCdcPipelineFactory(String type) {

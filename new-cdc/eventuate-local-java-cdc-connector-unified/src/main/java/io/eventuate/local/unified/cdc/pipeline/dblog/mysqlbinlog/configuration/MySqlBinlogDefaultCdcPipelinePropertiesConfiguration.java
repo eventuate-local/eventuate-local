@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class MySqlBinlogCdcDefaultPipelinePropertiesConfiguration extends CommonDbLogCdcDefaultPipelinePropertiesConfiguration {
+public class MySqlBinlogDefaultCdcPipelinePropertiesConfiguration extends CommonDbLogCdcDefaultPipelinePropertiesConfiguration {
 
   @Conditional(MySqlBinlogCondition.class)
   @Bean

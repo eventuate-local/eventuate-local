@@ -7,8 +7,12 @@ fi
 
 echo ADVERTISED_HOST_NAME=${ADVERTISED_HOST_NAME}
 
-sed -i "s/ADVERTISED_HOST_NAME/${ADVERTISED_HOST_NAME?}/" /usr/local/kafka-config/server.properties
+EFFECTIVE_KAFKA_CONFIG_DIR=./config
 
-sed -i "s/ZOOKEEPER_SERVERS/${ZOOKEEPER_SERVERS?}/" /usr/local/kafka-config/server.properties
+cp -v /usr/local/kafka-config/* $EFFECTIVE_KAFKA_CONFIG_DIR
 
-bin/kafka-server-start.sh /usr/local/kafka-config/server.properties
+sed -i "s/ADVERTISED_HOST_NAME/${ADVERTISED_HOST_NAME?}/" $EFFECTIVE_KAFKA_CONFIG_DIR/server.properties
+
+sed -i "s/ZOOKEEPER_SERVERS/${ZOOKEEPER_SERVERS?}/" $EFFECTIVE_KAFKA_CONFIG_DIR/server.properties
+
+bin/kafka-server-start.sh $EFFECTIVE_KAFKA_CONFIG_DIR/server.properties

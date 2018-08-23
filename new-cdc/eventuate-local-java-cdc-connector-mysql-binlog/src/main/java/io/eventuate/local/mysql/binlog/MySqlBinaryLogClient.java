@@ -79,7 +79,9 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
 
     client.setEventDeserializer(getEventDeserializer());
     client.registerEventListener(event -> {
-      switch (event.getHeader().getEventType()) {
+      EventType eventType = event.getHeader().getEventType();
+      logger.trace("Got binlog event of type {}", eventType);
+      switch (eventType) {
         case TABLE_MAP: {
           TableMapEventData tableMapEvent = event.getData();
           if (tableMapEvent.getTable().equalsIgnoreCase(sourceTableName)) {

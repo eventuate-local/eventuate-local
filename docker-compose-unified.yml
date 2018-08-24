@@ -16,15 +16,6 @@ kafka:
     - KAFKA_HEAP_OPTS=-Xmx320m -Xms320m
     - ZOOKEEPER_SERVERS=zookeeper:2181
 
-mysql:
-  build: ./mysql
-  ports:
-    - 3306:3306
-  environment:
-    - MYSQL_ROOT_PASSWORD=rootpassword
-    - MYSQL_USER=mysqluser
-    - MYSQL_PASSWORD=mysqlpw
-
 postgrespollingpipeline:
   build: ./postgres
   ports:
@@ -36,7 +27,7 @@ postgrespollingpipeline:
 mysqlbinlogpipeline:
   build: ./mysql
   ports:
-    - 3307:3306
+    - 3306:3306
   environment:
     - MYSQL_ROOT_PASSWORD=rootpassword
     - MYSQL_USER=mysqluser

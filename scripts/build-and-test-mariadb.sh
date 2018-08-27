@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-export database=mysql
+export database=mariadb
 
 ./scripts/build-and-test-mysql-common.sh
 ./scripts/build-and-test-mysql-embedded-cdc.sh

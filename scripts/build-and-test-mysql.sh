@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-export database=mysql
-
 ./scripts/build-and-test-mysql-common.sh
 ./scripts/build-and-test-mysql-embedded-cdc.sh
 ./scripts/build-and-test-mysql-cdc-connector-polling.sh

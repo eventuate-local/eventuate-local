@@ -16,11 +16,10 @@ fi
 . ./scripts/set-env-postgres-wal.sh
 
 docker-compose -f docker-compose-postgres-wal.yml build
-docker-compose -f docker-compose-postgres-wal.yml  up -d
+docker-compose -f docker-compose-postgres-wal.yml up -d
 
 ./scripts/wait-for-postgres.sh
 
 ./gradlew $* :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:cleanTest :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
 
-docker-compose -f docker-compose-postgres-wal.yml  stop
-docker-compose -f docker-compose-postgres-wal.yml  rm --force -v
+docker-compose -f docker-compose-postgres-wal.yml down --remove-orphans -v

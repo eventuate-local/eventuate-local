@@ -15,8 +15,7 @@ export GRADLE_OPTIONS="-P excludeCdcLibs=true"
 
 . ./scripts/set-env-mysql.sh
 
-$DOCKER_COMPOSE stop
-$DOCKER_COMPOSE rm --force -v
+$DOCKER_COMPOSE down --remove-orphans -v
 
 $DOCKER_COMPOSE build
 $DOCKER_COMPOSE up -d ${database}
@@ -53,5 +52,4 @@ $DOCKER_COMPOSE start ${database}
 
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:cleanTest :eventuate-local-java-jdbc-tests:test
 
-$DOCKER_COMPOSE stop
-$DOCKER_COMPOSE rm --force -v
+$DOCKER_COMPOSE down --remove-orphans -v

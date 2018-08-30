@@ -8,8 +8,7 @@ set -e
 
 ./gradlew clean
 
-docker-compose -f docker-compose-mysql.yml stop
-docker-compose -f docker-compose-mysql.yml rm --force -v
+docker-compose -f docker-compose-mysql.yml down --remove-orphans -v
 
 docker-compose -f docker-compose-mysql.yml build
 docker-compose -f docker-compose-mysql.yml up -d
@@ -20,5 +19,4 @@ docker-compose -f docker-compose-mysql.yml up -d
 ./gradlew new-cdc:eventuate-local-java-cdc-connector-mysql-binlog:test --tests "io.eventuate.local.mysql.binlog.MySQLMigrationTest"
 
 
-docker-compose -f docker-compose-mysql.yml stop
-docker-compose -f docker-compose-mysql.yml rm --force -v
+docker-compose -f docker-compose-mysql.yml down --remove-orphans -v

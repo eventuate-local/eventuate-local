@@ -88,19 +88,11 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
           break;
         }
         case EXT_WRITE_ROWS: {
-          logger.debug("Got binlog event {}", event);
-          offset = ((EventHeaderV4) event.getHeader()).getPosition();
-          WriteRowsEventData eventData = event.getData();
-          if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
-            try {
-              eventConsumer.accept(writeRowsEventDataParser.parseEventData(eventData,
-                      getCurrentBinlogFilename(), offset
-                      )
-              );
-            } catch (IOException e) {
-              throw new RuntimeException("Event row parsing exception", e);
-            }
-          }
+          handleWriteRowsEvent(event, eventConsumer);
+          break;
+        }
+        case WRITE_ROWS: {
+          handleWriteRowsEvent(event, eventConsumer);
           break;
         }
         case ROTATE: {
@@ -114,6 +106,22 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
     });
 
     connectWithRetriesOnFail();
+  }
+
+  private void handleWriteRowsEvent(Event event, Consumer<M> eventConsumer) {
+    logger.debug("Got binlog event {}", event);
+    offset = ((EventHeaderV4) event.getHeader()).getPosition();
+    WriteRowsEventData eventData = event.getData();
+    if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
+      try {
+        eventConsumer.accept(writeRowsEventDataParser.parseEventData(eventData,
+                getCurrentBinlogFilename(), offset
+                )
+        );
+      } catch (IOException e) {
+        throw new RuntimeException("Event row parsing exception", e);
+      }
+    }
   }
 
   private void connectWithRetriesOnFail() {
@@ -141,10 +149,11 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
   private EventDeserializer getEventDeserializer() {
     EventDeserializer eventDeserializer = new EventDeserializer();
 
-    // do not deserialize binlog events except the EXT_WRITE_ROWS and TABLE_MAP
+    // do not deserialize binlog events except the EXT_WRITE_ROWS, WRITE_ROWS, and TABLE_MAP
     Arrays.stream(EventType.values()).forEach(eventType -> {
       if (eventType != EventType.EXT_WRITE_ROWS &&
               eventType != EventType.TABLE_MAP &&
+              eventType != EventType.WRITE_ROWS &&
               eventType != EventType.ROTATE) {
         eventDeserializer.setEventDataDeserializer(eventType,
                 new NullEventDataDeserializer());
@@ -154,6 +163,11 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
     eventDeserializer.setEventDataDeserializer(EventType.EXT_WRITE_ROWS,
             new WriteRowsEventDataDeserializer(
                     tableMapEventByTableId).setMayContainExtraInformation(true));
+
+    eventDeserializer.setEventDataDeserializer(EventType.WRITE_ROWS,
+            new WriteRowsEventDataDeserializer(
+                    tableMapEventByTableId));
+
     return eventDeserializer;
   }
 

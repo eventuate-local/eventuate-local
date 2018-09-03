@@ -77,8 +77,6 @@ public class AbstractDatabaseOffsetKafkaStoreTest extends AbstractCdcTest {
     OffsetStore offsetStore = getDatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
     offsetStore.save(bfo);
 
-    Thread.sleep(5000);
-
     BinlogFileOffset savedBfo = offsetStore.getLastBinlogFileOffset().get();
     assertEquals(bfo, savedBfo);
     offsetStore.stop();

@@ -11,5 +11,14 @@ dependencies {
 }
 
 test {
+    if (project.hasProperty("onlyBinlogClientRelatedTests")) {
+        exclude '**/DatabaseOffsetKafkaStoreTest**'
+        exclude '**/DuplicatePublishingDetectorTest**'
+        exclude '**/MySQLCdcKafkaPublisherTest**'
+        exclude '**/MySQLMigrationTest**'
+    }
+}
+
+test {
     forkEvery 1
 }

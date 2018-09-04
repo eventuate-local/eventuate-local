@@ -23,4 +23,7 @@ docker-compose -f docker-compose-${database}.yml up -d
 
 ./scripts/wait-for-mysql.sh
 
-./gradlew $* build -x :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
+./gradlew $* -x :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
+
+docker-compose -f docker-compose-${database}.yml stop
+docker-compose -f docker-compose-${database}.yml rm --force -v

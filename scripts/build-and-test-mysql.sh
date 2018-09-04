@@ -2,4 +2,4 @@
 
 export database=mysql
 
-./scripts/_build-and-test-mysql.sh
+./scripts/_build-and-test-mysql.sh build

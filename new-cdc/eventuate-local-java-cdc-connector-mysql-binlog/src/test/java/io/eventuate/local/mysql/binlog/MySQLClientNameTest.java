@@ -85,9 +85,6 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
     cdcProcessor.stop();
 
-    /*waiting while offset is storing in kafka*/
-    Thread.sleep(10000);
-
     offsetStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
     cdcProcessor = createMySQLCdcProcessor();

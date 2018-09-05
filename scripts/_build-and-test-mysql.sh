@@ -15,20 +15,15 @@ fi
 
 ./gradlew ${GRADLE_OPTS} testClasses
 
-docker-compose -f docker-compose-mysql.yml stop
-docker-compose -f docker-compose-mysql.yml rm --force -v
+docker-compose -f docker-compose-${database}.yml stop
+docker-compose -f docker-compose-${database}.yml rm --force -v
 
-docker-compose -f docker-compose-mysql.yml build
-docker-compose -f docker-compose-mysql.yml up -d
+docker-compose -f docker-compose-${database}.yml build
+docker-compose -f docker-compose-${database}.yml up -d
 
 ./scripts/wait-for-mysql.sh
 
 ./gradlew $* build -x :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
 
-#test spring compatibility
-
-./gradlew -a :eventuate-local-java-jdbc-tests:cleanTest
-./gradlew -a :eventuate-local-java-jdbc-tests:test --tests "io.eventuate.local.java.jdbckafkastore.JdbcAutoConfigurationIntegrationTest" -P springBootVersion=2.0.0.M7
-
-docker-compose -f docker-compose-mysql.yml stop
-docker-compose -f docker-compose-mysql.yml rm --force -v
+docker-compose -f docker-compose-${database}.yml stop
+docker-compose -f docker-compose-${database}.yml rm --force -v

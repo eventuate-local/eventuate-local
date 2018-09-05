@@ -1,5 +1,5 @@
 dependencies {
-    compile 'com.github.shyiko:mysql-binlog-connector-java:0.6.0'
+    compile 'com.github.shyiko:mysql-binlog-connector-java:0.16.1'
     compile project(":new-cdc:eventuate-local-java-cdc-connector-db-log-common")
     compile project(":new-cdc:eventuate-local-java-cdc-connector-common")
 

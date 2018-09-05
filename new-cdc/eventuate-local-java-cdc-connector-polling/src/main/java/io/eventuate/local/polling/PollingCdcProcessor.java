@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -14,6 +15,7 @@ public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> implements CdcProcessor<
   private PollingDao pollingDao;
   private int pollingIntervalInMilliseconds;
   private AtomicBoolean watcherRunning = new AtomicBoolean(false);
+  private CountDownLatch stopCountDownLatch = new CountDownLatch(1);
 
   public PollingCdcProcessor(PollingDao<EVENT_BEAN, EVENT, ID> pollingDao, int pollingIntervalInMilliseconds) {
     this.pollingDao = pollingDao;
@@ -48,11 +50,17 @@ public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> implements CdcProcessor<
             logger.error(e.getMessage(), e);
           }
         }
+        stopCountDownLatch.countDown();
       }
     }.start();
   }
 
   public void stop() {
     watcherRunning.set(false);
+    try {
+      stopCountDownLatch.await();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

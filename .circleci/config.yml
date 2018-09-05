@@ -12,7 +12,30 @@ jobs:
           paths:
             - ~/.gradle
           key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mysql-common.sh
+      - run: TERM=dumb ./scripts/build-and-test-mysql.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  build-mariadb:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./gradlew testClasses
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./scripts/build-and-test-mariadb.sh
       - run:
           name: Save test results
           command: |
@@ -41,60 +64,6 @@ jobs:
           path: ~/junit
       - store_artifacts:
           path: ~/junit
-  build-mysql-embedded-cdc:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mysql-embedded-cdc.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-  build-mysql-cdc-connector-polling:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mysql-cdc-connector-polling.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-  build-mysql-cdc-connector-mysql-binlog:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mysql-cdc-connector-mysql-binlog.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
   build-cdc-mysql:
     machine: true
     working_directory: ~/eventuate-local-java
@@ -113,6 +82,24 @@ jobs:
           path: ~/junit
       - store_artifacts:
           path: ~/junit
+  build-cdc-mariadb:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./scripts/build-and-test-all-cdc-mariadb.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
   build-new-cdc-mysql:
     machine: true
     working_directory: ~/eventuate-local-java
@@ -121,6 +108,24 @@ jobs:
       - restore_cache:
           key: eventuate-local-java-{{ checksum "build.gradle" }}
       - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-mysql.sh
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  build-new-cdc-mariadb:
+    machine: true
+    working_directory: ~/eventuate-local-java
+    steps:
+      - checkout
+      - restore_cache:
+          key: eventuate-local-java-{{ checksum "build.gradle" }}
+      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-mariadb.sh
       - run:
           name: Save test results
           command: |
@@ -207,30 +212,28 @@ workflows:
   build-test-and-deploy:
     jobs:
       - build
-      - build-mysql-embedded-cdc:
-          requires:
-            - build
+      - build-mariadb
       - build-postgres-wal:
-          requires:
-            - build
-      - build-mysql-cdc-connector-polling:
-          requires:
-            - build
-      - build-mysql-cdc-connector-mysql-binlog:
           requires:
             - build
       - build-cdc-mysql:
           requires:
-            - build-mysql-embedded-cdc
+            - build
+      - build-cdc-mariadb:
+          requires:
+            - build-mariadb
       - build-new-cdc-mysql:
           requires:
-            - build-mysql-cdc-connector-mysql-binlog
+            - build
+      - build-new-cdc-mariadb:
+          requires:
+            - build-mariadb
       - build-new-cdc-postgres-wal:
           requires:
             - build-postgres-wal
       - build-new-cdc-postgres-polling:
           requires:
-            - build-mysql-cdc-connector-polling
+            - build
       - build-new-cdc-unified:
           requires:
             - build-postgres-wal

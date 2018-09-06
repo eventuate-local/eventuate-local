@@ -1,5 +1,3 @@
-package io.eventuate.local.db.log.test.util;
-
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.PublishedEvent;
@@ -10,14 +8,29 @@ import io.eventuate.local.test.util.AbstractCdcTest;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.UUID;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class AbstractDuplicatePublishingDetectorTest extends AbstractCdcTest {
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = DuplicatePublishingDetectorTest.Config.class)
+public class DuplicatePublishingDetectorTest extends AbstractCdcTest {
+
+  @Configuration
+  public static class Config {
+    @Bean
+    public EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties() {
+      return new EventuateKafkaConfigurationProperties();
+    }
+  }
 
   @Autowired
   EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;

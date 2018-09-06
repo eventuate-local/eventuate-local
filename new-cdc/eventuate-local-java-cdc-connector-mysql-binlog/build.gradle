@@ -5,9 +5,15 @@ dependencies {
 
     testCompile project(":eventuate-local-java-test-util")
     testCompile project(":new-cdc:eventuate-local-java-cdc-connector-test-util")
-    testCompile project(":new-cdc:eventuate-local-java-cdc-connector-db-log-test-util")
+    testCompile project(":new-cdc:eventuate-local-java-cdc-connector-db-log-test-common")
     testCompile "junit:junit:4.11"
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+}
+
+test {
+    if (!project.hasProperty("testCdcMigration")) {
+        exclude '**/MySQLMigrationTest**'
+    }
 }
 
 test {

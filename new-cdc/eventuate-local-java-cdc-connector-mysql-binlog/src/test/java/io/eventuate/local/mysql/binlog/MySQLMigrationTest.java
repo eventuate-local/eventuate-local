@@ -46,6 +46,8 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   @Test
   public void test() throws Exception {
 
+    final String event = "TestEvent_MIGRATION";
+
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
     CdcProcessor<PublishedEvent> cdcProcessor = createMySQLCdcProcessor();
     cdcProcessor.start(publishedEvent -> {
@@ -54,18 +56,19 @@ public class MySQLMigrationTest extends AbstractCdcTest {
     });
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
-    List<EventTypeAndData> events = Collections.singletonList(new EventTypeAndData("TestEvent_MIGRATION", "{}", Optional.empty()));
+    List<EventTypeAndData> events = Collections.singletonList(new EventTypeAndData(event, "{}", Optional.empty()));
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = localAggregateCrud.save("TestAggregate_MIGRATION", events, Optional.empty());
 
     PublishedEvent publishedEvent;
 
     while((publishedEvent = publishedEvents.poll(10, TimeUnit.SECONDS)) != null) {
-      if ("TestEvent_MIGRATION".equals(publishedEvent.getEventType())) {
+      if (event.equals(publishedEvent.getEventType())) {
         break;
       }
     }
 
     Assert.assertNotNull(publishedEvent);
+    Assert.assertEquals(event, publishedEvent.getEventType());
     Assert.assertEquals(entityIdVersionAndEventIds.getEntityVersion().asString(), publishedEvent.getId());
   }
 

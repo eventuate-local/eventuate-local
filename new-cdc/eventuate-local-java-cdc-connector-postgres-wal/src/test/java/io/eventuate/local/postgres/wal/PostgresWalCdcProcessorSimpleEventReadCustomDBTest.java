@@ -1,4 +1,5 @@
-package io.eventuate.local.mysql.binlog;
+package io.eventuate.local.postgres.wal;
+
 
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
@@ -7,20 +8,22 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+@ActiveProfiles("PostgresWal")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {CustomDBTestConfiguration.class, MySqlBinlogCdcIntegrationTestConfiguration.class})
-public class MySQLCdcProcessorCustomDBTest extends AbstractMySQLCdcProcessorTest {
+@SpringBootTest(classes = {CustomDBTestConfiguration.class, PostgresWalCdcIntegrationTestConfiguration.class})
+public class PostgresWalCdcProcessorSimpleEventReadCustomDBTest extends AbstractPostgresWalCdcProcessorSimpleEventReadTest {
 
   @Autowired
   private CustomDBCreator customDBCreator;
 
   @Autowired
-  private SqlScriptEditor eventuateLocalCustomDBSqlEditor;
+  private SqlScriptEditor sqlScriptEditor;
 
   @Before
   public void createCustomDB() {
-    customDBCreator.create(eventuateLocalCustomDBSqlEditor);
+    customDBCreator.create(sqlScriptEditor);
   }
 }

@@ -1,3 +1,5 @@
+package io.eventuate.local.db.log.test.common;
+
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.EventuateConfigurationProperties;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
@@ -6,7 +8,7 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
-import io.eventuate.local.test.util.AbstractCdcTest;
+import io.eventuate.local.test.util.AbstractConnectorTest;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Test;
@@ -24,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = DatabaseOffsetKafkaStoreTest.Config.class)
-public class DatabaseOffsetKafkaStoreTest extends AbstractCdcTest {
+public class DatabaseOffsetKafkaStoreTest extends AbstractConnectorTest {
 
   @Configuration
   @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
@@ -79,10 +81,15 @@ public class DatabaseOffsetKafkaStoreTest extends AbstractCdcTest {
 
   @Test
   public void shouldReadTheLastRecordMultipleTimes() throws InterruptedException {
+    long t = System.currentTimeMillis();
     BinlogFileOffset bfo = generateAndSaveBinlogFileOffset();
 
+    System.out.println((System.currentTimeMillis() - t) / 1000);
+
     assertLastRecordEquals(bfo);
+    System.out.println((System.currentTimeMillis() - t) / 1000);
     assertLastRecordEquals(bfo);
+    System.out.println((System.currentTimeMillis() - t) / 1000);
   }
 
   private void floodTopic(String topicName, String key) {

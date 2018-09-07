@@ -2,11 +2,9 @@ package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
-import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -16,7 +14,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -33,9 +30,6 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
   @Value("${spring.datasource.url}")
   private String dataSourceURL;
-
-  @Autowired
-  EventuateJdbcAccess eventuateJdbcAccess;
 
   @Autowired
   private EventuateConfigurationProperties eventuateConfigurationProperties;
@@ -69,7 +63,6 @@ public class MySQLClientNameTest extends AbstractCdcTest {
       offsetStore.save(publishedEvent.getBinlogFileOffset());
     });
 
-    EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
     List<EventTypeAndData> events = Collections.singletonList(new EventTypeAndData("TestEvent", "{}", Optional.empty()));
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = localAggregateCrud.save("TestAggregate", events, Optional.empty());
 

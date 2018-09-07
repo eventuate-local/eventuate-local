@@ -11,11 +11,5 @@ dependencies {
 }
 
 test {
-    if (!project.hasProperty("testCdcMigration")) {
-        exclude '**/MySQLMigrationTest**'
-    }
-}
-
-test {
     forkEvery 1
 }

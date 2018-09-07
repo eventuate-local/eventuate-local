@@ -1,15 +1,12 @@
 package io.eventuate.local.test.util;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
-import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.PublishingStrategy;
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,9 +17,6 @@ import java.util.Collections;
 public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
 
   @Autowired
-  protected EventuateJdbcAccess eventuateJdbcAccess;
-
-  @Autowired
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
 
   @Autowired
@@ -31,15 +25,8 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
   @Autowired
   protected PublishingStrategy<PublishedEvent> publishingStrategy;
 
-  protected EventuateLocalAggregateCrud localAggregateCrud;
-
-  @Before
-  public void init() {
-    localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
-  }
-
   @Test
-  public void shouldSendPublishedEventsToKafka() throws InterruptedException {
+  public void shouldSendPublishedEventsToKafka() {
     CdcDataPublisher<PublishedEvent> cdcDataPublisher = createCdcKafkaPublisher();
 
     cdcDataPublisher.start();
@@ -47,7 +34,7 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
     cdcProcessor.start(cdcDataPublisher::handleEvent);
 
     String accountCreatedEventData = generateAccountCreatedEvent();
-    EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
+    EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
 
     KafkaConsumer<String, String> consumer = createConsumer(eventuateKafkaConfigurationProperties.getBootstrapServers());
     consumer.partitionsFor(getEventTopicName());

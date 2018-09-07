@@ -1,10 +1,12 @@
+package io.eventuate.local.db.log.test.common;
+
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
-import io.eventuate.local.test.util.AbstractCdcTest;
+import io.eventuate.local.test.util.AbstractConnectorTest;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Test;
@@ -22,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = DuplicatePublishingDetectorTest.Config.class)
-public class DuplicatePublishingDetectorTest extends AbstractCdcTest {
+public class DuplicatePublishingDetectorTest extends AbstractConnectorTest {
 
   @Configuration
   public static class Config {

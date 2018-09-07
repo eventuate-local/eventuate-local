@@ -8,7 +8,6 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfiguratio
 import io.eventuate.local.test.util.CdcKafkaPublisherTest;
 import org.junit.Before;
 import org.junit.runner.RunWith;
-
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;

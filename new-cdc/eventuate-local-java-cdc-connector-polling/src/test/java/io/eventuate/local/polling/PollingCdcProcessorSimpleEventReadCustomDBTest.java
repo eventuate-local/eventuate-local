@@ -8,7 +8,6 @@ import io.eventuate.local.testutil.CustomDBTestConfiguration;
 import io.eventuate.local.testutil.SqlScriptEditor;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,8 +18,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @ActiveProfiles("EventuatePolling")
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = PollingCdcProcessorCustomDBTest.Config.class)
-public class PollingCdcProcessorCustomDBTest extends AbstractPollingCdcProcessorTest {
+@SpringBootTest(classes = PollingCdcProcessorSimpleEventReadCustomDBTest.Config.class)
+public class PollingCdcProcessorSimpleEventReadCustomDBTest extends AbstractPollingCdcProcessorSimpleEventReadTest {
 
   @Configuration
   @Import({CustomDBTestConfiguration.class, PollingIntegrationTestConfiguration.class})

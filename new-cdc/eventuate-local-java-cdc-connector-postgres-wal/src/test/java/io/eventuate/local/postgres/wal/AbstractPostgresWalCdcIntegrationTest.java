@@ -1,10 +1,8 @@
 package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
-import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.EventuateConfigurationProperties;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +25,6 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
   private String dbPassword;
 
   @Autowired
-  EventuateJdbcAccess eventuateJdbcAccess;
-
-  @Autowired
   private EventuateConfigurationProperties eventuateConfigurationProperties;
 
   @Autowired
@@ -47,16 +42,14 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationSlotName());
 
-    EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
-
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
     postgresWalClient.start(Optional.empty(), publishedEvents::add);
     String accountCreatedEventData = generateAccountCreatedEvent();
-    EntityIdVersionAndEventIds saveResult = saveEvent(localAggregateCrud, accountCreatedEventData);
+    EntityIdVersionAndEventIds saveResult = saveEvent(accountCreatedEventData);
 
     String accountDebitedEventData = generateAccountDebitedEvent();
-    EntityIdVersionAndEventIds updateResult = updateEvent(saveResult.getEntityId(), saveResult.getEntityVersion(), localAggregateCrud, accountDebitedEventData);
+    EntityIdVersionAndEventIds updateResult = updateEvent(saveResult.getEntityId(), saveResult.getEntityVersion(), accountDebitedEventData);
 
     // Wait for 10 seconds
     LocalDateTime deadline = LocalDateTime.now().plusSeconds(10);

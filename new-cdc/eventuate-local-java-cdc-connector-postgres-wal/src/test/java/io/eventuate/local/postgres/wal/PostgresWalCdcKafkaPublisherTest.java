@@ -1,6 +1,6 @@
 package io.eventuate.local.postgres.wal;
 
-import io.eventuate.local.db.log.test.util.AbstractDbLogBasedCdcKafkaPublisherTest;
+import io.eventuate.local.db.log.test.common.AbstractDbLogBasedCdcKafkaPublisherTest;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;

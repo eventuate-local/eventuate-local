@@ -1,10 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinLogEvent;
-import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.CdcProcessor;
-import io.eventuate.local.common.EventTableChangesToAggregateTopicTranslator;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -13,8 +10,8 @@ import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
-import io.eventuate.local.postgres.wal.PostgresWalMessageParser;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDBLogCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
@@ -53,11 +50,13 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
 
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(offsetStore);
 
-    PostgresWalMessageParser<EVENT> publishedEventPostgresWalMessageParser = createPostgresReplicationMessageParser();
+    SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
 
-    DbLogClient<EVENT> dbLogClient = createDbLogClient(cdcPipelineProperties, publishedEventPostgresWalMessageParser);
+    DbLogClient dbLogClient = createDbLogClient(sourceTableNameSupplier, cdcPipelineProperties);
 
-    CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(dbLogClient, offsetStore);
+    BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
+
+    CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(dbLogClient, offsetStore, binlogEntryToEventConverter);
 
     EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =
             createEventTableChangesToAggregateTopicTranslator(cdcPipelineProperties, cdcDataPublisher, cdcProcessor);
@@ -65,10 +64,10 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
     return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
   }
 
-  protected DbLogClient<EVENT> createDbLogClient(PostgresWalCdcPipelineProperties postgresWalCdcPipelineProperties,
-                                                        PostgresWalMessageParser<EVENT> postgresWalMessageParser) {
+  protected DbLogClient createDbLogClient(SourceTableNameSupplier sourceTableNameSupplier,
+                                          PostgresWalCdcPipelineProperties postgresWalCdcPipelineProperties) {
 
-    return new PostgresWalClient<>(postgresWalMessageParser,
+    return new PostgresWalClient(sourceTableNameSupplier.getSourceTableName(),
             postgresWalCdcPipelineProperties.getDataSourceUrl(),
             postgresWalCdcPipelineProperties.getDataSourceUserName(),
             postgresWalCdcPipelineProperties.getDataSourcePassword(),
@@ -79,11 +78,10 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
             postgresWalCdcPipelineProperties.getPostgresReplicationSlotName());
   }
 
-  protected abstract PostgresWalMessageParser<EVENT> createPostgresReplicationMessageParser();
+  protected CdcProcessor<EVENT> createCdcProcessor(DbLogClient dbLogClient,
+                                                   OffsetStore offsetStore,
+                                                   BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter) {
 
-  protected CdcProcessor<EVENT> createCdcProcessor(DbLogClient<EVENT> dbLogClient,
-                                                          OffsetStore offsetStore) {
-
-    return new DbLogBasedCdcProcessor<>(dbLogClient, offsetStore);
+    return new DbLogBasedCdcProcessor<>(dbLogClient, offsetStore, binlogEntryToEventConverter);
   }
 }

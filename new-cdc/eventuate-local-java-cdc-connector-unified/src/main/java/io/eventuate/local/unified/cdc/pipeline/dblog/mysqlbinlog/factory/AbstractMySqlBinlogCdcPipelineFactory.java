@@ -50,34 +50,30 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
 
-    IWriteRowsEventDataParser<EVENT> writeRowsEventDataParser = createWriteRowsEventDataParser(eventuateSchema, dataSource, sourceTableNameSupplier);
+    DbLogClient dbLogClient = createDbLogClient(cdcPipelineProperties, sourceTableNameSupplier, dataSource, eventuateSchema);
 
-    DbLogClient<EVENT> dbLogClient = createDbLogClient(cdcPipelineProperties, sourceTableNameSupplier, writeRowsEventDataParser);
+    BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 
     DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore =
             createDebeziumBinlogOffsetKafkaStore(cdcPipelineProperties, eventuateKafkaConfigurationProperties, eventuateKafkaConsumerConfigurationProperties);
 
-    CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(dbLogClient, offsetStore, debeziumBinlogOffsetKafkaStore);
+    CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(dbLogClient, offsetStore, binlogEntryToEventConverter, debeziumBinlogOffsetKafkaStore);
 
     EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =
             createEventTableChangesToAggregateTopicTranslator(cdcPipelineProperties, cdcDataPublisher, cdcProcessor);
 
-    return new CdcPipeline<EVENT>(publishedEventEventTableChangesToAggregateTopicTranslator);
+    return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
   }
 
-  protected abstract SourceTableNameSupplier createSourceTableNameSupplier(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties);
-
-  protected abstract IWriteRowsEventDataParser<EVENT> createWriteRowsEventDataParser(EventuateSchema eventuateSchema,
-                                                                     DataSource dataSource,
-                                                                     SourceTableNameSupplier sourceTableNameSupplier);
-
-  protected DbLogClient<EVENT> createDbLogClient(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties,
-                                                       SourceTableNameSupplier sourceTableNameSupplier,
-                                                       IWriteRowsEventDataParser<EVENT> writeRowsEventDataParser) {
+  protected DbLogClient createDbLogClient(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties,
+                                         SourceTableNameSupplier sourceTableNameSupplier,
+                                         DataSource dataSource,
+                                         EventuateSchema eventuateSchema) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(mySqlBinlogCdcPipelineProperties.getDataSourceUrl());
 
-    return new MySqlBinaryLogClient<>(writeRowsEventDataParser,
+    return new MySqlBinaryLogClient(dataSource,
+            eventuateSchema,
             mySqlBinlogCdcPipelineProperties.getCdcDbUserName(),
             mySqlBinlogCdcPipelineProperties.getCdcDbPassword(),
             jdbcUrl.getHost(),
@@ -98,10 +94,11 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
             eventuateKafkaConsumerConfigurationProperties);
   }
 
-  protected CdcProcessor<EVENT> createCdcProcessor(DbLogClient<EVENT> dbLogClient,
+  protected CdcProcessor<EVENT> createCdcProcessor(DbLogClient dbLogClient,
                                                    OffsetStore offsetStore,
+                                                   BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                                                    DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
-    return new MySQLCdcProcessor<>(dbLogClient, offsetStore, debeziumBinlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(dbLogClient, offsetStore, binlogEntryToEventConverter, debeziumBinlogOffsetKafkaStore);
   }
 }

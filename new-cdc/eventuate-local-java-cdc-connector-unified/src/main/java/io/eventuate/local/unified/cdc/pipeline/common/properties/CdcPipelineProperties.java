@@ -14,6 +14,7 @@ public class CdcPipelineProperties {
   private String dataSourceDriverClassName;
   private String leadershipLockPath;
   private String eventuateDatabaseSchema = null;
+  private String sourceTableName = null;
 
   public void validate() {
     Assert.notNull(type, "type must not be null");
@@ -84,5 +85,13 @@ public class CdcPipelineProperties {
   @Override
   public String toString() {
     return ReflectionToStringBuilder.toString(this);
+  }
+
+  public String getSourceTableName() {
+    return sourceTableName;
+  }
+
+  public void setSourceTableName(String sourceTableName) {
+    this.sourceTableName = sourceTableName;
   }
 }

@@ -2,16 +2,15 @@ package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
-import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.JdbcUrl;
-import io.eventuate.local.common.JdbcUrlParser;
-import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.*;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -29,15 +28,21 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   private EventuateConfigurationProperties eventuateConfigurationProperties;
 
   @Autowired
-  private WriteRowsEventDataParser eventDataParser;
+  private DataSource dataSource;
+
+  @Autowired
+  private EventuateSchema eventuateSchema;
 
   @Autowired
   private SourceTableNameSupplier sourceTableNameSupplier;
 
   @Test
   public void shouldGetEvents() throws InterruptedException {
+    BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
+
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
-    MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient = new MySqlBinaryLogClient<>(eventDataParser,
+    MySqlBinaryLogClient mySqlBinaryLogClient = new MySqlBinaryLogClient(dataSource,
+            eventuateSchema,
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             jdbcUrl.getHost(),
@@ -52,7 +57,9 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-    mySqlBinaryLogClient.start(Optional.empty(), publishedEvents::add);
+    mySqlBinaryLogClient.start(Optional.empty(), binlogEntry ->
+      publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));
+
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds saveResult = saveEvent(localAggregateCrud, accountCreatedEventData);
 

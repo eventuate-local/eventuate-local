@@ -1,4 +1,4 @@
-package io.eventuate.local.mysql.binlog;
+package io.eventuate.local.common;
 
 
 public class SourceTableNameSupplier {

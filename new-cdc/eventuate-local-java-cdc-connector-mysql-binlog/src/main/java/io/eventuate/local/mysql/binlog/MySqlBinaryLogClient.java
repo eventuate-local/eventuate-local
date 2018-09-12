@@ -6,12 +6,14 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.db.log.common.DbLogClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,7 +22,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<M> {
+public class MySqlBinaryLogClient implements DbLogClient {
 
   private String name;
 
@@ -32,7 +34,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
   private final String host;
   private final int port;
 
-  private final IWriteRowsEventDataParser<M> writeRowsEventDataParser;
+  private final MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor;
 
   private final String sourceTableName;
   private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
@@ -44,7 +46,8 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public MySqlBinaryLogClient(IWriteRowsEventDataParser<M> writeRowsEventDataParser,
+  public MySqlBinaryLogClient(DataSource dataSource,
+                              EventuateSchema eventuateSchema,
                               String dbUserName,
                               String dbPassword,
                               String host,
@@ -54,7 +57,6 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
                               String clientName,
                               int connectionTimeoutInMilliseconds,
                               int maxAttemptsForBinlogConnection) {
-    this.writeRowsEventDataParser = writeRowsEventDataParser;
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;
@@ -64,9 +66,11 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
     this.name = clientName;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
+
+    this.mySqlBinlogEntryExtractor = new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema);
   }
 
-  public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<M> eventConsumer) {
+  public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<BinlogEntry> eventConsumer) {
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
     client.setServerId(binlogClientUniqueId);
@@ -108,16 +112,13 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
     connectWithRetriesOnFail();
   }
 
-  private void handleWriteRowsEvent(Event event, Consumer<M> eventConsumer) {
+  private void handleWriteRowsEvent(Event event, Consumer<BinlogEntry> eventConsumer) {
     logger.debug("Got binlog event {}", event);
     offset = ((EventHeaderV4) event.getHeader()).getPosition();
     WriteRowsEventData eventData = event.getData();
     if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
       try {
-        eventConsumer.accept(writeRowsEventDataParser.parseEventData(eventData,
-                getCurrentBinlogFilename(), offset
-                )
-        );
+        eventConsumer.accept(mySqlBinlogEntryExtractor.extract(eventData, getCurrentBinlogFilename(), offset));
       } catch (IOException e) {
         throw new RuntimeException("Event row parsing exception", e);
       }

@@ -3,6 +3,7 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.sql.DataSource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +43,10 @@ public class MySQLClientNameTest extends AbstractCdcTest {
   private EventuateConfigurationProperties eventuateConfigurationProperties;
 
   @Autowired
-  private WriteRowsEventDataParser eventDataParser;
+  private DataSource dataSource;
+
+  @Autowired
+  private EventuateSchema eventuateSchema;
 
   @Autowired
   private SourceTableNameSupplier sourceTableNameSupplier;
@@ -103,7 +108,11 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
   private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() {
     MySqlBinaryLogClient mySqlBinaryLogClient = createMySqlBinaryLogClient();
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, createDatabaseOffsetKafkaStore(mySqlBinaryLogClient), debeziumBinlogOffsetKafkaStore);
+
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
+            createDatabaseOffsetKafkaStore(mySqlBinaryLogClient),
+            new BinlogEntryToPublishedEventConverter(),
+            debeziumBinlogOffsetKafkaStore);
   }
 
   public DatabaseOffsetKafkaStore createDatabaseOffsetKafkaStore(MySqlBinaryLogClient mySqlBinaryLogClient) {
@@ -115,9 +124,10 @@ public class MySQLClientNameTest extends AbstractCdcTest {
         EventuateKafkaConsumerConfigurationProperties.empty());
   }
 
-  private MySqlBinaryLogClient<PublishedEvent> createMySqlBinaryLogClient() {
+  private MySqlBinaryLogClient createMySqlBinaryLogClient() {
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
-    return new MySqlBinaryLogClient<>(eventDataParser,
+    return new MySqlBinaryLogClient(dataSource,
+            eventuateSchema,
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             jdbcUrl.getHost(),

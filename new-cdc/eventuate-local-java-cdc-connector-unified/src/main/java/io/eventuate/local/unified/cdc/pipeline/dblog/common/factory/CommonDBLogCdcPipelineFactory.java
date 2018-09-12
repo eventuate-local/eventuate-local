@@ -2,6 +2,7 @@ package io.eventuate.local.unified.cdc.pipeline.dblog.common.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.local.common.BinlogEntryToEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -37,6 +38,9 @@ public abstract class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbL
     this.eventuateKafkaProducer = eventuateKafkaProducer;
     this.publishingFilter = publishingFilter;
   }
+
+  protected abstract BinlogEntryToEventConverter<EVENT> createBinlogEntryToEventConverter();
+
 
   protected abstract OffsetStore createOffsetStore(PROPERTIES properties,
                                                    DataSource dataSource,

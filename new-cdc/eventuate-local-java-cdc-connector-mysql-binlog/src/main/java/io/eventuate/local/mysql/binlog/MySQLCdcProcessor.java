@@ -1,6 +1,7 @@
 package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.local.common.BinlogEntryToEventConverter;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.DbLogClient;
@@ -13,11 +14,12 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcP
 
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
-  public MySQLCdcProcessor(DbLogClient<EVENT> dbLogClient,
+  public MySQLCdcProcessor(DbLogClient dbLogClient,
                            OffsetStore offsetStore,
+                           BinlogEntryToEventConverter binlogEntryToEventConverter,
                            DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
-    super(dbLogClient, offsetStore);
+    super(dbLogClient, offsetStore, binlogEntryToEventConverter);
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
   }
 

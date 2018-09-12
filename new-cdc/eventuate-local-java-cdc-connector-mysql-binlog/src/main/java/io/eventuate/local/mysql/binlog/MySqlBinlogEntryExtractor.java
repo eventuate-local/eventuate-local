@@ -3,6 +3,7 @@ package io.eventuate.local.mysql.binlog;
 import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
 import com.github.shyiko.mysql.binlog.event.deserialization.json.JsonBinary;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.PublishedEvent;
 
@@ -17,31 +18,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class WriteRowsEventDataParser implements IWriteRowsEventDataParser<PublishedEvent> {
+public class MySqlBinlogEntryExtractor {
 
   private DataSource dataSource;
 
   private final String sourceTableName;
 
-  private static final String EVENT_ID_FIELDNAME = "event_id";
-  private static final String EVENT_TYPE_FIELDNAME = "event_type";
-  private static final String EVENT_DATA_FIELDNAME = "event_data";
-  private static final String ENTITY_ID_FIELDNAME = "entity_id";
-  private static final String ENTITY_TYPE_FIELDNAME = "entity_type";
-  private static final String EVENT_METADATA_FIELDNAME = "metadata";
-
   private Map<String, Integer> columnOrders = new HashMap<>();
 
   private EventuateSchema eventuateSchema;
 
-  public WriteRowsEventDataParser(DataSource dataSource, String sourceTableName, EventuateSchema eventuateSchema) {
+  public MySqlBinlogEntryExtractor(DataSource dataSource, String sourceTableName, EventuateSchema eventuateSchema) {
     this.dataSource = dataSource;
     this.sourceTableName = sourceTableName;
     this.eventuateSchema = eventuateSchema;
   }
 
-  @Override
-  public PublishedEvent parseEventData(WriteRowsEventData eventData, String binlogFilename, long position) throws IOException {
+  public BinlogEntry extract(WriteRowsEventData eventData, String binlogFilename, long position) throws IOException {
     if (columnOrders.isEmpty()) {
       try {
         getColumnOrders();
@@ -50,21 +43,17 @@ public class WriteRowsEventDataParser implements IWriteRowsEventDataParser<Publi
       }
     }
 
-    String eventDataValue;
-    if(getValue(eventData, EVENT_DATA_FIELDNAME) instanceof String) {
-      eventDataValue = (String) getValue(eventData, EVENT_DATA_FIELDNAME);
-    } else {
-      eventDataValue = JsonBinary.parseAsString((byte[])getValue(eventData, EVENT_DATA_FIELDNAME));
-    }
-    return new PublishedEvent(
-            (String)getValue(eventData, EVENT_ID_FIELDNAME),
-            (String)getValue(eventData, ENTITY_ID_FIELDNAME),
-            (String)getValue(eventData, ENTITY_TYPE_FIELDNAME),
-            eventDataValue,
-            (String)getValue(eventData, EVENT_TYPE_FIELDNAME),
-            new BinlogFileOffset(binlogFilename, position),
-            Optional.ofNullable((String)getValue(eventData, EVENT_METADATA_FIELDNAME))
-    );
+    return new BinlogEntry() {
+      @Override
+      public Object getColumn(String name) {
+        return getValue(eventData, name);
+      }
+
+      @Override
+      public BinlogFileOffset getBinlogFileOffset() {
+        return new BinlogFileOffset(binlogFilename, position);
+      }
+    };
   }
 
   private Serializable getValue(WriteRowsEventData eventData, String columnName) {

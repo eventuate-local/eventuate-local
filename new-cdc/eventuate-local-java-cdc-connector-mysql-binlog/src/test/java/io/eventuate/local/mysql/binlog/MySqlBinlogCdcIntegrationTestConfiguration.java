@@ -49,20 +49,21 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  @Conditional(MySqlBinlogCondition.class)
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
     return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "EVENTS");
   }
 
   @Bean
   @Conditional(MySqlBinlogCondition.class)
-  public MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
-                                                                   EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                                   SourceTableNameSupplier sourceTableNameSupplier,
-                                                                   IWriteRowsEventDataParser<PublishedEvent> eventDataParser) {
+  public MySqlBinaryLogClient mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
+                                                   EventuateConfigurationProperties eventuateConfigurationProperties,
+                                                   SourceTableNameSupplier sourceTableNameSupplier,
+                                                   DataSource dataSource,
+                                                   EventuateSchema eventuateSchema) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
-    return new MySqlBinaryLogClient<>(eventDataParser,
+    return new MySqlBinaryLogClient(dataSource,
+            eventuateSchema,
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             jdbcUrl.getHost(),
@@ -79,15 +80,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema, DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
     return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema);
-  }
-
-  @Bean
-  @Conditional(MySqlBinlogCondition.class)
-  public IWriteRowsEventDataParser<PublishedEvent> eventDataParser(EventuateSchema eventuateSchema,
-                                                                   DataSource dataSource,
-                                                                   SourceTableNameSupplier sourceTableNameSupplier) {
-
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
   }
 
   @Bean
@@ -121,11 +113,14 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Conditional(MySqlBinlogCondition.class)
-  public CdcProcessor<PublishedEvent> cdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient,
+  public CdcProcessor<PublishedEvent> cdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient,
                                                    OffsetStore offsetStore,
                                                    DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, offsetStore, debeziumBinlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
+            offsetStore,
+            new BinlogEntryToPublishedEventConverter(),
+            debeziumBinlogOffsetKafkaStore);
   }
 
   @Bean

@@ -23,6 +23,11 @@ import javax.sql.DataSource;
 public class PollingIntegrationTestConfiguration {
 
   @Bean
+  public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "EVENTS");
+  }
+
+  @Bean
   public EventuateConfigurationProperties eventuateConfigurationProperties() {
     return new EventuateConfigurationProperties();
   }

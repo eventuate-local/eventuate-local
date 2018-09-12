@@ -1,5 +1,6 @@
 package io.eventuate.local.mysql.binlog;
 
+import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -9,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
 
   @Autowired
-  private MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient;
+  private MySqlBinaryLogClient mySqlBinaryLogClient;
 
   @Autowired
   private OffsetStore offsetStore;
@@ -19,7 +20,7 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
 
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, offsetStore, debeziumBinlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, offsetStore, new BinlogEntryToPublishedEventConverter(), debeziumBinlogOffsetKafkaStore);
   }
 
   @Override

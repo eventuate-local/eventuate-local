@@ -3,6 +3,7 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
+import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -41,7 +42,7 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
   @Autowired
-  private MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient;
+  private MySqlBinaryLogClient mySqlBinaryLogClient;
 
   @Test
   public void test() throws Exception {
@@ -70,6 +71,6 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   }
 
   private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, offsetStore, debeziumBinlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, offsetStore, new BinlogEntryToPublishedEventConverter(), debeziumBinlogOffsetKafkaStore);
   }
 }

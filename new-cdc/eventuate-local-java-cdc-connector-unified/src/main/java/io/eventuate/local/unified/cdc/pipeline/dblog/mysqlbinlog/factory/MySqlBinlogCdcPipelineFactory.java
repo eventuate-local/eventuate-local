@@ -1,9 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.PublishedEventPublishingStrategy;
-import io.eventuate.local.common.PublishingStrategy;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.db.log.common.PublishingFilter;
@@ -11,9 +9,8 @@ import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import io.eventuate.local.mysql.binlog.IWriteRowsEventDataParser;
-import io.eventuate.local.mysql.binlog.SourceTableNameSupplier;
-import io.eventuate.local.mysql.binlog.WriteRowsEventDataParser;
+import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -43,16 +40,13 @@ public class MySqlBinlogCdcPipelineFactory extends AbstractMySqlBinlogCdcPipelin
   }
 
   @Override
-  protected IWriteRowsEventDataParser<PublishedEvent> createWriteRowsEventDataParser(EventuateSchema eventuateSchema,
-                                                                                     DataSource dataSource,
-                                                                                     SourceTableNameSupplier sourceTableNameSupplier) {
-
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
+  protected BinlogEntryToEventConverter<PublishedEvent> createBinlogEntryToEventConverter() {
+    return new BinlogEntryToPublishedEventConverter();
   }
 
   @Override
-  protected SourceTableNameSupplier createSourceTableNameSupplier(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties) {
-    return new SourceTableNameSupplier(mySqlBinlogCdcPipelineProperties.getSourceTableName(), "EVENTS");
+  protected SourceTableNameSupplier createSourceTableNameSupplier(CdcPipelineProperties cdcPipelineProperties) {
+    return new SourceTableNameSupplier(cdcPipelineProperties.getSourceTableName(), "EVENTS");
   }
 
   @Override

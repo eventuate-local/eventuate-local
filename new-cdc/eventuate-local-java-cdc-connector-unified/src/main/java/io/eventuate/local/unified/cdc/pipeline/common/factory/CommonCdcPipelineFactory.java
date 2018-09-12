@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -19,6 +20,8 @@ abstract public class CommonCdcPipelineFactory<PROPERTIES extends CdcPipelinePro
     this.curatorFramework = curatorFramework;
     this.dataProducerFactory = dataProducerFactory;
   }
+
+  protected abstract SourceTableNameSupplier createSourceTableNameSupplier(CdcPipelineProperties cdcPipelineProperties);
 
   protected abstract PublishingStrategy<EVENT> createPublishingStrategy();
 

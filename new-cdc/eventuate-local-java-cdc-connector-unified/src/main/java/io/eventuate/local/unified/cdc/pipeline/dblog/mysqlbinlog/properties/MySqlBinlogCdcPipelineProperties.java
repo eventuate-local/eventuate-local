@@ -6,7 +6,6 @@ import org.springframework.util.Assert;
 public class MySqlBinlogCdcPipelineProperties extends CommonDbLogCdcPipelineProperties {
   private String cdcDbUserName;
   private String cdcDbPassword;
-  private String sourceTableName = null;
   private Long binlogClientId = System.currentTimeMillis();
   private String oldDbHistoryTopicName = "eventuate.local.cdc.my-sql-connector.offset.storage";
 
@@ -30,14 +29,6 @@ public class MySqlBinlogCdcPipelineProperties extends CommonDbLogCdcPipelineProp
 
   public void setCdcDbPassword(String cdcDbPassword) {
     this.cdcDbPassword = cdcDbPassword;
-  }
-
-  public String getSourceTableName() {
-    return sourceTableName;
-  }
-
-  public void setSourceTableName(String sourceTableName) {
-    this.sourceTableName = sourceTableName;
   }
 
   public Long getBinlogClientId() {

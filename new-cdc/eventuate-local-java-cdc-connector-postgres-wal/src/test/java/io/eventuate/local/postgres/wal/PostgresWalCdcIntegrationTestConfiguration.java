@@ -3,10 +3,7 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
-import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
-import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.db.log.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -32,6 +29,11 @@ import java.util.stream.Collectors;
 public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
+  public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "EVENTS");
+  }
+
+  @Bean
   public EventuateConfigurationProperties eventuateConfigurationProperties() {
     return new EventuateConfigurationProperties();
   }
@@ -43,13 +45,13 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("PostgresWal")
-  public PostgresWalClient<PublishedEvent> postgresWalClient(@Value("${spring.datasource.url}") String dbUrl,
-                                                             @Value("${spring.datasource.username}") String dbUserName,
-                                                             @Value("${spring.datasource.password}") String dbPassword,
-                                                             EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                             PostgresWalMessageParser<PublishedEvent> postgresWalMessageParser) {
+  public PostgresWalClient postgresWalClient(@Value("${spring.datasource.url}") String dbUrl,
+                                             @Value("${spring.datasource.username}") String dbUserName,
+                                             @Value("${spring.datasource.password}") String dbPassword,
+                                             EventuateConfigurationProperties eventuateConfigurationProperties,
+                                             SourceTableNameSupplier sourceTableNameSupplier) {
 
-    return new PostgresWalClient<>(postgresWalMessageParser,
+    return new PostgresWalClient(sourceTableNameSupplier.getSourceTableName(),
             dbUrl,
             dbUserName,
             dbPassword,
@@ -58,12 +60,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationSlotName());
-  }
-
-  @Bean
-  @Profile("PostgresWal")
-  public PostgresWalMessageParser<PublishedEvent> postgresWalMessageParser() {
-    return new PostgresWalJsonMessageParser();
   }
 
   @Bean
@@ -83,10 +79,10 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("PostgresWal")
-  public CdcProcessor<PublishedEvent> cdcProcessor(PostgresWalClient<PublishedEvent> postgresWalClient,
+  public CdcProcessor<PublishedEvent> cdcProcessor(PostgresWalClient postgresWalClient,
                                                    OffsetStore offsetStore) {
 
-    return new PostgresWalCdcProcessor<>(postgresWalClient, offsetStore);
+    return new DbLogBasedCdcProcessor<>(postgresWalClient, offsetStore, new BinlogEntryToPublishedEventConverter());
   }
 
   @Bean

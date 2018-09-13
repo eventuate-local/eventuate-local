@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.function.Consumer;
 
 public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcTest {
 
@@ -41,14 +42,11 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
-    MySqlBinaryLogClient mySqlBinaryLogClient = new MySqlBinaryLogClient(dataSource,
-            eventuateSchema,
-            eventuateConfigurationProperties.getDbUserName(),
+    MySqlBinaryLogClient mySqlBinaryLogClient = new MySqlBinaryLogClient(eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             jdbcUrl.getHost(),
             jdbcUrl.getPort(),
             eventuateConfigurationProperties.getBinlogClientId(),
-            sourceTableNameSupplier.getSourceTableName(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
@@ -57,8 +55,21 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-    mySqlBinaryLogClient.start(Optional.empty(), binlogEntry ->
-      publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));
+    Consumer<BinlogEntry> consumer = binlogEntry ->
+            publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry));
+
+    MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor = new MySqlBinlogEntryExtractor(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
+
+    BinlogEntryHandler binlogEntryHandler = new BinlogEntryHandler(JdbcUrlParser.parse(dataSourceURL).getDatabase(),
+            eventuateSchema,
+            mySqlBinlogEntryExtractor,
+            sourceTableNameSupplier.getSourceTableName(),
+            consumer);
+
+
+    mySqlBinaryLogClient.addBinlogEntryHandler(binlogEntryHandler);
+
+    mySqlBinaryLogClient.start(Optional.empty());
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds saveResult = saveEvent(localAggregateCrud, accountCreatedEventData);

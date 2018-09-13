@@ -51,8 +51,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                              EventuateConfigurationProperties eventuateConfigurationProperties,
                                              SourceTableNameSupplier sourceTableNameSupplier) {
 
-    return new PostgresWalClient(sourceTableNameSupplier.getSourceTableName(),
-            dbUrl,
+    return new PostgresWalClient(dbUrl,
             dbUserName,
             dbPassword,
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
@@ -79,10 +78,18 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("PostgresWal")
-  public CdcProcessor<PublishedEvent> cdcProcessor(PostgresWalClient postgresWalClient,
+  public CdcProcessor<PublishedEvent> cdcProcessor(@Value("${spring.datasource.url}") String dbUrl,
+                                                   SourceTableNameSupplier sourceTableNameSupplier,
+                                                   EventuateSchema eventuateSchema,
+                                                   PostgresWalClient postgresWalClient,
                                                    OffsetStore offsetStore) {
 
-    return new DbLogBasedCdcProcessor<>(postgresWalClient, offsetStore, new BinlogEntryToPublishedEventConverter());
+    return new PostgresWalCdcProcessor<>(postgresWalClient,
+            offsetStore,
+            new BinlogEntryToPublishedEventConverter(),
+            dbUrl,
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateSchema);
   }
 
   @Bean

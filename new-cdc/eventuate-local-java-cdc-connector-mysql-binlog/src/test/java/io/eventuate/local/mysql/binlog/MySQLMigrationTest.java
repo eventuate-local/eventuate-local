@@ -3,9 +3,11 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.sql.DataSource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +36,10 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   private String dataSourceURL;
 
   @Autowired
-  EventuateJdbcAccess eventuateJdbcAccess;
+  private DataSource dataSource;
+
+  @Autowired
+  private EventuateJdbcAccess eventuateJdbcAccess;
 
   @Autowired
   private OffsetStore offsetStore;
@@ -43,6 +49,12 @@ public class MySQLMigrationTest extends AbstractCdcTest {
 
   @Autowired
   private MySqlBinaryLogClient mySqlBinaryLogClient;
+
+  @Autowired
+  private SourceTableNameSupplier sourceTableNameSupplier;
+
+  @Autowired
+  private EventuateSchema eventuateSchema;
 
   @Test
   public void test() throws Exception {
@@ -71,6 +83,13 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   }
 
   private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, offsetStore, new BinlogEntryToPublishedEventConverter(), debeziumBinlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
+            offsetStore,
+            debeziumBinlogOffsetKafkaStore,
+            new BinlogEntryToPublishedEventConverter(),
+            dataSource,
+            dataSourceURL,
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateSchema);
   }
 }

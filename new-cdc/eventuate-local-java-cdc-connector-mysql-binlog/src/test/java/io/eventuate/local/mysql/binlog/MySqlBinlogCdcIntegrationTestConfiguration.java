@@ -56,20 +56,15 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Bean
   @Conditional(MySqlBinlogCondition.class)
   public MySqlBinaryLogClient mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
-                                                   EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                   SourceTableNameSupplier sourceTableNameSupplier,
-                                                   DataSource dataSource,
-                                                   EventuateSchema eventuateSchema) {
+                                                   EventuateConfigurationProperties eventuateConfigurationProperties) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
-    return new MySqlBinaryLogClient(dataSource,
-            eventuateSchema,
+    return new MySqlBinaryLogClient(
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             jdbcUrl.getHost(),
             jdbcUrl.getPort(),
             eventuateConfigurationProperties.getBinlogClientId(),
-            sourceTableNameSupplier.getSourceTableName(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
@@ -115,12 +110,20 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Conditional(MySqlBinlogCondition.class)
   public CdcProcessor<PublishedEvent> cdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient,
                                                    OffsetStore offsetStore,
-                                                   DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+                                                   DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore,
+                                                   DataSource dataSource,
+                                                   @Value("${spring.datasource.url}") String dataSourceUrl,
+                                                   SourceTableNameSupplier sourceTableNameSupplier,
+                                                   EventuateSchema eventuateSchema) {
 
     return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
             offsetStore,
+            debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
-            debeziumBinlogOffsetKafkaStore);
+            dataSource,
+            dataSourceUrl,
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateSchema);
   }
 
   @Bean

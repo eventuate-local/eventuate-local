@@ -6,19 +6,14 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.db.log.common.DbLogClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
@@ -34,9 +29,6 @@ public class MySqlBinaryLogClient implements DbLogClient {
   private final String host;
   private final int port;
 
-  private final MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor;
-
-  private final String sourceTableName;
   private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
   private String binlogFilename;
   private long offset;
@@ -46,14 +38,15 @@ public class MySqlBinaryLogClient implements DbLogClient {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public MySqlBinaryLogClient(DataSource dataSource,
-                              EventuateSchema eventuateSchema,
-                              String dbUserName,
+  private List<BinlogEntryHandler> binlogEntryHandlers = new ArrayList<>();
+
+  private boolean started;
+
+  public MySqlBinaryLogClient(String dbUserName,
                               String dbPassword,
                               String host,
                               int port,
                               long binlogClientUniqueId,
-                              String sourceTableName,
                               String clientName,
                               int connectionTimeoutInMilliseconds,
                               int maxAttemptsForBinlogConnection) {
@@ -62,15 +55,21 @@ public class MySqlBinaryLogClient implements DbLogClient {
     this.dbPassword = dbPassword;
     this.host = host;
     this.port = port;
-    this.sourceTableName = sourceTableName;
     this.name = clientName;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
-
-    this.mySqlBinlogEntryExtractor = new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema);
   }
 
-  public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<BinlogEntry> eventConsumer) {
+  public void addBinlogEntryHandler(BinlogEntryHandler binlogEntryHandler) {
+    binlogEntryHandlers.add(binlogEntryHandler);
+  }
+
+  public void start(Optional<BinlogFileOffset> binlogFileOffset) {
+    if (started) {
+      return;
+    }
+
+    started = true;
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
     client.setServerId(binlogClientUniqueId);
@@ -86,17 +85,15 @@ public class MySqlBinaryLogClient implements DbLogClient {
       switch (event.getHeader().getEventType()) {
         case TABLE_MAP: {
           TableMapEventData tableMapEvent = event.getData();
-          if (tableMapEvent.getTable().equalsIgnoreCase(sourceTableName)) {
-            tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
-          }
+          tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
           break;
         }
         case EXT_WRITE_ROWS: {
-          handleWriteRowsEvent(event, eventConsumer);
+          handleWriteRowsEvent(event);
           break;
         }
         case WRITE_ROWS: {
-          handleWriteRowsEvent(event, eventConsumer);
+          handleWriteRowsEvent(event);
           break;
         }
         case ROTATE: {
@@ -112,17 +109,40 @@ public class MySqlBinaryLogClient implements DbLogClient {
     connectWithRetriesOnFail();
   }
 
-  private void handleWriteRowsEvent(Event event, Consumer<BinlogEntry> eventConsumer) {
+  private void handleWriteRowsEvent(Event event) {
     logger.debug("Got binlog event {}", event);
     offset = ((EventHeaderV4) event.getHeader()).getPosition();
     WriteRowsEventData eventData = event.getData();
     if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
-      try {
-        eventConsumer.accept(mySqlBinlogEntryExtractor.extract(eventData, getCurrentBinlogFilename(), offset));
-      } catch (IOException e) {
-        throw new RuntimeException("Event row parsing exception", e);
-      }
+
+      binlogEntryHandlers
+              .stream()
+              .filter(bh -> {
+                TableMapEventData tableMapEventData = tableMapEventByTableId.get(eventData.getTableId());
+
+                String database = tableMapEventData.getDatabase();
+                String table = tableMapEventData.getTable();
+
+                return checkSchemasAreEqual(bh, database) && bh.getSourceTableName().equalsIgnoreCase(table);
+              })
+              .forEach(bh -> {
+                try {
+                  MySqlBinlogEntryExtractor extractor = bh.getMySqlBinlogEntryExtractor();
+                  Consumer<BinlogEntry> consumer = bh.getEventConsumer();
+
+                  BinlogEntry entry = extractor.extract(eventData, getCurrentBinlogFilename(), offset);
+
+                  consumer.accept(entry);
+                } catch (IOException e) {
+                  throw new RuntimeException("Event row parsing exception", e);
+                }
+              });
     }
+  }
+
+  private boolean checkSchemasAreEqual(BinlogEntryHandler binlogEntryHandler, String database) {
+    return binlogEntryHandler.getEventuateSchema().isEmpty() && database.equalsIgnoreCase(binlogEntryHandler.getDefaultDatabase()) ||
+            database.equalsIgnoreCase(binlogEntryHandler.getEventuateSchema().getEventuateDatabaseSchema());
   }
 
   private void connectWithRetriesOnFail() {
@@ -178,6 +198,9 @@ public class MySqlBinaryLogClient implements DbLogClient {
     } catch (IOException e) {
       logger.error("Cannot stop the MySqlBinaryLogClient", e);
     }
+
+    binlogEntryHandlers.clear();
+    started = false;
   }
 
   public String getCurrentBinlogFilename() {

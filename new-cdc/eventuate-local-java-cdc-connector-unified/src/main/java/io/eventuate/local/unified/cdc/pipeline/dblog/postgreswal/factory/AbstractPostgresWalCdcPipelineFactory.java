@@ -11,6 +11,7 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.postgres.wal.PostgresWalCdcProcessor;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDBLogCdcPipelineFactory;
@@ -52,11 +53,16 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
 
-    DbLogClient dbLogClient = createDbLogClient(sourceTableNameSupplier, cdcPipelineProperties);
+    PostgresWalClient postgresWalClient = createPostgresWalClient(sourceTableNameSupplier, cdcPipelineProperties);
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 
-    CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(dbLogClient, offsetStore, binlogEntryToEventConverter);
+    CdcProcessor<EVENT> cdcProcessor = new PostgresWalCdcProcessor<>(postgresWalClient,
+            offsetStore,
+            binlogEntryToEventConverter,
+            cdcPipelineProperties.getDataSourceUrl(),
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateSchema);
 
     EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =
             createEventTableChangesToAggregateTopicTranslator(cdcPipelineProperties, cdcDataPublisher, cdcProcessor);
@@ -64,11 +70,10 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
     return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
   }
 
-  protected DbLogClient createDbLogClient(SourceTableNameSupplier sourceTableNameSupplier,
+  protected PostgresWalClient createPostgresWalClient(SourceTableNameSupplier sourceTableNameSupplier,
                                           PostgresWalCdcPipelineProperties postgresWalCdcPipelineProperties) {
 
-    return new PostgresWalClient(sourceTableNameSupplier.getSourceTableName(),
-            postgresWalCdcPipelineProperties.getDataSourceUrl(),
+    return new PostgresWalClient(postgresWalCdcPipelineProperties.getDataSourceUrl(),
             postgresWalCdcPipelineProperties.getDataSourceUserName(),
             postgresWalCdcPipelineProperties.getDataSourcePassword(),
             postgresWalCdcPipelineProperties.getBinlogConnectionTimeoutInMilliseconds(),
@@ -76,12 +81,5 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
             postgresWalCdcPipelineProperties.getPostgresWalIntervalInMilliseconds(),
             postgresWalCdcPipelineProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             postgresWalCdcPipelineProperties.getPostgresReplicationSlotName());
-  }
-
-  protected CdcProcessor<EVENT> createCdcProcessor(DbLogClient dbLogClient,
-                                                   OffsetStore offsetStore,
-                                                   BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter) {
-
-    return new DbLogBasedCdcProcessor<>(dbLogClient, offsetStore, binlogEntryToEventConverter);
   }
 }

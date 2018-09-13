@@ -5,7 +5,7 @@ import io.eventuate.local.common.*;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
+public abstract class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcProcessor<EVENT> {
 
   protected DbLogClient dbLogClient;
   protected OffsetStore offsetStore;
@@ -26,27 +26,7 @@ public class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implements CdcPro
     process(eventConsumer, startingBinlogFileOffset);
   }
 
-  protected void process(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset) {
-    try {
-      dbLogClient.start(startingBinlogFileOffset, new Consumer<BinlogEntry>() {
-        private boolean couldReadDuplicateEntries = true;
-
-        @Override
-        public void accept(BinlogEntry binlogEntry) {
-          if (couldReadDuplicateEntries) {
-            if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(binlogEntry.getBinlogFileOffset())).orElse(false)) {
-              return;
-            } else {
-              couldReadDuplicateEntries = false;
-            }
-          }
-          eventConsumer.accept(binlogEntryToEventConverter.convert(binlogEntry));
-        }
-      });
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
+  protected abstract void process(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset);
 
   @Override
   public void stop() {

@@ -1,12 +1,14 @@
 package io.eventuate.local.postgres.wal;
 
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTest {
 
@@ -16,9 +18,23 @@ public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTe
   @Autowired
   private OffsetStore offsetStore;
 
+  @Value("${spring.datasource.url}")
+  private String dataSourceUrl;
+
+  @Autowired
+  private EventuateSchema eventuateSchema;
+
+  @Autowired
+  private SourceTableNameSupplier sourceTableNameSupplier;
+
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new DbLogBasedCdcProcessor<>(postgresWalClient, offsetStore, new BinlogEntryToPublishedEventConverter());
+    return new PostgresWalCdcProcessor<>(postgresWalClient,
+            offsetStore,
+            new BinlogEntryToPublishedEventConverter(),
+            dataSourceUrl,
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateSchema);
   }
 
   @Override

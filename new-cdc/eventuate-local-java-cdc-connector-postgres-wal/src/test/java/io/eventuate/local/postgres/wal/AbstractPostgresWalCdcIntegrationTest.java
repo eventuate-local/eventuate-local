@@ -2,10 +2,8 @@ package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
-import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
-import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.*;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.junit.Test;
@@ -37,10 +35,12 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
   @Autowired
   private SourceTableNameSupplier sourceTableNameSupplier;
 
+  @Autowired
+  private EventuateSchema eventuateSchema;
+
   @Test
   public void shouldGetEvents() throws InterruptedException{
-    PostgresWalClient postgresWalClient = new PostgresWalClient(sourceTableNameSupplier.getSourceTableName(),
-            dataSourceURL,
+    PostgresWalClient postgresWalClient = new PostgresWalClient(dataSourceURL,
             dbUserName,
             dbPassword,
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
@@ -55,8 +55,14 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
 
     BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
 
-    postgresWalClient.start(Optional.empty(),
+    BinlogEntryHandler binlogEntryHandler = new BinlogEntryHandler(JdbcUrlParser.parse(dataSourceURL).getDatabase(),
+            eventuateSchema,
+            sourceTableNameSupplier.getSourceTableName(),
             binlogEntry -> publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));
+
+    postgresWalClient.addBinlogEntryHandler(binlogEntryHandler);
+
+    postgresWalClient.start(Optional.empty());
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds saveResult = saveEvent(localAggregateCrud, accountCreatedEventData);

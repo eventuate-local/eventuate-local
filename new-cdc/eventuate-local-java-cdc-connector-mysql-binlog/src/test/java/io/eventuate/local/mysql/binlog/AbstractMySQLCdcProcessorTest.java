@@ -1,11 +1,16 @@
 package io.eventuate.local.mysql.binlog;
 
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
+import javax.sql.DataSource;
 
 public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
 
@@ -18,9 +23,28 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
   @Autowired
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
+  @Autowired
+  private DataSource dataSource;
+
+  @Value("${spring.datasource.url}")
+  private String dataSourceUrl;
+
+  @Autowired
+  private EventuateSchema eventuateSchema;
+
+  @Autowired
+  private SourceTableNameSupplier sourceTableNameSupplier;
+
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, offsetStore, new BinlogEntryToPublishedEventConverter(), debeziumBinlogOffsetKafkaStore);
+    return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
+            offsetStore,
+            debeziumBinlogOffsetKafkaStore,
+            new BinlogEntryToPublishedEventConverter(),
+            dataSource,
+            dataSourceUrl,
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateSchema);
   }
 
   @Override

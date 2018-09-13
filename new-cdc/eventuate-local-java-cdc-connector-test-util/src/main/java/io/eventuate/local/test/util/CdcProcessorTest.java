@@ -44,8 +44,6 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
     waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData);
     cdcProcessor.stop();
 
-    Thread.sleep(10000);
-
     publishedEvents.clear();
     cdcProcessor.start(publishedEvent -> {
       publishedEvents.add(publishedEvent);

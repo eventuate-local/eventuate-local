@@ -12,7 +12,7 @@ jobs:
           paths:
             - ~/.gradle
           key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mysql-common.sh
+      - run: TERM=dumb ./scripts/build-and-test-mysql.sh
       - run:
           name: Save test results
           command: |
@@ -35,7 +35,7 @@ jobs:
           paths:
             - ~/.gradle
           key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mariadb-common.sh
+      - run: TERM=dumb ./scripts/build-and-test-mariadb.sh
       - run:
           name: Save test results
           command: |
@@ -54,114 +54,6 @@ jobs:
       - restore_cache:
           key: eventuate-local-java-{{ checksum "build.gradle" }}
       - run: TERM=dumb ./scripts/build-and-test-postgres-wal.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-  build-mysql-embedded-cdc:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mysql-embedded-cdc.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-  build-mariadb-embedded-cdc:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mariadb-embedded-cdc.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-  build-mysql-cdc-connector-polling:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mysql-cdc-connector-polling.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-  build-mariadb-cdc-connector-polling:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mariadb-cdc-connector-polling.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-  build-mysql-cdc-connector-mysql-binlog:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mysql-cdc-connector-mysql-binlog.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-  build-mariadb-cdc-connector-mariadb-binlog:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-mariadb-cdc-connector-mariadb-binlog.sh
       - run:
           name: Save test results
           command: |
@@ -321,45 +213,27 @@ workflows:
     jobs:
       - build
       - build-mariadb
-      - build-mysql-embedded-cdc:
-          requires:
-            - build
-      - build-mariadb-embedded-cdc:
-          requires:
-            - build-mariadb
       - build-postgres-wal:
           requires:
             - build
-      - build-mysql-cdc-connector-polling:
-          requires:
-            - build
-      - build-mariadb-cdc-connector-polling:
-          requires:
-            - build-mariadb
-      - build-mysql-cdc-connector-mysql-binlog:
-          requires:
-            - build
-      - build-mariadb-cdc-connector-mariadb-binlog:
-          requires:
-            - build-mariadb
       - build-cdc-mysql:
           requires:
-            - build-mysql-embedded-cdc
+            - build
       - build-cdc-mariadb:
           requires:
-            - build-mariadb-embedded-cdc
+            - build-mariadb
       - build-new-cdc-mysql:
           requires:
-            - build-mysql-cdc-connector-mysql-binlog
+            - build
       - build-new-cdc-mariadb:
           requires:
-            - build-mariadb-cdc-connector-mariadb-binlog
+            - build-mariadb
       - build-new-cdc-postgres-wal:
           requires:
             - build-postgres-wal
       - build-new-cdc-postgres-polling:
           requires:
-            - build-mysql-cdc-connector-polling
+            - build
       - build-new-cdc-unified:
           requires:
             - build-postgres-wal

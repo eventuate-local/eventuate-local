@@ -62,7 +62,8 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
 
     postgresWalClient.addBinlogEntryHandler(binlogEntryHandler);
 
-    postgresWalClient.start(Optional.empty());
+    postgresWalClient.setBinlogFileOffset(Optional.empty());
+    postgresWalClient.start();
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds saveResult = saveEvent(localAggregateCrud, accountCreatedEventData);

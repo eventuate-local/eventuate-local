@@ -1,6 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline;
 
 import io.eventuate.local.unified.cdc.pipeline.common.configuration.CommonCdcPipelineConfiguration;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration.CommonDbLogCdcPilpelineConfiguration;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.configuration.MySqlBinlogCdcPipelineFactoryConfiguration;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.configuration.MySqlBinlogDefaultCdcPipelineFactoryConfiguration;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.configuration.MySqlBinlogDefaultCdcPipelinePropertiesConfiguration;
@@ -15,6 +16,8 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @Import({CommonCdcPipelineConfiguration.class,
+
+        CommonDbLogCdcPilpelineConfiguration.class,
 
         MySqlBinlogDefaultCdcPipelinePropertiesConfiguration.class,
         MySqlBinlogCdcPipelineFactoryConfiguration.class,

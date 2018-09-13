@@ -69,7 +69,8 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
     mySqlBinaryLogClient.addBinlogEntryHandler(binlogEntryHandler);
 
-    mySqlBinaryLogClient.start(Optional.empty());
+    mySqlBinaryLogClient.setBinlogFileOffset(Optional.empty());
+    mySqlBinaryLogClient.start();
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds saveResult = saveEvent(localAggregateCrud, accountCreatedEventData);

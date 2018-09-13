@@ -13,6 +13,7 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.DbLogClientProvider;
 import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
@@ -24,19 +25,22 @@ public abstract class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbL
   protected EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
   protected EventuateKafkaProducer eventuateKafkaProducer;
   protected PublishingFilter publishingFilter;
+  protected DbLogClientProvider dbLogClientProvider;
 
   public CommonDBLogCdcPipelineFactory(CuratorFramework curatorFramework,
                                        DataProducerFactory dataProducerFactory,
                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                        EventuateKafkaProducer eventuateKafkaProducer,
-                                       PublishingFilter publishingFilter) {
+                                       PublishingFilter publishingFilter,
+                                       DbLogClientProvider dbLogClientProvider) {
 
     super(curatorFramework, dataProducerFactory);
     this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
     this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
     this.publishingFilter = publishingFilter;
+    this.dbLogClientProvider = dbLogClientProvider;
   }
 
   protected abstract BinlogEntryToEventConverter<EVENT> createBinlogEntryToEventConverter();

@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class MySqlBinaryLogClient implements DbLogClient {
@@ -38,9 +40,11 @@ public class MySqlBinaryLogClient implements DbLogClient {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  private List<BinlogEntryHandler> binlogEntryHandlers = new ArrayList<>();
+  private List<BinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
 
-  private boolean started;
+  private AtomicBoolean started = new AtomicBoolean(false);
+
+  private Optional<BinlogFileOffset> binlogFileOffset = Optional.empty();
 
   public MySqlBinaryLogClient(String dbUserName,
                               String dbPassword,
@@ -64,12 +68,14 @@ public class MySqlBinaryLogClient implements DbLogClient {
     binlogEntryHandlers.add(binlogEntryHandler);
   }
 
-  public void start(Optional<BinlogFileOffset> binlogFileOffset) {
-    if (started) {
+  public void setBinlogFileOffset(Optional<BinlogFileOffset> binlogFileOffset) {
+    this.binlogFileOffset = binlogFileOffset;
+  }
+
+  public void start() {
+    if (!started.compareAndSet(false, true)) {
       return;
     }
-
-    started = true;
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
     client.setServerId(binlogClientUniqueId);
@@ -193,6 +199,10 @@ public class MySqlBinaryLogClient implements DbLogClient {
   }
 
   public void stop() {
+    if (!started.compareAndSet(true, false)) {
+      return;
+    }
+
     try {
       client.disconnect();
     } catch (IOException e) {
@@ -200,7 +210,6 @@ public class MySqlBinaryLogClient implements DbLogClient {
     }
 
     binlogEntryHandlers.clear();
-    started = false;
   }
 
   public String getCurrentBinlogFilename() {

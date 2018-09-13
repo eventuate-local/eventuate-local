@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.sql.DataSource;
+import java.util.function.Consumer;
 
 public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
 
@@ -37,14 +38,20 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
 
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
+    return new MySQLCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
             offsetStore,
             debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
             dataSource,
             dataSourceUrl,
             sourceTableNameSupplier.getSourceTableName(),
-            eventuateSchema);
+            eventuateSchema) {
+      @Override
+      public void start(Consumer consumer) {
+        super.start(consumer);
+        mySqlBinaryLogClient.start();
+      }
+    };
   }
 
   @Override

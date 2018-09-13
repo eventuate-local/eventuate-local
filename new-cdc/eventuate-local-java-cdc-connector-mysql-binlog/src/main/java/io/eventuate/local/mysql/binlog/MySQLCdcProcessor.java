@@ -79,7 +79,7 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcP
 
       mySqlBinaryLogClient.addBinlogEntryHandler(binlogEntryHandler);
 
-      mySqlBinaryLogClient.start(startingBinlogFileOffset);
+      mySqlBinaryLogClient.setBinlogFileOffset(startingBinlogFileOffset);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

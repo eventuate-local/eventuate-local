@@ -57,7 +57,7 @@ public class PostgresWalCdcProcessor<EVENT extends BinLogEvent> extends DbLogBas
 
       postgresWalClient.addBinlogEntryHandler(binlogEntryHandler);
 
-      postgresWalClient.start(startingBinlogFileOffset);
+      postgresWalClient.setBinlogFileOffset(startingBinlogFileOffset);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

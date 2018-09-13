@@ -65,6 +65,7 @@ public class MySQLMigrationTest extends AbstractCdcTest {
       publishedEvents.add(publishedEvent);
       offsetStore.save(publishedEvent.getBinlogFileOffset());
     });
+    mySqlBinaryLogClient.start();
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
     List<EventTypeAndData> events = Collections.singletonList(new EventTypeAndData("TestEvent_MIGRATION", "{}", Optional.empty()));

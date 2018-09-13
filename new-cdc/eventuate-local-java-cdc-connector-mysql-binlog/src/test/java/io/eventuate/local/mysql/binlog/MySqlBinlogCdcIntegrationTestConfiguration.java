@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import java.util.function.Consumer;
 
 @Configuration
 @EnableAutoConfiguration
@@ -116,14 +117,20 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
                                                    SourceTableNameSupplier sourceTableNameSupplier,
                                                    EventuateSchema eventuateSchema) {
 
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
+    return new MySQLCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
             offsetStore,
             debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
             dataSource,
             dataSourceUrl,
             sourceTableNameSupplier.getSourceTableName(),
-            eventuateSchema);
+            eventuateSchema) {
+      @Override
+      public void start(Consumer<PublishedEvent> publishedEventConsumer) {
+        super.start(publishedEventConsumer);
+        mySqlBinaryLogClient.start();
+      }
+    };
   }
 
   @Bean

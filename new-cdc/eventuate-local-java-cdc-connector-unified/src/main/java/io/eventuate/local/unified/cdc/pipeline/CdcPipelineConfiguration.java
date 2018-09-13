@@ -5,6 +5,7 @@ import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.DbLogClientProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,9 @@ public class CdcPipelineConfiguration {
   @Autowired
   private CdcPipelineProperties defaultCdcPipelineProperties;
 
+  @Autowired
+  private DbLogClientProvider dbLogClientProvider;
+
   @PostConstruct
   public void initialize() {
     logger.info("Starting unified cdc pipelines");
@@ -50,11 +54,15 @@ public class CdcPipelineConfiguration {
             })
             .forEach(this::createStartSaveCdcPipeline);
 
+    dbLogClientProvider.start();
+
     logger.info("Unified cdc pipelines are started");
   }
 
   @PreDestroy
   public void stop() {
+    dbLogClientProvider.stop();
+
     cdcPipelines.forEach(CdcPipeline::stop);
   }
 

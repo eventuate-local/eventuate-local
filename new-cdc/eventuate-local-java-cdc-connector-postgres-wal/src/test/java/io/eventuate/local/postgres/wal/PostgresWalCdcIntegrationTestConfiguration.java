@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Primary;
 
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -84,12 +85,18 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                                    PostgresWalClient postgresWalClient,
                                                    OffsetStore offsetStore) {
 
-    return new PostgresWalCdcProcessor<>(postgresWalClient,
+    return new PostgresWalCdcProcessor<PublishedEvent>(postgresWalClient,
             offsetStore,
             new BinlogEntryToPublishedEventConverter(),
             dbUrl,
             sourceTableNameSupplier.getSourceTableName(),
-            eventuateSchema);
+            eventuateSchema) {
+      @Override
+      public void start(Consumer consumer) {
+        super.start(consumer);
+        postgresWalClient.start();
+      }
+    };
   }
 
   @Bean

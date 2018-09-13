@@ -10,6 +10,8 @@ import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.function.Consumer;
+
 public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTest {
 
   @Autowired
@@ -29,12 +31,18 @@ public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTe
 
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new PostgresWalCdcProcessor<>(postgresWalClient,
+    return new PostgresWalCdcProcessor<PublishedEvent>(postgresWalClient,
             offsetStore,
             new BinlogEntryToPublishedEventConverter(),
             dataSourceUrl,
             sourceTableNameSupplier.getSourceTableName(),
-            eventuateSchema);
+            eventuateSchema) {
+      @Override
+      public void start(Consumer<PublishedEvent> publishedEventConsumer) {
+        super.start(publishedEventConsumer);
+        postgresWalClient.start();
+      }
+    };
   }
 
   @Override

@@ -68,11 +68,15 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     offsetStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
-    CdcProcessor<PublishedEvent> cdcProcessor = createMySQLCdcProcessor();
+
+    MySqlBinaryLogClient mySqlBinaryLogClient = createMySqlBinaryLogClient();
+
+    CdcProcessor<PublishedEvent> cdcProcessor = createMySQLCdcProcessor(mySqlBinaryLogClient);
     cdcProcessor.start(publishedEvent -> {
       publishedEvents.add(publishedEvent);
       offsetStore.save(publishedEvent.getBinlogFileOffset());
     });
+    mySqlBinaryLogClient.start();
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
     List<EventTypeAndData> events = Collections.singletonList(new EventTypeAndData("TestEvent", "{}", Optional.empty()));
@@ -88,6 +92,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
     Assert.assertEquals(entityIdVersionAndEventIds.getEntityVersion().asString(), publishedEvent.getId());
 
+    mySqlBinaryLogClient.stop();
     cdcProcessor.stop();
 
     /*waiting while offset is storing in kafka*/
@@ -95,20 +100,19 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
     offsetStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
-    cdcProcessor = createMySQLCdcProcessor();
+    cdcProcessor = createMySQLCdcProcessor(mySqlBinaryLogClient);
     cdcProcessor.start(event -> {
       publishedEvents.add(event);
       offsetStore.save(event.getBinlogFileOffset());
     });
+    mySqlBinaryLogClient.start();
 
     while((publishedEvent = publishedEvents.poll(10, TimeUnit.SECONDS)) != null) {
         Assert.assertNotEquals(entityIdVersionAndEventIds.getEntityVersion().asString(), publishedEvent.getId());
     }
   }
 
-  private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() {
-    MySqlBinaryLogClient mySqlBinaryLogClient = createMySqlBinaryLogClient();
-
+  private CdcProcessor<PublishedEvent> createMySQLCdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient) {
     return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
             createDatabaseOffsetKafkaStore(mySqlBinaryLogClient),
             debeziumBinlogOffsetKafkaStore,

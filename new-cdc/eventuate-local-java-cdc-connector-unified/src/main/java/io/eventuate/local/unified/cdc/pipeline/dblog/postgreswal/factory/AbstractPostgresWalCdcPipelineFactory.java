@@ -14,6 +14,7 @@ import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.postgres.wal.PostgresWalCdcProcessor;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.DbLogClientProvider;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDBLogCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -27,13 +28,15 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
                                                EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                EventuateKafkaProducer eventuateKafkaProducer,
-                                               PublishingFilter publishingFilter) {
+                                               PublishingFilter publishingFilter,
+                                               DbLogClientProvider dbLogClientProvider) {
     super(curatorFramework,
             dataProducerFactory,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
-            publishingFilter);
+            publishingFilter,
+            dbLogClientProvider);
   }
 
   @Override
@@ -53,7 +56,10 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
 
-    PostgresWalClient postgresWalClient = createPostgresWalClient(sourceTableNameSupplier, cdcPipelineProperties);
+    PostgresWalClient postgresWalClient = dbLogClientProvider.getOrCreateClient(cdcPipelineProperties.getDataSourceUrl(),
+            cdcPipelineProperties.getDataSourceUserName(),
+            cdcPipelineProperties.getDataSourcePassword(),
+            () -> createPostgresWalClient(sourceTableNameSupplier, cdcPipelineProperties));
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 

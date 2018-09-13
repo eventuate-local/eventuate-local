@@ -16,8 +16,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class PostgresWalClient implements DbLogClient {
@@ -32,10 +34,11 @@ public class PostgresWalClient implements DbLogClient {
   private Connection connection;
   private PGReplicationStream stream;
   private CountDownLatch countDownLatchForStop;
-  private boolean running;
+  private AtomicBoolean running = new AtomicBoolean(false);
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
-  private List<BinlogEntryHandler> binlogEntryHandlers = new ArrayList<>();
+  private Optional<BinlogFileOffset> binlogFileOffset = Optional.empty();
+  private List<BinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
 
   public PostgresWalClient(String url,
                            String user,
@@ -60,11 +63,15 @@ public class PostgresWalClient implements DbLogClient {
     binlogEntryHandlers.add(binlogEntryHandler);
   }
 
-  public void start(Optional<BinlogFileOffset> binlogFileOffset) {
-    if (running) {
+  public void setBinlogFileOffset(Optional<BinlogFileOffset> binlogFileOffset) {
+    this.binlogFileOffset = binlogFileOffset;
+  }
+
+  public void start() {
+    if (!running.compareAndSet(false, true)) {
       return;
     }
-    running = true;
+
     new Thread(() -> connectWithRetriesOnFail(binlogFileOffset)).start();
   }
 
@@ -123,7 +130,7 @@ public class PostgresWalClient implements DbLogClient {
 
     logger.info("connection to postgres wal succeed");
 
-    while (running) {
+    while (running.get()) {
       ByteBuffer messageBuffer = stream.readPending();
 
       if (messageBuffer == null) {
@@ -176,7 +183,9 @@ public class PostgresWalClient implements DbLogClient {
   }
 
   public void stop() {
-    running = false;
+    if (!running.compareAndSet(true, false)) {
+      return;
+    }
     binlogEntryHandlers.clear();
     try {
       countDownLatchForStop.await();

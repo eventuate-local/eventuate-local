@@ -11,6 +11,7 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.DbLogClientProvider;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -25,13 +26,15 @@ public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelin
                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                        EventuateKafkaProducer eventuateKafkaProducer,
-                                       PublishingFilter publishingFilter) {
+                                       PublishingFilter publishingFilter,
+                                       DbLogClientProvider dbLogClientProvider) {
     super(curatorFramework,
             dataProducerFactory,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
-            publishingFilter);
+            publishingFilter,
+            dbLogClientProvider);
   }
 
   @Override

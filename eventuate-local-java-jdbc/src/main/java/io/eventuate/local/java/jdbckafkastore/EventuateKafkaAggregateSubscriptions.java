@@ -48,7 +48,7 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
   @PreDestroy
   public void cleanUp() {
     synchronized (consumers) {
-      consumers.stream().forEach(EventuateKafkaConsumer::stop);
+      consumers.forEach(EventuateKafkaConsumer::stop);
     }
     logger.debug("Waiting for consumers to commit");
     try {

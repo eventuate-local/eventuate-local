@@ -53,8 +53,7 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
   }
 
   public synchronized void stop() {
-    if (this.recordToSave.isPresent())
-      this.store(this.recordToSave.get());
+    recordToSave.ifPresent(this::store);
     this.scheduledExecutorService.shutdown();
   }
 

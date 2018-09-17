@@ -2,7 +2,6 @@ package io.eventuate.local.java.kafka.producer;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

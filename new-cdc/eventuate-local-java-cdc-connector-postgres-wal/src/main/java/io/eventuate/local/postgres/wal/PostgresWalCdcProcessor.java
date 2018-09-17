@@ -32,28 +32,14 @@ public class PostgresWalCdcProcessor<EVENT extends BinLogEvent> extends DbLogBas
   }
 
   @Override
-  protected void process(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset) {
+  public void start(Consumer<EVENT> eventConsumer) {
+    Optional<BinlogFileOffset> startingBinlogFileOffset = offsetStore.getLastBinlogFileOffset();
+
     try {
-      Consumer<BinlogEntry> consumer = new Consumer<BinlogEntry>() {
-        private boolean couldReadDuplicateEntries = true;
-
-        @Override
-        public void accept(BinlogEntry binlogEntry) {
-          if (couldReadDuplicateEntries) {
-            if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(binlogEntry.getBinlogFileOffset())).orElse(false)) {
-              return;
-            } else {
-              couldReadDuplicateEntries = false;
-            }
-          }
-          eventConsumer.accept(binlogEntryToEventConverter.convert(binlogEntry));
-        }
-      };
-
-      BinlogEntryHandler binlogEntryHandler = new BinlogEntryHandler(JdbcUrlParser.parse(dataSourceUrl).getDatabase(),
+      PostgresWalBinlogEntryHandler binlogEntryHandler = new PostgresWalBinlogEntryHandler(JdbcUrlParser.parse(dataSourceUrl).getDatabase(),
               eventuateSchema,
               sourceTableName,
-              consumer);
+              createBinlogConsumer(eventConsumer, startingBinlogFileOffset));
 
       postgresWalClient.addBinlogEntryHandler(binlogEntryHandler);
 

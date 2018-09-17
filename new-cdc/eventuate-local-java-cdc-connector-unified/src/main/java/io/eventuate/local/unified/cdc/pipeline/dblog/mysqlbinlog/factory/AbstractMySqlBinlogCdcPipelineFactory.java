@@ -10,7 +10,7 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.mysql.binlog.*;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.DbLogClientProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDBLogCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -25,14 +25,14 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
                                                EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                EventuateKafkaProducer eventuateKafkaProducer,
                                                PublishingFilter publishingFilter,
-                                               DbLogClientProvider dbLogClientProvider) {
+                                               BinlogEntryReaderProvider binlogEntryReaderProvider) {
     super(curatorFramework,
           dataProducerFactory,
           eventuateKafkaConfigurationProperties,
           eventuateKafkaConsumerConfigurationProperties,
           eventuateKafkaProducer,
           publishingFilter,
-          dbLogClientProvider);
+          binlogEntryReaderProvider);
   }
 
   @Override
@@ -52,7 +52,13 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
 
-    MySqlBinaryLogClient mySqlBinaryLogClient = createMySqlBinaryLogClient(cdcPipelineProperties);
+    MySqlBinaryLogClient mySqlBinaryLogClient =
+            binlogEntryReaderProvider.getOrCreateClient(cdcPipelineProperties.getDataSourceUrl(),
+                    cdcPipelineProperties.getCdcDbUserName(),
+                    cdcPipelineProperties.getCdcDbPassword(),
+                    () -> createMySqlBinaryLogClient(cdcPipelineProperties),
+                    MySqlBinaryLogClient::start,
+                    MySqlBinaryLogClient::stop);
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 

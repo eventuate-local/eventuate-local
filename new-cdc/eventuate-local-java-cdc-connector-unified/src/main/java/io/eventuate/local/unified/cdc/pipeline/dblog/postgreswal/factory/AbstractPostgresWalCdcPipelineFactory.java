@@ -2,8 +2,6 @@ package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
-import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.db.log.common.PublishingFilter;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
@@ -14,7 +12,7 @@ import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.postgres.wal.PostgresWalCdcProcessor;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.DbLogClientProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDBLogCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -29,14 +27,14 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
                                                EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                EventuateKafkaProducer eventuateKafkaProducer,
                                                PublishingFilter publishingFilter,
-                                               DbLogClientProvider dbLogClientProvider) {
+                                               BinlogEntryReaderProvider binlogEntryReaderProvider) {
     super(curatorFramework,
             dataProducerFactory,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
             publishingFilter,
-            dbLogClientProvider);
+            binlogEntryReaderProvider);
   }
 
   @Override
@@ -56,10 +54,12 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
 
-    PostgresWalClient postgresWalClient = dbLogClientProvider.getOrCreateClient(cdcPipelineProperties.getDataSourceUrl(),
+    PostgresWalClient postgresWalClient = binlogEntryReaderProvider.getOrCreateClient(cdcPipelineProperties.getDataSourceUrl(),
             cdcPipelineProperties.getDataSourceUserName(),
             cdcPipelineProperties.getDataSourcePassword(),
-            () -> createPostgresWalClient(sourceTableNameSupplier, cdcPipelineProperties));
+            () -> createPostgresWalClient(sourceTableNameSupplier, cdcPipelineProperties),
+            PostgresWalClient::start,
+            PostgresWalClient::stop);
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 

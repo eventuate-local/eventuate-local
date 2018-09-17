@@ -5,6 +5,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -15,10 +16,15 @@ abstract public class CommonCdcPipelineFactory<PROPERTIES extends CdcPipelinePro
 
   protected CuratorFramework curatorFramework;
   protected DataProducerFactory dataProducerFactory;
+  protected BinlogEntryReaderProvider binlogEntryReaderProvider;
 
-  public CommonCdcPipelineFactory(CuratorFramework curatorFramework, DataProducerFactory dataProducerFactory) {
+
+  public CommonCdcPipelineFactory(CuratorFramework curatorFramework,
+                                  DataProducerFactory dataProducerFactory,
+                                  BinlogEntryReaderProvider binlogEntryReaderProvider) {
     this.curatorFramework = curatorFramework;
     this.dataProducerFactory = dataProducerFactory;
+    this.binlogEntryReaderProvider = binlogEntryReaderProvider;
   }
 
   protected abstract SourceTableNameSupplier createSourceTableNameSupplier(CdcPipelineProperties cdcPipelineProperties);
@@ -54,4 +60,6 @@ abstract public class CommonCdcPipelineFactory<PROPERTIES extends CdcPipelinePro
 
     return hikariDataSource;
   }
+
+  protected abstract BinlogEntryToEventConverter<EVENT> createBinlogEntryToEventConverter();
 }

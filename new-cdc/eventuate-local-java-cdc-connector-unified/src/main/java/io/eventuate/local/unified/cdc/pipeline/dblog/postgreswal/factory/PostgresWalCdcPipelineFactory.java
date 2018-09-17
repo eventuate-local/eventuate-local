@@ -11,7 +11,7 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.DbLogClientProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -27,14 +27,14 @@ public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelin
                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                        EventuateKafkaProducer eventuateKafkaProducer,
                                        PublishingFilter publishingFilter,
-                                       DbLogClientProvider dbLogClientProvider) {
+                                       BinlogEntryReaderProvider binlogEntryReaderProvider) {
     super(curatorFramework,
             dataProducerFactory,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
             publishingFilter,
-            dbLogClientProvider);
+            binlogEntryReaderProvider);
   }
 
   @Override
@@ -44,7 +44,7 @@ public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelin
 
   @Override
   protected SourceTableNameSupplier createSourceTableNameSupplier(CdcPipelineProperties cdcPipelineProperties) {
-    return new SourceTableNameSupplier(cdcPipelineProperties.getSourceTableName(), "EVENTS");
+    return new SourceTableNameSupplier(cdcPipelineProperties.getSourceTableName(), "events");
   }
 
   @Override

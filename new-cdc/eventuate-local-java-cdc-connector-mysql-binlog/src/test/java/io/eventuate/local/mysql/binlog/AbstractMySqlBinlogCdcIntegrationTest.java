@@ -60,7 +60,7 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
     MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor = new MySqlBinlogEntryExtractor(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
 
-    BinlogEntryHandler binlogEntryHandler = new BinlogEntryHandler(JdbcUrlParser.parse(dataSourceURL).getDatabase(),
+    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(JdbcUrlParser.parse(dataSourceURL).getDatabase(),
             eventuateSchema,
             mySqlBinlogEntryExtractor,
             sourceTableNameSupplier.getSourceTableName(),

@@ -1,6 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.configuration;
 
 import io.eventuate.local.java.common.broker.DataProducerFactory;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.polling.factory.PollingCdcPipelineFactory;
 import org.apache.curator.framework.CuratorFramework;
@@ -13,8 +14,9 @@ public class PollingDefaultCdcPipelineFactoryConfiguration {
   @Profile("EventuatePolling")
   @Bean("default")
   public CdcPipelineFactory defaultPollingCdcPipelineFactory(CuratorFramework curatorFramework,
-                                                             DataProducerFactory dataProducerFactory) {
+                                                             DataProducerFactory dataProducerFactory,
+                                                             BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
-    return new PollingCdcPipelineFactory(curatorFramework, dataProducerFactory);
+    return new PollingCdcPipelineFactory(curatorFramework, dataProducerFactory, binlogEntryReaderProvider);
   }
 }

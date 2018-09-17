@@ -55,7 +55,7 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
 
     BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
 
-    BinlogEntryHandler binlogEntryHandler = new BinlogEntryHandler(JdbcUrlParser.parse(dataSourceURL).getDatabase(),
+    PostgresWalBinlogEntryHandler binlogEntryHandler = new PostgresWalBinlogEntryHandler(JdbcUrlParser.parse(dataSourceURL).getDatabase(),
             eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
             binlogEntry -> publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));

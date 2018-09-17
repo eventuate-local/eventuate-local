@@ -20,13 +20,23 @@ public abstract class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implemen
     this.binlogEntryToEventConverter = binlogEntryToEventConverter;
   }
 
-  public void start(Consumer<EVENT> eventConsumer) {
-    Optional<BinlogFileOffset> startingBinlogFileOffset = offsetStore.getLastBinlogFileOffset();
+  protected Consumer<BinlogEntry> createBinlogConsumer(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset) {
+    return new Consumer<BinlogEntry>() {
+      private boolean couldReadDuplicateEntries = true;
 
-    process(eventConsumer, startingBinlogFileOffset);
+      @Override
+      public void accept(BinlogEntry binlogEntry) {
+        if (couldReadDuplicateEntries) {
+          if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(binlogEntry.getBinlogFileOffset())).orElse(false)) {
+            return;
+          } else {
+            couldReadDuplicateEntries = false;
+          }
+        }
+        eventConsumer.accept(binlogEntryToEventConverter.convert(binlogEntry));
+      }
+    };
   }
-
-  protected abstract void process(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset);
 
   @Override
   public void stop() {

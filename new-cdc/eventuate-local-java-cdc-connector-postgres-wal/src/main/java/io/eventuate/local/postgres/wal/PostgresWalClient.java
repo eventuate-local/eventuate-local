@@ -38,7 +38,7 @@ public class PostgresWalClient implements DbLogClient {
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
   private Optional<BinlogFileOffset> binlogFileOffset = Optional.empty();
-  private List<BinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
+  private List<PostgresWalBinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
 
   public PostgresWalClient(String url,
                            String user,
@@ -59,7 +59,7 @@ public class PostgresWalClient implements DbLogClient {
     this.postgresWalBinlogEntryExtractor = new PostgresWalBinlogEntryExtractor();
   }
 
-  public void addBinlogEntryHandler(BinlogEntryHandler binlogEntryHandler) {
+  public void addBinlogEntryHandler(PostgresWalBinlogEntryHandler binlogEntryHandler) {
     binlogEntryHandlers.add(binlogEntryHandler);
   }
 
@@ -154,14 +154,12 @@ public class PostgresWalClient implements DbLogClient {
       binlogEntryHandlers.forEach(binlogEntryHandler -> {
         List<PostgresWalChange> filteredChanges = inserts
                 .stream()
-                .filter(change ->
-                    checkSchemasAreEqual(binlogEntryHandler, change.getSchema()) &&
-                    change.getTable().equalsIgnoreCase(binlogEntryHandler.getSourceTableName()))
+                .filter(change -> binlogEntryHandler.isFor(change.getSchema(), change.getTable()))
                 .collect(Collectors.toList());
 
         postgresWalBinlogEntryExtractor
                 .extract(filteredChanges, stream.getLastReceiveLSN().asLong(), replicationSlotName)
-                .forEach(binlogEntryHandler.getEventConsumer());
+                .forEach(binlogEntryHandler::accept);
       });
 
       stream.setAppliedLSN(stream.getLastReceiveLSN());
@@ -175,11 +173,6 @@ public class PostgresWalClient implements DbLogClient {
       throw new RuntimeException(e);
     }
     countDownLatchForStop.countDown();
-  }
-
-  private boolean checkSchemasAreEqual(BinlogEntryHandler binlogEntryHandler, String database) {
-    return binlogEntryHandler.getEventuateSchema().isEmpty() && database.equalsIgnoreCase(binlogEntryHandler.getDefaultDatabase()) ||
-            database.equalsIgnoreCase(binlogEntryHandler.getEventuateSchema().getEventuateDatabaseSchema());
   }
 
   public void stop() {

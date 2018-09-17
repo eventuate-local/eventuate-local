@@ -1,6 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration;
 
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.DbLogClientProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 public class CommonDbLogCdcPilpelineConfiguration {
 
   @Bean
-  public DbLogClientProvider dbClientProvider() {
-    return new DbLogClientProvider();
+  public BinlogEntryReaderProvider dbClientProvider() {
+    return new BinlogEntryReaderProvider();
   }
 }

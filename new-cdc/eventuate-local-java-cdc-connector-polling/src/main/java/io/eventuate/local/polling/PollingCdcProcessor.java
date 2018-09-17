@@ -1,6 +1,9 @@
 package io.eventuate.local.polling;
 
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.BinlogEntryToEventConverter;
 import io.eventuate.local.common.CdcProcessor;
+import io.eventuate.local.common.JdbcUrlParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,54 +12,71 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-public class PollingCdcProcessor<EVENT_BEAN, EVENT, ID> implements CdcProcessor<EVENT> {
+public class PollingCdcProcessor<EVENT> implements CdcProcessor<EVENT> {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
   private PollingDao pollingDao;
   private int pollingIntervalInMilliseconds;
+  private PollingDataProvider pollingDataProvider;
+  private BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter;
+  private String dataSourceUrl;
+  private EventuateSchema eventuateSchema;
+  private String sourceTableName;
   private AtomicBoolean watcherRunning = new AtomicBoolean(false);
   private CountDownLatch stopCountDownLatch = new CountDownLatch(1);
 
-  public PollingCdcProcessor(PollingDao<EVENT_BEAN, EVENT, ID> pollingDao, int pollingIntervalInMilliseconds) {
+  public PollingCdcProcessor(PollingDao pollingDao,
+                             int pollingIntervalInMilliseconds,
+                             PollingDataProvider pollingDataProvider,
+                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                             String dataSourceUrl,
+                             EventuateSchema eventuateSchema,
+                             String sourceTableName) {
     this.pollingDao = pollingDao;
     this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
+    this.pollingDataProvider = pollingDataProvider;
+    this.binlogEntryToEventConverter = binlogEntryToEventConverter;
+    this.dataSourceUrl = dataSourceUrl;
+    this.eventuateSchema = eventuateSchema;
+    this.sourceTableName = sourceTableName;
   }
 
   public void start(Consumer<EVENT> eventConsumer) {
-    watcherRunning.set(true);
+    if (!watcherRunning.compareAndSet(false, true)) {
+      return;
+    }
 
-    new Thread() {
-      @Override
-      public void run() {
+    PollingEntryHandler pollingEntryHandler = new PollingEntryHandler(JdbcUrlParser.parse(dataSourceUrl).getDatabase(),
+            eventuateSchema,
+            sourceTableName,
+            binlogEntry -> eventConsumer.accept(binlogEntryToEventConverter.convert(binlogEntry)),
+            pollingDataProvider.publishedField(),
+            pollingDataProvider.idField());
 
-        while (watcherRunning.get()) {
+    new Thread(() -> {
+
+      while (watcherRunning.get()) {
+        try {
+
+          pollingDao.processEvents(pollingEntryHandler);
+
           try {
-
-            List<EVENT> eventsToPublish = pollingDao.findEventsToPublish();
-
-            eventsToPublish.forEach(eventConsumer::accept);
-
-            if (!eventsToPublish.isEmpty()) {
-
-              pollingDao.markEventsAsPublished(eventsToPublish);
-            }
-
-            try {
-              Thread.sleep(pollingIntervalInMilliseconds);
-            } catch (Exception e) {
-              logger.error(e.getMessage(), e);
-            }
+            Thread.sleep(pollingIntervalInMilliseconds);
           } catch (Exception e) {
             logger.error(e.getMessage(), e);
           }
+        } catch (Exception e) {
+          logger.error(e.getMessage(), e);
         }
-        stopCountDownLatch.countDown();
       }
-    }.start();
+      stopCountDownLatch.countDown();
+    }).start();
   }
 
   public void stop() {
-    watcherRunning.set(false);
+    if (!watcherRunning.compareAndSet(true, false)) {
+      return;
+    }
     try {
       stopCountDownLatch.await();
     } catch (InterruptedException e) {

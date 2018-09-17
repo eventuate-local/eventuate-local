@@ -51,7 +51,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "EVENTS");
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "events");
   }
 
   @Bean

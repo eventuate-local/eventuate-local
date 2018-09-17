@@ -6,7 +6,6 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.db.log.common.DbLogClient;
 import org.slf4j.Logger;
@@ -17,7 +16,6 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 public class MySqlBinaryLogClient implements DbLogClient {
 
@@ -40,7 +38,7 @@ public class MySqlBinaryLogClient implements DbLogClient {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  private List<BinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
+  private List<MySqlBinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
 
   private AtomicBoolean started = new AtomicBoolean(false);
 
@@ -64,7 +62,7 @@ public class MySqlBinaryLogClient implements DbLogClient {
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
   }
 
-  public void addBinlogEntryHandler(BinlogEntryHandler binlogEntryHandler) {
+  public void addBinlogEntryHandler(MySqlBinlogEntryHandler binlogEntryHandler) {
     binlogEntryHandlers.add(binlogEntryHandler);
   }
 
@@ -121,34 +119,16 @@ public class MySqlBinaryLogClient implements DbLogClient {
     WriteRowsEventData eventData = event.getData();
     if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
 
+      TableMapEventData tableMapEventData = tableMapEventByTableId.get(eventData.getTableId());
+
+      String database = tableMapEventData.getDatabase();
+      String table = tableMapEventData.getTable();
+
       binlogEntryHandlers
               .stream()
-              .filter(bh -> {
-                TableMapEventData tableMapEventData = tableMapEventByTableId.get(eventData.getTableId());
-
-                String database = tableMapEventData.getDatabase();
-                String table = tableMapEventData.getTable();
-
-                return checkSchemasAreEqual(bh, database) && bh.getSourceTableName().equalsIgnoreCase(table);
-              })
-              .forEach(bh -> {
-                try {
-                  MySqlBinlogEntryExtractor extractor = bh.getMySqlBinlogEntryExtractor();
-                  Consumer<BinlogEntry> consumer = bh.getEventConsumer();
-
-                  BinlogEntry entry = extractor.extract(eventData, getCurrentBinlogFilename(), offset);
-
-                  consumer.accept(entry);
-                } catch (IOException e) {
-                  throw new RuntimeException("Event row parsing exception", e);
-                }
-              });
+              .filter(bh -> bh.isFor(database, table))
+              .forEach(bh -> bh.accept(eventData, getCurrentBinlogFilename(), offset));
     }
-  }
-
-  private boolean checkSchemasAreEqual(BinlogEntryHandler binlogEntryHandler, String database) {
-    return binlogEntryHandler.getEventuateSchema().isEmpty() && database.equalsIgnoreCase(binlogEntryHandler.getDefaultDatabase()) ||
-            database.equalsIgnoreCase(binlogEntryHandler.getEventuateSchema().getEventuateDatabaseSchema());
   }
 
   private void connectWithRetriesOnFail() {

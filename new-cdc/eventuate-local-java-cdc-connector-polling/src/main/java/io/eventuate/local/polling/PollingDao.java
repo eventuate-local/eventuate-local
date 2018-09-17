@@ -1,29 +1,31 @@
 package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
+import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.BinlogFileOffset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
-public class PollingDao<EVENT_BEAN, EVENT, ID> {
+public class PollingDao {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
-  private PollingDataProvider<EVENT_BEAN, EVENT, ID> pollingDataParser;
-  private DataSource dataSource;
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private int maxEventsPerPolling;
   private int maxAttemptsForPolling;
   private int pollingRetryIntervalInMilliseconds;
 
-  public PollingDao(PollingDataProvider<EVENT_BEAN, EVENT, ID> pollingDataParser,
-          DataSource dataSource,
+  public PollingDao(DataSource dataSource,
           int maxEventsPerPolling,
           int maxAttemptsForPolling,
           int pollingRetryIntervalInMilliseconds) {
@@ -32,8 +34,6 @@ public class PollingDao<EVENT_BEAN, EVENT, ID> {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
     }
 
-    this.pollingDataParser = pollingDataParser;
-    this.dataSource = dataSource;
     this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     this.maxEventsPerPolling = maxEventsPerPolling;
     this.maxAttemptsForPolling = maxAttemptsForPolling;
@@ -48,26 +48,37 @@ public class PollingDao<EVENT_BEAN, EVENT, ID> {
     this.maxEventsPerPolling = maxEventsPerPolling;
   }
 
-  public List<EVENT> findEventsToPublish() {
+  public void processEvents(PollingEntryHandler handler) {
+    String findEventsQuery = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
+            handler.getQualifiedTable(), handler.getPublishedField(), handler.getIdField());
 
+    SqlRowSet sqlRowSet = handleConnectionLost(() ->
+      namedParameterJdbcTemplate.queryForRowSet(findEventsQuery, ImmutableMap.of("limit", maxEventsPerPolling)));
 
-    String query = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
-      pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
+    List<Object> ids = new ArrayList<>();
 
-    List<EVENT_BEAN> messageBeans = handleConnectionLost(() -> namedParameterJdbcTemplate.query(query,
-      ImmutableMap.of("limit", maxEventsPerPolling), new BeanPropertyRowMapper(pollingDataParser.eventBeanClass())));
+    while (sqlRowSet.next()) {
+      ids.add(sqlRowSet.getObject(handler.getIdField()));
 
-    return messageBeans.stream().map(pollingDataParser::transformEventBeanToEvent).collect(Collectors.toList());
-  }
+      handler.accept(new BinlogEntry() {
+        @Override
+        public Object getColumn(String name) {
+          return sqlRowSet.getObject(name);
+        }
 
-  public void markEventsAsPublished(List<EVENT> events) {
+        @Override
+        public BinlogFileOffset getBinlogFileOffset() {
+          return null;
+        }
+      });
+    }
 
-    List<ID> ids = events.stream().map(message -> pollingDataParser.getId(message)).collect(Collectors.toList());
+    String markEventsAsReadQuery = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
+            handler.getQualifiedTable(), handler.getPublishedField(), handler.getIdField());
 
-    String query = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
-        pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
-
-    handleConnectionLost(() -> namedParameterJdbcTemplate.update(query, ImmutableMap.of("ids", ids)));
+    if (!ids.isEmpty()) {
+      handleConnectionLost(() -> namedParameterJdbcTemplate.update(markEventsAsReadQuery, ImmutableMap.of("ids", ids)));
+    }
   }
 
   private <T> T handleConnectionLost(Callable<T> query) {

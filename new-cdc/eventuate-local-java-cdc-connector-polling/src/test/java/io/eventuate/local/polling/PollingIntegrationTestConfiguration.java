@@ -24,7 +24,7 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "EVENTS");
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "events");
   }
 
   @Bean
@@ -56,27 +56,33 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public CdcProcessor<PublishedEvent> pollingCdcProcessor(EventuateConfigurationProperties eventuateConfigurationProperties,
-          PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
+  public CdcProcessor<PublishedEvent> pollingCdcProcessor(@Value("${spring.datasource.url}") String dbUrl,
+                                                          EventuateConfigurationProperties eventuateConfigurationProperties,
+                                                          PollingDao pollingDao,
+                                                          PollingDataProvider pollingDataProvider,
+                                                          EventuateSchema eventuateSchema,
+                                                          SourceTableNameSupplier sourceTableNameSupplier) {
     
-    return new PollingCdcProcessor<>(pollingDao, eventuateConfigurationProperties.getPollingIntervalInMilliseconds());
+    return new PollingCdcProcessor<>(pollingDao,
+            eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
+            pollingDataProvider,
+            new BinlogEntryToPublishedEventConverter(),
+            dbUrl,
+            eventuateSchema,
+            sourceTableNameSupplier.getSourceTableName());
   }
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateSchema eventuateSchema,
-          EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new EventPollingDataProvider(eventuateSchema);
+  public PollingDataProvider pollingDataProvider() {
+    return new EventPollingDataProvider();
   }
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao(EventuateConfigurationProperties eventuateConfigurationProperties,
-          PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider,
-    DataSource dataSource) {
+  public PollingDao pollingDao(EventuateConfigurationProperties eventuateConfigurationProperties, DataSource dataSource) {
 
-    return new PollingDao<>(pollingDataProvider,
-      dataSource,
+    return new PollingDao(dataSource,
       eventuateConfigurationProperties.getMaxEventsPerPolling(),
       eventuateConfigurationProperties.getMaxAttemptsForPolling(),
       eventuateConfigurationProperties.getPollingRetryIntervalInMilliseconds());

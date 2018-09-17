@@ -3,7 +3,6 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
-import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 
 import javax.sql.DataSource;
@@ -52,30 +51,13 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcP
     process(eventConsumer, startingBinlogFileOffset);
   }
 
-  @Override
   protected void process(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset) {
     try {
-      Consumer<BinlogEntry> consumer = new Consumer<BinlogEntry>() {
-        private boolean couldReadDuplicateEntries = true;
-
-        @Override
-        public void accept(BinlogEntry binlogEntry) {
-          if (couldReadDuplicateEntries) {
-            if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(binlogEntry.getBinlogFileOffset())).orElse(false)) {
-              return;
-            } else {
-              couldReadDuplicateEntries = false;
-            }
-          }
-          eventConsumer.accept(binlogEntryToEventConverter.convert(binlogEntry));
-        }
-      };
-
-      BinlogEntryHandler binlogEntryHandler = new BinlogEntryHandler(defaultDataBase,
+      MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(defaultDataBase,
               eventuateSchema,
               new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema),
               sourceTableName,
-              consumer);
+              createBinlogConsumer(eventConsumer, startingBinlogFileOffset));
 
       mySqlBinaryLogClient.addBinlogEntryHandler(binlogEntryHandler);
 

@@ -1,11 +1,9 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.factory;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.polling.EventPollingDataProvider;
 import io.eventuate.local.polling.PollingDataProvider;
-import io.eventuate.local.polling.PublishedEventBean;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;

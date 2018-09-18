@@ -1,8 +1,10 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.configuration;
 
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration.CommonDbLogCdcDefaultPipelinePropertiesConfiguration;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -21,6 +23,17 @@ public class PostgresWalDefaultCdcPipelinePropertiesConfiguration extends Common
     return postgresWalCdcPipelineProperties;
   }
 
+  @Profile("PostgresWal")
+  @Bean
+  public CdcPipelineReaderProperties defaultPostgresWalPipelineReaderProperties() {
+    PostgresWalCdcPipelineReaderProperties postgresWalCdcPipelineReaderProperties = createPostgresWalCdcPipelineReaderProperties();
+
+    initCommonDbLogCdcPipelineReaderProperties(postgresWalCdcPipelineReaderProperties);
+    initCdcPipelineReaderProperties(postgresWalCdcPipelineReaderProperties);
+
+    return postgresWalCdcPipelineReaderProperties;
+  }
+
   private PostgresWalCdcPipelineProperties createPostgresWalCdcPipelineProperties() {
     PostgresWalCdcPipelineProperties postgresWalCdcPipelineProperties = new PostgresWalCdcPipelineProperties();
 
@@ -29,5 +42,15 @@ public class PostgresWalDefaultCdcPipelinePropertiesConfiguration extends Common
     postgresWalCdcPipelineProperties.setPostgresWalIntervalInMilliseconds(eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds());
 
     return postgresWalCdcPipelineProperties;
+  }
+
+  private PostgresWalCdcPipelineReaderProperties createPostgresWalCdcPipelineReaderProperties() {
+    PostgresWalCdcPipelineReaderProperties postgresWalCdcPipelineReaderProperties = new PostgresWalCdcPipelineReaderProperties();
+
+    postgresWalCdcPipelineReaderProperties.setPostgresReplicationStatusIntervalInMilliseconds(eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds());
+    postgresWalCdcPipelineReaderProperties.setPostgresReplicationSlotName(eventuateConfigurationProperties.getPostgresReplicationSlotName());
+    postgresWalCdcPipelineReaderProperties.setPostgresWalIntervalInMilliseconds(eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds());
+
+    return postgresWalCdcPipelineReaderProperties;
   }
 }

@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class PollingCdcPipelineFactoryConfiguration {
-  @Bean("evenutateLocalPolling")
+  @Bean("evenutateLocalPollingCdcPipelineFactory")
   public CdcPipelineFactory pollingCdcPipelineFactory(CuratorFramework curatorFramework,
                                                       DataProducerFactory dataProducerFactory,
                                                       BinlogEntryReaderProvider binlogEntryReaderProvider) {

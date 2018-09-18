@@ -54,12 +54,7 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
 
-    PostgresWalClient postgresWalClient = binlogEntryReaderProvider.getOrCreateClient(cdcPipelineProperties.getDataSourceUrl(),
-            cdcPipelineProperties.getDataSourceUserName(),
-            cdcPipelineProperties.getDataSourcePassword(),
-            () -> createPostgresWalClient(sourceTableNameSupplier, cdcPipelineProperties),
-            PostgresWalClient::start,
-            PostgresWalClient::stop);
+    PostgresWalClient postgresWalClient = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 
@@ -71,21 +66,8 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
             eventuateSchema);
 
     EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =
-            createEventTableChangesToAggregateTopicTranslator(cdcPipelineProperties, cdcDataPublisher, cdcProcessor);
+            createEventTableChangesToAggregateTopicTranslator(cdcDataPublisher, cdcProcessor);
 
     return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
-  }
-
-  protected PostgresWalClient createPostgresWalClient(SourceTableNameSupplier sourceTableNameSupplier,
-                                          PostgresWalCdcPipelineProperties postgresWalCdcPipelineProperties) {
-
-    return new PostgresWalClient(postgresWalCdcPipelineProperties.getDataSourceUrl(),
-            postgresWalCdcPipelineProperties.getDataSourceUserName(),
-            postgresWalCdcPipelineProperties.getDataSourcePassword(),
-            postgresWalCdcPipelineProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            postgresWalCdcPipelineProperties.getMaxAttemptsForBinlogConnection(),
-            postgresWalCdcPipelineProperties.getPostgresWalIntervalInMilliseconds(),
-            postgresWalCdcPipelineProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
-            postgresWalCdcPipelineProperties.getPostgresReplicationSlotName());
   }
 }

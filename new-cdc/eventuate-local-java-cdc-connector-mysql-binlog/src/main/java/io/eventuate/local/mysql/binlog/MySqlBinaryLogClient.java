@@ -7,7 +7,10 @@ import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
 import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.EventuateLeaderSelectorListener;
 import io.eventuate.local.db.log.common.DbLogClient;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,9 +43,14 @@ public class MySqlBinaryLogClient implements DbLogClient {
 
   private List<MySqlBinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
 
-  private AtomicBoolean started = new AtomicBoolean(false);
+  private AtomicBoolean running = new AtomicBoolean(false);
 
   private Optional<BinlogFileOffset> binlogFileOffset = Optional.empty();
+
+  private LeaderSelector leaderSelector;
+
+  private CuratorFramework curatorFramework;
+  private String leadershipLockPath;
 
   public MySqlBinaryLogClient(String dbUserName,
                               String dbPassword,
@@ -51,7 +59,10 @@ public class MySqlBinaryLogClient implements DbLogClient {
                               long binlogClientUniqueId,
                               String clientName,
                               int connectionTimeoutInMilliseconds,
-                              int maxAttemptsForBinlogConnection) {
+                              int maxAttemptsForBinlogConnection,
+                              CuratorFramework curatorFramework,
+                              String leadershipLockPath) {
+
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;
@@ -60,6 +71,9 @@ public class MySqlBinaryLogClient implements DbLogClient {
     this.name = clientName;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
+
+    this.curatorFramework = curatorFramework;
+    this.leadershipLockPath = leadershipLockPath;
   }
 
   public void addBinlogEntryHandler(MySqlBinlogEntryHandler binlogEntryHandler) {
@@ -70,10 +84,16 @@ public class MySqlBinaryLogClient implements DbLogClient {
     this.binlogFileOffset = binlogFileOffset;
   }
 
+  @Override
   public void start() {
-    if (!started.compareAndSet(false, true)) {
-      return;
-    }
+    leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,
+            new EventuateLeaderSelectorListener(this::leaderStart, this::leaderStop));
+
+    leaderSelector.start();
+  }
+
+  private void leaderStart() {
+    running.set(true);
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
     client.setServerId(binlogClientUniqueId);
@@ -178,8 +198,16 @@ public class MySqlBinaryLogClient implements DbLogClient {
     return eventDeserializer;
   }
 
+  @Override
   public void stop() {
-    if (!started.compareAndSet(true, false)) {
+    leaderSelector.close();
+    leaderStop();
+
+    binlogEntryHandlers.clear();
+  }
+
+  private void leaderStop() {
+    if (!running.compareAndSet(true, false)) {
       return;
     }
 
@@ -188,8 +216,6 @@ public class MySqlBinaryLogClient implements DbLogClient {
     } catch (IOException e) {
       logger.error("Cannot stop the MySqlBinaryLogClient", e);
     }
-
-    binlogEntryHandlers.clear();
   }
 
   public String getCurrentBinlogFilename() {
@@ -203,5 +229,4 @@ public class MySqlBinaryLogClient implements DbLogClient {
   public String getName() {
     return name;
   }
-
 }

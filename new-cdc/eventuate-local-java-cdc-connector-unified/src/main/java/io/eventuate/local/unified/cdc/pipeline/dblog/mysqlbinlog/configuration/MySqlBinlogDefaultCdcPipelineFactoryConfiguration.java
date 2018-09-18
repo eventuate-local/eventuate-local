@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MySqlBinlogDefaultCdcPipelineFactoryConfiguration {
   @Conditional(MySqlBinlogCondition.class)
-  @Bean("default")
+  @Bean("defaultCdcPipelineFactory")
   public CdcPipelineFactory defaultMySqlBinlogCdcPipelineFactory(CuratorFramework curatorFramework,
                                                                  DataProducerFactory dataProducerFactory,
                                                                  EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,

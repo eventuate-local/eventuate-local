@@ -6,6 +6,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
+import org.apache.curator.framework.CuratorFramework;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +39,9 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
   @Autowired
   private EventuateSchema eventuateSchema;
 
+  @Autowired
+  private CuratorFramework curatorFramework;
+
   @Test
   public void shouldGetEvents() throws InterruptedException{
     PostgresWalClient postgresWalClient = new PostgresWalClient(dataSourceURL,
@@ -47,7 +51,9 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getPostgresReplicationSlotName());
+            eventuateConfigurationProperties.getPostgresReplicationSlotName(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath());
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 

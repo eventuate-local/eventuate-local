@@ -2,11 +2,14 @@ package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.BinlogEntryReader;
 import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.EventuateLeaderSelectorListener;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
@@ -15,29 +18,100 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class PollingDao {
+public class PollingDao implements BinlogEntryReader {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private int maxEventsPerPolling;
   private int maxAttemptsForPolling;
   private int pollingRetryIntervalInMilliseconds;
+  private List<PollingEntryHandler> pollingEntryHandlers = new CopyOnWriteArrayList<>();
+  private AtomicBoolean watcherRunning = new AtomicBoolean(false);
+  private CountDownLatch stopCountDownLatch = new CountDownLatch(1);
+  private int pollingIntervalInMilliseconds;
+  private LeaderSelector leaderSelector;
+
+  private CuratorFramework curatorFramework;
+  private String leadershipLockPath;
 
   public PollingDao(DataSource dataSource,
-          int maxEventsPerPolling,
-          int maxAttemptsForPolling,
-          int pollingRetryIntervalInMilliseconds) {
+                    int maxEventsPerPolling,
+                    int maxAttemptsForPolling,
+                    int pollingRetryIntervalInMilliseconds,
+                    int pollingIntervalInMilliseconds,
+                    CuratorFramework curatorFramework,
+                    String leadershipLockPath) {
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
     }
 
+    this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
     this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     this.maxEventsPerPolling = maxEventsPerPolling;
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
+
+
+    this.curatorFramework = curatorFramework;
+    this.leadershipLockPath = leadershipLockPath;
+  }
+
+  public void addPollingEntryHandler(PollingEntryHandler pollingEntryHandler) {
+    pollingEntryHandlers.add(pollingEntryHandler);
+  }
+
+  @Override
+  public void start() {
+    leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,
+            new EventuateLeaderSelectorListener(this::leaderStart, this::leaderStop));
+
+    leaderSelector.start();
+  }
+
+  public void leaderStart() {
+    watcherRunning.set(true);
+
+    new Thread(() -> {
+
+      while (watcherRunning.get()) {
+        try {
+
+          pollingEntryHandlers.forEach(this::processEvents);
+
+          try {
+            Thread.sleep(pollingIntervalInMilliseconds);
+          } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+          }
+        } catch (Exception e) {
+          logger.error(e.getMessage(), e);
+        }
+      }
+      stopCountDownLatch.countDown();
+    }).start();
+  }
+
+  @Override
+  public void stop() {
+    leaderSelector.close();
+    leaderStop();
+    pollingEntryHandlers.clear();
+  }
+
+  public void leaderStop() {
+    if (!watcherRunning.compareAndSet(true, false)) {
+      return;
+    }
+
+    try {
+      stopCountDownLatch.await();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public int getMaxEventsPerPolling() {

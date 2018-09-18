@@ -31,15 +31,11 @@ abstract public class CommonCdcPipelineFactory<PROPERTIES extends CdcPipelinePro
 
   protected abstract PublishingStrategy<EVENT> createPublishingStrategy();
 
-  protected EventTableChangesToAggregateTopicTranslator<EVENT> createEventTableChangesToAggregateTopicTranslator(PROPERTIES properties,
-                                                                                                                 CdcDataPublisher<EVENT> cdcDataPublisher,
+  protected EventTableChangesToAggregateTopicTranslator<EVENT> createEventTableChangesToAggregateTopicTranslator(CdcDataPublisher<EVENT> cdcDataPublisher,
                                                                                                                  CdcProcessor<EVENT> cdcProcessor) {
 
 
-    return new EventTableChangesToAggregateTopicTranslator<>(cdcDataPublisher,
-            cdcProcessor,
-            curatorFramework,
-            properties.getLeadershipLockPath());
+    return new EventTableChangesToAggregateTopicTranslator<>(cdcDataPublisher, cdcProcessor);
   }
 
   protected EventuateSchema createEventuateSchema(PROPERTIES properties) {

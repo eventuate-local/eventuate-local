@@ -6,6 +6,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
+import org.apache.curator.framework.CuratorFramework;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +38,9 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   @Autowired
   private SourceTableNameSupplier sourceTableNameSupplier;
 
+  @Autowired
+  private CuratorFramework curatorFramework;
+
   @Test
   public void shouldGetEvents() throws InterruptedException {
     BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
@@ -49,7 +53,9 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
+            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath());
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 

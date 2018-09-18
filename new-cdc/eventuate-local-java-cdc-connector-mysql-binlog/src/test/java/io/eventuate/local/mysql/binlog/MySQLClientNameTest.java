@@ -12,6 +12,7 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.test.util.AbstractCdcTest;
+import org.apache.curator.framework.CuratorFramework;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +57,9 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
   @Autowired
   private EventuateKafkaProducer eventuateKafkaProducer;
+
+  @Autowired
+  private CuratorFramework curatorFramework;
 
   private OffsetStore offsetStore;
 
@@ -139,6 +143,8 @@ public class MySQLClientNameTest extends AbstractCdcTest {
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
+            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath());
   }
 }

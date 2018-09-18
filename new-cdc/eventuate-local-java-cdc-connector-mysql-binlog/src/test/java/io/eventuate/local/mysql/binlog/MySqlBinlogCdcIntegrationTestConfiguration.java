@@ -14,6 +14,10 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.*;
@@ -57,7 +61,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Bean
   @Conditional(MySqlBinlogCondition.class)
   public MySqlBinaryLogClient mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
-                                                   EventuateConfigurationProperties eventuateConfigurationProperties) {
+                                                   EventuateConfigurationProperties eventuateConfigurationProperties,
+                                                   CuratorFramework curatorFramework) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     return new MySqlBinaryLogClient(
@@ -68,7 +73,9 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
+            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath());
   }
 
   @Bean
@@ -161,5 +168,16 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             offsetStore,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy);
+  }
+
+  @Bean
+  public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
+    RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+    CuratorFramework client = CuratorFrameworkFactory.
+            builder().retryPolicy(retryPolicy)
+            .connectString(eventuateLocalZookeperConfigurationProperties.getConnectionString())
+            .build();
+    client.start();
+    return client;
   }
 }

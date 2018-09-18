@@ -6,6 +6,10 @@ import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -15,6 +19,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+import java.util.function.Consumer;
 
 @Configuration
 @EnableAutoConfiguration
@@ -63,13 +68,24 @@ public class PollingIntegrationTestConfiguration {
                                                           EventuateSchema eventuateSchema,
                                                           SourceTableNameSupplier sourceTableNameSupplier) {
     
-    return new PollingCdcProcessor<>(pollingDao,
-            eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
+    return new PollingCdcProcessor<PublishedEvent>(pollingDao,
             pollingDataProvider,
             new BinlogEntryToPublishedEventConverter(),
             dbUrl,
             eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName());
+            sourceTableNameSupplier.getSourceTableName()) {
+      @Override
+      public void start(Consumer<PublishedEvent> publishedEventConsumer) {
+        super.start(publishedEventConsumer);
+        pollingDao.start();
+      }
+
+      @Override
+      public void stop() {
+        pollingDao.stop();
+        super.stop();
+      }
+    };
   }
 
   @Bean
@@ -80,11 +96,27 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDao pollingDao(EventuateConfigurationProperties eventuateConfigurationProperties, DataSource dataSource) {
+  public PollingDao pollingDao(EventuateConfigurationProperties eventuateConfigurationProperties,
+                               DataSource dataSource,
+                               CuratorFramework curatorFramework) {
 
     return new PollingDao(dataSource,
-      eventuateConfigurationProperties.getMaxEventsPerPolling(),
-      eventuateConfigurationProperties.getMaxAttemptsForPolling(),
-      eventuateConfigurationProperties.getPollingRetryIntervalInMilliseconds());
+            eventuateConfigurationProperties.getMaxEventsPerPolling(),
+            eventuateConfigurationProperties.getMaxAttemptsForPolling(),
+            eventuateConfigurationProperties.getPollingRetryIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath());
+  }
+
+  @Bean
+  public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
+    RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+    CuratorFramework client = CuratorFrameworkFactory.
+            builder().retryPolicy(retryPolicy)
+            .connectString(eventuateLocalZookeperConfigurationProperties.getConnectionString())
+            .build();
+    client.start();
+    return client;
   }
 }

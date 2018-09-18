@@ -1,13 +1,12 @@
 package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
-import io.eventuate.local.common.CdcProcessor;
-import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.common.*;
 import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+
+import java.util.function.Consumer;
 
 public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
 
@@ -28,12 +27,23 @@ public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
 
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new PollingCdcProcessor<>(pollingDao,
-            500,
+    return new PollingCdcProcessor<PublishedEvent>(pollingDao,
             pollingDataProvider,
             new BinlogEntryToPublishedEventConverter(),
             dataSourceUrl,
             eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName());
+            sourceTableNameSupplier.getSourceTableName()) {
+      @Override
+      public void start(Consumer consumer) {
+        super.start(consumer);
+        pollingDao.start();
+      }
+
+      @Override
+      public void stop() {
+        pollingDao.stop();
+        super.stop();
+      }
+    };
   }
 }

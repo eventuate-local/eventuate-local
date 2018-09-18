@@ -41,6 +41,5 @@ public abstract class DbLogBasedCdcProcessor<EVENT extends BinLogEvent> implemen
   @Override
   public void stop() {
     offsetStore.stop();
-    dbLogClient.stop();
   }
 }

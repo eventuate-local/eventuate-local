@@ -13,9 +13,6 @@ import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineF
 import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
-import javax.sql.DataSource;
-import java.util.function.Consumer;
-
 public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonCdcPipelineFactory<PollingPipelineProperties, EVENT> {
 
   public AbstractPollingCdcPipelineFactory(CuratorFramework curatorFramework,
@@ -36,20 +33,11 @@ public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEven
 
     PollingDataProvider pollingDataProvider = createPollingDataProvider();
 
-    DataSource dataSource = createDataSource(cdcPipelineProperties);
-
-    PollingDao pollingDao =
-            binlogEntryReaderProvider.getOrCreateClient(cdcPipelineProperties.getDataSourceUrl(),
-                    cdcPipelineProperties.getDataSourceUserName(),
-                    cdcPipelineProperties.getDataSourcePassword(),
-                    () -> createPollingDao(cdcPipelineProperties, dataSource),
-                    c -> {},
-                    c -> {});
+    PollingDao pollingDao = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(dataProducerFactory, createPublishingStrategy());
 
     CdcProcessor<EVENT> cdcProcessor = new PollingCdcProcessor<>(pollingDao,
-            cdcPipelineProperties.getPollingIntervalInMilliseconds(),
             pollingDataProvider,
             createBinlogEntryToEventConverter(),
             cdcPipelineProperties.getDataSourceUrl(),
@@ -57,7 +45,7 @@ public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEven
             createSourceTableNameSupplier(cdcPipelineProperties).getSourceTableName());
 
     EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =
-            createEventTableChangesToAggregateTopicTranslator(cdcPipelineProperties, cdcDataPublisher, cdcProcessor);
+            createEventTableChangesToAggregateTopicTranslator(cdcDataPublisher, cdcProcessor);
 
     return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
   }
@@ -69,12 +57,4 @@ public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEven
   }
 
   protected abstract PollingDataProvider createPollingDataProvider();
-
-  public PollingDao createPollingDao(PollingPipelineProperties pollingPipelineProperties, DataSource dataSource) {
-
-    return new PollingDao(dataSource,
-            pollingPipelineProperties.getMaxEventsPerPolling(),
-            pollingPipelineProperties.getMaxAttemptsForPolling(),
-            pollingPipelineProperties.getPollingRetryIntervalInMilliseconds());
-  }
 }

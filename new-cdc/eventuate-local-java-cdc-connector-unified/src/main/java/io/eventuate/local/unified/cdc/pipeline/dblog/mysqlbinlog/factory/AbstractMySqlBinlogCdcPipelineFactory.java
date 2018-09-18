@@ -52,13 +52,7 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
 
-    MySqlBinaryLogClient mySqlBinaryLogClient =
-            binlogEntryReaderProvider.getOrCreateClient(cdcPipelineProperties.getDataSourceUrl(),
-                    cdcPipelineProperties.getCdcDbUserName(),
-                    cdcPipelineProperties.getCdcDbPassword(),
-                    () -> createMySqlBinaryLogClient(cdcPipelineProperties),
-                    MySqlBinaryLogClient::start,
-                    MySqlBinaryLogClient::stop);
+    MySqlBinaryLogClient mySqlBinaryLogClient = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 
@@ -75,23 +69,9 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
             eventuateSchema);
 
     EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =
-            createEventTableChangesToAggregateTopicTranslator(cdcPipelineProperties, cdcDataPublisher, cdcProcessor);
+            createEventTableChangesToAggregateTopicTranslator(cdcDataPublisher, cdcProcessor);
 
     return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
-  }
-
-  protected MySqlBinaryLogClient createMySqlBinaryLogClient(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties) {
-
-    JdbcUrl jdbcUrl = JdbcUrlParser.parse(mySqlBinlogCdcPipelineProperties.getDataSourceUrl());
-
-    return new MySqlBinaryLogClient(mySqlBinlogCdcPipelineProperties.getCdcDbUserName(),
-            mySqlBinlogCdcPipelineProperties.getCdcDbPassword(),
-            jdbcUrl.getHost(),
-            jdbcUrl.getPort(),
-            mySqlBinlogCdcPipelineProperties.getBinlogClientId(),
-            mySqlBinlogCdcPipelineProperties.getMySqlBinLogClientName(),
-            mySqlBinlogCdcPipelineProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            mySqlBinlogCdcPipelineProperties.getMaxAttemptsForBinlogConnection());
   }
 
   protected DebeziumBinlogOffsetKafkaStore createDebeziumBinlogOffsetKafkaStore(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties,

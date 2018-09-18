@@ -66,9 +66,4 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcP
       throw new RuntimeException(e);
     }
   }
-
-  public void stop() {
-    dbLogClient.stop();
-    offsetStore.stop();
-  }
 }

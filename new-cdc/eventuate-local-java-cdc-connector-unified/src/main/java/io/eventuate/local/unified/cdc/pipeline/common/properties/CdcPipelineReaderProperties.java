@@ -5,10 +5,10 @@ import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.springframework.util.Assert;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CdcPipelineProperties {
+public class CdcPipelineReaderProperties {
   private String type;
 
-  private String reader;
+  private String name;
   private String dataSourceUrl;
   private String dataSourceUserName;
   private String dataSourcePassword;
@@ -18,8 +18,8 @@ public class CdcPipelineProperties {
   private String sourceTableName = null;
 
   public void validate() {
+    Assert.notNull(name, "name must not be null");
     Assert.notNull(type, "type must not be null");
-    Assert.notNull(reader, "reader must not be null");
     Assert.notNull(dataSourceUrl, "dataSourceUrl must not be null");
     Assert.notNull(dataSourceUserName, "dataSourceUserName must not be null");
     Assert.notNull(dataSourcePassword, "dataSourcePassword must not be null");
@@ -27,12 +27,12 @@ public class CdcPipelineProperties {
     Assert.notNull(leadershipLockPath, "leadershipLockPath must not be null");
   }
 
-  public String getReader() {
-    return reader;
+  public String getName() {
+    return name;
   }
 
-  public void setReader(String reader) {
-    this.reader = reader;
+  public void setName(String name) {
+    this.name = name;
   }
 
   public String getType() {

@@ -12,6 +12,7 @@ public class PollingPropertyValidationTest extends CommonPropertyValidationTest 
   @Test
   public void testPollingProperties() throws Exception {
     PropertyBuilder propertyBuilder = new PropertyBuilder();
+
     assertExceptionMessage(propertyBuilder.toString(), PostgresWalCdcPipelineProperties.class, "type must not be null");
 
     propertyBuilder.addString("type", PollingCdcPipelineFactory.TYPE);

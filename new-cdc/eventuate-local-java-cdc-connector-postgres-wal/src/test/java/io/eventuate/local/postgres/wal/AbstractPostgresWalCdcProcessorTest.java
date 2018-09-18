@@ -42,6 +42,12 @@ public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTe
         super.start(publishedEventConsumer);
         postgresWalClient.start();
       }
+
+      @Override
+      public void stop() {
+        postgresWalClient.stop();
+        super.stop();
+      }
     };
   }
 

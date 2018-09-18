@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 public class PostgresWalDefaultCdcPipelineFactoryConfiguration {
   @Profile("PostgresWal")
-  @Bean("default")
+  @Bean("defaultCdcPipelineFactory")
   public CdcPipelineFactory defaultPostgresWalCdcPipelineFactory(CuratorFramework curatorFramework,
                                                                  DataProducerFactory dataProducerFactory,
                                                                  EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,

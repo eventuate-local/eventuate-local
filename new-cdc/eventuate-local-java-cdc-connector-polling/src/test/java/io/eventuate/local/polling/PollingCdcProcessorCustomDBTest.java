@@ -39,7 +39,6 @@ public class PollingCdcProcessorCustomDBTest extends AbstractPollingCdcProcessor
                                                             SourceTableNameSupplier sourceTableNameSupplier) {
 
       return new PollingCdcProcessor<>(pollingDao,
-              eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
               pollingDataProvider,
               new BinlogEntryToPublishedEventConverter(),
               dbUrl,

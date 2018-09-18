@@ -10,6 +10,10 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.testutil.SqlScriptEditor;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -50,7 +54,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                              @Value("${spring.datasource.username}") String dbUserName,
                                              @Value("${spring.datasource.password}") String dbPassword,
                                              EventuateConfigurationProperties eventuateConfigurationProperties,
-                                             SourceTableNameSupplier sourceTableNameSupplier) {
+                                             CuratorFramework curatorFramework) {
 
     return new PostgresWalClient(dbUrl,
             dbUserName,
@@ -59,7 +63,9 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getPostgresReplicationSlotName());
+            eventuateConfigurationProperties.getPostgresReplicationSlotName(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath());
   }
 
   @Bean
@@ -139,5 +145,21 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
       return sqlList.stream().map(s -> s.replace("eventuate", "custom")).collect(Collectors.toList());
     };
+  }
+
+  @Bean
+  public EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties() {
+    return new EventuateLocalZookeperConfigurationProperties();
+  }
+
+  @Bean
+  public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
+    RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+    CuratorFramework client = CuratorFrameworkFactory.
+            builder().retryPolicy(retryPolicy)
+            .connectString(eventuateLocalZookeperConfigurationProperties.getConnectionString())
+            .build();
+    client.start();
+    return client;
   }
 }

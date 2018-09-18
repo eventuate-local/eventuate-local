@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 public class PollingDefaultCdcPipelineFactoryConfiguration {
   @Profile("EventuatePolling")
-  @Bean("default")
+  @Bean("defaultCdcPipelineFactory")
   public CdcPipelineFactory defaultPollingCdcPipelineFactory(CuratorFramework curatorFramework,
                                                              DataProducerFactory dataProducerFactory,
                                                              BinlogEntryReaderProvider binlogEntryReaderProvider) {

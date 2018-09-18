@@ -51,6 +51,12 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
         super.start(consumer);
         mySqlBinaryLogClient.start();
       }
+
+      @Override
+      public void stop() {
+        mySqlBinaryLogClient.stop();
+        super.stop();
+      }
     };
   }
 

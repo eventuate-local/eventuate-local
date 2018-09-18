@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class PostgresWalCdcPipelineFactoryConfiguration {
-  @Bean("eventuateLocalPostgresWal")
+  @Bean("eventuateLocalPostgresWalCdcPipelineFactory")
   public CdcPipelineFactory postgresWalCdcPipelineFactory(CuratorFramework curatorFramework,
                                                           DataProducerFactory dataProducerFactory,
                                                           EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,

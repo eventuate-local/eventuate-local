@@ -15,6 +15,12 @@ public class CommonPropertyValidationTest {
 
   protected  <PROPERTIES extends CdcPipelineProperties> void testCommonRequiredProperties(Class<PROPERTIES> propertyClass,
                                                                                           PropertyBuilder propertyBuilder) throws Exception {
+
+    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "reader must not be null");
+    propertyBuilder.addString("reader", "reader1");
+
+    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "dataSourceUrl must not be null");
+
     propertyBuilder.addString("dataSourceUrl", "jdbc:correctdb://localhost/eventuate");
     assertExceptionMessage(propertyBuilder.toString(), propertyClass, "dataSourceUserName must not be null");
 

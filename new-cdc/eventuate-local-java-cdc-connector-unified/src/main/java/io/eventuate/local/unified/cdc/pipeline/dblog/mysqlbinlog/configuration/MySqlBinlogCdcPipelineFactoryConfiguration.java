@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MySqlBinlogCdcPipelineFactoryConfiguration {
-  @Bean("eventuateLocalMySqlBinlog")
+  @Bean("eventuateLocalMySqlBinlogCdcPipelineFactory")
   public CdcPipelineFactory mySqlBinlogCdcPipelineFactory(CuratorFramework curatorFramework,
                                                           DataProducerFactory dataProducerFactory,
                                                           EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,

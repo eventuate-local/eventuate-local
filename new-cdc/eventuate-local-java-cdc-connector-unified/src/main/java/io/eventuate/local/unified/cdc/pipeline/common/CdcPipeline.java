@@ -15,10 +15,6 @@ public class CdcPipeline<EVENT extends BinLogEvent> {
   }
 
   public void stop() {
-    try {
-      publishedEventEventTableChangesToAggregateTopicTranslator.stop();
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    publishedEventEventTableChangesToAggregateTopicTranslator.stop();
   }
 }

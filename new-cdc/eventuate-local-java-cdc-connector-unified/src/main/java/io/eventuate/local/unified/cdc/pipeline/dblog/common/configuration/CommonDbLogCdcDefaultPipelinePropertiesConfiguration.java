@@ -2,6 +2,7 @@ package io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration;
 
 import io.eventuate.local.unified.cdc.pipeline.common.configuration.CommonCdcDefaultPipelinePropertiesConfiguration;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineReaderProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -12,5 +13,12 @@ public class CommonDbLogCdcDefaultPipelinePropertiesConfiguration extends Common
     commonDbLogCdcPipelineProperties.setDbHistoryTopicName(eventuateConfigurationProperties.getDbHistoryTopicName());
     commonDbLogCdcPipelineProperties.setMaxAttemptsForBinlogConnection(eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
     commonDbLogCdcPipelineProperties.setMySqlBinLogClientName(eventuateConfigurationProperties.getMySqlBinLogClientName());
+  }
+
+  protected void initCommonDbLogCdcPipelineReaderProperties(CommonDbLogCdcPipelineReaderProperties commonDbLogCdcPipelineReaderProperties) {
+    commonDbLogCdcPipelineReaderProperties.setBinlogConnectionTimeoutInMilliseconds(eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds());
+    commonDbLogCdcPipelineReaderProperties.setDbHistoryTopicName(eventuateConfigurationProperties.getDbHistoryTopicName());
+    commonDbLogCdcPipelineReaderProperties.setMaxAttemptsForBinlogConnection(eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
+    commonDbLogCdcPipelineReaderProperties.setMySqlBinLogClientName(eventuateConfigurationProperties.getMySqlBinLogClientName());
   }
 }

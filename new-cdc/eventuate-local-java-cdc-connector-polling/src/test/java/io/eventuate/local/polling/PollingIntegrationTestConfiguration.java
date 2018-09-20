@@ -71,7 +71,6 @@ public class PollingIntegrationTestConfiguration {
     return new PollingCdcProcessor<PublishedEvent>(pollingDao,
             pollingDataProvider,
             new BinlogEntryToPublishedEventConverter(),
-            dbUrl,
             eventuateSchema,
             sourceTableNameSupplier.getSourceTableName()) {
       @Override

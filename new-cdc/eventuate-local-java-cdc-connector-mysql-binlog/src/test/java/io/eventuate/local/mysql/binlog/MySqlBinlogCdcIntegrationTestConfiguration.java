@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import javax.xml.crypto.Data;
 import java.util.function.Consumer;
 
 @Configuration
@@ -61,6 +62,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Bean
   @Conditional(MySqlBinlogCondition.class)
   public MySqlBinaryLogClient mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
+                                                   DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
                                                    CuratorFramework curatorFramework) {
 
@@ -68,8 +70,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
     return new MySqlBinaryLogClient(
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
-            jdbcUrl.getHost(),
-            jdbcUrl.getPort(),
+            dataSourceURL,
+            dataSource,
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
@@ -128,8 +130,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             offsetStore,
             debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
-            dataSource,
-            dataSourceUrl,
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {
       @Override

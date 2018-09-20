@@ -13,17 +13,13 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcP
 
   private MySqlBinaryLogClient mySqlBinaryLogClient;
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
-  private String defaultDataBase;
   private EventuateSchema eventuateSchema;
-  private DataSource dataSource;
   private String sourceTableName;
 
   public MySQLCdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient,
                            OffsetStore offsetStore,
                            DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore,
                            BinlogEntryToEventConverter binlogEntryToEventConverter,
-                           DataSource dataSource,
-                           String datasourceUrl,
                            String sourceTableName,
                            EventuateSchema eventuateSchema) {
 
@@ -31,9 +27,6 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcP
 
     this.mySqlBinaryLogClient = mySqlBinaryLogClient;
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
-
-    this.dataSource = dataSource;
-    this.defaultDataBase = JdbcUrlParser.parse(datasourceUrl).getDatabase();
     this.eventuateSchema = eventuateSchema;
     this.sourceTableName = sourceTableName;
   }
@@ -53,9 +46,9 @@ public class MySQLCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcP
 
   protected void process(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset) {
     try {
-      MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(defaultDataBase,
+      MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(
               eventuateSchema,
-              new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema),
+              new MySqlBinlogEntryExtractor(mySqlBinaryLogClient.getDataSource(), sourceTableName, eventuateSchema),
               sourceTableName,
               createBinlogConsumer(eventConsumer, startingBinlogFileOffset));
 

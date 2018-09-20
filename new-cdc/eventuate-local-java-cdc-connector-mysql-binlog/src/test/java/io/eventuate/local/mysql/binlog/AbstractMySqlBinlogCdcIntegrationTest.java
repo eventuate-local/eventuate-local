@@ -48,8 +48,8 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     MySqlBinaryLogClient mySqlBinaryLogClient = new MySqlBinaryLogClient(eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
-            jdbcUrl.getHost(),
-            jdbcUrl.getPort(),
+            dataSourceURL,
+            dataSource,
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
@@ -66,8 +66,7 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
     MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor = new MySqlBinlogEntryExtractor(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
 
-    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(JdbcUrlParser.parse(dataSourceURL).getDatabase(),
-            eventuateSchema,
+    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(eventuateSchema,
             mySqlBinlogEntryExtractor,
             sourceTableNameSupplier.getSourceTableName(),
             consumer);

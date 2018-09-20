@@ -118,8 +118,6 @@ public class MySQLClientNameTest extends AbstractCdcTest {
             createDatabaseOffsetKafkaStore(mySqlBinaryLogClient),
             debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
-            dataSource,
-            dataSourceURL,
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema);
   }
@@ -134,12 +132,11 @@ public class MySQLClientNameTest extends AbstractCdcTest {
   }
 
   private MySqlBinaryLogClient createMySqlBinaryLogClient() {
-    JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     return new MySqlBinaryLogClient(
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
-            jdbcUrl.getHost(),
-            jdbcUrl.getPort(),
+            dataSourceURL,
+            dataSource,
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),

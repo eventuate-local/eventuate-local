@@ -11,14 +11,12 @@ import java.util.function.Consumer;
 public class PostgresWalCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcProcessor<EVENT> {
 
   private PostgresWalClient postgresWalClient;
-  private String dataSourceUrl;
   private String sourceTableName;
   private EventuateSchema eventuateSchema;
 
   public PostgresWalCdcProcessor(PostgresWalClient postgresWalClient,
                                  OffsetStore offsetStore,
                                  BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
-                                 String dataSourceUrl,
                                  String sourceTableName,
                                  EventuateSchema eventuateSchema) {
 
@@ -26,7 +24,6 @@ public class PostgresWalCdcProcessor<EVENT extends BinLogEvent> extends DbLogBas
 
     this.postgresWalClient = postgresWalClient;
 
-    this.dataSourceUrl = dataSourceUrl;
     this.sourceTableName = sourceTableName;
     this.eventuateSchema = eventuateSchema;
   }
@@ -36,7 +33,7 @@ public class PostgresWalCdcProcessor<EVENT extends BinLogEvent> extends DbLogBas
     Optional<BinlogFileOffset> startingBinlogFileOffset = offsetStore.getLastBinlogFileOffset();
 
     try {
-      PostgresWalBinlogEntryHandler binlogEntryHandler = new PostgresWalBinlogEntryHandler(JdbcUrlParser.parse(dataSourceUrl).getDatabase(),
+      PostgresWalBinlogEntryHandler binlogEntryHandler = new PostgresWalBinlogEntryHandler(
               eventuateSchema,
               sourceTableName,
               createBinlogConsumer(eventConsumer, startingBinlogFileOffset));

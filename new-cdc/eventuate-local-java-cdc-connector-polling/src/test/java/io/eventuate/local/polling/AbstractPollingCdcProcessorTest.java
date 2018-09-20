@@ -30,7 +30,6 @@ public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
     return new PollingCdcProcessor<PublishedEvent>(pollingDao,
             pollingDataProvider,
             new BinlogEntryToPublishedEventConverter(),
-            dataSourceUrl,
             eventuateSchema,
             sourceTableNameSupplier.getSourceTableName()) {
       @Override

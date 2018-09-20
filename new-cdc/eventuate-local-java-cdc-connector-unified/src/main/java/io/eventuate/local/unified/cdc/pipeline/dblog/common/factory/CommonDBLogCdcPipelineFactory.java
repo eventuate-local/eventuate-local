@@ -11,7 +11,7 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.properties.CommonDbLogCdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -42,7 +42,8 @@ public abstract class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbL
 
   protected abstract OffsetStore createOffsetStore(PROPERTIES properties,
                                                    DataSource dataSource,
-                                                   EventuateSchema eventuateSchema);
+                                                   EventuateSchema eventuateSchema,
+                                                   String clientName);
 
   protected CdcDataPublisher<EVENT> createCdcDataPublisher(OffsetStore offsetStore) {
 

@@ -42,17 +42,15 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
 
   @Override
   public CdcPipeline<EVENT> create(MySqlBinlogCdcPipelineProperties cdcPipelineProperties) {
-    DataSource dataSource = createDataSource(cdcPipelineProperties);
+    MySqlBinaryLogClient mySqlBinaryLogClient = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
 
-    OffsetStore offsetStore = createOffsetStore(cdcPipelineProperties, dataSource, eventuateSchema);
+    OffsetStore offsetStore = createOffsetStore(cdcPipelineProperties, mySqlBinaryLogClient.getDataSource(), eventuateSchema, mySqlBinaryLogClient.getName());
 
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(offsetStore);
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
-
-    MySqlBinaryLogClient mySqlBinaryLogClient = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 
@@ -63,8 +61,6 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
             offsetStore,
             debeziumBinlogOffsetKafkaStore,
             binlogEntryToEventConverter,
-            dataSource,
-            cdcPipelineProperties.getDataSourceUrl(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema);
 

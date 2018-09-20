@@ -1,11 +1,11 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal;
 
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogPropertyValidationTest;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogPipelinePropertyValidationTest;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.PostgresWalCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
 import org.junit.Test;
 
-public class PostgresWalPropertyValidationTest extends CommonDbLogPropertyValidationTest {
+public class PostgresWalPipelinePropertyValidationTest extends CommonDbLogPipelinePropertyValidationTest {
   @Test
   public void testPostgresWalProperties() throws Exception {
     PropertyBuilder propertyBuilder = new PropertyBuilder();

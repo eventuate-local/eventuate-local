@@ -42,8 +42,6 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
             offsetStore,
             debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
-            dataSource,
-            dataSourceUrl,
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {
       @Override

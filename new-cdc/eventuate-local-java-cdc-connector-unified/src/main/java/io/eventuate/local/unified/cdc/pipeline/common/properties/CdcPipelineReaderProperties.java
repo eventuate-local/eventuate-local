@@ -5,7 +5,7 @@ import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.springframework.util.Assert;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CdcPipelineReaderProperties {
+public class CdcPipelineReaderProperties implements ValidatableProperties {
   private String type;
 
   private String name;
@@ -14,12 +14,11 @@ public class CdcPipelineReaderProperties {
   private String dataSourcePassword;
   private String dataSourceDriverClassName;
   private String leadershipLockPath;
-  private String eventuateDatabaseSchema = null;
-  private String sourceTableName = null;
 
+  @Override
   public void validate() {
-    Assert.notNull(name, "name must not be null");
     Assert.notNull(type, "type must not be null");
+    Assert.notNull(name, "name must not be null");
     Assert.notNull(dataSourceUrl, "dataSourceUrl must not be null");
     Assert.notNull(dataSourceUserName, "dataSourceUserName must not be null");
     Assert.notNull(dataSourcePassword, "dataSourcePassword must not be null");
@@ -50,15 +49,6 @@ public class CdcPipelineReaderProperties {
   public void setLeadershipLockPath(String leadershipLockPath) {
     this.leadershipLockPath = leadershipLockPath;
   }
-
-  public String getEventuateDatabaseSchema() {
-    return eventuateDatabaseSchema;
-  }
-
-  public void setEventuateDatabaseSchema(String eventuateDatabaseSchema) {
-    this.eventuateDatabaseSchema = eventuateDatabaseSchema;
-  }
-
 
   public String getDataSourceUrl() {
     return dataSourceUrl;
@@ -95,13 +85,5 @@ public class CdcPipelineReaderProperties {
   @Override
   public String toString() {
     return ReflectionToStringBuilder.toString(this);
-  }
-
-  public String getSourceTableName() {
-    return sourceTableName;
-  }
-
-  public void setSourceTableName(String sourceTableName) {
-    this.sourceTableName = sourceTableName;
   }
 }

@@ -11,13 +11,12 @@ import java.util.function.Consumer;
 public class MySqlBinlogEntryHandler extends BinlogEntryHandler {
   private MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor;
 
-  public MySqlBinlogEntryHandler(String defaultDatabase,
-                                 EventuateSchema eventuateSchema,
+  public MySqlBinlogEntryHandler(EventuateSchema eventuateSchema,
                                  MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor,
                                  String sourceTableName,
                                  Consumer<BinlogEntry> eventConsumer) {
 
-    super(defaultDatabase, eventuateSchema, sourceTableName, eventConsumer);
+    super(eventuateSchema, sourceTableName, eventConsumer);
 
     this.mySqlBinlogEntryExtractor = mySqlBinlogEntryExtractor;
   }

@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Primary;
 
+import javax.sql.DataSource;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -53,12 +54,15 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   public PostgresWalClient postgresWalClient(@Value("${spring.datasource.url}") String dbUrl,
                                              @Value("${spring.datasource.username}") String dbUserName,
                                              @Value("${spring.datasource.password}") String dbPassword,
+                                             DataSource dataSource,
                                              EventuateConfigurationProperties eventuateConfigurationProperties,
                                              CuratorFramework curatorFramework) {
 
     return new PostgresWalClient(dbUrl,
             dbUserName,
             dbPassword,
+            dataSource,
+            eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
@@ -94,7 +98,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
     return new PostgresWalCdcProcessor<PublishedEvent>(postgresWalClient,
             offsetStore,
             new BinlogEntryToPublishedEventConverter(),
-            dbUrl,
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {
       @Override

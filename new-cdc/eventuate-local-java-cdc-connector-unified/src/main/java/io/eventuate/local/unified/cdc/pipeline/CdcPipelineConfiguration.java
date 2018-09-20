@@ -117,8 +117,12 @@ public class CdcPipelineConfiguration {
 
   private void createStartSaveCdcDefaultPipelineReader(CdcPipelineReaderProperties cdcDefaultPipelineReaderProperties) {
     cdcDefaultPipelineReaderProperties.validate();
+
     BinlogEntryReader binlogEntryReader = defaultCdcPipelineReaderFactory.create(cdcDefaultPipelineReaderProperties);
-    binlogEntryReaderProvider.addReader(cdcDefaultPipelineReaderProperties.getName(), binlogEntryReader);
+
+    binlogEntryReaderProvider.addReader(cdcDefaultPipelineReaderProperties.getName(),
+            cdcDefaultPipelineReaderProperties.getType(),
+            binlogEntryReader);
   }
 
   private CdcPipeline createCdcPipeline(Map<String, Object> properties) {
@@ -126,7 +130,8 @@ public class CdcPipelineConfiguration {
     CdcPipelineProperties cdcPipelineProperties = objectMapper.convertValue(properties, CdcPipelineProperties.class);
     cdcPipelineProperties.validate();
 
-    CdcPipelineFactory<? extends CdcPipelineProperties, PublishedEvent> cdcPipelineFactory = findCdcPipelineFactory(cdcPipelineProperties.getType());
+    CdcPipelineFactory<? extends CdcPipelineProperties, PublishedEvent> cdcPipelineFactory =
+            findCdcPipelineFactory(cdcPipelineProperties.getType(), binlogEntryReaderProvider.getReaderType(cdcPipelineProperties.getReader()));
 
     CdcPipelineProperties exactCdcPipelineProperties = objectMapper.convertValue(properties, cdcPipelineFactory.propertyClass());
     exactCdcPipelineProperties.validate();
@@ -146,16 +151,17 @@ public class CdcPipelineConfiguration {
     exactCdcPipelineReaderProperties.validate();
 
     binlogEntryReaderProvider.addReader(cdcPipelineReaderProperties.getName(),
+            cdcPipelineReaderProperties.getType(),
             ((CdcPipelineReaderFactory)cdcPipelineReaderFactory).create(exactCdcPipelineReaderProperties));
   }
 
-  private CdcPipelineFactory<? extends CdcPipelineProperties, PublishedEvent> findCdcPipelineFactory(String type) {
+  private CdcPipelineFactory<? extends CdcPipelineProperties, PublishedEvent> findCdcPipelineFactory(String type, String readerType) {
     return cdcPipelineFactories
             .stream()
-            .filter(factory ->  factory.supports(type))
+            .filter(factory ->  factory.supports(type, readerType))
             .findAny()
             .orElseThrow(() ->
-                    new RuntimeException(String.format("factory not found for type %s",
+                    new RuntimeException(String.format("reader factory not found for type %s",
                             type)));
   }
 
@@ -165,7 +171,7 @@ public class CdcPipelineConfiguration {
             .filter(factory ->  factory.supports(type))
             .findAny()
             .orElseThrow(() ->
-                    new RuntimeException(String.format("factory not found for type %s",
+                    new RuntimeException(String.format("pipeline factory not found for type %s",
                             type)));
   }
 }

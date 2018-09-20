@@ -28,13 +28,10 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonCdcPipelineReader
 
   @Override
   public MySqlBinaryLogClient create(MySqlBinlogCdcPipelineReaderProperties mySqlBinlogCdcPipelineReaderProperties) {
-
-    JdbcUrl jdbcUrl = JdbcUrlParser.parse(mySqlBinlogCdcPipelineReaderProperties.getDataSourceUrl());
-
     return new MySqlBinaryLogClient(mySqlBinlogCdcPipelineReaderProperties.getCdcDbUserName(),
             mySqlBinlogCdcPipelineReaderProperties.getCdcDbPassword(),
-            jdbcUrl.getHost(),
-            jdbcUrl.getPort(),
+            mySqlBinlogCdcPipelineReaderProperties.getDataSourceUrl(),
+            createDataSource(mySqlBinlogCdcPipelineReaderProperties),
             mySqlBinlogCdcPipelineReaderProperties.getBinlogClientId(),
             mySqlBinlogCdcPipelineReaderProperties.getMySqlBinLogClientName(),
             mySqlBinlogCdcPipelineReaderProperties.getBinlogConnectionTimeoutInMilliseconds(),

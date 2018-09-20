@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -28,7 +29,10 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
   private String dbPassword;
 
   @Autowired
-  EventuateJdbcAccess eventuateJdbcAccess;
+  private DataSource dataSource;
+
+  @Autowired
+  private EventuateJdbcAccess eventuateJdbcAccess;
 
   @Autowired
   private EventuateConfigurationProperties eventuateConfigurationProperties;
@@ -47,6 +51,8 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
     PostgresWalClient postgresWalClient = new PostgresWalClient(dataSourceURL,
             dbUserName,
             dbPassword,
+            dataSource,
+            eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
@@ -61,8 +67,7 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
 
     BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
 
-    PostgresWalBinlogEntryHandler binlogEntryHandler = new PostgresWalBinlogEntryHandler(JdbcUrlParser.parse(dataSourceURL).getDatabase(),
-            eventuateSchema,
+    PostgresWalBinlogEntryHandler binlogEntryHandler = new PostgresWalBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
             binlogEntry -> publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));
 

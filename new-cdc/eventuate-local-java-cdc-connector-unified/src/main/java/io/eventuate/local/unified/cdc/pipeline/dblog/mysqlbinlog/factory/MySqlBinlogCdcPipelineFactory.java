@@ -18,7 +18,7 @@ import org.apache.curator.framework.CuratorFramework;
 import javax.sql.DataSource;
 
 public class MySqlBinlogCdcPipelineFactory extends AbstractMySqlBinlogCdcPipelineFactory<PublishedEvent> {
-  public static final String TYPE = "eventuate-local-mysql-binlog";
+  public static final String TYPE = "eventuate-local";
 
   public MySqlBinlogCdcPipelineFactory(CuratorFramework curatorFramework,
                                        DataProducerFactory dataProducerFactory,
@@ -38,8 +38,8 @@ public class MySqlBinlogCdcPipelineFactory extends AbstractMySqlBinlogCdcPipelin
 
 
   @Override
-  public boolean supports(String type) {
-    return TYPE.equals(type);
+  public boolean supports(String type, String readerType) {
+    return TYPE.equals(type) && MySqlBinlogCdcPipelineReaderFactory.TYPE.equals(readerType);
   }
 
   @Override
@@ -55,10 +55,11 @@ public class MySqlBinlogCdcPipelineFactory extends AbstractMySqlBinlogCdcPipelin
   @Override
   protected OffsetStore createOffsetStore(MySqlBinlogCdcPipelineProperties properties,
                                           DataSource dataSource,
-                                          EventuateSchema eventuateSchema) {
+                                          EventuateSchema eventuateSchema,
+                                          String clientName) {
 
     return new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
-            properties.getMySqlBinLogClientName(),
+            clientName,
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);

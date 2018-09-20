@@ -30,6 +30,8 @@ public class PostgresWalCdcPipelineReaderFactory extends CommonCdcPipelineReader
     return new PostgresWalClient(postgresWalCdcPipelineReaderProperties.getDataSourceUrl(),
             postgresWalCdcPipelineReaderProperties.getDataSourceUserName(),
             postgresWalCdcPipelineReaderProperties.getDataSourcePassword(),
+            createDataSource(postgresWalCdcPipelineReaderProperties),
+            postgresWalCdcPipelineReaderProperties.getMySqlBinLogClientName(),
             postgresWalCdcPipelineReaderProperties.getBinlogConnectionTimeoutInMilliseconds(),
             postgresWalCdcPipelineReaderProperties.getMaxAttemptsForBinlogConnection(),
             postgresWalCdcPipelineReaderProperties.getPostgresWalIntervalInMilliseconds(),

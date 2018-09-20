@@ -11,14 +11,13 @@ public class PollingEntryHandler extends BinlogEntryHandler {
   private String publishedField;
   private String idField;
 
-  public PollingEntryHandler(String defaultDatabase,
-                             EventuateSchema eventuateSchema,
+  public PollingEntryHandler(EventuateSchema eventuateSchema,
                              String sourceTableName,
                              Consumer<BinlogEntry> eventConsumer,
                              String publishedField,
                              String idField) {
 
-    super(defaultDatabase, eventuateSchema, sourceTableName, eventConsumer);
+    super(eventuateSchema, sourceTableName, eventConsumer);
 
     this.publishedField = publishedField;
     this.idField = idField;
@@ -32,20 +31,12 @@ public class PollingEntryHandler extends BinlogEntryHandler {
     eventConsumer.accept(binlogEntry);
   }
 
-  public String getDefaultDatabase() {
-    return defaultDatabase;
-  }
-
   public EventuateSchema getEventuateSchema() {
     return eventuateSchema;
   }
 
   public String getSourceTableName() {
     return sourceTableName;
-  }
-
-  public Consumer<BinlogEntry> getEventConsumer() {
-    return eventConsumer;
   }
 
   public String getPublishedField() {

@@ -1,23 +1,19 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration;
 
 import io.eventuate.local.unified.cdc.pipeline.common.configuration.CommonCdcDefaultPipelinePropertiesConfiguration;
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineProperties;
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineReaderProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.properties.CommonDbLogCdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.properties.CommonDbLogCdcPipelineReaderProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CommonDbLogCdcDefaultPipelinePropertiesConfiguration extends CommonCdcDefaultPipelinePropertiesConfiguration {
 
   protected void initCommonDbLogCdcPipelineProperties(CommonDbLogCdcPipelineProperties commonDbLogCdcPipelineProperties) {
-    commonDbLogCdcPipelineProperties.setBinlogConnectionTimeoutInMilliseconds(eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds());
     commonDbLogCdcPipelineProperties.setDbHistoryTopicName(eventuateConfigurationProperties.getDbHistoryTopicName());
-    commonDbLogCdcPipelineProperties.setMaxAttemptsForBinlogConnection(eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
-    commonDbLogCdcPipelineProperties.setMySqlBinLogClientName(eventuateConfigurationProperties.getMySqlBinLogClientName());
   }
 
   protected void initCommonDbLogCdcPipelineReaderProperties(CommonDbLogCdcPipelineReaderProperties commonDbLogCdcPipelineReaderProperties) {
     commonDbLogCdcPipelineReaderProperties.setBinlogConnectionTimeoutInMilliseconds(eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds());
-    commonDbLogCdcPipelineReaderProperties.setDbHistoryTopicName(eventuateConfigurationProperties.getDbHistoryTopicName());
     commonDbLogCdcPipelineReaderProperties.setMaxAttemptsForBinlogConnection(eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
     commonDbLogCdcPipelineReaderProperties.setMySqlBinLogClientName(eventuateConfigurationProperties.getMySqlBinLogClientName());
   }

@@ -31,22 +31,15 @@ public class CommonCdcDefaultPipelinePropertiesConfiguration {
   protected void initCdcPipelineProperties(CdcPipelineProperties cdcPipelineProperties) {
     cdcPipelineProperties.setType("default");
     cdcPipelineProperties.setReader("default");
-    cdcPipelineProperties.setDataSourceUrl(dataSourceURL);
-    cdcPipelineProperties.setDataSourceUserName(dataSourceUserName);
-    cdcPipelineProperties.setDataSourcePassword(dataSourcePassword);
-    cdcPipelineProperties.setDataSourceDriverClassName(dataSourceDriverClassName);
-    cdcPipelineProperties.setLeadershipLockPath(eventuateConfigurationProperties.getLeadershipLockPath());
     cdcPipelineProperties.setEventuateDatabaseSchema(eventuateDataBaseSchema);
   }
 
   protected void initCdcPipelineReaderProperties(CdcPipelineReaderProperties cdcPipelineReaderProperties) {
-    cdcPipelineReaderProperties.setType("default");
     cdcPipelineReaderProperties.setName("default");
     cdcPipelineReaderProperties.setDataSourceUrl(dataSourceURL);
     cdcPipelineReaderProperties.setDataSourceUserName(dataSourceUserName);
     cdcPipelineReaderProperties.setDataSourcePassword(dataSourcePassword);
     cdcPipelineReaderProperties.setDataSourceDriverClassName(dataSourceDriverClassName);
     cdcPipelineReaderProperties.setLeadershipLockPath(eventuateConfigurationProperties.getLeadershipLockPath());
-    cdcPipelineReaderProperties.setEventuateDatabaseSchema(eventuateDataBaseSchema);
   }
 }

@@ -3,6 +3,7 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.EventuateLeaderSelectorListener;
+import io.eventuate.local.common.JdbcUrlParser;
 import io.eventuate.local.db.log.common.DbLogClient;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
@@ -13,6 +14,7 @@ import org.postgresql.replication.PGReplicationStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.Connection;
@@ -30,6 +32,9 @@ public class PostgresWalClient implements DbLogClient {
   private String url;
   private String user;
   private String password;
+  private DataSource dataSource;
+  private String name;
+  private String defaultDatabase;
   private PostgresWalBinlogEntryExtractor postgresWalBinlogEntryExtractor;
   private int walIntervalInMilliseconds;
   private int connectionTimeoutInMilliseconds;
@@ -50,6 +55,8 @@ public class PostgresWalClient implements DbLogClient {
   public PostgresWalClient(String url,
                            String user,
                            String password,
+                           DataSource dataSource,
+                           String clientName,
                            int walIntervalInMilliseconds,
                            int connectionTimeoutInMilliseconds,
                            int maxAttemptsForBinlogConnection,
@@ -60,15 +67,25 @@ public class PostgresWalClient implements DbLogClient {
     this.url = url;
     this.user = user;
     this.password = password;
+    this.dataSource = dataSource;
+    name = clientName;
+    this.defaultDatabase = JdbcUrlParser.parse(url).getDatabase();
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
     this.replicationStatusIntervalInMilliseconds = replicationStatusIntervalInMilliseconds;
     this.replicationSlotName = replicationSlotName;
     this.postgresWalBinlogEntryExtractor = new PostgresWalBinlogEntryExtractor();
-
     this.curatorFramework = curatorFramework;
     this.leadershipLockPath = leadershipLockPath;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public DataSource getDataSource() {
+    return dataSource;
   }
 
   public void addBinlogEntryHandler(PostgresWalBinlogEntryHandler binlogEntryHandler) {
@@ -172,7 +189,7 @@ public class PostgresWalClient implements DbLogClient {
       binlogEntryHandlers.forEach(binlogEntryHandler -> {
         List<PostgresWalChange> filteredChanges = inserts
                 .stream()
-                .filter(change -> binlogEntryHandler.isFor(change.getSchema(), change.getTable()))
+                .filter(change -> binlogEntryHandler.isFor(change.getSchema(), change.getTable(), defaultDatabase))
                 .collect(Collectors.toList());
 
         postgresWalBinlogEntryExtractor

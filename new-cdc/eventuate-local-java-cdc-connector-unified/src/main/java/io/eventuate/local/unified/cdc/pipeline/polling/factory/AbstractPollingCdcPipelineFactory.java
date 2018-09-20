@@ -40,7 +40,6 @@ public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEven
     CdcProcessor<EVENT> cdcProcessor = new PollingCdcProcessor<>(pollingDao,
             pollingDataProvider,
             createBinlogEntryToEventConverter(),
-            cdcPipelineProperties.getDataSourceUrl(),
             eventuateSchema,
             createSourceTableNameSupplier(cdcPipelineProperties).getSourceTableName());
 

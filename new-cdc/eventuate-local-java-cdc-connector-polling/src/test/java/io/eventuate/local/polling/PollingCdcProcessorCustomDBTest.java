@@ -41,7 +41,6 @@ public class PollingCdcProcessorCustomDBTest extends AbstractPollingCdcProcessor
       return new PollingCdcProcessor<>(pollingDao,
               pollingDataProvider,
               new BinlogEntryToPublishedEventConverter(),
-              dbUrl,
               eventuateSchema,
               sourceTableNameSupplier.getSourceTableName());
     }

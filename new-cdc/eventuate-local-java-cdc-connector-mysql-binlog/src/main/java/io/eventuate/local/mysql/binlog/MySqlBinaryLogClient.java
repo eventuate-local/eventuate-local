@@ -8,12 +8,15 @@ import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeseria
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.EventuateLeaderSelectorListener;
+import io.eventuate.local.common.JdbcUrl;
+import io.eventuate.local.common.JdbcUrlParser;
 import io.eventuate.local.db.log.common.DbLogClient;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -31,6 +34,8 @@ public class MySqlBinaryLogClient implements DbLogClient {
   private final String dbPassword;
   private final String host;
   private final int port;
+  private String defaultDatabase;
+  private DataSource dataSource;
 
   private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
   private String binlogFilename;
@@ -54,8 +59,8 @@ public class MySqlBinaryLogClient implements DbLogClient {
 
   public MySqlBinaryLogClient(String dbUserName,
                               String dbPassword,
-                              String host,
-                              int port,
+                              String dataSourceUrl,
+                              DataSource dataSource,
                               long binlogClientUniqueId,
                               String clientName,
                               int connectionTimeoutInMilliseconds,
@@ -66,14 +71,24 @@ public class MySqlBinaryLogClient implements DbLogClient {
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;
-    this.host = host;
-    this.port = port;
+
+    JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceUrl);
+    host = jdbcUrl.getHost();
+    port = jdbcUrl.getPort();
+    defaultDatabase = jdbcUrl.getDatabase();
+
+
+    this.dataSource = dataSource;
     this.name = clientName;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
 
     this.curatorFramework = curatorFramework;
     this.leadershipLockPath = leadershipLockPath;
+  }
+
+  public DataSource getDataSource() {
+    return dataSource;
   }
 
   public void addBinlogEntryHandler(MySqlBinlogEntryHandler binlogEntryHandler) {
@@ -146,7 +161,7 @@ public class MySqlBinaryLogClient implements DbLogClient {
 
       binlogEntryHandlers
               .stream()
-              .filter(bh -> bh.isFor(database, table))
+              .filter(bh -> bh.isFor(database, table, defaultDatabase))
               .forEach(bh -> bh.accept(eventData, getCurrentBinlogFilename(), offset));
     }
   }

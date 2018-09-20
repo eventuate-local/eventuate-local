@@ -1,14 +1,12 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties;
 
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineProperties;
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineReaderProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.properties.CommonDbLogCdcPipelineReaderProperties;
 import org.springframework.util.Assert;
 
 public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipelineReaderProperties {
   private String cdcDbUserName;
   private String cdcDbPassword;
   private Long binlogClientId = System.currentTimeMillis();
-  private String oldDbHistoryTopicName = "eventuate.local.cdc.my-sql-connector.offset.storage";
 
   public void validate() {
     super.validate();
@@ -38,13 +36,5 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
 
   public void setBinlogClientId(Long binlogClientId) {
     this.binlogClientId = binlogClientId;
-  }
-
-  public String getOldDbHistoryTopicName() {
-    return oldDbHistoryTopicName;
-  }
-
-  public void setOldDbHistoryTopicName(String oldDbHistoryTopicName) {
-    this.oldDbHistoryTopicName = oldDbHistoryTopicName;
   }
 }

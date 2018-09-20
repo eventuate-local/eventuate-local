@@ -42,20 +42,5 @@ abstract public class CommonCdcPipelineFactory<PROPERTIES extends CdcPipelinePro
     return new EventuateSchema(properties.getEventuateDatabaseSchema());
   }
 
-  protected DataSource createDataSource(PROPERTIES properties) {
-
-
-    HikariDataSource hikariDataSource = new HikariDataSource();
-    hikariDataSource.setUsername(properties.getDataSourceUserName());
-    hikariDataSource.setPassword(properties.getDataSourcePassword());
-    hikariDataSource.setJdbcUrl(properties.getDataSourceUrl());
-    hikariDataSource.setDriverClassName(properties.getDataSourceDriverClassName());
-
-
-    hikariDataSource.setConnectionTestQuery("select 1");
-
-    return hikariDataSource;
-  }
-
   protected abstract BinlogEntryToEventConverter<EVENT> createBinlogEntryToEventConverter();
 }

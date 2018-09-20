@@ -1,7 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties;
 
 
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineReaderProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.properties.CommonDbLogCdcPipelineReaderProperties;
 
 public class PostgresWalCdcPipelineReaderProperties extends CommonDbLogCdcPipelineReaderProperties {
   private Integer postgresWalIntervalInMilliseconds = 10;

@@ -44,24 +44,24 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
 
   @Override
   public CdcPipeline<EVENT> create(PostgresWalCdcPipelineProperties cdcPipelineProperties) {
-    DataSource dataSource = createDataSource(cdcPipelineProperties);
+    PostgresWalClient postgresWalClient = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
 
-    OffsetStore offsetStore = createOffsetStore(cdcPipelineProperties, dataSource, eventuateSchema);
+    OffsetStore offsetStore = createOffsetStore(cdcPipelineProperties,
+            postgresWalClient.getDataSource(),
+            eventuateSchema,
+            postgresWalClient.getName());
 
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(offsetStore);
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
-
-    PostgresWalClient postgresWalClient = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 
     CdcProcessor<EVENT> cdcProcessor = new PostgresWalCdcProcessor<>(postgresWalClient,
             offsetStore,
             binlogEntryToEventConverter,
-            cdcPipelineProperties.getDataSourceUrl(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema);
 

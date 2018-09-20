@@ -19,7 +19,7 @@ import javax.sql.DataSource;
 
 public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelineFactory<PublishedEvent> {
 
-  public static final String TYPE = "eventuate-local-postgres-wal";
+  public static final String TYPE = "eventuate-local";
 
   public PostgresWalCdcPipelineFactory(CuratorFramework curatorFramework,
                                        DataProducerFactory dataProducerFactory,
@@ -38,8 +38,8 @@ public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelin
   }
 
   @Override
-  public boolean supports(String type) {
-    return TYPE.equals(type);
+  public boolean supports(String type, String readerType) {
+    return TYPE.equals(type) && PostgresWalCdcPipelineReaderFactory.TYPE.equals(readerType);
   }
 
   @Override
@@ -55,10 +55,11 @@ public class PostgresWalCdcPipelineFactory extends AbstractPostgresWalCdcPipelin
   @Override
   protected OffsetStore createOffsetStore(PostgresWalCdcPipelineProperties properties,
                                           DataSource dataSource,
-                                          EventuateSchema eventuateSchema) {
+                                          EventuateSchema eventuateSchema,
+                                          String clientName) {
 
     return new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
-            properties.getMySqlBinLogClientName(),
+            clientName,
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);

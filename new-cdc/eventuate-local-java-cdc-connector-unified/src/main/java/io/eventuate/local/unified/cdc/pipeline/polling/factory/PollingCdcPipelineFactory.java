@@ -10,7 +10,7 @@ import org.apache.curator.framework.CuratorFramework;
 
 public class PollingCdcPipelineFactory extends AbstractPollingCdcPipelineFactory<PublishedEvent> {
 
-  public static final String TYPE = "eventuate-local-event-polling";
+  public static final String TYPE = "eventuate-local";
 
   public PollingCdcPipelineFactory(CuratorFramework curatorFramework,
                                    DataProducerFactory dataProducerFactory,
@@ -25,8 +25,8 @@ public class PollingCdcPipelineFactory extends AbstractPollingCdcPipelineFactory
   }
 
   @Override
-  public boolean supports(String type) {
-    return TYPE.equals(type);
+  public boolean supports(String type, String readerType) {
+    return TYPE.equals(type) && PollingCdcPipelineReaderFactory.TYPE.equals(readerType);
   }
 
   @Override

@@ -88,8 +88,6 @@ public class MySQLMigrationTest extends AbstractCdcTest {
             offsetStore,
             debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
-            dataSource,
-            dataSourceURL,
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema);
   }

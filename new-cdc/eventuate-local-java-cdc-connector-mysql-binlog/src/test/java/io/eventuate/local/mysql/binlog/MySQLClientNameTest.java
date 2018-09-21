@@ -115,8 +115,6 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
   private CdcProcessor<PublishedEvent> createMySQLCdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient) {
     return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
-            createDatabaseOffsetKafkaStore(mySqlBinaryLogClient),
-            debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema);
@@ -142,6 +140,8 @@ public class MySQLClientNameTest extends AbstractCdcTest {
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath());
+            eventuateConfigurationProperties.getLeadershipLockPath(),
+            offsetStore,
+            debeziumBinlogOffsetKafkaStore);
   }
 }

@@ -56,7 +56,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                              @Value("${spring.datasource.password}") String dbPassword,
                                              DataSource dataSource,
                                              EventuateConfigurationProperties eventuateConfigurationProperties,
-                                             CuratorFramework curatorFramework) {
+                                             CuratorFramework curatorFramework,
+                                             OffsetStore offsetStore) {
 
     return new PostgresWalClient(dbUrl,
             dbUserName,
@@ -69,7 +70,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationSlotName(),
             curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath());
+            eventuateConfigurationProperties.getLeadershipLockPath(),
+            offsetStore);
   }
 
   @Bean
@@ -96,7 +98,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                                    OffsetStore offsetStore) {
 
     return new PostgresWalCdcProcessor<PublishedEvent>(postgresWalClient,
-            offsetStore,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {

@@ -2,16 +2,18 @@ package io.eventuate.local.common;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 
+import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public abstract class BinlogEntryHandler {
   protected EventuateSchema eventuateSchema;
   protected String sourceTableName;
-  protected Consumer<BinlogEntry> eventConsumer;
+  protected BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer;
 
   public BinlogEntryHandler(EventuateSchema eventuateSchema,
                             String sourceTableName,
-                            Consumer<BinlogEntry> eventConsumer) {
+                            BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
 
     this.eventuateSchema = eventuateSchema;
     this.sourceTableName = sourceTableName;

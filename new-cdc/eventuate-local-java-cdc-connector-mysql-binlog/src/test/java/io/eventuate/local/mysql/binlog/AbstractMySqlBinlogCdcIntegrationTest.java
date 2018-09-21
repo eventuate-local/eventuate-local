@@ -4,6 +4,7 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
+import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.apache.curator.framework.CuratorFramework;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcTest {
@@ -41,11 +43,16 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   @Autowired
   private CuratorFramework curatorFramework;
 
+  @Autowired
+  private OffsetStore offsetStore;
+
+  @Autowired
+  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
+
   @Test
   public void shouldGetEvents() throws InterruptedException {
     BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
 
-    JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     MySqlBinaryLogClient mySqlBinaryLogClient = new MySqlBinaryLogClient(eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             dataSourceURL,
@@ -55,13 +62,15 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath());
+            eventuateConfigurationProperties.getLeadershipLockPath(),
+            offsetStore,
+            debeziumBinlogOffsetKafkaStore);
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-    Consumer<BinlogEntry> consumer = binlogEntry ->
+    BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> consumer = (binlogEntry, offset) ->
             publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry));
 
     MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor = new MySqlBinlogEntryExtractor(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
@@ -74,7 +83,6 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
     mySqlBinaryLogClient.addBinlogEntryHandler(binlogEntryHandler);
 
-    mySqlBinaryLogClient.setBinlogFileOffset(Optional.empty());
     mySqlBinaryLogClient.start();
 
     String accountCreatedEventData = generateAccountCreatedEvent();

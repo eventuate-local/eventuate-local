@@ -36,16 +36,10 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   private String dataSourceURL;
 
   @Autowired
-  private DataSource dataSource;
-
-  @Autowired
   private EventuateJdbcAccess eventuateJdbcAccess;
 
   @Autowired
   private OffsetStore offsetStore;
-
-  @Autowired
-  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
   @Autowired
   private MySqlBinaryLogClient mySqlBinaryLogClient;
@@ -85,8 +79,6 @@ public class MySQLMigrationTest extends AbstractCdcTest {
 
   private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() {
     return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
-            offsetStore,
-            debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema);

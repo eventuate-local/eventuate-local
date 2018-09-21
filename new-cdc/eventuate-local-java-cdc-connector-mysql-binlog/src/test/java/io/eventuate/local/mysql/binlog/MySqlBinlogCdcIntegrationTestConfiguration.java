@@ -64,7 +64,9 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   public MySqlBinaryLogClient mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                   CuratorFramework curatorFramework) {
+                                                   CuratorFramework curatorFramework,
+                                                   OffsetStore offsetStore,
+                                                   DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     return new MySqlBinaryLogClient(
@@ -77,7 +79,9 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath());
+            eventuateConfigurationProperties.getLeadershipLockPath(),
+            offsetStore,
+            debeziumBinlogOffsetKafkaStore);
   }
 
   @Bean
@@ -105,12 +109,11 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Primary
   public OffsetStore databaseOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                            EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                           MySqlBinaryLogClient mySqlBinaryLogClient,
                                                            EventuateKafkaProducer eventuateKafkaProducer,
                                                            EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
-            mySqlBinaryLogClient.getName(),
+            eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);
@@ -119,16 +122,11 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Bean
   @Conditional(MySqlBinlogCondition.class)
   public CdcProcessor<PublishedEvent> cdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient,
-                                                   OffsetStore offsetStore,
-                                                   DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore,
-                                                   DataSource dataSource,
                                                    @Value("${spring.datasource.url}") String dataSourceUrl,
                                                    SourceTableNameSupplier sourceTableNameSupplier,
                                                    EventuateSchema eventuateSchema) {
 
     return new MySQLCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
-            offsetStore,
-            debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {

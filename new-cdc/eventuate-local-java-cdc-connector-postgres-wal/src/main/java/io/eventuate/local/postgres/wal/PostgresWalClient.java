@@ -5,6 +5,7 @@ import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.EventuateLeaderSelectorListener;
 import io.eventuate.local.common.JdbcUrlParser;
 import io.eventuate.local.db.log.common.DbLogClient;
+import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.postgresql.PGConnection;
@@ -45,12 +46,13 @@ public class PostgresWalClient implements DbLogClient {
   private AtomicBoolean running = new AtomicBoolean(false);
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
-  private Optional<BinlogFileOffset> binlogFileOffset = Optional.empty();
   private List<PostgresWalBinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
   private LeaderSelector leaderSelector;
 
   private CuratorFramework curatorFramework;
   private String leadershipLockPath;
+
+  private OffsetStore offsetStore;
 
   public PostgresWalClient(String url,
                            String user,
@@ -63,7 +65,8 @@ public class PostgresWalClient implements DbLogClient {
                            int replicationStatusIntervalInMilliseconds,
                            String replicationSlotName,
                            CuratorFramework curatorFramework,
-                           String leadershipLockPath) {
+                           String leadershipLockPath,
+                           OffsetStore offsetStore) {
     this.url = url;
     this.user = user;
     this.password = password;
@@ -78,6 +81,11 @@ public class PostgresWalClient implements DbLogClient {
     this.postgresWalBinlogEntryExtractor = new PostgresWalBinlogEntryExtractor();
     this.curatorFramework = curatorFramework;
     this.leadershipLockPath = leadershipLockPath;
+    this.offsetStore = offsetStore;
+  }
+
+  public OffsetStore getOffsetStore() {
+    return offsetStore;
   }
 
   public String getName() {
@@ -92,14 +100,10 @@ public class PostgresWalClient implements DbLogClient {
     binlogEntryHandlers.add(binlogEntryHandler);
   }
 
-  public void setBinlogFileOffset(Optional<BinlogFileOffset> binlogFileOffset) {
-    this.binlogFileOffset = binlogFileOffset;
-  }
-
   private void leaderStart() {
     running.set(true);
 
-    new Thread(() -> connectWithRetriesOnFail(binlogFileOffset)).start();
+    new Thread(() -> connectWithRetriesOnFail(offsetStore.getLastBinlogFileOffset())).start();
   }
 
   @Override
@@ -194,7 +198,7 @@ public class PostgresWalClient implements DbLogClient {
 
         postgresWalBinlogEntryExtractor
                 .extract(filteredChanges, stream.getLastReceiveLSN().asLong(), replicationSlotName)
-                .forEach(binlogEntryHandler::accept);
+                .forEach(binlogEntry -> binlogEntryHandler.accept(binlogEntry, binlogFileOffset));
       });
 
       stream.setAppliedLSN(stream.getLastReceiveLSN());

@@ -1,7 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal;
 
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogPipelineReaderPropertyValidationTest;
-import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.PostgresWalCdcPipelineReaderFactory;
+import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.AbstractPostgresWalCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ public class PostgresWalPipelineReaderPropertyValidationTest extends CommonDbLog
     PropertyBuilder propertyBuilder = new PropertyBuilder();
     assertExceptionMessage(propertyBuilder.toString(), PostgresWalCdcPipelineReaderProperties.class, "type must not be null");
 
-    propertyBuilder.addString("type", PostgresWalCdcPipelineReaderFactory.TYPE);
+    propertyBuilder.addString("type", AbstractPostgresWalCdcPipelineReaderFactory.TYPE);
     testCommonRequiredProperties(PostgresWalCdcPipelineReaderProperties.class, propertyBuilder);
 
     assertNoException(propertyBuilder.toString(), PostgresWalCdcPipelineReaderProperties.class);

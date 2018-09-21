@@ -12,49 +12,31 @@ import java.util.function.Consumer;
 public class MySQLCdcProcessor<EVENT extends BinLogEvent> extends DbLogBasedCdcProcessor<EVENT> {
 
   private MySqlBinaryLogClient mySqlBinaryLogClient;
-  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
   private EventuateSchema eventuateSchema;
   private String sourceTableName;
 
   public MySQLCdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient,
-                           OffsetStore offsetStore,
-                           DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore,
                            BinlogEntryToEventConverter binlogEntryToEventConverter,
                            String sourceTableName,
                            EventuateSchema eventuateSchema) {
 
-    super(mySqlBinaryLogClient, offsetStore, binlogEntryToEventConverter);
+    super(mySqlBinaryLogClient, binlogEntryToEventConverter);
 
     this.mySqlBinaryLogClient = mySqlBinaryLogClient;
-    this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
     this.eventuateSchema = eventuateSchema;
     this.sourceTableName = sourceTableName;
   }
 
   @Override
   public void start(Consumer<EVENT> eventConsumer) {
-    Optional<BinlogFileOffset> binlogFileOffset = offsetStore.getLastBinlogFileOffset();
-
-    if (!binlogFileOffset.isPresent()) {
-      binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
-    }
-
-    Optional<BinlogFileOffset> startingBinlogFileOffset = binlogFileOffset;
-
-    process(eventConsumer, startingBinlogFileOffset);
-  }
-
-  protected void process(Consumer<EVENT> eventConsumer, Optional<BinlogFileOffset> startingBinlogFileOffset) {
     try {
       MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(
               eventuateSchema,
               new MySqlBinlogEntryExtractor(mySqlBinaryLogClient.getDataSource(), sourceTableName, eventuateSchema),
               sourceTableName,
-              createBinlogConsumer(eventConsumer, startingBinlogFileOffset));
+              createBinlogConsumer(eventConsumer));
 
       mySqlBinaryLogClient.addBinlogEntryHandler(binlogEntryHandler);
-
-      mySqlBinaryLogClient.setBinlogFileOffset(startingBinlogFileOffset);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

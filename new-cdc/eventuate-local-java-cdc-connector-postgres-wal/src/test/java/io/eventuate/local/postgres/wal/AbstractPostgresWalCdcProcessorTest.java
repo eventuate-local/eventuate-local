@@ -32,7 +32,6 @@ public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTe
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
     return new PostgresWalCdcProcessor<PublishedEvent>(postgresWalClient,
-            offsetStore,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {

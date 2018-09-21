@@ -3,7 +3,7 @@ package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.configuration;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration.CommonDbLogCdcDefaultPipelinePropertiesConfiguration;
-import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.PostgresWalCdcPipelineReaderFactory;
+import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.AbstractPostgresWalCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +18,6 @@ public class PostgresWalDefaultCdcPipelinePropertiesConfiguration extends Common
   public CdcPipelineProperties defaultPostgresWalPipelineProperties() {
     PostgresWalCdcPipelineProperties postgresWalCdcPipelineProperties = createPostgresWalCdcPipelineProperties();
 
-    initCommonDbLogCdcPipelineProperties(postgresWalCdcPipelineProperties);
     initCdcPipelineProperties(postgresWalCdcPipelineProperties);
 
     return postgresWalCdcPipelineProperties;
@@ -29,7 +28,7 @@ public class PostgresWalDefaultCdcPipelinePropertiesConfiguration extends Common
   public CdcPipelineReaderProperties defaultPostgresWalPipelineReaderProperties() {
     PostgresWalCdcPipelineReaderProperties postgresWalCdcPipelineReaderProperties = createPostgresWalCdcPipelineReaderProperties();
 
-    postgresWalCdcPipelineReaderProperties.setType(PostgresWalCdcPipelineReaderFactory.TYPE);
+    postgresWalCdcPipelineReaderProperties.setType(AbstractPostgresWalCdcPipelineReaderFactory.TYPE);
 
 
     initCommonDbLogCdcPipelineReaderProperties(postgresWalCdcPipelineReaderProperties);

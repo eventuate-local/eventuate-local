@@ -6,11 +6,13 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
+import com.sun.scenario.effect.Offset;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.EventuateLeaderSelectorListener;
 import io.eventuate.local.common.JdbcUrl;
 import io.eventuate.local.common.JdbcUrlParser;
 import io.eventuate.local.db.log.common.DbLogClient;
+import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.slf4j.Logger;
@@ -50,12 +52,13 @@ public class MySqlBinaryLogClient implements DbLogClient {
 
   private AtomicBoolean running = new AtomicBoolean(false);
 
-  private Optional<BinlogFileOffset> binlogFileOffset = Optional.empty();
-
   private LeaderSelector leaderSelector;
 
   private CuratorFramework curatorFramework;
   private String leadershipLockPath;
+
+  private OffsetStore offsetStore;
+  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
   public MySqlBinaryLogClient(String dbUserName,
                               String dbPassword,
@@ -66,7 +69,9 @@ public class MySqlBinaryLogClient implements DbLogClient {
                               int connectionTimeoutInMilliseconds,
                               int maxAttemptsForBinlogConnection,
                               CuratorFramework curatorFramework,
-                              String leadershipLockPath) {
+                              String leadershipLockPath,
+                              OffsetStore offsetStore,
+                              DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.dbUserName = dbUserName;
@@ -85,6 +90,13 @@ public class MySqlBinaryLogClient implements DbLogClient {
 
     this.curatorFramework = curatorFramework;
     this.leadershipLockPath = leadershipLockPath;
+
+    this.offsetStore = offsetStore;
+    this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
+  }
+
+  public OffsetStore getOffsetStore() {
+    return offsetStore;
   }
 
   public DataSource getDataSource() {
@@ -93,10 +105,6 @@ public class MySqlBinaryLogClient implements DbLogClient {
 
   public void addBinlogEntryHandler(MySqlBinlogEntryHandler binlogEntryHandler) {
     binlogEntryHandlers.add(binlogEntryHandler);
-  }
-
-  public void setBinlogFileOffset(Optional<BinlogFileOffset> binlogFileOffset) {
-    this.binlogFileOffset = binlogFileOffset;
   }
 
   @Override
@@ -114,7 +122,10 @@ public class MySqlBinaryLogClient implements DbLogClient {
     client.setServerId(binlogClientUniqueId);
     client.setKeepAliveInterval(5 * 1000);
 
+    Optional<BinlogFileOffset> binlogFileOffset = getStartingBinlogFileOffset();
+
     BinlogFileOffset bfo = binlogFileOffset.orElse(new BinlogFileOffset("", 4L));
+
     logger.debug("Starting with {}", bfo);
     client.setBinlogFilename(bfo.getBinlogFilename());
     client.setBinlogPosition(bfo.getOffset());
@@ -128,11 +139,11 @@ public class MySqlBinaryLogClient implements DbLogClient {
           break;
         }
         case EXT_WRITE_ROWS: {
-          handleWriteRowsEvent(event);
+          handleWriteRowsEvent(event, binlogFileOffset);
           break;
         }
         case WRITE_ROWS: {
-          handleWriteRowsEvent(event);
+          handleWriteRowsEvent(event, binlogFileOffset);
           break;
         }
         case ROTATE: {
@@ -148,7 +159,17 @@ public class MySqlBinaryLogClient implements DbLogClient {
     connectWithRetriesOnFail();
   }
 
-  private void handleWriteRowsEvent(Event event) {
+  private Optional<BinlogFileOffset> getStartingBinlogFileOffset() {
+    Optional<BinlogFileOffset> binlogFileOffset = offsetStore.getLastBinlogFileOffset();
+
+    if (!binlogFileOffset.isPresent()) {
+      binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
+    }
+
+    return binlogFileOffset;
+  }
+
+  private void handleWriteRowsEvent(Event event, Optional<BinlogFileOffset> startingBinlogFileOffset) {
     logger.debug("Got binlog event {}", event);
     offset = ((EventHeaderV4) event.getHeader()).getPosition();
     WriteRowsEventData eventData = event.getData();
@@ -162,7 +183,7 @@ public class MySqlBinaryLogClient implements DbLogClient {
       binlogEntryHandlers
               .stream()
               .filter(bh -> bh.isFor(database, table, defaultDatabase))
-              .forEach(bh -> bh.accept(eventData, getCurrentBinlogFilename(), offset));
+              .forEach(bh -> bh.accept(eventData, getCurrentBinlogFilename(), offset, startingBinlogFileOffset));
     }
   }
 

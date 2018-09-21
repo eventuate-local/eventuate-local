@@ -21,12 +21,6 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
   @Autowired
   private OffsetStore offsetStore;
 
-  @Autowired
-  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
-
-  @Autowired
-  private DataSource dataSource;
-
   @Value("${spring.datasource.url}")
   private String dataSourceUrl;
 
@@ -39,8 +33,6 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
     return new MySQLCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
-            offsetStore,
-            debeziumBinlogOffsetKafkaStore,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {

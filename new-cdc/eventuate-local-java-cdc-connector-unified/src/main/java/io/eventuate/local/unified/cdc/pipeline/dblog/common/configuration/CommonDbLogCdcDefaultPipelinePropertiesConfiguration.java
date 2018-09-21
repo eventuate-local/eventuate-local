@@ -8,13 +8,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CommonDbLogCdcDefaultPipelinePropertiesConfiguration extends CommonCdcDefaultPipelinePropertiesConfiguration {
 
-  protected void initCommonDbLogCdcPipelineProperties(CommonDbLogCdcPipelineProperties commonDbLogCdcPipelineProperties) {
-    commonDbLogCdcPipelineProperties.setDbHistoryTopicName(eventuateConfigurationProperties.getDbHistoryTopicName());
-  }
-
   protected void initCommonDbLogCdcPipelineReaderProperties(CommonDbLogCdcPipelineReaderProperties commonDbLogCdcPipelineReaderProperties) {
     commonDbLogCdcPipelineReaderProperties.setBinlogConnectionTimeoutInMilliseconds(eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds());
     commonDbLogCdcPipelineReaderProperties.setMaxAttemptsForBinlogConnection(eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
     commonDbLogCdcPipelineReaderProperties.setMySqlBinLogClientName(eventuateConfigurationProperties.getMySqlBinLogClientName());
+    commonDbLogCdcPipelineReaderProperties.setDbHistoryTopicName(eventuateConfigurationProperties.getDbHistoryTopicName());
   }
 }

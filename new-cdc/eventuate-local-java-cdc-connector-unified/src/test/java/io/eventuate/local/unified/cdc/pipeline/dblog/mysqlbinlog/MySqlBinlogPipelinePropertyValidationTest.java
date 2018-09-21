@@ -1,12 +1,11 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog;
 
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogPipelinePropertyValidationTest;
+import io.eventuate.local.unified.cdc.pipeline.common.CommonPipelinePropertyValidationTest;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.MySqlBinlogCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineProperties;
-import org.junit.Assert;
 import org.junit.Test;
 
-public class MySqlBinlogPipelinePropertyValidationTest extends CommonDbLogPipelinePropertyValidationTest {
+public class MySqlBinlogPipelinePropertyValidationTest extends CommonPipelinePropertyValidationTest {
 
   @Test
   public void testMySqlBinlogProperties() throws Exception {
@@ -19,11 +18,5 @@ public class MySqlBinlogPipelinePropertyValidationTest extends CommonDbLogPipeli
     testCommonRequiredProperties(MySqlBinlogCdcPipelineProperties.class, propertyBuilder);
 
     assertNoException(propertyBuilder.toString(), MySqlBinlogCdcPipelineProperties.class);
-
-    MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties = objectMapper.readValue(propertyBuilder.toString(), MySqlBinlogCdcPipelineProperties.class);
-
-    testCommonDbLogDefaultProperties(mySqlBinlogCdcPipelineProperties);
-
-    Assert.assertEquals("eventuate.local.cdc.my-sql-connector.offset.storage", mySqlBinlogCdcPipelineProperties.getOldDbHistoryTopicName());
   }
 }

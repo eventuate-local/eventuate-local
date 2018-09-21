@@ -4,6 +4,7 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
+import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.apache.curator.framework.CuratorFramework;
@@ -46,6 +47,9 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
   @Autowired
   private CuratorFramework curatorFramework;
 
+  @Autowired
+  private OffsetStore offsetStore;
+
   @Test
   public void shouldGetEvents() throws InterruptedException{
     PostgresWalClient postgresWalClient = new PostgresWalClient(dataSourceURL,
@@ -59,7 +63,8 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationSlotName(),
             curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath());
+            eventuateConfigurationProperties.getLeadershipLockPath(),
+            offsetStore);
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 
@@ -69,11 +74,10 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
 
     PostgresWalBinlogEntryHandler binlogEntryHandler = new PostgresWalBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            binlogEntry -> publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));
+            (binlogEntry, offset) -> publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));
 
     postgresWalClient.addBinlogEntryHandler(binlogEntryHandler);
 
-    postgresWalClient.setBinlogFileOffset(Optional.empty());
     postgresWalClient.start();
 
     String accountCreatedEventData = generateAccountCreatedEvent();

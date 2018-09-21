@@ -15,12 +15,11 @@ public class PostgresWalCdcProcessor<EVENT extends BinLogEvent> extends DbLogBas
   private EventuateSchema eventuateSchema;
 
   public PostgresWalCdcProcessor(PostgresWalClient postgresWalClient,
-                                 OffsetStore offsetStore,
                                  BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                                  String sourceTableName,
                                  EventuateSchema eventuateSchema) {
 
-    super(postgresWalClient, offsetStore, binlogEntryToEventConverter);
+    super(postgresWalClient, binlogEntryToEventConverter);
 
     this.postgresWalClient = postgresWalClient;
 
@@ -30,17 +29,13 @@ public class PostgresWalCdcProcessor<EVENT extends BinLogEvent> extends DbLogBas
 
   @Override
   public void start(Consumer<EVENT> eventConsumer) {
-    Optional<BinlogFileOffset> startingBinlogFileOffset = offsetStore.getLastBinlogFileOffset();
-
     try {
       PostgresWalBinlogEntryHandler binlogEntryHandler = new PostgresWalBinlogEntryHandler(
               eventuateSchema,
               sourceTableName,
-              createBinlogConsumer(eventConsumer, startingBinlogFileOffset));
+              createBinlogConsumer(eventConsumer));
 
       postgresWalClient.addBinlogEntryHandler(binlogEntryHandler);
-
-      postgresWalClient.setBinlogFileOffset(startingBinlogFileOffset);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

@@ -2,7 +2,6 @@ package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.db.log.common.PublishingFilter;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -14,8 +13,6 @@ import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDBLogCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
-
-import javax.sql.DataSource;
 
 public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonDBLogCdcPipelineFactory<MySqlBinlogCdcPipelineProperties, EVENT> {
 
@@ -46,20 +43,13 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
 
     EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
 
-    OffsetStore offsetStore = createOffsetStore(cdcPipelineProperties, mySqlBinaryLogClient.getDataSource(), eventuateSchema, mySqlBinaryLogClient.getName());
-
-    CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(offsetStore);
+    CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(mySqlBinaryLogClient.getOffsetStore());
 
     SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 
-    DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore =
-            createDebeziumBinlogOffsetKafkaStore(cdcPipelineProperties, eventuateKafkaConfigurationProperties, eventuateKafkaConsumerConfigurationProperties);
-
     CdcProcessor<EVENT> cdcProcessor = new MySQLCdcProcessor<>(mySqlBinaryLogClient,
-            offsetStore,
-            debeziumBinlogOffsetKafkaStore,
             binlogEntryToEventConverter,
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema);
@@ -68,14 +58,5 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
             createEventTableChangesToAggregateTopicTranslator(cdcDataPublisher, cdcProcessor);
 
     return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
-  }
-
-  protected DebeziumBinlogOffsetKafkaStore createDebeziumBinlogOffsetKafkaStore(MySqlBinlogCdcPipelineProperties mySqlBinlogCdcPipelineProperties,
-                                                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-
-    return new DebeziumBinlogOffsetKafkaStore(mySqlBinlogCdcPipelineProperties.getOldDbHistoryTopicName(),
-            eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties);
   }
 }

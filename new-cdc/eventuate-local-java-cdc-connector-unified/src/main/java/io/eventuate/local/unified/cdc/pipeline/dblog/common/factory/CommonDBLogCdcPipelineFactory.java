@@ -40,11 +40,6 @@ public abstract class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbL
     this.publishingFilter = publishingFilter;
   }
 
-  protected abstract OffsetStore createOffsetStore(PROPERTIES properties,
-                                                   DataSource dataSource,
-                                                   EventuateSchema eventuateSchema,
-                                                   String clientName);
-
   protected CdcDataPublisher<EVENT> createCdcDataPublisher(OffsetStore offsetStore) {
 
     return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,

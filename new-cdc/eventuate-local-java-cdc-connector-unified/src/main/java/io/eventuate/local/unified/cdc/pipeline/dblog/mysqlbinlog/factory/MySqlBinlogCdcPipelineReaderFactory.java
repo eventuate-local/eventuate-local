@@ -1,42 +1,42 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory;
 
-import io.eventuate.local.common.JdbcUrl;
-import io.eventuate.local.common.JdbcUrlParser;
-import io.eventuate.local.mysql.binlog.MySqlBinaryLogClient;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
+import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
-import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
 import org.apache.curator.framework.CuratorFramework;
 
-public class MySqlBinlogCdcPipelineReaderFactory extends CommonCdcPipelineReaderFactory<MySqlBinlogCdcPipelineReaderProperties, MySqlBinaryLogClient> {
-  public static final String TYPE = "mysql-binlog";
+import javax.sql.DataSource;
 
+public class MySqlBinlogCdcPipelineReaderFactory extends AbstractMySqlBinlogCdcPipelineReaderFactory {
 
-  public MySqlBinlogCdcPipelineReaderFactory(CuratorFramework curatorFramework, BinlogEntryReaderProvider binlogEntryReaderProvider) {
-    super(curatorFramework, binlogEntryReaderProvider);
+  public MySqlBinlogCdcPipelineReaderFactory(CuratorFramework curatorFramework,
+                                             BinlogEntryReaderProvider binlogEntryReaderProvider,
+                                             EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
+                                             EventuateKafkaProducer eventuateKafkaProducer) {
+
+    super(curatorFramework,
+            binlogEntryReaderProvider,
+            eventuateKafkaConfigurationProperties,
+            eventuateKafkaConsumerConfigurationProperties,
+            eventuateKafkaProducer);
   }
 
   @Override
-  public boolean supports(String type) {
-    return TYPE.equals(type);
-  }
+  protected OffsetStore createOffsetStore(MySqlBinlogCdcPipelineReaderProperties properties,
+                                          DataSource dataSource,
+                                          EventuateSchema eventuateSchema,
+                                          String clientName) {
 
-  @Override
-  public Class<MySqlBinlogCdcPipelineReaderProperties> propertyClass() {
-    return MySqlBinlogCdcPipelineReaderProperties.class;
-  }
-
-  @Override
-  public MySqlBinaryLogClient create(MySqlBinlogCdcPipelineReaderProperties mySqlBinlogCdcPipelineReaderProperties) {
-    return new MySqlBinaryLogClient(mySqlBinlogCdcPipelineReaderProperties.getCdcDbUserName(),
-            mySqlBinlogCdcPipelineReaderProperties.getCdcDbPassword(),
-            mySqlBinlogCdcPipelineReaderProperties.getDataSourceUrl(),
-            createDataSource(mySqlBinlogCdcPipelineReaderProperties),
-            mySqlBinlogCdcPipelineReaderProperties.getBinlogClientId(),
-            mySqlBinlogCdcPipelineReaderProperties.getMySqlBinLogClientName(),
-            mySqlBinlogCdcPipelineReaderProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            mySqlBinlogCdcPipelineReaderProperties.getMaxAttemptsForBinlogConnection(),
-            curatorFramework,
-            mySqlBinlogCdcPipelineReaderProperties.getLeadershipLockPath());
+    return new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
+            clientName,
+            eventuateKafkaProducer,
+            eventuateKafkaConfigurationProperties,
+            eventuateKafkaConsumerConfigurationProperties);
   }
 }

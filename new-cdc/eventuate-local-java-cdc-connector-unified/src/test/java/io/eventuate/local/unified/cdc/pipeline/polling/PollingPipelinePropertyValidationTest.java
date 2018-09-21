@@ -3,8 +3,6 @@ package io.eventuate.local.unified.cdc.pipeline.polling;
 import io.eventuate.local.unified.cdc.pipeline.common.CommonPipelinePropertyValidationTest;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.polling.factory.PollingCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineProperties;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class PollingPipelinePropertyValidationTest extends CommonPipelinePropertyValidationTest {

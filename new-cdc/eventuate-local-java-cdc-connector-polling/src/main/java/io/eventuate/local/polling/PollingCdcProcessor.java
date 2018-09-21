@@ -30,7 +30,7 @@ public class PollingCdcProcessor<EVENT> implements CdcProcessor<EVENT> {
     PollingEntryHandler pollingEntryHandler = new PollingEntryHandler(
             eventuateSchema,
             sourceTableName,
-            binlogEntry -> eventConsumer.accept(binlogEntryToEventConverter.convert(binlogEntry)),
+            (binlogEntry, offset) -> eventConsumer.accept(binlogEntryToEventConverter.convert(binlogEntry)),
             pollingDataProvider.publishedField(),
             pollingDataProvider.idField());
 

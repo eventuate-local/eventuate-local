@@ -3,7 +3,10 @@ package io.eventuate.local.polling;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogEntryHandler;
+import io.eventuate.local.common.BinlogFileOffset;
 
+import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class PollingEntryHandler extends BinlogEntryHandler {
@@ -13,7 +16,7 @@ public class PollingEntryHandler extends BinlogEntryHandler {
 
   public PollingEntryHandler(EventuateSchema eventuateSchema,
                              String sourceTableName,
-                             Consumer<BinlogEntry> eventConsumer,
+                             BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer,
                              String publishedField,
                              String idField) {
 
@@ -28,7 +31,7 @@ public class PollingEntryHandler extends BinlogEntryHandler {
   }
 
   public void accept(BinlogEntry binlogEntry) {
-    eventConsumer.accept(binlogEntry);
+    eventConsumer.accept(binlogEntry, Optional.empty());
   }
 
   public EventuateSchema getEventuateSchema() {

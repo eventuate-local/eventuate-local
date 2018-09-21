@@ -1,43 +1,43 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
-import io.eventuate.local.postgres.wal.PostgresWalClient;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
+import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
-import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import org.apache.curator.framework.CuratorFramework;
 
-public class PostgresWalCdcPipelineReaderFactory extends CommonCdcPipelineReaderFactory<PostgresWalCdcPipelineReaderProperties, PostgresWalClient> {
-  public static final String TYPE = "postgres-wal";
+import javax.sql.DataSource;
+
+public class PostgresWalCdcPipelineReaderFactory
+        extends AbstractPostgresWalCdcPipelineReaderFactory {
 
   public PostgresWalCdcPipelineReaderFactory(CuratorFramework curatorFramework,
-                                             BinlogEntryReaderProvider binlogEntryReaderProvider) {
-    super(curatorFramework, binlogEntryReaderProvider);
-  }
+                                             BinlogEntryReaderProvider binlogEntryReaderProvider,
+                                             EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
+                                             EventuateKafkaProducer eventuateKafkaProducer) {
 
+    super(curatorFramework,
+            binlogEntryReaderProvider,
+            eventuateKafkaConfigurationProperties,
+            eventuateKafkaConsumerConfigurationProperties,
+            eventuateKafkaProducer);
+  }
   @Override
-  public boolean supports(String type) {
-    return TYPE.equals(type);
+  protected OffsetStore createOffsetStore(PostgresWalCdcPipelineReaderProperties properties,
+                                          DataSource dataSource,
+                                          EventuateSchema eventuateSchema,
+                                          String clientName) {
+
+    return new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
+            clientName,
+            eventuateKafkaProducer,
+            eventuateKafkaConfigurationProperties,
+            eventuateKafkaConsumerConfigurationProperties);
   }
 
-  @Override
-  public Class<PostgresWalCdcPipelineReaderProperties> propertyClass() {
-    return PostgresWalCdcPipelineReaderProperties.class;
-  }
-
-  @Override
-  public PostgresWalClient create(PostgresWalCdcPipelineReaderProperties postgresWalCdcPipelineReaderProperties) {
-
-    return new PostgresWalClient(postgresWalCdcPipelineReaderProperties.getDataSourceUrl(),
-            postgresWalCdcPipelineReaderProperties.getDataSourceUserName(),
-            postgresWalCdcPipelineReaderProperties.getDataSourcePassword(),
-            createDataSource(postgresWalCdcPipelineReaderProperties),
-            postgresWalCdcPipelineReaderProperties.getMySqlBinLogClientName(),
-            postgresWalCdcPipelineReaderProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            postgresWalCdcPipelineReaderProperties.getMaxAttemptsForBinlogConnection(),
-            postgresWalCdcPipelineReaderProperties.getPostgresWalIntervalInMilliseconds(),
-            postgresWalCdcPipelineReaderProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
-            postgresWalCdcPipelineReaderProperties.getPostgresReplicationSlotName(),
-            curatorFramework,
-            postgresWalCdcPipelineReaderProperties.getLeadershipLockPath());
-  }
 }

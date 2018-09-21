@@ -1,12 +1,11 @@
 package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 
 import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-public class CommonCdcDefaultPipelinePropertiesConfiguration {
+public class CommonCdcDefaultPipelineReaderConfiguration {
   @Value("${spring.profiles.active:#{\"\"}}")
   private String springProfilesActive;
 
@@ -22,17 +21,8 @@ public class CommonCdcDefaultPipelinePropertiesConfiguration {
   @Value("${spring.datasource.driver.class.name:#{null}}")
   private String dataSourceDriverClassName;
 
-  @Value("${eventuate.database.schema:#{null}}")
-  private String eventuateDataBaseSchema;
-
   @Autowired
   protected EventuateConfigurationProperties eventuateConfigurationProperties;
-
-  protected void initCdcPipelineProperties(CdcPipelineProperties cdcPipelineProperties) {
-    cdcPipelineProperties.setType("default");
-    cdcPipelineProperties.setReader("default");
-    cdcPipelineProperties.setEventuateDatabaseSchema(eventuateDataBaseSchema);
-  }
 
   protected void initCdcPipelineReaderProperties(CdcPipelineReaderProperties cdcPipelineReaderProperties) {
     cdcPipelineReaderProperties.setName("default");

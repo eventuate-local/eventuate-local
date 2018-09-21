@@ -7,10 +7,8 @@ import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
 import com.sun.scenario.effect.Offset;
-import io.eventuate.local.common.BinlogFileOffset;
-import io.eventuate.local.common.EventuateLeaderSelectorListener;
-import io.eventuate.local.common.JdbcUrl;
-import io.eventuate.local.common.JdbcUrlParser;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
@@ -24,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 
 public class MySqlBinaryLogClient implements DbLogClient {
 
@@ -103,7 +102,17 @@ public class MySqlBinaryLogClient implements DbLogClient {
     return dataSource;
   }
 
-  public void addBinlogEntryHandler(MySqlBinlogEntryHandler binlogEntryHandler) {
+  @Override
+  public void addBinlogEntryHandler(EventuateSchema eventuateSchema,
+                                    String sourceTableName,
+                                    BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
+
+    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(
+            eventuateSchema,
+            sourceTableName,
+            eventConsumer,
+            new MySqlBinlogEntryExtractor(getDataSource(), sourceTableName, eventuateSchema));
+
     binlogEntryHandlers.add(binlogEntryHandler);
   }
 

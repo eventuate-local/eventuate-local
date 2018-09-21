@@ -15,14 +15,15 @@ public class MySqlBinlogEntryHandler extends BinlogEntryHandler {
   private MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor;
 
   public MySqlBinlogEntryHandler(EventuateSchema eventuateSchema,
-                                 MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor,
                                  String sourceTableName,
-                                 BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
+                                 BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer,
+                                 MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor) {
 
     super(eventuateSchema, sourceTableName, eventConsumer);
 
     this.mySqlBinlogEntryExtractor = mySqlBinlogEntryExtractor;
   }
+
 
   public void accept(WriteRowsEventData eventData,
                      String binlogFilename,

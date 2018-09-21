@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -72,11 +71,10 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
 
     BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
 
-    PostgresWalBinlogEntryHandler binlogEntryHandler = new PostgresWalBinlogEntryHandler(eventuateSchema,
+    postgresWalClient.addBinlogEntryHandler(
+            eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
             (binlogEntry, offset) -> publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));
-
-    postgresWalClient.addBinlogEntryHandler(binlogEntryHandler);
 
     postgresWalClient.start();
 
@@ -86,8 +84,7 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
     String accountDebitedEventData = generateAccountDebitedEvent();
     EntityIdVersionAndEventIds updateResult = updateEvent(saveResult.getEntityId(), saveResult.getEntityVersion(), localAggregateCrud, accountDebitedEventData);
 
-    // Wait for 10 seconds
-    LocalDateTime deadline = LocalDateTime.now().plusSeconds(10);
+    LocalDateTime deadline = LocalDateTime.now().plusSeconds(20);
 
     waitForEvent(publishedEvents, saveResult.getEntityVersion(), deadline, accountCreatedEventData);
     waitForEvent(publishedEvents, updateResult.getEntityVersion(), deadline, accountDebitedEventData);

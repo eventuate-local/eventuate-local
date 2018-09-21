@@ -7,14 +7,14 @@ import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import io.eventuate.local.mysql.binlog.*;
-import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
+import io.eventuate.local.mysql.binlog.MySqlBinaryLogClient;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDBLogCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
-public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonDBLogCdcPipelineFactory<MySqlBinlogCdcPipelineProperties, EVENT> {
+public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonDBLogCdcPipelineFactory< EVENT> {
 
   public AbstractMySqlBinlogCdcPipelineFactory(CuratorFramework curatorFramework,
                                                DataProducerFactory dataProducerFactory,
@@ -33,12 +33,7 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
   }
 
   @Override
-  public Class<MySqlBinlogCdcPipelineProperties> propertyClass() {
-    return MySqlBinlogCdcPipelineProperties.class;
-  }
-
-  @Override
-  public CdcPipeline<EVENT> create(MySqlBinlogCdcPipelineProperties cdcPipelineProperties) {
+  public CdcPipeline<EVENT> create(CdcPipelineProperties cdcPipelineProperties) {
     MySqlBinaryLogClient mySqlBinaryLogClient = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
@@ -49,9 +44,9 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 
-    CdcProcessor<EVENT> cdcProcessor = new MySQLCdcProcessor<>(mySqlBinaryLogClient,
+    CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(mySqlBinaryLogClient,
             binlogEntryToEventConverter,
-            sourceTableNameSupplier.getSourceTableName(),
+            sourceTableNameSupplier,
             eventuateSchema);
 
     EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =

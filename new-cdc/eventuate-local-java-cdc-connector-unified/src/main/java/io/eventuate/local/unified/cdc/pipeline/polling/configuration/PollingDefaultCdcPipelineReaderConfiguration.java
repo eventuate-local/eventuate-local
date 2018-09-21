@@ -1,26 +1,32 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.configuration;
 
-import io.eventuate.local.unified.cdc.pipeline.common.configuration.CommonCdcDefaultPipelinePropertiesConfiguration;
-import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.configuration.CommonCdcDefaultPipelineReaderConfiguration;
+import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import io.eventuate.local.unified.cdc.pipeline.polling.factory.PollingCdcPipelineReaderFactory;
-import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineReaderProperties;
+import org.apache.curator.framework.CuratorFramework;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-public class PollingDefaultCdcPipelinePropertiesConfiguration extends CommonCdcDefaultPipelinePropertiesConfiguration {
+public class PollingDefaultCdcPipelineReaderConfiguration extends CommonCdcDefaultPipelineReaderConfiguration {
+
+  @Bean("evenutateLocalPollingCdcPipelineReaderFactory")
+  public CdcPipelineReaderFactory pollingCdcPipelineReaderFactory(CuratorFramework curatorFramework,
+                                                                  BinlogEntryReaderProvider binlogEntryReaderProvider) {
+
+    return new PollingCdcPipelineReaderFactory(curatorFramework, binlogEntryReaderProvider);
+  }
 
   @Profile("EventuatePolling")
-  @Bean
-  public CdcPipelineProperties defaultPollingPipelineProperties() {
-    PollingPipelineProperties pollingPipelineProperties = createPollingPipelineProperties();
+  @Bean("defaultCdcPipelineReaderFactory")
+  public CdcPipelineReaderFactory defaultPollingCdcPipelineReaderFactory(CuratorFramework curatorFramework,
+                                                                         BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
-    initCdcPipelineProperties(pollingPipelineProperties);
-
-    return pollingPipelineProperties;
+    return new PollingCdcPipelineReaderFactory(curatorFramework, binlogEntryReaderProvider);
   }
 
   @Profile("EventuatePolling")
@@ -33,10 +39,6 @@ public class PollingDefaultCdcPipelinePropertiesConfiguration extends CommonCdcD
     initCdcPipelineReaderProperties(pollingPipelineReaderProperties);
 
     return pollingPipelineReaderProperties;
-  }
-
-  private PollingPipelineProperties createPollingPipelineProperties() {
-    return new PollingPipelineProperties();
   }
 
   private PollingPipelineReaderProperties createPollingPipelineReaderProperties() {

@@ -5,6 +5,7 @@ import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTe
 
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new PostgresWalCdcProcessor<PublishedEvent>(postgresWalClient,
+    return new DbLogBasedCdcProcessor<PublishedEvent>(postgresWalClient,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {

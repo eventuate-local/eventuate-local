@@ -8,6 +8,7 @@ import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
@@ -78,7 +79,7 @@ public class MySQLMigrationTest extends AbstractCdcTest {
   }
 
   private CdcProcessor<PublishedEvent> createMySQLCdcProcessor() {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
+    return new DbLogBasedCdcProcessor<>(mySqlBinaryLogClient,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema);

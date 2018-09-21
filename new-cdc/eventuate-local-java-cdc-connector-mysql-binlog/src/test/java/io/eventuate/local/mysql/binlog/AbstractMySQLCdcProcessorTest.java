@@ -5,6 +5,7 @@ import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +33,12 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
 
   @Override
   protected CdcProcessor<PublishedEvent> createCdcProcessor() {
-    return new MySQLCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
+    return new DbLogBasedCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {
       @Override
-      public void start(Consumer consumer) {
+      public void start(Consumer<PublishedEvent> consumer) {
         super.start(consumer);
         mySqlBinaryLogClient.start();
       }

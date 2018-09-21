@@ -1,7 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline.common;
 
 import io.eventuate.local.common.BinlogEntryReader;
-import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -97,7 +97,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                                    PostgresWalClient postgresWalClient,
                                                    OffsetStore offsetStore) {
 
-    return new PostgresWalCdcProcessor<PublishedEvent>(postgresWalClient,
+    return new DbLogBasedCdcProcessor<PublishedEvent>(postgresWalClient,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {

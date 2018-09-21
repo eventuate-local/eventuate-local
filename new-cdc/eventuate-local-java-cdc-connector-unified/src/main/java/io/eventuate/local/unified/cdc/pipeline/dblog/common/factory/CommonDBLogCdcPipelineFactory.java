@@ -2,23 +2,20 @@ package io.eventuate.local.unified.cdc.pipeline.dblog.common.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.local.common.BinlogEntryToEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
-import io.eventuate.local.db.log.common.OffsetStore;
-import io.eventuate.local.db.log.common.PublishingFilter;
+import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.db.log.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.properties.CommonDbLogCdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineFactory;
 import org.apache.curator.framework.CuratorFramework;
 
-import javax.sql.DataSource;
-
-public abstract class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbLogCdcPipelineProperties, EVENT extends BinLogEvent>
-        extends CommonCdcPipelineFactory<PROPERTIES, EVENT> {
+public abstract class CommonDBLogCdcPipelineFactory<EVENT extends BinLogEvent>
+        extends CommonCdcPipelineFactory<EVENT> {
 
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
   protected EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
@@ -46,5 +43,16 @@ public abstract class CommonDBLogCdcPipelineFactory<PROPERTIES extends CommonDbL
             offsetStore,
             publishingFilter,
             createPublishingStrategy());
+  }
+
+  protected DbLogBasedCdcProcessor<EVENT> createCdcProcessor(DbLogClient dbLogClient,
+                                                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                                                             SourceTableNameSupplier sourceTableNameSupplier,
+                                                             EventuateSchema eventuateSchema) {
+    return new DbLogBasedCdcProcessor<EVENT>(dbLogClient,
+            binlogEntryToEventConverter,
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateSchema) {
+    };
   }
 }

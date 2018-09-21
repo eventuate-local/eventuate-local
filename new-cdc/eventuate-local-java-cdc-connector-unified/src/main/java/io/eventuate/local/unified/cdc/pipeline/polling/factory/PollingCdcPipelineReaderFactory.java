@@ -1,21 +1,10 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.factory;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
-import io.eventuate.local.java.common.broker.DataProducerFactory;
-import io.eventuate.local.polling.PollingCdcDataPublisher;
-import io.eventuate.local.polling.PollingCdcProcessor;
 import io.eventuate.local.polling.PollingDao;
-import io.eventuate.local.polling.PollingDataProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
-import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
-import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
-import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineReaderProperties;
 import org.apache.curator.framework.CuratorFramework;
-
-import javax.sql.DataSource;
 
 public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFactory<PollingPipelineReaderProperties, PollingDao> {
 

@@ -9,6 +9,7 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -22,6 +23,11 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
         EventuateKafkaConsumerConfigurationProperties.class})
 public class CommonCdcPipelineConfiguration {
+
+  @Bean
+  public BinlogEntryReaderProvider dbClientProvider() {
+    return new BinlogEntryReaderProvider();
+  }
 
   @Bean
   public EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties() {

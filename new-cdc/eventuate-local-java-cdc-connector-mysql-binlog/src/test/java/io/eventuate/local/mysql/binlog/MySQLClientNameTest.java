@@ -6,6 +6,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
+import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -114,7 +115,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
   }
 
   private CdcProcessor<PublishedEvent> createMySQLCdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient) {
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient,
+    return new DbLogBasedCdcProcessor<>(mySqlBinaryLogClient,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema);

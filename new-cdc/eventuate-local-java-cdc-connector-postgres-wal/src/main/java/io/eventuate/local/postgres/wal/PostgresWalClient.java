@@ -1,6 +1,8 @@
 package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.EventuateLeaderSelectorListener;
 import io.eventuate.local.common.JdbcUrlParser;
@@ -26,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class PostgresWalClient implements DbLogClient {
@@ -96,7 +99,14 @@ public class PostgresWalClient implements DbLogClient {
     return dataSource;
   }
 
-  public void addBinlogEntryHandler(PostgresWalBinlogEntryHandler binlogEntryHandler) {
+  @Override
+  public void addBinlogEntryHandler(EventuateSchema eventuateSchema,
+                                    String sourceTableName,
+                                    BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
+
+    PostgresWalBinlogEntryHandler binlogEntryHandler =
+            new PostgresWalBinlogEntryHandler(eventuateSchema, sourceTableName, eventConsumer);
+
     binlogEntryHandlers.add(binlogEntryHandler);
   }
 

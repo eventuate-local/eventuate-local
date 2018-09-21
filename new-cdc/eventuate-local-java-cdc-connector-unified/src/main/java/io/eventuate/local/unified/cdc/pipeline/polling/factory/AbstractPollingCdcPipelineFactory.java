@@ -10,10 +10,10 @@ import io.eventuate.local.polling.PollingDataProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
-public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonCdcPipelineFactory<PollingPipelineProperties, EVENT> {
+public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonCdcPipelineFactory<EVENT> {
 
   public AbstractPollingCdcPipelineFactory(CuratorFramework curatorFramework,
                                            DataProducerFactory dataProducerFactory,
@@ -23,12 +23,7 @@ public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEven
   }
 
   @Override
-  public Class<PollingPipelineProperties> propertyClass() {
-    return PollingPipelineProperties.class;
-  }
-
-  @Override
-  public CdcPipeline<EVENT> create(PollingPipelineProperties cdcPipelineProperties) {
+  public CdcPipeline<EVENT> create(CdcPipelineProperties cdcPipelineProperties) {
     EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
 
     PollingDataProvider pollingDataProvider = createPollingDataProvider();

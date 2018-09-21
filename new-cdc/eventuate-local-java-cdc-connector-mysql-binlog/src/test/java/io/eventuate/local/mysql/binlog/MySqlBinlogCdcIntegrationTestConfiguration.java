@@ -4,10 +4,7 @@ import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
-import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
-import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.db.log.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -126,7 +123,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
                                                    SourceTableNameSupplier sourceTableNameSupplier,
                                                    EventuateSchema eventuateSchema) {
 
-    return new MySQLCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
+    return new DbLogBasedCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
             new BinlogEntryToPublishedEventConverter(),
             sourceTableNameSupplier.getSourceTableName(),
             eventuateSchema) {

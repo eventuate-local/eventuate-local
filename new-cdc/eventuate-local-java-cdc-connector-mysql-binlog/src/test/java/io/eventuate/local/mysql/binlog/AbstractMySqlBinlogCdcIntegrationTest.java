@@ -73,15 +73,7 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> consumer = (binlogEntry, offset) ->
             publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry));
 
-    MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor = new MySqlBinlogEntryExtractor(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
-
-    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(eventuateSchema,
-            mySqlBinlogEntryExtractor,
-            sourceTableNameSupplier.getSourceTableName(),
-            consumer);
-
-
-    mySqlBinaryLogClient.addBinlogEntryHandler(binlogEntryHandler);
+    mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema, sourceTableNameSupplier.getSourceTableName(), consumer);
 
     mySqlBinaryLogClient.start();
 

@@ -2,24 +2,19 @@ package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.db.log.common.PublishingFilter;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
-import io.eventuate.local.common.SourceTableNameSupplier;
-import io.eventuate.local.postgres.wal.PostgresWalCdcProcessor;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
-import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDBLogCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
-import javax.sql.DataSource;
-
-public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonDBLogCdcPipelineFactory<PostgresWalCdcPipelineProperties, EVENT> {
+public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonDBLogCdcPipelineFactory<EVENT> {
 
   public AbstractPostgresWalCdcPipelineFactory(CuratorFramework curatorFramework,
                                                DataProducerFactory dataProducerFactory,
@@ -38,12 +33,7 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
   }
 
   @Override
-  public Class<PostgresWalCdcPipelineProperties> propertyClass() {
-    return PostgresWalCdcPipelineProperties.class;
-  }
-
-  @Override
-  public CdcPipeline<EVENT> create(PostgresWalCdcPipelineProperties cdcPipelineProperties) {
+  public CdcPipeline<EVENT> create(CdcPipelineProperties cdcPipelineProperties) {
     PostgresWalClient postgresWalClient = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
@@ -54,9 +44,9 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
 
     BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
 
-    CdcProcessor<EVENT> cdcProcessor = new PostgresWalCdcProcessor<>(postgresWalClient,
+    CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(postgresWalClient,
             binlogEntryToEventConverter,
-            sourceTableNameSupplier.getSourceTableName(),
+            sourceTableNameSupplier,
             eventuateSchema);
 
     EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =

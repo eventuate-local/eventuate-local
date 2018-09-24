@@ -1,11 +1,10 @@
 package io.eventuate.local.unified.cdc.pipeline;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogEntryReader;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
+import io.eventuate.local.unified.cdc.pipeline.common.PropertyReader;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
@@ -19,14 +18,14 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.io.IOException;
 import java.util.*;
 
 @Configuration
 public class CdcPipelineConfiguration {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
-  private ObjectMapper objectMapper = new ObjectMapper();
+  private PropertyReader propertyReader = new PropertyReader();
+
   private List<CdcPipeline> cdcPipelines = new ArrayList<>();
 
   @Value("${eventuate.cdc.pipeline.properties:#{null}}")
@@ -64,7 +63,7 @@ public class CdcPipelineConfiguration {
 
     Optional
             .ofNullable(cdcPipelineReaderJsonProperties)
-            .map(this::convertPropertiesToListOfMaps)
+            .map(propertyReader::convertPropertiesToListOfMaps)
             .orElseGet(() -> {
               createStartSaveCdcDefaultPipelineReader(defaultCdcPipelineReaderProperties);
               return Collections.emptyList();
@@ -74,7 +73,7 @@ public class CdcPipelineConfiguration {
 
     Optional
             .ofNullable(cdcPipelineJsonProperties)
-            .map(properties -> Arrays.asList(JSonMapper.fromJson(properties, CdcPipelineProperties[].class)))
+            .map(propertyReader::convertPropertiesToListOfMaps)
             .orElseGet(() -> {
               createStartSaveCdcDefaultPipeline(defaultCdcPipelineProperties);
               return Collections.emptyList();
@@ -93,24 +92,20 @@ public class CdcPipelineConfiguration {
     cdcPipelines.forEach(CdcPipeline::stop);
   }
 
-  private List<Map<String, Object>> convertPropertiesToListOfMaps(String properties) {
-    try {
-      return objectMapper.readValue(properties, List.class);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
+  private void createStartSaveCdcPipeline(Map<String, Object> properties) {
+    propertyReader.checkForUnknownProperties(properties, CdcPipelineProperties.class);
 
-  private void createStartSaveCdcPipeline(CdcPipelineProperties properties) {
-    properties.validate();
+    CdcPipelineProperties cdcPipelineProperties = propertyReader
+            .convertMapToPropertyClass(properties, CdcPipelineProperties.class);
 
-    CdcPipeline cdcPipeline = createCdcPipeline(properties);
+    cdcPipelineProperties.validate();
+
+    CdcPipeline cdcPipeline = createCdcPipeline(cdcPipelineProperties);
     cdcPipeline.start();
     cdcPipelines.add(cdcPipeline);
   }
 
   private void createStartSaveCdcDefaultPipeline(CdcPipelineProperties cdcDefaultPipelineProperties) {
-
     cdcDefaultPipelineProperties.validate();
     CdcPipeline cdcPipeline = defaultCdcPipelineFactory.create(cdcDefaultPipelineProperties);
     cdcPipeline.start();
@@ -137,13 +132,17 @@ public class CdcPipelineConfiguration {
 
   private void createCdcPipelineReader(Map<String, Object> properties) {
 
-    CdcPipelineReaderProperties cdcPipelineReaderProperties = objectMapper.convertValue(properties, CdcPipelineReaderProperties.class);
+    CdcPipelineReaderProperties cdcPipelineReaderProperties = propertyReader
+            .convertMapToPropertyClass(properties, CdcPipelineReaderProperties.class);
     cdcPipelineReaderProperties.validate();
 
     CdcPipelineReaderFactory<? extends CdcPipelineReaderProperties, ? extends BinlogEntryReader> cdcPipelineReaderFactory =
             findCdcPipelineReaderFactory(cdcPipelineReaderProperties.getType());
 
-    CdcPipelineReaderProperties exactCdcPipelineReaderProperties = objectMapper.convertValue(properties, cdcPipelineReaderFactory.propertyClass());
+    propertyReader.checkForUnknownProperties(properties, cdcPipelineReaderFactory.propertyClass());
+
+    CdcPipelineReaderProperties exactCdcPipelineReaderProperties = propertyReader
+            .convertMapToPropertyClass(properties, cdcPipelineReaderFactory.propertyClass());
     exactCdcPipelineReaderProperties.validate();
 
     binlogEntryReaderProvider.addReader(cdcPipelineReaderProperties.getName(),

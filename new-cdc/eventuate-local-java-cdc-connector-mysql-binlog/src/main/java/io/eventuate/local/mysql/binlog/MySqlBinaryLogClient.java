@@ -6,56 +6,33 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import com.sun.scenario.effect.Offset;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
-public class MySqlBinaryLogClient implements DbLogClient {
-
-  private String name;
-
-  private BinaryLogClient client;
-  private long binlogClientUniqueId;
-
-  private final String dbUserName;
-  private final String dbPassword;
-  private final String host;
-  private final int port;
-  private String defaultDatabase;
-  private DataSource dataSource;
-
-  private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
-  private String binlogFilename;
-  private long offset;
-
-  private int connectionTimeoutInMilliseconds;
-  private int maxAttemptsForBinlogConnection;
+public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler> {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  private List<MySqlBinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
-
-  private AtomicBoolean running = new AtomicBoolean(false);
-
-  private LeaderSelector leaderSelector;
-
-  private CuratorFramework curatorFramework;
-  private String leadershipLockPath;
-
+  private String name;
+  private BinaryLogClient client;
+  private long binlogClientUniqueId;
+  private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
+  private String binlogFilename;
+  private long offset;
+  private DataSource dataSource;
+  private int connectionTimeoutInMilliseconds;
+  private int maxAttemptsForBinlogConnection;
   private OffsetStore offsetStore;
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
@@ -72,34 +49,23 @@ public class MySqlBinaryLogClient implements DbLogClient {
                               OffsetStore offsetStore,
                               DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
+    super(dbUserName, dbPassword, dataSourceUrl, curatorFramework, leadershipLockPath);
+
     this.binlogClientUniqueId = binlogClientUniqueId;
-    this.dbUserName = dbUserName;
-    this.dbPassword = dbPassword;
-
-    JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceUrl);
-    host = jdbcUrl.getHost();
-    port = jdbcUrl.getPort();
-    defaultDatabase = jdbcUrl.getDatabase();
-
-
     this.dataSource = dataSource;
     this.name = clientName;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
-
-    this.curatorFramework = curatorFramework;
-    this.leadershipLockPath = leadershipLockPath;
-
     this.offsetStore = offsetStore;
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
   }
 
-  public OffsetStore getOffsetStore() {
-    return offsetStore;
+  public String getName() {
+    return name;
   }
 
-  public DataSource getDataSource() {
-    return dataSource;
+  public OffsetStore getOffsetStore() {
+    return offsetStore;
   }
 
   @Override
@@ -111,20 +77,13 @@ public class MySqlBinaryLogClient implements DbLogClient {
             eventuateSchema,
             sourceTableName,
             eventConsumer,
-            new MySqlBinlogEntryExtractor(getDataSource(), sourceTableName, eventuateSchema));
+            new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema));
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }
 
   @Override
-  public void start() {
-    leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,
-            new EventuateLeaderSelectorListener(this::leaderStart, this::leaderStop));
-
-    leaderSelector.start();
-  }
-
-  private void leaderStart() {
+  protected void leaderStart() {
     running.set(true);
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
@@ -192,7 +151,7 @@ public class MySqlBinaryLogClient implements DbLogClient {
       binlogEntryHandlers
               .stream()
               .filter(bh -> bh.isFor(database, table, defaultDatabase))
-              .forEach(bh -> bh.accept(eventData, getCurrentBinlogFilename(), offset, startingBinlogFileOffset));
+              .forEach(bh -> bh.accept(eventData, binlogFilename, offset, startingBinlogFileOffset));
     }
   }
 
@@ -244,14 +203,7 @@ public class MySqlBinaryLogClient implements DbLogClient {
   }
 
   @Override
-  public void stop() {
-    leaderSelector.close();
-    leaderStop();
-
-    binlogEntryHandlers.clear();
-  }
-
-  private void leaderStop() {
+  protected void leaderStop() {
     if (!running.compareAndSet(true, false)) {
       return;
     }
@@ -261,17 +213,5 @@ public class MySqlBinaryLogClient implements DbLogClient {
     } catch (IOException e) {
       logger.error("Cannot stop the MySqlBinaryLogClient", e);
     }
-  }
-
-  public String getCurrentBinlogFilename() {
-    return this.binlogFilename;
-  }
-
-  public long getCurrentOffset() {
-    return this.offset;
-  }
-
-  public String getName() {
-    return name;
   }
 }

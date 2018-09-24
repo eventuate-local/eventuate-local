@@ -54,8 +54,6 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
     PostgresWalClient postgresWalClient = new PostgresWalClient(dataSourceURL,
             dbUserName,
             dbPassword,
-            dataSource,
-            eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),

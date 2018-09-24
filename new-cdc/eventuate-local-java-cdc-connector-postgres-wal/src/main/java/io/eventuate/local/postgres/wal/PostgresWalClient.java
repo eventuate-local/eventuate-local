@@ -4,12 +4,9 @@ import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogFileOffset;
-import io.eventuate.local.common.EventuateLeaderSelectorListener;
-import io.eventuate.local.common.JdbcUrlParser;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.postgresql.PGConnection;
 import org.postgresql.PGProperty;
 import org.postgresql.replication.LogSequenceNumber;
@@ -17,7 +14,6 @@ import org.postgresql.replication.PGReplicationStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.Connection;
@@ -27,18 +23,11 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-public class PostgresWalClient implements DbLogClient {
+public class PostgresWalClient extends DbLogClient<PostgresWalBinlogEntryHandler> {
   private Logger logger = LoggerFactory.getLogger(this.getClass());
-  private String url;
-  private String user;
-  private String password;
-  private DataSource dataSource;
-  private String name;
-  private String defaultDatabase;
   private PostgresWalBinlogEntryExtractor postgresWalBinlogEntryExtractor;
   private int walIntervalInMilliseconds;
   private int connectionTimeoutInMilliseconds;
@@ -46,22 +35,14 @@ public class PostgresWalClient implements DbLogClient {
   private Connection connection;
   private PGReplicationStream stream;
   private CountDownLatch countDownLatchForStop;
-  private AtomicBoolean running = new AtomicBoolean(false);
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
   private List<PostgresWalBinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
-  private LeaderSelector leaderSelector;
-
-  private CuratorFramework curatorFramework;
-  private String leadershipLockPath;
-
   private OffsetStore offsetStore;
 
   public PostgresWalClient(String url,
                            String user,
                            String password,
-                           DataSource dataSource,
-                           String clientName,
                            int walIntervalInMilliseconds,
                            int connectionTimeoutInMilliseconds,
                            int maxAttemptsForBinlogConnection,
@@ -70,33 +51,20 @@ public class PostgresWalClient implements DbLogClient {
                            CuratorFramework curatorFramework,
                            String leadershipLockPath,
                            OffsetStore offsetStore) {
-    this.url = url;
-    this.user = user;
-    this.password = password;
-    this.dataSource = dataSource;
-    name = clientName;
-    this.defaultDatabase = JdbcUrlParser.parse(url).getDatabase();
+
+    super(user, password, url, curatorFramework, leadershipLockPath);
+
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
     this.replicationStatusIntervalInMilliseconds = replicationStatusIntervalInMilliseconds;
     this.replicationSlotName = replicationSlotName;
     this.postgresWalBinlogEntryExtractor = new PostgresWalBinlogEntryExtractor();
-    this.curatorFramework = curatorFramework;
-    this.leadershipLockPath = leadershipLockPath;
     this.offsetStore = offsetStore;
   }
 
   public OffsetStore getOffsetStore() {
     return offsetStore;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public DataSource getDataSource() {
-    return dataSource;
   }
 
   @Override
@@ -110,18 +78,11 @@ public class PostgresWalClient implements DbLogClient {
     binlogEntryHandlers.add(binlogEntryHandler);
   }
 
-  private void leaderStart() {
+  @Override
+  protected void leaderStart() {
     running.set(true);
 
     new Thread(() -> connectWithRetriesOnFail(offsetStore.getLastBinlogFileOffset())).start();
-  }
-
-  @Override
-  public void start() {
-    leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,
-            new EventuateLeaderSelectorListener(this::leaderStart, this::leaderStop));
-
-    leaderSelector.start();
   }
 
   private void connectWithRetriesOnFail(Optional<BinlogFileOffset> binlogFileOffset) {
@@ -154,13 +115,13 @@ public class PostgresWalClient implements DbLogClient {
     countDownLatchForStop = new CountDownLatch(1);
 
     Properties props = new Properties();
-    PGProperty.USER.set(props, user);
-    PGProperty.PASSWORD.set(props, password);
+    PGProperty.USER.set(props, dbUserName);
+    PGProperty.PASSWORD.set(props, dbPassword);
     PGProperty.ASSUME_MIN_SERVER_VERSION.set(props, "9.4");
     PGProperty.REPLICATION.set(props, "database");
     PGProperty.PREFER_QUERY_MODE.set(props, "simple");
 
-    connection = DriverManager.getConnection(url, props);
+    connection = DriverManager.getConnection(dataSourceUrl, props);
 
     PGConnection replConnection = connection.unwrap(PGConnection.class);
 
@@ -225,18 +186,11 @@ public class PostgresWalClient implements DbLogClient {
   }
 
   @Override
-  public void stop() {
+  protected void leaderStop() {
     if (!running.compareAndSet(true, false)) {
       return;
     }
 
-    leaderSelector.close();
-    leaderStop();
-    binlogEntryHandlers.clear();
-  }
-
-  private void leaderStop() {
-    running.set(false);
     try {
       countDownLatchForStop.await();
     } catch (InterruptedException e) {

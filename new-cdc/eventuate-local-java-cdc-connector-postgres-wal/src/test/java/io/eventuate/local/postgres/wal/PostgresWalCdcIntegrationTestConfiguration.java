@@ -62,8 +62,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
     return new PostgresWalClient(dbUrl,
             dbUserName,
             dbPassword,
-            dataSource,
-            eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),

@@ -3,7 +3,6 @@ package io.eventuate.local.polling;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntryToEventConverter;
 import io.eventuate.local.common.CdcProcessor;
-import io.eventuate.local.common.JdbcUrlParser;
 import java.util.function.Consumer;
 
 public class PollingCdcProcessor<EVENT> implements CdcProcessor<EVENT> {
@@ -27,14 +26,10 @@ public class PollingCdcProcessor<EVENT> implements CdcProcessor<EVENT> {
 
   @Override
   public void start(Consumer<EVENT> eventConsumer) {
-    PollingEntryHandler pollingEntryHandler = new PollingEntryHandler(
-            eventuateSchema,
+    pollingDao.addPollingEntryHandler(eventuateSchema,
             sourceTableName,
             (binlogEntry, offset) -> eventConsumer.accept(binlogEntryToEventConverter.convert(binlogEntry)),
-            pollingDataProvider.publishedField(),
-            pollingDataProvider.idField());
-
-    pollingDao.addPollingEntryHandler(pollingEntryHandler);
+            pollingDataProvider);
   }
 
   @Override

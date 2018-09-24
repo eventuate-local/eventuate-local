@@ -48,8 +48,6 @@ public abstract class AbstractPostgresWalCdcPipelineReaderFactory
     return new PostgresWalClient(postgresWalCdcPipelineReaderProperties.getDataSourceUrl(),
             postgresWalCdcPipelineReaderProperties.getDataSourceUserName(),
             postgresWalCdcPipelineReaderProperties.getDataSourcePassword(),
-            dataSource,
-            postgresWalCdcPipelineReaderProperties.getMySqlBinLogClientName(),
             postgresWalCdcPipelineReaderProperties.getBinlogConnectionTimeoutInMilliseconds(),
             postgresWalCdcPipelineReaderProperties.getMaxAttemptsForBinlogConnection(),
             postgresWalCdcPipelineReaderProperties.getPostgresWalIntervalInMilliseconds(),

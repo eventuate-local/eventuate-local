@@ -37,7 +37,6 @@ public class PostgresWalClient extends DbLogClient<PostgresWalBinlogEntryHandler
   private CountDownLatch countDownLatchForStop;
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
-  private List<PostgresWalBinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
   private OffsetStore offsetStore;
 
   public PostgresWalClient(String url,

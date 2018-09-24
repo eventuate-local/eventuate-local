@@ -4,16 +4,17 @@ import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
-import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
-import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.db.log.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.*;
@@ -25,6 +26,8 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import javax.xml.crypto.Data;
+import java.util.function.Consumer;
 
 @Configuration
 @EnableAutoConfiguration
@@ -49,29 +52,33 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  @Conditional(MySqlBinlogCondition.class)
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "EVENTS");
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "events");
   }
 
   @Bean
   @Conditional(MySqlBinlogCondition.class)
-  public MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
-                                                                   EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                                   SourceTableNameSupplier sourceTableNameSupplier,
-                                                                   IWriteRowsEventDataParser<PublishedEvent> eventDataParser) {
+  public MySqlBinaryLogClient mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
+                                                   DataSource dataSource,
+                                                   EventuateConfigurationProperties eventuateConfigurationProperties,
+                                                   CuratorFramework curatorFramework,
+                                                   OffsetStore offsetStore,
+                                                   DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
-    return new MySqlBinaryLogClient<>(eventDataParser,
+    return new MySqlBinaryLogClient(
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
-            jdbcUrl.getHost(),
-            jdbcUrl.getPort(),
+            dataSourceURL,
+            dataSource,
             eventuateConfigurationProperties.getBinlogClientId(),
-            sourceTableNameSupplier.getSourceTableName(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
+            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath(),
+            offsetStore,
+            debeziumBinlogOffsetKafkaStore);
   }
 
   @Bean
@@ -79,15 +86,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema, DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
     return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema);
-  }
-
-  @Bean
-  @Conditional(MySqlBinlogCondition.class)
-  public IWriteRowsEventDataParser<PublishedEvent> eventDataParser(EventuateSchema eventuateSchema,
-                                                                   DataSource dataSource,
-                                                                   SourceTableNameSupplier sourceTableNameSupplier) {
-
-    return new WriteRowsEventDataParser(dataSource, sourceTableNameSupplier.getSourceTableName(), eventuateSchema);
   }
 
   @Bean
@@ -108,12 +106,11 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Primary
   public OffsetStore databaseOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                            EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                           MySqlBinaryLogClient mySqlBinaryLogClient,
                                                            EventuateKafkaProducer eventuateKafkaProducer,
                                                            EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
-            mySqlBinaryLogClient.getName(),
+            eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);
@@ -121,11 +118,21 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   @Conditional(MySqlBinlogCondition.class)
-  public CdcProcessor<PublishedEvent> cdcProcessor(MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient,
-                                                   OffsetStore offsetStore,
-                                                   DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+  public CdcProcessor<PublishedEvent> cdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient,
+                                                   @Value("${spring.datasource.url}") String dataSourceUrl,
+                                                   SourceTableNameSupplier sourceTableNameSupplier,
+                                                   EventuateSchema eventuateSchema) {
 
-    return new MySQLCdcProcessor<>(mySqlBinaryLogClient, offsetStore, debeziumBinlogOffsetKafkaStore);
+    return new DbLogBasedCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
+            new BinlogEntryToPublishedEventConverter(),
+            sourceTableNameSupplier.getSourceTableName(),
+            eventuateSchema) {
+      @Override
+      public void start(Consumer<PublishedEvent> publishedEventConsumer) {
+        super.start(publishedEventConsumer);
+        mySqlBinaryLogClient.start();
+      }
+    };
   }
 
   @Bean
@@ -156,5 +163,16 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             offsetStore,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy);
+  }
+
+  @Bean
+  public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
+    RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+    CuratorFramework client = CuratorFrameworkFactory.
+            builder().retryPolicy(retryPolicy)
+            .connectString(eventuateLocalZookeperConfigurationProperties.getConnectionString())
+            .build();
+    client.start();
+    return client;
   }
 }

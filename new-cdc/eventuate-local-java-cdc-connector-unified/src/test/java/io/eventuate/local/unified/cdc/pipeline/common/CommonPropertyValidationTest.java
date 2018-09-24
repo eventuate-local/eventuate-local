@@ -1,7 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.ValidatableProperties;
 import org.junit.Assert;
 
 import java.util.ArrayList;
@@ -13,35 +13,18 @@ public class CommonPropertyValidationTest {
 
   protected ObjectMapper objectMapper = new ObjectMapper();
 
-  protected  <PROPERTIES extends CdcPipelineProperties> void testCommonRequiredProperties(Class<PROPERTIES> propertyClass,
-                                                                                          PropertyBuilder propertyBuilder) throws Exception {
-    propertyBuilder.addString("dataSourceUrl", "jdbc:correctdb://localhost/eventuate");
-    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "dataSourceUserName must not be null");
-
-    propertyBuilder.addString("dataSourceUserName", "testUser");
-    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "dataSourcePassword must not be null");
-
-    propertyBuilder.addString("dataSourcePassword", "testPassword");
-    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "dataSourceDriverClassName must not be null");
-
-    propertyBuilder.addString("dataSourceDriverClassName", "com.correct.db.Driver");
-    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "leadershipLockPath must not be null");
-
-    propertyBuilder.addString("leadershipLockPath", "/eventuate/leader/test");
-  }
-
-  protected  <PROPERTIES extends CdcPipelineProperties> void assertExceptionMessage(String properties,
-                                                                                 Class<PROPERTIES> propertyClass,
-                                                                                 String message) throws Exception {
+  protected  <PROPERTIES extends ValidatableProperties> void assertExceptionMessage(String properties,
+                                                                                    Class<PROPERTIES> propertyClass,
+                                                                                    String message) throws Exception {
     assertExceptionMessage(properties, propertyClass, Optional.of(message));
   }
 
-  protected <PROPERTIES extends CdcPipelineProperties> void assertNoException(String properties,
+  protected <PROPERTIES extends ValidatableProperties> void assertNoException(String properties,
                                                                             Class<PROPERTIES> propertyClass) throws Exception {
     assertExceptionMessage(properties, propertyClass, Optional.empty());
   }
 
-  protected <PROPERTIES extends CdcPipelineProperties> void assertExceptionMessage(String properties,
+  protected <PROPERTIES extends ValidatableProperties> void assertExceptionMessage(String properties,
                                                                                  Class<PROPERTIES> propertyClass,
                                                                                  Optional<String> message) throws Exception {
 

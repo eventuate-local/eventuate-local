@@ -1,9 +1,9 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.properties;
 
 
-import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 
-public class PollingPipelineProperties extends CdcPipelineProperties {
+public class PollingPipelineReaderProperties extends CdcPipelineReaderProperties {
   private Integer pollingIntervalInMilliseconds = 500;
   private Integer maxEventsPerPolling = 1000;
   private Integer maxAttemptsForPolling = 100;

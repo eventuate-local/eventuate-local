@@ -6,73 +6,94 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.local.common.BinLogEvent;
-import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
+import io.eventuate.local.db.log.common.OffsetStore;
+import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
-public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<M> {
-
-  private String name;
-
-  private BinaryLogClient client;
-  private long binlogClientUniqueId;
-
-  private final String dbUserName;
-  private final String dbPassword;
-  private final String host;
-  private final int port;
-
-  private final IWriteRowsEventDataParser<M> writeRowsEventDataParser;
-
-  private final String sourceTableName;
-  private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
-  private String binlogFilename;
-  private long offset;
-
-  private int connectionTimeoutInMilliseconds;
-  private int maxAttemptsForBinlogConnection;
+public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler> {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  public MySqlBinaryLogClient(IWriteRowsEventDataParser<M> writeRowsEventDataParser,
-                              String dbUserName,
+  private String name;
+  private BinaryLogClient client;
+  private long binlogClientUniqueId;
+  private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
+  private String binlogFilename;
+  private long offset;
+  private DataSource dataSource;
+  private int connectionTimeoutInMilliseconds;
+  private int maxAttemptsForBinlogConnection;
+  private OffsetStore offsetStore;
+  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
+
+  public MySqlBinaryLogClient(String dbUserName,
                               String dbPassword,
-                              String host,
-                              int port,
+                              String dataSourceUrl,
+                              DataSource dataSource,
                               long binlogClientUniqueId,
-                              String sourceTableName,
                               String clientName,
                               int connectionTimeoutInMilliseconds,
-                              int maxAttemptsForBinlogConnection) {
-    this.writeRowsEventDataParser = writeRowsEventDataParser;
+                              int maxAttemptsForBinlogConnection,
+                              CuratorFramework curatorFramework,
+                              String leadershipLockPath,
+                              OffsetStore offsetStore,
+                              DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+
+    super(dbUserName, dbPassword, dataSourceUrl, curatorFramework, leadershipLockPath);
+
     this.binlogClientUniqueId = binlogClientUniqueId;
-    this.dbUserName = dbUserName;
-    this.dbPassword = dbPassword;
-    this.host = host;
-    this.port = port;
-    this.sourceTableName = sourceTableName;
+    this.dataSource = dataSource;
     this.name = clientName;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
+    this.offsetStore = offsetStore;
+    this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
   }
 
-  public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<M> eventConsumer) {
+  public String getName() {
+    return name;
+  }
+
+  public OffsetStore getOffsetStore() {
+    return offsetStore;
+  }
+
+  @Override
+  public void addBinlogEntryHandler(EventuateSchema eventuateSchema,
+                                    String sourceTableName,
+                                    BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
+
+    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(
+            eventuateSchema,
+            sourceTableName,
+            eventConsumer,
+            new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema));
+
+    binlogEntryHandlers.add(binlogEntryHandler);
+  }
+
+  @Override
+  protected void leaderStart() {
+    running.set(true);
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
     client.setServerId(binlogClientUniqueId);
     client.setKeepAliveInterval(5 * 1000);
 
+    Optional<BinlogFileOffset> binlogFileOffset = getStartingBinlogFileOffset();
+
     BinlogFileOffset bfo = binlogFileOffset.orElse(new BinlogFileOffset("", 4L));
+
     logger.debug("Starting with {}", bfo);
     client.setBinlogFilename(bfo.getBinlogFilename());
     client.setBinlogPosition(bfo.getOffset());
@@ -82,17 +103,15 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
       switch (event.getHeader().getEventType()) {
         case TABLE_MAP: {
           TableMapEventData tableMapEvent = event.getData();
-          if (tableMapEvent.getTable().equalsIgnoreCase(sourceTableName)) {
-            tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
-          }
+          tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
           break;
         }
         case EXT_WRITE_ROWS: {
-          handleWriteRowsEvent(event, eventConsumer);
+          handleWriteRowsEvent(event, binlogFileOffset);
           break;
         }
         case WRITE_ROWS: {
-          handleWriteRowsEvent(event, eventConsumer);
+          handleWriteRowsEvent(event, binlogFileOffset);
           break;
         }
         case ROTATE: {
@@ -108,19 +127,31 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
     connectWithRetriesOnFail();
   }
 
-  private void handleWriteRowsEvent(Event event, Consumer<M> eventConsumer) {
+  private Optional<BinlogFileOffset> getStartingBinlogFileOffset() {
+    Optional<BinlogFileOffset> binlogFileOffset = offsetStore.getLastBinlogFileOffset();
+
+    if (!binlogFileOffset.isPresent()) {
+      binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
+    }
+
+    return binlogFileOffset;
+  }
+
+  private void handleWriteRowsEvent(Event event, Optional<BinlogFileOffset> startingBinlogFileOffset) {
     logger.debug("Got binlog event {}", event);
     offset = ((EventHeaderV4) event.getHeader()).getPosition();
     WriteRowsEventData eventData = event.getData();
     if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
-      try {
-        eventConsumer.accept(writeRowsEventDataParser.parseEventData(eventData,
-                getCurrentBinlogFilename(), offset
-                )
-        );
-      } catch (IOException e) {
-        throw new RuntimeException("Event row parsing exception", e);
-      }
+
+      TableMapEventData tableMapEventData = tableMapEventByTableId.get(eventData.getTableId());
+
+      String database = tableMapEventData.getDatabase();
+      String table = tableMapEventData.getTable();
+
+      binlogEntryHandlers
+              .stream()
+              .filter(bh -> bh.isFor(database, table, defaultDatabase))
+              .forEach(bh -> bh.accept(eventData, binlogFilename, offset, startingBinlogFileOffset));
     }
   }
 
@@ -171,24 +202,16 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
     return eventDeserializer;
   }
 
-  public void stop() {
+  @Override
+  protected void leaderStop() {
+    if (!running.compareAndSet(true, false)) {
+      return;
+    }
+
     try {
       client.disconnect();
     } catch (IOException e) {
       logger.error("Cannot stop the MySqlBinaryLogClient", e);
     }
   }
-
-  public String getCurrentBinlogFilename() {
-    return this.binlogFilename;
-  }
-
-  public long getCurrentOffset() {
-    return this.offset;
-  }
-
-  public String getName() {
-    return name;
-  }
-
 }

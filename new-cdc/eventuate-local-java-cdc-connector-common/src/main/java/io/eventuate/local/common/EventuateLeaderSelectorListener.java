@@ -9,10 +9,12 @@ import org.slf4j.LoggerFactory;
 public class EventuateLeaderSelectorListener implements LeaderSelectorListener {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
-  private EventTableChangesToAggregateTopicTranslator eventTableChangesToAggregateTopicTranslator;
+  private Runnable start;
+  private Runnable stop;
 
-  public EventuateLeaderSelectorListener(EventTableChangesToAggregateTopicTranslator eventTableChangesToAggregateTopicTranslator) {
-    this.eventTableChangesToAggregateTopicTranslator = eventTableChangesToAggregateTopicTranslator;
+  public EventuateLeaderSelectorListener(Runnable start, Runnable stop) {
+    this.start = start;
+    this.stop = stop;
   }
 
   @Override
@@ -23,7 +25,7 @@ public class EventuateLeaderSelectorListener implements LeaderSelectorListener {
   private void takeLeadership() throws InterruptedException {
     logger.info("Taking leadership");
     try {
-      eventTableChangesToAggregateTopicTranslator.startCapturingChanges();
+      start.run();
     } catch (Throwable t) {
       logger.error("In takeLeadership", t);
       throw t instanceof RuntimeException ? (RuntimeException) t : new RuntimeException(t);
@@ -58,10 +60,6 @@ public class EventuateLeaderSelectorListener implements LeaderSelectorListener {
 
   private void resignLeadership() {
     logger.info("Resigning leadership");
-    try {
-      eventTableChangesToAggregateTopicTranslator.stopCapturingChanges();
-    } catch (InterruptedException e) {
-      logger.error("While handling SUSPEND", e);
-    }
+    stop.run();
   }
 }

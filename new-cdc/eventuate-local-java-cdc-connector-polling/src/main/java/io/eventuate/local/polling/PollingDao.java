@@ -1,73 +1,133 @@
 package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.BinlogEntryReader;
+import io.eventuate.local.common.BinlogFileOffset;
+import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
+import java.util.concurrent.CountDownLatch;
+import java.util.function.BiConsumer;
 
-public class PollingDao<EVENT_BEAN, EVENT, ID> {
+public class PollingDao extends BinlogEntryReader<PollingEntryHandler> {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
-  private PollingDataProvider<EVENT_BEAN, EVENT, ID> pollingDataParser;
-  private DataSource dataSource;
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private int maxEventsPerPolling;
   private int maxAttemptsForPolling;
   private int pollingRetryIntervalInMilliseconds;
+  private CountDownLatch stopCountDownLatch = new CountDownLatch(1);
+  private int pollingIntervalInMilliseconds;
 
-  public PollingDao(PollingDataProvider<EVENT_BEAN, EVENT, ID> pollingDataParser,
-          DataSource dataSource,
-          int maxEventsPerPolling,
-          int maxAttemptsForPolling,
-          int pollingRetryIntervalInMilliseconds) {
+  public PollingDao(DataSource dataSource,
+                    int maxEventsPerPolling,
+                    int maxAttemptsForPolling,
+                    int pollingRetryIntervalInMilliseconds,
+                    int pollingIntervalInMilliseconds,
+                    CuratorFramework curatorFramework,
+                    String leadershipLockPath) {
+
+    super(curatorFramework, leadershipLockPath);
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
     }
 
-    this.pollingDataParser = pollingDataParser;
-    this.dataSource = dataSource;
+    this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
     this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     this.maxEventsPerPolling = maxEventsPerPolling;
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
   }
 
-  public int getMaxEventsPerPolling() {
-    return maxEventsPerPolling;
+  public void addPollingEntryHandler(EventuateSchema eventuateSchema,
+                                     String sourceTableName,
+                                     BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer,
+                                     PollingDataProvider pollingDataProvider) {
+
+    binlogEntryHandlers.add(new PollingEntryHandler(eventuateSchema,
+            sourceTableName, eventConsumer, pollingDataProvider.publishedField(), pollingDataProvider.idField()));
   }
 
-  public void setMaxEventsPerPolling(int maxEventsPerPolling) {
-    this.maxEventsPerPolling = maxEventsPerPolling;
+  @Override
+  protected void leaderStart() {
+    running.set(true);
+
+    new Thread(() -> {
+
+      while (running.get()) {
+        try {
+
+          binlogEntryHandlers.forEach(this::processEvents);
+
+          try {
+            Thread.sleep(pollingIntervalInMilliseconds);
+          } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+          }
+        } catch (Exception e) {
+          logger.error(e.getMessage(), e);
+        }
+      }
+      stopCountDownLatch.countDown();
+    }).start();
   }
 
-  public List<EVENT> findEventsToPublish() {
+  @Override
+  protected void leaderStop() {
+    if (!running.compareAndSet(true, false)) {
+      return;
+    }
 
-
-    String query = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
-      pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
-
-    List<EVENT_BEAN> messageBeans = handleConnectionLost(() -> namedParameterJdbcTemplate.query(query,
-      ImmutableMap.of("limit", maxEventsPerPolling), new BeanPropertyRowMapper(pollingDataParser.eventBeanClass())));
-
-    return messageBeans.stream().map(pollingDataParser::transformEventBeanToEvent).collect(Collectors.toList());
+    try {
+      stopCountDownLatch.await();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  public void markEventsAsPublished(List<EVENT> events) {
+  public void processEvents(PollingEntryHandler handler) {
+    String findEventsQuery = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
+            handler.getQualifiedTable(), handler.getPublishedField(), handler.getIdField());
 
-    List<ID> ids = events.stream().map(message -> pollingDataParser.getId(message)).collect(Collectors.toList());
+    SqlRowSet sqlRowSet = handleConnectionLost(() ->
+      namedParameterJdbcTemplate.queryForRowSet(findEventsQuery, ImmutableMap.of("limit", maxEventsPerPolling)));
 
-    String query = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
-        pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
+    List<Object> ids = new ArrayList<>();
 
-    handleConnectionLost(() -> namedParameterJdbcTemplate.update(query, ImmutableMap.of("ids", ids)));
+    while (sqlRowSet.next()) {
+      ids.add(sqlRowSet.getObject(handler.getIdField()));
+
+      handler.accept(new BinlogEntry() {
+        @Override
+        public Object getColumn(String name) {
+          return sqlRowSet.getObject(name);
+        }
+
+        @Override
+        public BinlogFileOffset getBinlogFileOffset() {
+          return null;
+        }
+      });
+    }
+
+    String markEventsAsReadQuery = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
+            handler.getQualifiedTable(), handler.getPublishedField(), handler.getIdField());
+
+    if (!ids.isEmpty()) {
+      handleConnectionLost(() -> namedParameterJdbcTemplate.update(markEventsAsReadQuery, ImmutableMap.of("ids", ids)));
+    }
   }
 
   private <T> T handleConnectionLost(Callable<T> query) {

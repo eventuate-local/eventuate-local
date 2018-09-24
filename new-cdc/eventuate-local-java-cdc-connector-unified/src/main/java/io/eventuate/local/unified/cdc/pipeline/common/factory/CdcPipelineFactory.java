@@ -4,8 +4,7 @@ import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 
-public interface CdcPipelineFactory<PROPERTIES extends CdcPipelineProperties, EVENT extends BinLogEvent> {
-  boolean supports(String type);
-  Class<PROPERTIES> propertyClass();
-  CdcPipeline<EVENT> create(PROPERTIES cdcPipelineProperties);
+public interface CdcPipelineFactory<EVENT extends BinLogEvent> {
+  boolean supports(String type, String readerType);
+  CdcPipeline<EVENT> create(CdcPipelineProperties cdcPipelineProperties);
 }

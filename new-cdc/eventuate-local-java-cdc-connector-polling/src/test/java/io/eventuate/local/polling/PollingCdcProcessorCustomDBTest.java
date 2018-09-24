@@ -1,19 +1,16 @@
 package io.eventuate.local.polling;
 
-import io.eventuate.local.common.CdcProcessor;
-import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.*;
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
 import io.eventuate.local.testutil.SqlScriptEditor;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -34,11 +31,18 @@ public class PollingCdcProcessorCustomDBTest extends AbstractPollingCdcProcessor
 
     @Bean
     @Primary
-    public CdcProcessor<PublishedEvent> pollingCdcProcessor(EventuateConfigurationProperties eventuateConfigurationProperties,
-            PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
+    public CdcProcessor<PublishedEvent> pollingCdcProcessor(@Value("${spring.datasource.url}") String dbUrl,
+                                                            EventuateConfigurationProperties eventuateConfigurationProperties,
+                                                            PollingDao pollingDao,
+                                                            PollingDataProvider pollingDataProvider,
+                                                            EventuateSchema eventuateSchema,
+                                                            SourceTableNameSupplier sourceTableNameSupplier) {
 
-      customDBCreator.create(eventuateLocalCustomDBSqlEditor);
-      return new PollingCdcProcessor<>(pollingDao, eventuateConfigurationProperties.getPollingIntervalInMilliseconds());
+      return new PollingCdcProcessor<>(pollingDao,
+              pollingDataProvider,
+              new BinlogEntryToPublishedEventConverter(),
+              eventuateSchema,
+              sourceTableNameSupplier.getSourceTableName());
     }
   }
 }

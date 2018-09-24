@@ -1,20 +1,12 @@
-package io.eventuate.local.unified.cdc.pipeline.dblog.common;
+package io.eventuate.local.unified.cdc.pipeline.dblog.common.properties;
 
-import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 
-public abstract class CommonDbLogCdcPipelineProperties extends CdcPipelineProperties {
-  private String dbHistoryTopicName = "db.history.topic";
+public abstract class CommonDbLogCdcPipelineReaderProperties extends CdcPipelineReaderProperties {
   private String mySqlBinLogClientName = "MySqlBinLog";
+  private String dbHistoryTopicName = "db.history.topic";
   private Integer binlogConnectionTimeoutInMilliseconds = 5000;
   private Integer maxAttemptsForBinlogConnection = 100;
-
-  public String getDbHistoryTopicName() {
-    return dbHistoryTopicName;
-  }
-
-  public void setDbHistoryTopicName(String dbHistoryTopicName) {
-    this.dbHistoryTopicName = dbHistoryTopicName;
-  }
 
   public String getMySqlBinLogClientName() {
     return mySqlBinLogClientName;
@@ -22,6 +14,14 @@ public abstract class CommonDbLogCdcPipelineProperties extends CdcPipelineProper
 
   public void setMySqlBinLogClientName(String mySqlBinLogClientName) {
     this.mySqlBinLogClientName = mySqlBinLogClientName;
+  }
+
+  public String getDbHistoryTopicName() {
+    return dbHistoryTopicName;
+  }
+
+  public void setDbHistoryTopicName(String dbHistoryTopicName) {
+    this.dbHistoryTopicName = dbHistoryTopicName;
   }
 
   public Integer getBinlogConnectionTimeoutInMilliseconds() {

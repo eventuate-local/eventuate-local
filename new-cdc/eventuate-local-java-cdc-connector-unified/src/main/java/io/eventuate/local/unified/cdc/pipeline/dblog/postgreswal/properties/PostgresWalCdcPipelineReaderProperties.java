@@ -1,9 +1,9 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties;
 
 
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogCdcPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.properties.CommonDbLogCdcPipelineReaderProperties;
 
-public class PostgresWalCdcPipelineProperties extends CommonDbLogCdcPipelineProperties {
+public class PostgresWalCdcPipelineReaderProperties extends CommonDbLogCdcPipelineReaderProperties {
   private Integer postgresWalIntervalInMilliseconds = 10;
   private Integer postgresReplicationStatusIntervalInMilliseconds = 1000;
   private String postgresReplicationSlotName = "eventuate_slot";

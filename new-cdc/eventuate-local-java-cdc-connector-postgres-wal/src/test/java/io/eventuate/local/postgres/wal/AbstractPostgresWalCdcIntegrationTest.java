@@ -2,16 +2,18 @@ package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
-import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.*;
+import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
+import org.apache.curator.framework.CuratorFramework;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -27,39 +29,60 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
   private String dbPassword;
 
   @Autowired
-  EventuateJdbcAccess eventuateJdbcAccess;
+  private DataSource dataSource;
+
+  @Autowired
+  private EventuateJdbcAccess eventuateJdbcAccess;
 
   @Autowired
   private EventuateConfigurationProperties eventuateConfigurationProperties;
 
   @Autowired
-  private PostgresWalMessageParser postgresWalMessageParser;
+  private SourceTableNameSupplier sourceTableNameSupplier;
+
+  @Autowired
+  private EventuateSchema eventuateSchema;
+
+  @Autowired
+  private CuratorFramework curatorFramework;
+
+  @Autowired
+  private OffsetStore offsetStore;
 
   @Test
   public void shouldGetEvents() throws InterruptedException{
-    PostgresWalClient<PublishedEvent> postgresWalClient = new PostgresWalClient<>(postgresWalMessageParser,
-            dataSourceURL,
+    PostgresWalClient postgresWalClient = new PostgresWalClient(dataSourceURL,
             dbUserName,
             dbPassword,
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getPostgresReplicationSlotName());
+            eventuateConfigurationProperties.getPostgresReplicationSlotName(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath(),
+            offsetStore);
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-    postgresWalClient.start(Optional.empty(), publishedEvents::add);
+    BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
+
+    postgresWalClient.addBinlogEntryHandler(
+            eventuateSchema,
+            sourceTableNameSupplier.getSourceTableName(),
+            (binlogEntry, offset) -> publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));
+
+    postgresWalClient.start();
+
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds saveResult = saveEvent(localAggregateCrud, accountCreatedEventData);
 
     String accountDebitedEventData = generateAccountDebitedEvent();
     EntityIdVersionAndEventIds updateResult = updateEvent(saveResult.getEntityId(), saveResult.getEntityVersion(), localAggregateCrud, accountDebitedEventData);
 
-    // Wait for 10 seconds
-    LocalDateTime deadline = LocalDateTime.now().plusSeconds(10);
+    LocalDateTime deadline = LocalDateTime.now().plusSeconds(20);
 
     waitForEvent(publishedEvents, saveResult.getEntityVersion(), deadline, accountCreatedEventData);
     waitForEvent(publishedEvents, updateResult.getEntityVersion(), deadline, accountDebitedEventData);

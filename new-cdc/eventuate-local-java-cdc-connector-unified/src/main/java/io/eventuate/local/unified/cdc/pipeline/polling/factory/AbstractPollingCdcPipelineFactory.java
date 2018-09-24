@@ -7,42 +7,39 @@ import io.eventuate.local.polling.PollingCdcDataPublisher;
 import io.eventuate.local.polling.PollingCdcProcessor;
 import io.eventuate.local.polling.PollingDao;
 import io.eventuate.local.polling.PollingDataProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineFactory;
-import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineProperties;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import org.apache.curator.framework.CuratorFramework;
 
-import javax.sql.DataSource;
-
-public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEvent, EVENT_BEAN, ID> extends CommonCdcPipelineFactory<PollingPipelineProperties, EVENT> {
+public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEvent> extends CommonCdcPipelineFactory<EVENT> {
 
   public AbstractPollingCdcPipelineFactory(CuratorFramework curatorFramework,
-                                           DataProducerFactory dataProducerFactory) {
+                                           DataProducerFactory dataProducerFactory,
+                                           BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
-    super(curatorFramework, dataProducerFactory);
+    super(curatorFramework, dataProducerFactory, binlogEntryReaderProvider);
   }
 
   @Override
-  public Class<PollingPipelineProperties> propertyClass() {
-    return PollingPipelineProperties.class;
-  }
-
-  @Override
-  public CdcPipeline<EVENT> create(PollingPipelineProperties cdcPipelineProperties) {
+  public CdcPipeline<EVENT> create(CdcPipelineProperties cdcPipelineProperties) {
     EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
 
-    PollingDataProvider<EVENT_BEAN, EVENT, ID> pollingDataProvider = createPollingDataProvider(eventuateSchema);
+    PollingDataProvider pollingDataProvider = createPollingDataProvider();
 
-    DataSource dataSource = createDataSource(cdcPipelineProperties);
-
-    PollingDao<EVENT_BEAN, EVENT, ID> pollingDao = createPollingDao(cdcPipelineProperties, pollingDataProvider, dataSource);
+    PollingDao pollingDao = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(dataProducerFactory, createPublishingStrategy());
 
-    CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(cdcPipelineProperties, pollingDao);
+    CdcProcessor<EVENT> cdcProcessor = new PollingCdcProcessor<>(pollingDao,
+            pollingDataProvider,
+            createBinlogEntryToEventConverter(),
+            eventuateSchema,
+            createSourceTableNameSupplier(cdcPipelineProperties).getSourceTableName());
 
     EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =
-            createEventTableChangesToAggregateTopicTranslator(cdcPipelineProperties, cdcDataPublisher, cdcProcessor);
+            createEventTableChangesToAggregateTopicTranslator(cdcDataPublisher, cdcProcessor);
 
     return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
   }
@@ -53,22 +50,5 @@ public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEven
     return new PollingCdcDataPublisher<>(dataProducerFactory, publishingStrategy);
   }
 
-  protected abstract PollingDataProvider<EVENT_BEAN, EVENT, ID> createPollingDataProvider(EventuateSchema eventuateSchema);
-
-  public PollingDao<EVENT_BEAN, EVENT, ID> createPollingDao(PollingPipelineProperties pollingPipelineProperties,
-                                                                                 PollingDataProvider<EVENT_BEAN, EVENT, ID> pollingDataProvider,
-                                                                                 DataSource dataSource) {
-
-    return new PollingDao<>(pollingDataProvider,
-            dataSource,
-            pollingPipelineProperties.getMaxEventsPerPolling(),
-            pollingPipelineProperties.getMaxAttemptsForPolling(),
-            pollingPipelineProperties.getPollingRetryIntervalInMilliseconds());
-  }
-
-  protected CdcProcessor<EVENT> createCdcProcessor(PollingPipelineProperties pollingPipelineProperties,
-                                                   PollingDao<EVENT_BEAN, EVENT, ID> pollingDao) {
-
-    return new PollingCdcProcessor<>(pollingDao, pollingPipelineProperties.getPollingIntervalInMilliseconds());
-  }
+  protected abstract PollingDataProvider createPollingDataProvider();
 }

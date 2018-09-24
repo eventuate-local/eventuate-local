@@ -41,7 +41,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
-    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData);
+    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData);
     cdcProcessor.stop();
 
     publishedEvents.clear();
@@ -53,7 +53,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
 
     accountCreatedEventData = generateAccountCreatedEvent();
     entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
-    waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData, excludedIds);
+    waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData, excludedIds);
     cdcProcessor.stop();
   }
 

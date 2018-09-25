@@ -6,7 +6,6 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -16,11 +15,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
-public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler> {
+public class MySqlBinaryLogClient extends DbLogClient {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -66,20 +68,6 @@ public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler> {
 
   public OffsetStore getOffsetStore() {
     return offsetStore;
-  }
-
-  @Override
-  public void addBinlogEntryHandler(EventuateSchema eventuateSchema,
-                                    String sourceTableName,
-                                    BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
-
-    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(
-            eventuateSchema,
-            sourceTableName,
-            eventConsumer,
-            new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema));
-
-    binlogEntryHandlers.add(binlogEntryHandler);
   }
 
   @Override
@@ -151,7 +139,33 @@ public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler> {
       binlogEntryHandlers
               .stream()
               .filter(bh -> bh.isFor(database, table, defaultDatabase))
-              .forEach(bh -> bh.accept(eventData, binlogFilename, offset, startingBinlogFileOffset));
+              .forEach(new Consumer<BinlogEntryHandler>() {
+                private boolean couldReadDuplicateEntries = true;
+
+                @Override
+                public void accept(BinlogEntryHandler binlogEntryHandler) {
+                  try {
+                    MySqlBinlogEntryExtractor extractor = new MySqlBinlogEntryExtractor(dataSource,
+                            binlogEntryHandler.getSourceTableNameSupplier().getSourceTableName(),
+                            binlogEntryHandler.getEventuateSchema());
+
+                    BinlogEntry entry = extractor.extract(eventData, binlogFilename, offset);
+
+                    if (couldReadDuplicateEntries) {
+                      if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(entry.getBinlogFileOffset())).orElse(false)) {
+                        return;
+                      } else {
+                        couldReadDuplicateEntries = false;
+                      }
+                    }
+
+                    binlogEntryHandler.publish(entry);
+
+                  } catch (IOException e) {
+                    throw new RuntimeException("Event row parsing exception", e);
+                  }
+                }
+              });
     }
   }
 

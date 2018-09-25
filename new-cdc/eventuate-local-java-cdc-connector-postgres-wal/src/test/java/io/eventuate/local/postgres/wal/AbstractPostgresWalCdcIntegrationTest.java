@@ -4,6 +4,7 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
+import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
@@ -67,12 +68,16 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-    BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
-
     postgresWalClient.addBinlogEntryHandler(
             eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName(),
-            (binlogEntry, offset) -> publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry)));
+            sourceTableNameSupplier,
+            new BinlogEntryToPublishedEventConverter(),
+            new CdcDataPublisher<PublishedEvent>(null, null) {
+              @Override
+              public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+                publishedEvents.add(publishedEvent);
+              }
+            });
 
     postgresWalClient.start();
 

@@ -4,6 +4,7 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
+import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
@@ -14,11 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcTest {
 
@@ -51,8 +49,6 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
   @Test
   public void shouldGetEvents() throws InterruptedException {
-    BinlogEntryToPublishedEventConverter binlogEntryToPublishedEventConverter = new BinlogEntryToPublishedEventConverter();
-
     MySqlBinaryLogClient mySqlBinaryLogClient = new MySqlBinaryLogClient(eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             dataSourceURL,
@@ -70,10 +66,15 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-    BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> consumer = (binlogEntry, offset) ->
-            publishedEvents.add(binlogEntryToPublishedEventConverter.convert(binlogEntry));
-
-    mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema, sourceTableNameSupplier.getSourceTableName(), consumer);
+    mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
+            sourceTableNameSupplier,
+            new BinlogEntryToPublishedEventConverter(),
+            new CdcDataPublisher<PublishedEvent>(null, null) {
+      @Override
+      public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+        publishedEvents.add(publishedEvent);
+      }
+    });
 
     mySqlBinaryLogClient.start();
 

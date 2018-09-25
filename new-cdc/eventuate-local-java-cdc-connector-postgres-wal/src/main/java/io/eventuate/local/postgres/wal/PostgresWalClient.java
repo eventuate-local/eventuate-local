@@ -1,9 +1,7 @@
 package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntry;
-import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
@@ -19,14 +17,16 @@ import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class PostgresWalClient extends DbLogClient<PostgresWalBinlogEntryHandler> {
+public class PostgresWalClient extends DbLogClient {
   private Logger logger = LoggerFactory.getLogger(this.getClass());
   private PostgresWalBinlogEntryExtractor postgresWalBinlogEntryExtractor;
   private int walIntervalInMilliseconds;
@@ -64,17 +64,6 @@ public class PostgresWalClient extends DbLogClient<PostgresWalBinlogEntryHandler
 
   public OffsetStore getOffsetStore() {
     return offsetStore;
-  }
-
-  @Override
-  public void addBinlogEntryHandler(EventuateSchema eventuateSchema,
-                                    String sourceTableName,
-                                    BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
-
-    PostgresWalBinlogEntryHandler binlogEntryHandler =
-            new PostgresWalBinlogEntryHandler(eventuateSchema, sourceTableName, eventConsumer);
-
-    binlogEntryHandlers.add(binlogEntryHandler);
   }
 
   @Override
@@ -168,7 +157,22 @@ public class PostgresWalClient extends DbLogClient<PostgresWalBinlogEntryHandler
 
         postgresWalBinlogEntryExtractor
                 .extract(filteredChanges, stream.getLastReceiveLSN().asLong(), replicationSlotName)
-                .forEach(binlogEntry -> binlogEntryHandler.accept(binlogEntry, binlogFileOffset));
+                .forEach(new Consumer<BinlogEntry>() {
+                  private boolean couldReadDuplicateEntries = true;
+
+                  @Override
+                  public void accept(BinlogEntry binlogEntry) {
+                    if (couldReadDuplicateEntries) {
+                      if (binlogFileOffset.map(s -> s.isSameOrAfter(binlogEntry.getBinlogFileOffset())).orElse(false)) {
+                        return;
+                      } else {
+                        couldReadDuplicateEntries = false;
+                      }
+                    }
+
+                    binlogEntryHandler.publish(binlogEntry);
+                  }
+                });
       });
 
       stream.setAppliedLSN(stream.getLastReceiveLSN());

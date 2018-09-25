@@ -21,7 +21,7 @@ public class PollingCdcPipelineFactory extends AbstractPollingCdcPipelineFactory
 
   @Override
   protected SourceTableNameSupplier createSourceTableNameSupplier(CdcPipelineProperties cdcPipelineProperties) {
-    return new SourceTableNameSupplier(cdcPipelineProperties.getSourceTableName(), "events");
+    return new SourceTableNameSupplier(cdcPipelineProperties.getSourceTableName(), "events", "event_id", "published");
   }
 
   @Override

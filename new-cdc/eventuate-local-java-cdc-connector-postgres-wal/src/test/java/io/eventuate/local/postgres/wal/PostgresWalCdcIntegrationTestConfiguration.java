@@ -3,7 +3,10 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.*;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
+import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
+import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -17,14 +20,9 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.*;
 
 import javax.sql.DataSource;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -36,7 +34,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "events");
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "events", "event_id", "published");
   }
 
   @Bean
@@ -85,26 +83,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);
-  }
-
-  @Bean
-  @Profile("PostgresWal")
-  public CdcProcessor<PublishedEvent> cdcProcessor(@Value("${spring.datasource.url}") String dbUrl,
-                                                   SourceTableNameSupplier sourceTableNameSupplier,
-                                                   EventuateSchema eventuateSchema,
-                                                   PostgresWalClient postgresWalClient,
-                                                   OffsetStore offsetStore) {
-
-    return new DbLogBasedCdcProcessor<PublishedEvent>(postgresWalClient,
-            new BinlogEntryToPublishedEventConverter(),
-            sourceTableNameSupplier.getSourceTableName(),
-            eventuateSchema) {
-      @Override
-      public void start(Consumer consumer) {
-        super.start(consumer);
-        postgresWalClient.start();
-      }
-    };
   }
 
   @Bean

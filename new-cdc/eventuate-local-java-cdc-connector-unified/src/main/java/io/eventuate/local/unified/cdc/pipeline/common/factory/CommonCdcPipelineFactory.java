@@ -1,7 +1,10 @@
 package io.eventuate.local.unified.cdc.pipeline.common.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.local.common.BinlogEntryToEventConverter;
+import io.eventuate.local.common.PublishingStrategy;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
@@ -25,13 +28,6 @@ abstract public class CommonCdcPipelineFactory<EVENT extends BinLogEvent> implem
   protected abstract SourceTableNameSupplier createSourceTableNameSupplier(CdcPipelineProperties cdcPipelineProperties);
 
   protected abstract PublishingStrategy<EVENT> createPublishingStrategy();
-
-  protected EventTableChangesToAggregateTopicTranslator<EVENT> createEventTableChangesToAggregateTopicTranslator(CdcDataPublisher<EVENT> cdcDataPublisher,
-                                                                                                                 CdcProcessor<EVENT> cdcProcessor) {
-
-
-    return new EventTableChangesToAggregateTopicTranslator<>(cdcDataPublisher, cdcProcessor);
-  }
 
   protected EventuateSchema createEventuateSchema(CdcPipelineProperties properties) {
     return new EventuateSchema(properties.getEventuateDatabaseSchema());

@@ -1,10 +1,9 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.factory;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.polling.PollingCdcDataPublisher;
-import io.eventuate.local.polling.PollingCdcProcessor;
 import io.eventuate.local.polling.PollingDao;
 import io.eventuate.local.polling.PollingDataProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
@@ -24,30 +23,17 @@ public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEven
 
   @Override
   public CdcPipeline<EVENT> create(CdcPipelineProperties cdcPipelineProperties) {
-    EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
-
-    PollingDataProvider pollingDataProvider = createPollingDataProvider();
-
     PollingDao pollingDao = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
-    CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(dataProducerFactory, createPublishingStrategy());
+    CdcDataPublisher<EVENT> cdcDataPublisher =
+            new PollingCdcDataPublisher<>(dataProducerFactory, createPublishingStrategy());
 
-    CdcProcessor<EVENT> cdcProcessor = new PollingCdcProcessor<>(pollingDao,
-            pollingDataProvider,
+    pollingDao.addBinlogEntryHandler(createEventuateSchema(cdcPipelineProperties),
+            createSourceTableNameSupplier(cdcPipelineProperties),
             createBinlogEntryToEventConverter(),
-            eventuateSchema,
-            createSourceTableNameSupplier(cdcPipelineProperties).getSourceTableName());
+            cdcDataPublisher);
 
-    EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =
-            createEventTableChangesToAggregateTopicTranslator(cdcDataPublisher, cdcProcessor);
-
-    return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
-  }
-
-  protected CdcDataPublisher<EVENT> createCdcDataPublisher(DataProducerFactory dataProducerFactory,
-                                                           PublishingStrategy<EVENT> publishingStrategy) {
-
-    return new PollingCdcDataPublisher<>(dataProducerFactory, publishingStrategy);
+    return new CdcPipeline<>(cdcDataPublisher);
   }
 
   protected abstract PollingDataProvider createPollingDataProvider();

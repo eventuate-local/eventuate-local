@@ -4,7 +4,10 @@ import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.*;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
+import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
+import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -17,17 +20,11 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.*;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
-import javax.xml.crypto.Data;
-import java.util.function.Consumer;
 
 @Configuration
 @EnableAutoConfiguration
@@ -53,7 +50,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "events");
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "events", "event_id", "published");
   }
 
   @Bean
@@ -114,25 +111,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);
-  }
-
-  @Bean
-  @Conditional(MySqlBinlogCondition.class)
-  public CdcProcessor<PublishedEvent> cdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient,
-                                                   @Value("${spring.datasource.url}") String dataSourceUrl,
-                                                   SourceTableNameSupplier sourceTableNameSupplier,
-                                                   EventuateSchema eventuateSchema) {
-
-    return new DbLogBasedCdcProcessor<PublishedEvent>(mySqlBinaryLogClient,
-            new BinlogEntryToPublishedEventConverter(),
-            sourceTableNameSupplier.getSourceTableName(),
-            eventuateSchema) {
-      @Override
-      public void start(Consumer<PublishedEvent> publishedEventConsumer) {
-        super.start(publishedEventConsumer);
-        mySqlBinaryLogClient.start();
-      }
-    };
   }
 
   @Bean

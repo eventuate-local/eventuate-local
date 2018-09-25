@@ -33,7 +33,7 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
   @Override
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName(),
+            sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
             new CdcDataPublisher<PublishedEvent>(null, null) {
               @Override

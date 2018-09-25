@@ -39,7 +39,7 @@ public abstract class AbstractPostgresWalCdcPipelineFactory<EVENT extends BinLog
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(postgresWalClient.getOffsetStore());
 
     postgresWalClient.addBinlogEntryHandler(createEventuateSchema(cdcPipelineProperties),
-            createSourceTableNameSupplier(cdcPipelineProperties).getSourceTableName(),
+            createSourceTableNameSupplier(cdcPipelineProperties),
             createBinlogEntryToEventConverter(),
             cdcDataPublisher);
 

@@ -3,7 +3,6 @@ package io.eventuate.local.polling;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.test.util.CdcKafkaPublisherTest;
@@ -30,9 +29,8 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
   public void init() {
     super.init();
 
-    pollingDao.addPollingEntryHandler(eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName(),
-            pollingDataProvider,
+    pollingDao.addBinlogEntryHandler(eventuateSchema,
+            sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
             cdcDataPublisher);
 

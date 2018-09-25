@@ -39,7 +39,7 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(mySqlBinaryLogClient.getOffsetStore());
 
     mySqlBinaryLogClient.addBinlogEntryHandler(createEventuateSchema(cdcPipelineProperties),
-            createSourceTableNameSupplier(cdcPipelineProperties).getSourceTableName(),
+            createSourceTableNameSupplier(cdcPipelineProperties),
             createBinlogEntryToEventConverter(),
             cdcDataPublisher);
 

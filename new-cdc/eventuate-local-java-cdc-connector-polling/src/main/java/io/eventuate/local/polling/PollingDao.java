@@ -1,7 +1,6 @@
 package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -16,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
-public class PollingDao extends BinlogEntryReader<PollingEntryHandler<?>> {
+public class PollingDao extends BinlogEntryReader {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -45,20 +44,6 @@ public class PollingDao extends BinlogEntryReader<PollingEntryHandler<?>> {
     this.maxEventsPerPolling = maxEventsPerPolling;
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
-  }
-
-  public <EVENT extends BinLogEvent> void addPollingEntryHandler(EventuateSchema eventuateSchema,
-                                                                 String sourceTableName,
-                                                                 PollingDataProvider pollingDataProvider,
-                                                                 BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
-                                                                 CdcDataPublisher<EVENT> dataPublisher) {
-
-    binlogEntryHandlers.add(new PollingEntryHandler<>(eventuateSchema,
-            sourceTableName,
-            pollingDataProvider.publishedField(),
-            pollingDataProvider.idField(),
-            binlogEntryToEventConverter,
-            dataPublisher));
   }
 
   @Override
@@ -98,9 +83,12 @@ public class PollingDao extends BinlogEntryReader<PollingEntryHandler<?>> {
     }
   }
 
-  public void processEvents(PollingEntryHandler handler) {
+  public void processEvents(BinlogEntryHandler handler) {
+    String idField = handler.getSourceTableNameSupplier().getIdField();
+    String publishedField = handler.getSourceTableNameSupplier().getPublishedField();
+
     String findEventsQuery = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
-            handler.getQualifiedTable(), handler.getPublishedField(), handler.getIdField());
+            handler.getQualifiedTable(), publishedField, idField);
 
     SqlRowSet sqlRowSet = handleConnectionLost(() ->
       namedParameterJdbcTemplate.queryForRowSet(findEventsQuery, ImmutableMap.of("limit", maxEventsPerPolling)));
@@ -108,9 +96,9 @@ public class PollingDao extends BinlogEntryReader<PollingEntryHandler<?>> {
     List<Object> ids = new ArrayList<>();
 
     while (sqlRowSet.next()) {
-      ids.add(sqlRowSet.getObject(handler.getIdField()));
+      ids.add(sqlRowSet.getObject(handler.getSourceTableNameSupplier().getIdField()));
 
-      handler.accept(new BinlogEntry() {
+      handler.publish(new BinlogEntry() {
         @Override
         public Object getColumn(String name) {
           return sqlRowSet.getObject(name);
@@ -124,7 +112,7 @@ public class PollingDao extends BinlogEntryReader<PollingEntryHandler<?>> {
     }
 
     String markEventsAsReadQuery = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
-            handler.getQualifiedTable(), handler.getPublishedField(), handler.getIdField());
+            handler.getQualifiedTable(),publishedField, idField);
 
     if (!ids.isEmpty()) {
       handleConnectionLost(() -> namedParameterJdbcTemplate.update(markEventsAsReadQuery, ImmutableMap.of("ids", ids)));

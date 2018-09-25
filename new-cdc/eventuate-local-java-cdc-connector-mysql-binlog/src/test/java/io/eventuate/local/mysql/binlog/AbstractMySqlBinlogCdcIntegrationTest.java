@@ -67,7 +67,7 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName(),
+            sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
             new CdcDataPublisher<PublishedEvent>(null, null) {
       @Override

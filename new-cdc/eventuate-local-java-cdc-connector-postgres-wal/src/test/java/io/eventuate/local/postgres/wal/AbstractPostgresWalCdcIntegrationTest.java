@@ -70,7 +70,7 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
 
     postgresWalClient.addBinlogEntryHandler(
             eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName(),
+            sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
             new CdcDataPublisher<PublishedEvent>(null, null) {
               @Override

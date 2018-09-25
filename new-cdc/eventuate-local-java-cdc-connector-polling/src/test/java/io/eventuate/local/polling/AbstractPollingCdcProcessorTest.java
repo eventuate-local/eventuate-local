@@ -31,9 +31,8 @@ public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
 
   @Override
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
-    pollingDao.addPollingEntryHandler(eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName(),
-            pollingDataProvider,
+    pollingDao.addBinlogEntryHandler(eventuateSchema,
+            sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
             new CdcDataPublisher<PublishedEvent>(null, null) {
               @Override

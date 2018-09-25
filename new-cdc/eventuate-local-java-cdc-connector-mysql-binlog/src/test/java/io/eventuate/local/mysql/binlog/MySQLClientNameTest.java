@@ -76,7 +76,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     MySqlBinaryLogClient mySqlBinaryLogClient = createMySqlBinaryLogClient();
 
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName(),
+            sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
             new CdcDataPublisher<PublishedEvent>(null, null) {
               @Override
@@ -107,7 +107,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     offsetStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName(),
+            sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
             new CdcDataPublisher<PublishedEvent>(null, null) {
               @Override

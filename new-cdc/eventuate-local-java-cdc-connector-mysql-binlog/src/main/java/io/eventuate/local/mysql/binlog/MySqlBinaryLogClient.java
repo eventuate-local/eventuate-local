@@ -6,11 +6,7 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinLogEvent;
-import io.eventuate.local.common.BinlogEntryToEventConverter;
-import io.eventuate.local.common.BinlogFileOffset;
-import io.eventuate.local.common.CdcDataPublisher;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
@@ -24,8 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
-public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler<?>> {
+public class MySqlBinaryLogClient extends DbLogClient {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -71,22 +68,6 @@ public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler<?>
 
   public OffsetStore getOffsetStore() {
     return offsetStore;
-  }
-
-  @Override
-  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
-                                                                String sourceTableName,
-                                                                BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
-                                                                CdcDataPublisher<EVENT> dataPublisher) {
-
-    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler<>(
-            eventuateSchema,
-            sourceTableName,
-            new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema),
-            binlogEntryToEventConverter,
-            dataPublisher);
-
-    binlogEntryHandlers.add(binlogEntryHandler);
   }
 
   @Override
@@ -158,7 +139,33 @@ public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler<?>
       binlogEntryHandlers
               .stream()
               .filter(bh -> bh.isFor(database, table, defaultDatabase))
-              .forEach(bh -> bh.accept(eventData, binlogFilename, offset, startingBinlogFileOffset));
+              .forEach(new Consumer<BinlogEntryHandler>() {
+                private boolean couldReadDuplicateEntries = true;
+
+                @Override
+                public void accept(BinlogEntryHandler binlogEntryHandler) {
+                  try {
+                    MySqlBinlogEntryExtractor extractor = new MySqlBinlogEntryExtractor(dataSource,
+                            binlogEntryHandler.getSourceTableNameSupplier().getSourceTableName(),
+                            binlogEntryHandler.getEventuateSchema());
+
+                    BinlogEntry entry = extractor.extract(eventData, binlogFilename, offset);
+
+                    if (couldReadDuplicateEntries) {
+                      if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(entry.getBinlogFileOffset())).orElse(false)) {
+                        return;
+                      } else {
+                        couldReadDuplicateEntries = false;
+                      }
+                    }
+
+                    binlogEntryHandler.publish(entry);
+
+                  } catch (IOException e) {
+                    throw new RuntimeException("Event row parsing exception", e);
+                  }
+                }
+              });
     }
   }
 

@@ -28,9 +28,8 @@ public abstract class AbstractPollingCdcPipelineFactory<EVENT extends BinLogEven
     CdcDataPublisher<EVENT> cdcDataPublisher =
             new PollingCdcDataPublisher<>(dataProducerFactory, createPublishingStrategy());
 
-    pollingDao.addPollingEntryHandler(createEventuateSchema(cdcPipelineProperties),
-            createSourceTableNameSupplier(cdcPipelineProperties).getSourceTableName(),
-            createPollingDataProvider(),
+    pollingDao.addBinlogEntryHandler(createEventuateSchema(cdcPipelineProperties),
+            createSourceTableNameSupplier(cdcPipelineProperties),
             createBinlogEntryToEventConverter(),
             cdcDataPublisher);
 

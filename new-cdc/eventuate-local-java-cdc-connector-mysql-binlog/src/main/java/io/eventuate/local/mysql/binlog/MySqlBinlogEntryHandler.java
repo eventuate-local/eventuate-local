@@ -2,24 +2,22 @@ package io.eventuate.local.mysql.binlog;
 
 import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntry;
-import io.eventuate.local.common.BinlogEntryHandler;
-import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.*;
 
 import java.io.IOException;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
-public class MySqlBinlogEntryHandler extends BinlogEntryHandler {
+public class MySqlBinlogEntryHandler<EVENT extends BinLogEvent> extends BinlogEntryHandler<EVENT> {
+  private boolean couldReadDuplicateEntries = true;
   private MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor;
 
   public MySqlBinlogEntryHandler(EventuateSchema eventuateSchema,
                                  String sourceTableName,
-                                 BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer,
-                                 MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor) {
+                                 MySqlBinlogEntryExtractor mySqlBinlogEntryExtractor,
+                                 BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                                 CdcDataPublisher<EVENT> dataPublisher) {
 
-    super(eventuateSchema, sourceTableName, eventConsumer);
+    super(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
 
     this.mySqlBinlogEntryExtractor = mySqlBinlogEntryExtractor;
   }
@@ -30,12 +28,17 @@ public class MySqlBinlogEntryHandler extends BinlogEntryHandler {
                      long offset,
                      Optional<BinlogFileOffset> startingBinlogFileOffset) {
     try {
-      MySqlBinlogEntryExtractor extractor = mySqlBinlogEntryExtractor;
-      BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> consumer = eventConsumer;
+      BinlogEntry entry = mySqlBinlogEntryExtractor.extract(eventData, binlogFilename, offset);
 
-      BinlogEntry entry = extractor.extract(eventData, binlogFilename, offset);
+      if (couldReadDuplicateEntries) {
+        if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(entry.getBinlogFileOffset())).orElse(false)) {
+          return;
+        } else {
+          couldReadDuplicateEntries = false;
+        }
+      }
 
-      consumer.accept(entry, startingBinlogFileOffset);
+      cdcDataPublisher.handleEvent(binlogEntryToEventConverter.convert(entry));
     } catch (IOException e) {
       throw new RuntimeException("Event row parsing exception", e);
     }

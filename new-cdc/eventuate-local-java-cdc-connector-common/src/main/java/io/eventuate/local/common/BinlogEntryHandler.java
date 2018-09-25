@@ -2,22 +2,21 @@ package io.eventuate.local.common;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-public abstract class BinlogEntryHandler {
+public abstract class BinlogEntryHandler<EVENT extends BinLogEvent> {
   protected EventuateSchema eventuateSchema;
   protected String sourceTableName;
-  protected BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer;
+  protected BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter;
+  protected CdcDataPublisher<EVENT> cdcDataPublisher;
 
   public BinlogEntryHandler(EventuateSchema eventuateSchema,
                             String sourceTableName,
-                            BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
+                            BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                            CdcDataPublisher<EVENT> cdcDataPublisher) {
 
     this.eventuateSchema = eventuateSchema;
     this.sourceTableName = sourceTableName;
-    this.eventConsumer = eventConsumer;
+    this.binlogEntryToEventConverter = binlogEntryToEventConverter;
+    this.cdcDataPublisher = cdcDataPublisher;
   }
 
   public boolean isFor(String requestedDatabase, String requestedTable, String defaultDatabase) {

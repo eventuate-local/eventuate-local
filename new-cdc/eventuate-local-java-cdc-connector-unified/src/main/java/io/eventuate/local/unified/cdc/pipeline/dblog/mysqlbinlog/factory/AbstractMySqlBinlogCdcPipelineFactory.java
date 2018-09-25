@@ -1,7 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.db.log.common.PublishingFilter;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -36,22 +36,13 @@ public abstract class AbstractMySqlBinlogCdcPipelineFactory<EVENT extends BinLog
   public CdcPipeline<EVENT> create(CdcPipelineProperties cdcPipelineProperties) {
     MySqlBinaryLogClient mySqlBinaryLogClient = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
-    EventuateSchema eventuateSchema = createEventuateSchema(cdcPipelineProperties);
-
     CdcDataPublisher<EVENT> cdcDataPublisher = createCdcDataPublisher(mySqlBinaryLogClient.getOffsetStore());
 
-    SourceTableNameSupplier sourceTableNameSupplier = createSourceTableNameSupplier(cdcPipelineProperties);
+    mySqlBinaryLogClient.addBinlogEntryHandler(createEventuateSchema(cdcPipelineProperties),
+            createSourceTableNameSupplier(cdcPipelineProperties).getSourceTableName(),
+            createBinlogEntryToEventConverter(),
+            cdcDataPublisher);
 
-    BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter = createBinlogEntryToEventConverter();
-
-    CdcProcessor<EVENT> cdcProcessor = createCdcProcessor(mySqlBinaryLogClient,
-            binlogEntryToEventConverter,
-            sourceTableNameSupplier,
-            eventuateSchema);
-
-    EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator =
-            createEventTableChangesToAggregateTopicTranslator(cdcDataPublisher, cdcProcessor);
-
-    return new CdcPipeline<>(publishedEventEventTableChangesToAggregateTopicTranslator);
+    return new CdcPipeline<>(cdcDataPublisher);
   }
 }

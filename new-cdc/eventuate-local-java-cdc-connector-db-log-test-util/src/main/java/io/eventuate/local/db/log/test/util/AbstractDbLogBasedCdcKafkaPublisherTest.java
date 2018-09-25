@@ -6,23 +6,18 @@ import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
 import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
-import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.test.util.CdcKafkaPublisherTest;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
-public class AbstractDbLogBasedCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
+public abstract class AbstractDbLogBasedCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
 
   @Autowired
   private OffsetStore offsetStore;
-
-  @Before
-  public void init() {
-    localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
-  }
 
   @Override
   protected CdcDataPublisher<PublishedEvent> createCdcKafkaPublisher() {

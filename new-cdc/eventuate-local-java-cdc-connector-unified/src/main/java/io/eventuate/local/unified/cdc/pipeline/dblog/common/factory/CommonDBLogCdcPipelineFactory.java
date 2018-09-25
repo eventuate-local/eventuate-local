@@ -1,11 +1,10 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.common.factory;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinLogEvent;
-import io.eventuate.local.common.BinlogEntryToEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.SourceTableNameSupplier;
-import io.eventuate.local.db.log.common.*;
+import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.db.log.common.PublishingFilter;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -43,16 +42,5 @@ public abstract class CommonDBLogCdcPipelineFactory<EVENT extends BinLogEvent>
             offsetStore,
             publishingFilter,
             createPublishingStrategy());
-  }
-
-  protected DbLogBasedCdcProcessor<EVENT> createCdcProcessor(DbLogClient dbLogClient,
-                                                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
-                                                             SourceTableNameSupplier sourceTableNameSupplier,
-                                                             EventuateSchema eventuateSchema) {
-    return new DbLogBasedCdcProcessor<EVENT>(dbLogClient,
-            binlogEntryToEventConverter,
-            sourceTableNameSupplier.getSourceTableName(),
-            eventuateSchema) {
-    };
   }
 }

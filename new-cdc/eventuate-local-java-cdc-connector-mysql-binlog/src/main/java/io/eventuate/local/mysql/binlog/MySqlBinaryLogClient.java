@@ -7,7 +7,10 @@ import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.local.common.BinlogEntryToEventConverter;
+import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
@@ -16,11 +19,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
-import java.util.function.BiConsumer;
 
-public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler> {
+public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler<?>> {
 
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -69,15 +74,17 @@ public class MySqlBinaryLogClient extends DbLogClient<MySqlBinlogEntryHandler> {
   }
 
   @Override
-  public void addBinlogEntryHandler(EventuateSchema eventuateSchema,
-                                    String sourceTableName,
-                                    BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
+  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
+                                                                String sourceTableName,
+                                                                BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                                                                CdcDataPublisher<EVENT> dataPublisher) {
 
-    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler(
+    MySqlBinlogEntryHandler binlogEntryHandler = new MySqlBinlogEntryHandler<>(
             eventuateSchema,
             sourceTableName,
-            eventConsumer,
-            new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema));
+            new MySqlBinlogEntryExtractor(dataSource, sourceTableName, eventuateSchema),
+            binlogEntryToEventConverter,
+            dataPublisher);
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }

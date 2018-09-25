@@ -1,26 +1,21 @@
 package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntry;
-import io.eventuate.local.common.BinlogEntryHandler;
-import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.*;
 
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-public class PollingEntryHandler extends BinlogEntryHandler {
+public class PollingEntryHandler<EVENT extends BinLogEvent> extends BinlogEntryHandler<EVENT> {
 
   private String publishedField;
   private String idField;
 
   public PollingEntryHandler(EventuateSchema eventuateSchema,
                              String sourceTableName,
-                             BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer,
                              String publishedField,
-                             String idField) {
+                             String idField,
+                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                             CdcDataPublisher<EVENT> dataPublisher) {
 
-    super(eventuateSchema, sourceTableName, eventConsumer);
+    super(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
 
     this.publishedField = publishedField;
     this.idField = idField;
@@ -31,7 +26,7 @@ public class PollingEntryHandler extends BinlogEntryHandler {
   }
 
   public void accept(BinlogEntry binlogEntry) {
-    eventConsumer.accept(binlogEntry, Optional.empty());
+    cdcDataPublisher.handleEvent(binlogEntryToEventConverter.convert(binlogEntry));
   }
 
   public EventuateSchema getEventuateSchema() {

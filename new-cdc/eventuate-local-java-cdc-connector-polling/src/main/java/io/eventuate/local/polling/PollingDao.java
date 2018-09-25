@@ -2,9 +2,7 @@ package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntry;
-import io.eventuate.local.common.BinlogEntryReader;
-import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.*;
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +13,10 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
-import java.util.function.BiConsumer;
 
-public class PollingDao extends BinlogEntryReader<PollingEntryHandler> {
+public class PollingDao extends BinlogEntryReader<PollingEntryHandler<?>> {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -51,13 +47,18 @@ public class PollingDao extends BinlogEntryReader<PollingEntryHandler> {
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
   }
 
-  public void addPollingEntryHandler(EventuateSchema eventuateSchema,
-                                     String sourceTableName,
-                                     BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer,
-                                     PollingDataProvider pollingDataProvider) {
+  public <EVENT extends BinLogEvent> void addPollingEntryHandler(EventuateSchema eventuateSchema,
+                                                                 String sourceTableName,
+                                                                 PollingDataProvider pollingDataProvider,
+                                                                 BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                                                                 CdcDataPublisher<EVENT> dataPublisher) {
 
-    binlogEntryHandlers.add(new PollingEntryHandler(eventuateSchema,
-            sourceTableName, eventConsumer, pollingDataProvider.publishedField(), pollingDataProvider.idField()));
+    binlogEntryHandlers.add(new PollingEntryHandler<>(eventuateSchema,
+            sourceTableName,
+            pollingDataProvider.publishedField(),
+            pollingDataProvider.idField(),
+            binlogEntryToEventConverter,
+            dataPublisher));
   }
 
   @Override

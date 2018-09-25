@@ -5,8 +5,8 @@ import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
+import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DbLogBasedCdcProcessor;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -19,7 +19,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -76,11 +75,17 @@ public class MySQLClientNameTest extends AbstractCdcTest {
 
     MySqlBinaryLogClient mySqlBinaryLogClient = createMySqlBinaryLogClient();
 
-    CdcProcessor<PublishedEvent> cdcProcessor = createMySQLCdcProcessor(mySqlBinaryLogClient);
-    cdcProcessor.start(publishedEvent -> {
-      publishedEvents.add(publishedEvent);
-      offsetStore.save(publishedEvent.getBinlogFileOffset());
-    });
+    mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
+            sourceTableNameSupplier.getSourceTableName(),
+            new BinlogEntryToPublishedEventConverter(),
+            new CdcDataPublisher<PublishedEvent>(null, null) {
+              @Override
+              public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+                publishedEvents.add(publishedEvent);
+                offsetStore.save(publishedEvent.getBinlogFileOffset());
+              }
+            });
+
     mySqlBinaryLogClient.start();
 
     EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
@@ -98,27 +103,25 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     Assert.assertEquals(entityIdVersionAndEventIds.getEntityVersion().asString(), publishedEvent.getId());
 
     mySqlBinaryLogClient.stop();
-    cdcProcessor.stop();
 
     offsetStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
-    cdcProcessor = createMySQLCdcProcessor(mySqlBinaryLogClient);
-    cdcProcessor.start(event -> {
-      publishedEvents.add(event);
-      offsetStore.save(event.getBinlogFileOffset());
-    });
+    mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
+            sourceTableNameSupplier.getSourceTableName(),
+            new BinlogEntryToPublishedEventConverter(),
+            new CdcDataPublisher<PublishedEvent>(null, null) {
+              @Override
+              public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+                publishedEvents.add(publishedEvent);
+                offsetStore.save(publishedEvent.getBinlogFileOffset());
+              }
+            });
+
     mySqlBinaryLogClient.start();
 
     while((publishedEvent = publishedEvents.poll(10, TimeUnit.SECONDS)) != null) {
         Assert.assertNotEquals(entityIdVersionAndEventIds.getEntityVersion().asString(), publishedEvent.getId());
     }
-  }
-
-  private CdcProcessor<PublishedEvent> createMySQLCdcProcessor(MySqlBinaryLogClient mySqlBinaryLogClient) {
-    return new DbLogBasedCdcProcessor<>(mySqlBinaryLogClient,
-            new BinlogEntryToPublishedEventConverter(),
-            sourceTableNameSupplier.getSourceTableName(),
-            eventuateSchema);
   }
 
   public DatabaseOffsetKafkaStore createDatabaseOffsetKafkaStore(MySqlBinaryLogClient mySqlBinaryLogClient) {

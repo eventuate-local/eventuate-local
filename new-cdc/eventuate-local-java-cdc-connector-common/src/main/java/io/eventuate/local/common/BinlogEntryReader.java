@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class BinlogEntryReader<HANDLER extends BinlogEntryHandler> {
+public abstract class BinlogEntryReader<HANDLER extends BinlogEntryHandler<?>> {
   protected CuratorFramework curatorFramework;
   protected String leadershipLockPath;
   protected List<HANDLER> binlogEntryHandlers = new CopyOnWriteArrayList<>();

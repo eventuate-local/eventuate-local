@@ -3,7 +3,6 @@ package io.eventuate.local.test.util;
 import io.eventuate.Int128;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
-import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import org.junit.Before;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public abstract class CdcProcessorTest extends AbstractCdcTest {
@@ -33,28 +33,30 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
   @Test
   public void shouldReadNewEventsOnly() throws InterruptedException {
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
-    CdcProcessor<PublishedEvent> cdcProcessor = createCdcProcessor();
-    cdcProcessor.start(publishedEvent -> {
+    prepareBinlogEntryHandler(publishedEvent -> {
       publishedEvents.add(publishedEvent);
       onEventSent(publishedEvent);
     });
+
+    startEventProcessing();
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
     waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData);
-    cdcProcessor.stop();
+    stopEventProcessing();
 
     publishedEvents.clear();
-    cdcProcessor.start(publishedEvent -> {
+    prepareBinlogEntryHandler(publishedEvent -> {
       publishedEvents.add(publishedEvent);
       onEventSent(publishedEvent);
     });
+    startEventProcessing();
     List<String> excludedIds = entityIdVersionAndEventIds.getEventIds().stream().map(Int128::asString).collect(Collectors.toList());
 
     accountCreatedEventData = generateAccountCreatedEvent();
     entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
     waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData, excludedIds);
-    cdcProcessor.stop();
+    stopEventProcessing();
   }
 
   @Test
@@ -64,11 +66,11 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
 
-    CdcProcessor<PublishedEvent> cdcProcessor = createCdcProcessor();
-    cdcProcessor.start(publishedEvents::add);
+    prepareBinlogEntryHandler(publishedEvents::add);
+    startEventProcessing();
 
     waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData);
-    cdcProcessor.stop();
+    stopEventProcessing();
   }
 
   private PublishedEvent waitForEventExcluding(BlockingQueue<PublishedEvent> publishedEvents, Int128 eventId, LocalDateTime deadline, String eventData, List<String> excludedIds) throws InterruptedException {
@@ -88,9 +90,11 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
     throw new RuntimeException("event not found: " + eventId);
   }
 
-  protected abstract CdcProcessor<PublishedEvent> createCdcProcessor();
+  protected abstract void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer);
+
+  protected abstract void startEventProcessing();
+  protected abstract void stopEventProcessing();
 
   protected void onEventSent(PublishedEvent publishedEvent) {
-
   }
 }

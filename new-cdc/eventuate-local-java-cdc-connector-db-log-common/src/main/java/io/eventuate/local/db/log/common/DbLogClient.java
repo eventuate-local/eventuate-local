@@ -4,10 +4,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import org.apache.curator.framework.CuratorFramework;
 
-import java.util.Optional;
-import java.util.function.BiConsumer;
-
-public abstract class DbLogClient<HANDLER extends BinlogEntryHandler> extends BinlogEntryReader<HANDLER> {
+public abstract class DbLogClient<HANDLER extends BinlogEntryHandler<?>> extends BinlogEntryReader<HANDLER> {
 
   protected String dbUserName;
   protected String dbPassword;
@@ -35,7 +32,8 @@ public abstract class DbLogClient<HANDLER extends BinlogEntryHandler> extends Bi
     defaultDatabase = jdbcUrl.getDatabase();
   }
 
-  public abstract void addBinlogEntryHandler(EventuateSchema eventuateSchema,
+  public abstract <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
                                              String sourceTableName,
-                                             BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer);
+                                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                                             CdcDataPublisher<EVENT> dataPublisher);
 }

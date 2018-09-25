@@ -1,11 +1,9 @@
 package io.eventuate.local.mysql.binlog;
 
 import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
-import com.github.shyiko.mysql.binlog.event.deserialization.json.JsonBinary;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogFileOffset;
-import io.eventuate.local.common.PublishedEvent;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -16,7 +14,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class MySqlBinlogEntryExtractor {
 

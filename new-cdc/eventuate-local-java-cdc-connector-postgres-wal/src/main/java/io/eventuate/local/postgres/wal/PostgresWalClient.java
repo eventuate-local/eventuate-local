@@ -2,8 +2,10 @@ package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.BinLogEvent;
+import io.eventuate.local.common.BinlogEntryToEventConverter;
 import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
@@ -19,14 +21,15 @@ import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-public class PostgresWalClient extends DbLogClient<PostgresWalBinlogEntryHandler> {
+public class PostgresWalClient extends DbLogClient<PostgresWalBinlogEntryHandler<?>> {
   private Logger logger = LoggerFactory.getLogger(this.getClass());
   private PostgresWalBinlogEntryExtractor postgresWalBinlogEntryExtractor;
   private int walIntervalInMilliseconds;
@@ -67,12 +70,13 @@ public class PostgresWalClient extends DbLogClient<PostgresWalBinlogEntryHandler
   }
 
   @Override
-  public void addBinlogEntryHandler(EventuateSchema eventuateSchema,
-                                    String sourceTableName,
-                                    BiConsumer<BinlogEntry, Optional<BinlogFileOffset>> eventConsumer) {
+  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
+                                                                String sourceTableName,
+                                                                BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                                                                CdcDataPublisher<EVENT> dataPublisher) {
 
-    PostgresWalBinlogEntryHandler binlogEntryHandler =
-            new PostgresWalBinlogEntryHandler(eventuateSchema, sourceTableName, eventConsumer);
+    PostgresWalBinlogEntryHandler<EVENT> binlogEntryHandler =
+            new PostgresWalBinlogEntryHandler<>(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }

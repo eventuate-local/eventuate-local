@@ -1,20 +1,20 @@
 package io.eventuate.local.unified.cdc.pipeline.common;
 
 import io.eventuate.local.common.BinLogEvent;
-import io.eventuate.local.common.EventTableChangesToAggregateTopicTranslator;
+import io.eventuate.local.common.CdcDataPublisher;
 
 public class CdcPipeline<EVENT extends BinLogEvent> {
-  private EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator;
+  private CdcDataPublisher<EVENT> cdcDataPublisher;
 
-  public CdcPipeline(EventTableChangesToAggregateTopicTranslator<EVENT> publishedEventEventTableChangesToAggregateTopicTranslator) {
-    this.publishedEventEventTableChangesToAggregateTopicTranslator = publishedEventEventTableChangesToAggregateTopicTranslator;
+  public CdcPipeline(CdcDataPublisher<EVENT> cdcDataPublisher) {
+    this.cdcDataPublisher = cdcDataPublisher;
   }
 
   public void start() {
-    publishedEventEventTableChangesToAggregateTopicTranslator.start();
+    cdcDataPublisher.start();
   }
 
   public void stop() {
-    publishedEventEventTableChangesToAggregateTopicTranslator.stop();
+    cdcDataPublisher.stop();
   }
 }

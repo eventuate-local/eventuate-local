@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
-import java.util.function.Consumer;
 
 @Configuration
 @EnableAutoConfiguration
@@ -57,34 +56,6 @@ public class PollingIntegrationTestConfiguration {
   @Bean
   public PublishingStrategy<PublishedEvent> publishingStrategy() {
     return new PublishedEventPublishingStrategy();
-  }
-
-  @Bean
-  @Profile("EventuatePolling")
-  public CdcProcessor<PublishedEvent> pollingCdcProcessor(@Value("${spring.datasource.url}") String dbUrl,
-                                                          EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                          PollingDao pollingDao,
-                                                          PollingDataProvider pollingDataProvider,
-                                                          EventuateSchema eventuateSchema,
-                                                          SourceTableNameSupplier sourceTableNameSupplier) {
-    
-    return new PollingCdcProcessor<PublishedEvent>(pollingDao,
-            pollingDataProvider,
-            new BinlogEntryToPublishedEventConverter(),
-            eventuateSchema,
-            sourceTableNameSupplier.getSourceTableName()) {
-      @Override
-      public void start(Consumer<PublishedEvent> publishedEventConsumer) {
-        super.start(publishedEventConsumer);
-        pollingDao.start();
-      }
-
-      @Override
-      public void stop() {
-        pollingDao.stop();
-        super.stop();
-      }
-    };
   }
 
   @Bean

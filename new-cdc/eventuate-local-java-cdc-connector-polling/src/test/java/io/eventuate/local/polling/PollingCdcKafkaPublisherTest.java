@@ -1,5 +1,6 @@
 package io.eventuate.local.polling;
 
+import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
@@ -8,7 +9,7 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfiguratio
 import io.eventuate.local.test.util.CdcKafkaPublisherTest;
 import org.junit.Before;
 import org.junit.runner.RunWith;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -19,9 +20,23 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @SpringBootTest(classes = PollingIntegrationTestConfiguration.class)
 public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
 
+  @Autowired
+  private PollingDao pollingDao;
+
+  @Autowired
+  private PollingDataProvider pollingDataProvider;
+
   @Before
   public void init() {
-    localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
+    super.init();
+
+    pollingDao.addPollingEntryHandler(eventuateSchema,
+            sourceTableNameSupplier.getSourceTableName(),
+            pollingDataProvider,
+            new BinlogEntryToPublishedEventConverter(),
+            cdcDataPublisher);
+
+    pollingDao.start();
   }
 
   @Override
@@ -30,5 +45,10 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
             new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
                     EventuateKafkaProducerConfigurationProperties.empty()),
             publishingStrategy);
+  }
+
+  @Override
+  public void clear() {
+    pollingDao.stop();
   }
 }

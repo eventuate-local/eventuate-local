@@ -68,7 +68,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
           break;
         }
         if (excludedIds.contains(event.getId()))
-          throw new RuntimeException("Wrong event found in the queue");
+          throw new RuntimeException("Event with excluded id found in the queue");
       }
     }
     if (result != null)

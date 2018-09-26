@@ -55,7 +55,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   public MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
                                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
                                                                    SourceTableNameSupplier sourceTableNameSupplier,
-                                                                   IWriteRowsEventDataParser<PublishedEvent> eventDataParser) {
+                                                                   IWriteRowsEventDataParser<PublishedEvent> eventDataParser, EventuateSchema eventuateSchema) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     return new MySqlBinaryLogClient<>(eventDataParser,
@@ -64,7 +64,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             jdbcUrl.getHost(),
             jdbcUrl.getPort(),
             eventuateConfigurationProperties.getBinlogClientId(),
-            sourceTableNameSupplier.getSourceTableName(),
+            ResolvedEventuateSchema.make(eventuateSchema, jdbcUrl), sourceTableNameSupplier.getSourceTableName(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());

@@ -44,7 +44,7 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
   public DbLogClient<PublishedEvent> dbLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
                                                  EventuateConfigurationProperties eventuateConfigurationProperties,
                                                  SourceTableNameSupplier sourceTableNameSupplier,
-                                                 IWriteRowsEventDataParser<PublishedEvent> eventDataParser) {
+                                                 IWriteRowsEventDataParser<PublishedEvent> eventDataParser, EventuateSchema eventuateSchema) {
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     return new MySqlBinaryLogClient<>(eventDataParser,
@@ -53,7 +53,7 @@ public class MySqlEventTableChangesToAggregateTopicTranslatorConfiguration {
             jdbcUrl.getHost(),
             jdbcUrl.getPort(),
             eventuateConfigurationProperties.getBinlogClientId(),
-            sourceTableNameSupplier.getSourceTableName(),
+            ResolvedEventuateSchema.make(eventuateSchema, jdbcUrl), sourceTableNameSupplier.getSourceTableName(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());

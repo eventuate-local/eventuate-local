@@ -1,8 +1,8 @@
 package io.eventuate.local.mysql.binlog;
 
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -26,6 +26,7 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
 
   @Autowired
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
+  private DatabaseOffsetKafkaStore databaseOffsetKafkaStore;
 
   @Override
   public CdcProcessor<PublishedEvent> createCdcProcessor() {
@@ -43,6 +44,9 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
     createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient()).save(publishedEvent.getBinlogFileOffset());
   }
 
+  @Autowired
+  private EventuateSchema eventuateSchema;
+
   private MySqlBinaryLogClient<PublishedEvent> createMySqlBinaryLogClient() {
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
     return new MySqlBinaryLogClient<>(eventDataParser,
@@ -51,17 +55,19 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
             jdbcUrl.getHost(),
             jdbcUrl.getPort(),
             eventuateConfigurationProperties.getBinlogClientId(),
-            sourceTableNameSupplier.getSourceTableName(),
+            ResolvedEventuateSchema.make(eventuateSchema, jdbcUrl), sourceTableNameSupplier.getSourceTableName(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
   }
 
   public DatabaseOffsetKafkaStore createDatabaseOffsetKafkaStore(MySqlBinaryLogClient mySqlBinaryLogClient) {
-    return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
-            mySqlBinaryLogClient.getName(),
-            eventuateKafkaProducer,
-            eventuateKafkaConfigurationProperties,
-            EventuateKafkaConsumerConfigurationProperties.empty());
+    if (databaseOffsetKafkaStore == null)
+      databaseOffsetKafkaStore = new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
+              mySqlBinaryLogClient.getName(),
+              eventuateKafkaProducer,
+              eventuateKafkaConfigurationProperties,
+              EventuateKafkaConsumerConfigurationProperties.empty());
+    return databaseOffsetKafkaStore;
   }
 }

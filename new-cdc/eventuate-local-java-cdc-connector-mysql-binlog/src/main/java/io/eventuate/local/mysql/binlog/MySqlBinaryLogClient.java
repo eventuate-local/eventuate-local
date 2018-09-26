@@ -6,6 +6,7 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinLogEvent;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.db.log.common.DbLogClient;
@@ -34,6 +35,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
 
   private final IWriteRowsEventDataParser<M> writeRowsEventDataParser;
 
+  private final ResolvedEventuateSchema sourceDatabase;
   private final String sourceTableName;
   private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
   private String binlogFilename;
@@ -50,6 +52,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
                               String host,
                               int port,
                               long binlogClientUniqueId,
+                              ResolvedEventuateSchema sourceDatabase,
                               String sourceTableName,
                               String clientName,
                               int connectionTimeoutInMilliseconds,
@@ -60,6 +63,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
     this.dbPassword = dbPassword;
     this.host = host;
     this.port = port;
+    this.sourceDatabase = sourceDatabase;
     this.sourceTableName = sourceTableName;
     this.name = clientName;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
@@ -82,7 +86,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
       switch (event.getHeader().getEventType()) {
         case TABLE_MAP: {
           TableMapEventData tableMapEvent = event.getData();
-          if (tableMapEvent.getTable().equalsIgnoreCase(sourceTableName)) {
+          if (tableMapEvent.getTable().equalsIgnoreCase(sourceTableName) && tableMapEvent.getDatabase().equalsIgnoreCase(sourceDatabase.getEventuateDatabaseSchema())) {
             tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
           }
           break;
@@ -127,7 +131,7 @@ public class MySqlBinaryLogClient<M extends BinLogEvent> implements DbLogClient<
   private void connectWithRetriesOnFail() {
     for (int i = 1;; i++) {
       try {
-        logger.info("trying to connect to mysql binlog");
+        logger.info("trying to connect to mysql binlog for schema {}", sourceDatabase.getEventuateDatabaseSchema());
         client.connect(connectionTimeoutInMilliseconds);
         logger.info("connection to mysql binlog succeed");
         break;

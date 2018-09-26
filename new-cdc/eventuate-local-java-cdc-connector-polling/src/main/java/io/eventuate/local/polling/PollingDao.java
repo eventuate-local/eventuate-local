@@ -3,8 +3,6 @@ package io.eventuate.local.polling;
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.local.common.*;
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -16,13 +14,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
 public class PollingDao extends BinlogEntryReader {
-  private Logger logger = LoggerFactory.getLogger(getClass());
-
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private int maxEventsPerPolling;
   private int maxAttemptsForPolling;
   private int pollingRetryIntervalInMilliseconds;
-  private CountDownLatch stopCountDownLatch = new CountDownLatch(1);
   private int pollingIntervalInMilliseconds;
 
   public PollingDao(DataSource dataSource,
@@ -48,39 +43,21 @@ public class PollingDao extends BinlogEntryReader {
 
   @Override
   protected void leaderStart() {
+    stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
-    new Thread(() -> {
+    while (running.get()) {
+      binlogEntryHandlers.forEach(this::processEvents);
 
-      while (running.get()) {
-        try {
-
-          binlogEntryHandlers.forEach(this::processEvents);
-
-          try {
-            Thread.sleep(pollingIntervalInMilliseconds);
-          } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-          }
-        } catch (Exception e) {
-          logger.error(e.getMessage(), e);
-        }
+      try {
+        Thread.sleep(pollingIntervalInMilliseconds);
+      } catch (InterruptedException e) {
+        logger.error(e.getMessage(), e);
+        running.set(false);
       }
-      stopCountDownLatch.countDown();
-    }).start();
-  }
-
-  @Override
-  protected void leaderStop() {
-    if (!running.compareAndSet(true, false)) {
-      return;
     }
 
-    try {
-      stopCountDownLatch.await();
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    stopCountDownLatch.countDown();
   }
 
   public void processEvents(BinlogEntryHandler handler) {
@@ -139,7 +116,9 @@ public class PollingDao extends BinlogEntryReader {
         try {
           Thread.sleep(pollingRetryIntervalInMilliseconds);
         } catch (InterruptedException ie) {
-          logger.error(ie.getMessage(), ie);
+          running.set(false);
+          stopCountDownLatch.countDown();
+          throw new RuntimeException(ie);
         }
       } catch (Exception e) {
         throw new RuntimeException(e);

@@ -9,8 +9,6 @@ import org.postgresql.PGConnection;
 import org.postgresql.PGProperty;
 import org.postgresql.replication.LogSequenceNumber;
 import org.postgresql.replication.PGReplicationStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,14 +25,12 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class PostgresWalClient extends DbLogClient {
-  private Logger logger = LoggerFactory.getLogger(this.getClass());
   private PostgresWalBinlogEntryExtractor postgresWalBinlogEntryExtractor;
   private int walIntervalInMilliseconds;
   private int connectionTimeoutInMilliseconds;
   private int maxAttemptsForBinlogConnection;
   private Connection connection;
   private PGReplicationStream stream;
-  private CountDownLatch countDownLatchForStop;
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
 
@@ -60,15 +56,12 @@ public class PostgresWalClient extends DbLogClient {
     this.postgresWalBinlogEntryExtractor = new PostgresWalBinlogEntryExtractor();
   }
 
-  public OffsetStore getOffsetStore() {
-    return offsetStore;
-  }
-
   @Override
   protected void leaderStart() {
+    stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
-    new Thread(() -> connectWithRetriesOnFail(offsetStore.getLastBinlogFileOffset())).start();
+    connectWithRetriesOnFail(offsetStore.getLastBinlogFileOffset());
   }
 
   private void connectWithRetriesOnFail(Optional<BinlogFileOffset> binlogFileOffset) {
@@ -77,7 +70,7 @@ public class PostgresWalClient extends DbLogClient {
         logger.info("trying to connect to postgres wal");
         connectAndRun(binlogFileOffset);
         break;
-      } catch (SQLException | InterruptedException e) {
+      } catch (SQLException e) {
         logger.error("connection to posgres wal failed");
         if (i == maxAttemptsForBinlogConnection) {
           logger.error("connection attempts exceeded");
@@ -86,19 +79,17 @@ public class PostgresWalClient extends DbLogClient {
         try {
           Thread.sleep(connectionTimeoutInMilliseconds);
         } catch (InterruptedException ex) {
-          throw new RuntimeException(ex);
+          logger.error(e.getMessage(), e);
+          running.set(false);
+          stopCountDownLatch.countDown();
+          throw new RuntimeException(e);
         }
-      } catch (IOException e) {
-        logger.error(e.getMessage(), e);
-        throw new RuntimeException(e);
       }
     }
   }
 
   private void connectAndRun(Optional<BinlogFileOffset> binlogFileOffset)
-          throws SQLException, InterruptedException, IOException {
-
-    countDownLatchForStop = new CountDownLatch(1);
+          throws SQLException {
 
     Properties props = new Properties();
     PGProperty.USER.set(props, dbUserName);
@@ -131,7 +122,12 @@ public class PostgresWalClient extends DbLogClient {
 
       if (messageBuffer == null) {
         logger.info("Got empty message, sleeping");
-        TimeUnit.MILLISECONDS.sleep(walIntervalInMilliseconds);
+        try {
+          TimeUnit.MILLISECONDS.sleep(walIntervalInMilliseconds);
+        } catch (InterruptedException e) {
+          logger.error(e.getMessage(), e);
+          running.set(false);
+        }
         continue;
       }
 
@@ -176,6 +172,7 @@ public class PostgresWalClient extends DbLogClient {
       stream.setAppliedLSN(stream.getLastReceiveLSN());
       stream.setFlushedLSN(stream.getLastReceiveLSN());
     }
+
     try {
       stream.close();
       connection.close();
@@ -183,21 +180,8 @@ public class PostgresWalClient extends DbLogClient {
       logger.error(e.getMessage(), e);
       throw new RuntimeException(e);
     }
-    countDownLatchForStop.countDown();
-  }
 
-  @Override
-  protected void leaderStop() {
-    if (!running.compareAndSet(true, false)) {
-      return;
-    }
-
-    try {
-      countDownLatchForStop.await();
-    } catch (InterruptedException e) {
-      logger.error(e.getMessage(), e);
-      throw new RuntimeException(e);
-    }
+    stopCountDownLatch.countDown();
   }
 
   private String extractStringFromBuffer(ByteBuffer byteBuffer) {

@@ -7,12 +7,9 @@ import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -20,13 +17,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 public class MySqlBinaryLogClient extends DbLogClient {
-
-  private Logger logger = LoggerFactory.getLogger(this.getClass());
-
   private String name;
   private BinaryLogClient client;
   private long binlogClientUniqueId;
@@ -66,12 +61,9 @@ public class MySqlBinaryLogClient extends DbLogClient {
     return name;
   }
 
-  public OffsetStore getOffsetStore() {
-    return offsetStore;
-  }
-
   @Override
   protected void leaderStart() {
+    stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
@@ -113,6 +105,17 @@ public class MySqlBinaryLogClient extends DbLogClient {
     });
 
     connectWithRetriesOnFail();
+
+    while (running.get()) {
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        logger.error(e.getMessage(), e);
+        running.set(false);
+      }
+    }
+
+    stopCountDownLatch.countDown();
   }
 
   private Optional<BinlogFileOffset> getStartingBinlogFileOffset() {
@@ -185,7 +188,9 @@ public class MySqlBinaryLogClient extends DbLogClient {
         try {
           Thread.sleep(connectionTimeoutInMilliseconds);
         } catch (InterruptedException ex) {
-          throw new RuntimeException(ex);
+          running.set(false);
+          stopCountDownLatch.countDown();
+          return;
         }
       }
     }
@@ -218,9 +223,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
   @Override
   protected void leaderStop() {
-    if (!running.compareAndSet(true, false)) {
-      return;
-    }
+    super.leaderStop();
 
     try {
       client.disconnect();

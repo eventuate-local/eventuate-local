@@ -37,7 +37,6 @@ public class PostgresWalClient extends DbLogClient {
   private CountDownLatch countDownLatchForStop;
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
-  private OffsetStore offsetStore;
 
   public PostgresWalClient(String url,
                            String user,
@@ -51,7 +50,7 @@ public class PostgresWalClient extends DbLogClient {
                            String leadershipLockPath,
                            OffsetStore offsetStore) {
 
-    super(user, password, url, curatorFramework, leadershipLockPath);
+    super(user, password, url, curatorFramework, leadershipLockPath, offsetStore);
 
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
@@ -59,7 +58,6 @@ public class PostgresWalClient extends DbLogClient {
     this.replicationStatusIntervalInMilliseconds = replicationStatusIntervalInMilliseconds;
     this.replicationSlotName = replicationSlotName;
     this.postgresWalBinlogEntryExtractor = new PostgresWalBinlogEntryExtractor();
-    this.offsetStore = offsetStore;
   }
 
   public OffsetStore getOffsetStore() {

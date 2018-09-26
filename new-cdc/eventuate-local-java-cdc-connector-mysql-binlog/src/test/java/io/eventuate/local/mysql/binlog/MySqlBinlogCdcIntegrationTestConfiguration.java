@@ -134,11 +134,9 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducerFactory dataProducerFactory,
                                                             EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                            OffsetStore offsetStore,
                                                             PublishingStrategy<PublishedEvent> publishingStrategy) {
 
     return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
-            offsetStore,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy);
   }

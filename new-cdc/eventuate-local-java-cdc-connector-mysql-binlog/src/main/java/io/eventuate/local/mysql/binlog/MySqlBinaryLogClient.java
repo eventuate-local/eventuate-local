@@ -7,6 +7,7 @@ import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
 import io.eventuate.local.common.*;
+import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
@@ -35,7 +36,6 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private DataSource dataSource;
   private int connectionTimeoutInMilliseconds;
   private int maxAttemptsForBinlogConnection;
-  private OffsetStore offsetStore;
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
 
   public MySqlBinaryLogClient(String dbUserName,
@@ -51,7 +51,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               OffsetStore offsetStore,
                               DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
-    super(dbUserName, dbPassword, dataSourceUrl, curatorFramework, leadershipLockPath);
+    super(dbUserName, dbPassword, dataSourceUrl, curatorFramework, leadershipLockPath, offsetStore);
 
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.dataSource = dataSource;

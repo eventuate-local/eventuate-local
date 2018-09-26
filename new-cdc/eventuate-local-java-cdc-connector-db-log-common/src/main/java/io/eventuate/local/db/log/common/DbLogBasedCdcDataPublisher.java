@@ -19,17 +19,23 @@ public class DbLogBasedCdcDataPublisher<EVENT extends BinLogEvent> extends CdcDa
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
   public DbLogBasedCdcDataPublisher(DataProducerFactory dataProducerFactory,
-                                    OffsetStore offsetStore,
                                     PublishingFilter publishingFilter,
                                     PublishingStrategy<EVENT> publishingStrategy) {
     super(dataProducerFactory, publishingStrategy);
 
-    this.offsetStore = offsetStore;
     this.publishingFilter = publishingFilter;
+  }
+
+  public void initOffsetStore(OffsetStore offsetStore) {
+    this.offsetStore = offsetStore;
   }
 
   @Override
   public void handleEvent(EVENT publishedEvent) throws EventuateLocalPublishingException {
+    if (offsetStore == null) {
+      throw new RuntimeException("Offset store was not initialized");
+    }
+
     Objects.requireNonNull(publishedEvent);
 
     logger.trace("Got record " + publishedEvent.toString());

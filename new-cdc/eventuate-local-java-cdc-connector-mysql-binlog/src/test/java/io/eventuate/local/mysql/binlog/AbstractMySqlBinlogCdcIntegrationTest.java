@@ -3,8 +3,12 @@ package io.eventuate.local.mysql.binlog;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
+import io.eventuate.local.common.EventuateConfigurationProperties;
+import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
+import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
@@ -69,7 +73,7 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
-            new CdcDataPublisher<PublishedEvent>(null, null) {
+            new DbLogBasedCdcDataPublisher<PublishedEvent>(null, null, null) {
       @Override
       public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
         publishedEvents.add(publishedEvent);
@@ -85,7 +89,7 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     EntityIdVersionAndEventIds updateResult = updateEvent(saveResult.getEntityId(), saveResult.getEntityVersion(), localAggregateCrud, accountDebitedEventData);
 
     // Wait for 10 seconds
-    LocalDateTime deadline = LocalDateTime.now().plusSeconds(10);
+    LocalDateTime deadline = LocalDateTime.now().plusSeconds(20);
 
     waitForEvent(publishedEvents, saveResult.getEntityVersion(), deadline, accountCreatedEventData);
     waitForEvent(publishedEvents, updateResult.getEntityVersion(), deadline, accountDebitedEventData);

@@ -1,10 +1,6 @@
 package io.eventuate.local.mysql.binlog;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
-import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.db.log.test.util.AbstractDbLogBasedCdcKafkaPublisherTest;
 import org.junit.After;
 import org.junit.Before;

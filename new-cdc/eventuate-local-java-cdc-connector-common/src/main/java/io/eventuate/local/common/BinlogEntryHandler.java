@@ -31,6 +31,10 @@ public class BinlogEntryHandler<EVENT extends BinLogEvent> {
     return sourceTableNameSupplier;
   }
 
+  public CdcDataPublisher<EVENT> getCdcDataPublisher() {
+    return cdcDataPublisher;
+  }
+
   public boolean isFor(String requestedDatabase, String requestedTable, String defaultDatabase) {
     boolean schemasAreEqual = eventuateSchema.isEmpty() && requestedDatabase.equalsIgnoreCase(defaultDatabase) ||
             requestedDatabase.equalsIgnoreCase(eventuateSchema.getEventuateDatabaseSchema());

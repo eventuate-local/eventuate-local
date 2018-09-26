@@ -6,6 +6,7 @@ import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
+import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,7 @@ public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTe
     postgresWalClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
-            new CdcDataPublisher<PublishedEvent>(null, null) {
+            new DbLogBasedCdcDataPublisher<PublishedEvent>(null, null, null) {
               @Override
               public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
                 consumer.accept(publishedEvent);

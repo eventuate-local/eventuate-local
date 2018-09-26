@@ -15,8 +15,8 @@ public class BinlogEntryReaderProvider {
     readerTypeByName.put(name, type);
   }
 
-  public <CLIENT> CLIENT getReader(String name) {
-    return (CLIENT) clients.get(name);
+  public BinlogEntryReader getReader(String name) {
+    return clients.get(name);
   }
 
   public String getReaderType(String name) {

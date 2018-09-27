@@ -8,7 +8,7 @@ import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration.CommonDbLogCdcDefaultPipelineReaderConfiguration;
-import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.AbstractMySqlBinlogCdcPipelineReaderFactory;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.MySqlBinlogCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -17,20 +17,22 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class MySqlBinlogDefaultCdcPipelineReaderConfiguration extends CommonDbLogCdcDefaultPipelineReaderConfiguration {
+public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDefaultPipelineReaderConfiguration {
 
   @Bean("eventuateLocalMySqlBinlogCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory mySqlBinlogCdcPipelineReaderFactory(CuratorFramework curatorFramework,
                                                                       BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                      EventuateKafkaProducer eventuateKafkaProducer) {
+                                                                      EventuateKafkaProducer eventuateKafkaProducer,
+                                                                      OffsetStoreFactory offsetStoreFactory) {
 
     return new MySqlBinlogCdcPipelineReaderFactory(curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer);
+            eventuateKafkaProducer,
+            offsetStoreFactory);
   }
 
   @Conditional(MySqlBinlogCondition.class)
@@ -39,13 +41,15 @@ public class MySqlBinlogDefaultCdcPipelineReaderConfiguration extends CommonDbLo
                                                                        BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                       EventuateKafkaProducer eventuateKafkaProducer) {
+                                                                       EventuateKafkaProducer eventuateKafkaProducer,
+                                                                       OffsetStoreFactory offsetStoreFactory) {
 
     return new MySqlBinlogCdcPipelineReaderFactory(curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer);
+            eventuateKafkaProducer,
+            offsetStoreFactory);
   }
 
   @Conditional(MySqlBinlogCondition.class)
@@ -53,7 +57,7 @@ public class MySqlBinlogDefaultCdcPipelineReaderConfiguration extends CommonDbLo
   public CdcPipelineReaderProperties defaultMySqlPipelineReaderProperties() {
     MySqlBinlogCdcPipelineReaderProperties mySqlBinlogCdcPipelineReaderProperties = createMySqlBinlogCdcPipelineReaderProperties();
 
-    mySqlBinlogCdcPipelineReaderProperties.setType(AbstractMySqlBinlogCdcPipelineReaderFactory.TYPE);
+    mySqlBinlogCdcPipelineReaderProperties.setType(MySqlBinlogCdcPipelineReaderFactory.TYPE);
 
     initCommonDbLogCdcPipelineReaderProperties(mySqlBinlogCdcPipelineReaderProperties);
     initCdcPipelineReaderProperties(mySqlBinlogCdcPipelineReaderProperties);

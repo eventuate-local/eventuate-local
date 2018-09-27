@@ -152,7 +152,7 @@ public class CdcPipelineConfigurator {
             .filter(factory ->  factory.supports(type))
             .findAny()
             .orElseThrow(() ->
-                    new RuntimeException(String.format("reader factory not found for type %s",
+                    new RuntimeException(String.format("pipeline factory not found for type %s",
                             type)));
   }
 
@@ -162,7 +162,7 @@ public class CdcPipelineConfigurator {
             .filter(factory ->  factory.supports(type))
             .findAny()
             .orElseThrow(() ->
-                    new RuntimeException(String.format("pipeline factory not found for type %s",
+                    new RuntimeException(String.format("reader factory not found for type %s",
                             type)));
   }
 }

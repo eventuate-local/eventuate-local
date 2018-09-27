@@ -19,23 +19,21 @@ public abstract class CommonDbLogCdcPipelineReaderFactory<PROPERTIES extends Cdc
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
   protected EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
   protected EventuateKafkaProducer eventuateKafkaProducer;
+  protected OffsetStoreFactory offsetStoreFactory;
 
 
   public CommonDbLogCdcPipelineReaderFactory(CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                             EventuateKafkaProducer eventuateKafkaProducer) {
+                                             EventuateKafkaProducer eventuateKafkaProducer,
+                                             OffsetStoreFactory offsetStoreFactory) {
 
     super(curatorFramework, binlogEntryReaderProvider);
 
     this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
     this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
+    this.offsetStoreFactory = offsetStoreFactory;
   }
-
-  protected abstract OffsetStore createOffsetStore(PROPERTIES properties,
-                                                   DataSource dataSource,
-                                                   EventuateSchema eventuateSchema,
-                                                   String clientName);
 }

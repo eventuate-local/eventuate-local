@@ -43,24 +43,24 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
   }
 
   @Override
-  public MySqlBinaryLogClient create(MySqlBinlogCdcPipelineReaderProperties mySqlBinlogCdcPipelineReaderProperties) {
-    DataSource dataSource = createDataSource(mySqlBinlogCdcPipelineReaderProperties);
+  public MySqlBinaryLogClient create(MySqlBinlogCdcPipelineReaderProperties readerProperties) {
+    DataSource dataSource = createDataSource(readerProperties);
 
-    return new MySqlBinaryLogClient(mySqlBinlogCdcPipelineReaderProperties.getCdcDbUserName(),
-            mySqlBinlogCdcPipelineReaderProperties.getCdcDbPassword(),
-            mySqlBinlogCdcPipelineReaderProperties.getDataSourceUrl(),
-            createDataSource(mySqlBinlogCdcPipelineReaderProperties),
-            mySqlBinlogCdcPipelineReaderProperties.getBinlogClientId(),
-            mySqlBinlogCdcPipelineReaderProperties.getMySqlBinLogClientName(),
-            mySqlBinlogCdcPipelineReaderProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            mySqlBinlogCdcPipelineReaderProperties.getMaxAttemptsForBinlogConnection(),
+    return new MySqlBinaryLogClient(readerProperties.getCdcDbUserName(),
+            readerProperties.getCdcDbPassword(),
+            readerProperties.getDataSourceUrl(),
+            createDataSource(readerProperties),
+            readerProperties.getBinlogClientId(),
+            readerProperties.getMySqlBinLogClientName(),
+            readerProperties.getBinlogConnectionTimeoutInMilliseconds(),
+            readerProperties.getMaxAttemptsForBinlogConnection(),
             curatorFramework,
-            mySqlBinlogCdcPipelineReaderProperties.getLeadershipLockPath(),
-            offsetStoreFactory.create(mySqlBinlogCdcPipelineReaderProperties,
+            readerProperties.getLeadershipLockPath(),
+            offsetStoreFactory.create(readerProperties,
                     dataSource,
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
-                    mySqlBinlogCdcPipelineReaderProperties.getMySqlBinLogClientName()),
-            createDebeziumBinlogOffsetKafkaStore(mySqlBinlogCdcPipelineReaderProperties,
+                    readerProperties.getMySqlBinLogClientName()),
+            createDebeziumBinlogOffsetKafkaStore(readerProperties,
                     eventuateKafkaConfigurationProperties,
                     eventuateKafkaConsumerConfigurationProperties));
   }

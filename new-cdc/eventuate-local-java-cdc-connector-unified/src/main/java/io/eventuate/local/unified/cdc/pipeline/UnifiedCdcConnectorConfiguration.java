@@ -11,6 +11,7 @@ import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.configuration.P
 import io.eventuate.local.unified.cdc.pipeline.polling.configuration.PollingCdcPipelineFactoryConfiguration;
 import io.eventuate.local.unified.cdc.pipeline.polling.configuration.PollingDefaultCdcPipelineFactoryConfiguration;
 import io.eventuate.local.unified.cdc.pipeline.polling.configuration.PollingDefaultCdcPipelineReaderConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
@@ -29,8 +30,10 @@ import org.springframework.context.annotation.Import;
 
         PostgresWalDefaultCdcPipelineReaderConfiguration.class,
         PostgresWalCdcPipelineFactoryConfiguration.class,
-        PostgresWalDefaultCdcPipelineFactoryConfiguration.class,
-
-        CdcPipelineConfiguration.class})
+        PostgresWalDefaultCdcPipelineFactoryConfiguration.class})
 public class UnifiedCdcConnectorConfiguration {
+  @Bean
+  public CdcPipelineConfigurator cdcPipelineConfigurator() {
+    return new CdcPipelineConfigurator();
+  }
 }

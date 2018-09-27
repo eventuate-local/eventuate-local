@@ -3,6 +3,8 @@ package io.eventuate.local.db.log.common;
 import io.eventuate.local.common.*;
 import org.apache.curator.framework.CuratorFramework;
 
+import java.util.Optional;
+
 public abstract class DbLogClient extends BinlogEntryReader {
 
   protected String dbUserName;
@@ -12,6 +14,7 @@ public abstract class DbLogClient extends BinlogEntryReader {
   protected int port;
   protected String defaultDatabase;
   protected OffsetStore offsetStore;
+  private boolean checkEntriesForDuplicates;
 
   public DbLogClient(String dbUserName,
                      String dbPassword,
@@ -35,6 +38,7 @@ public abstract class DbLogClient extends BinlogEntryReader {
 
   @Override
   public void start() {
+    checkEntriesForDuplicates = true;
     initPublisher();
     super.start();
   }
@@ -42,5 +46,21 @@ public abstract class DbLogClient extends BinlogEntryReader {
   private void initPublisher() {
     binlogEntryHandlers.forEach(binlogEntryHandler ->
       ((DbLogBasedCdcDataPublisher)binlogEntryHandler.getCdcDataPublisher()).initOffsetStore(offsetStore));
+  }
+
+  protected boolean shouldSkipEntry(Optional<BinlogFileOffset> startingBinlogFileOffset, BinlogEntry entry) {
+    if (checkEntriesForDuplicates) {
+      if (startingBinlogFileOffset.isPresent()) {
+        BinlogFileOffset startingOffset = startingBinlogFileOffset.get();
+
+        if (startingOffset.isSameOrAfter(entry.getBinlogFileOffset())) {
+          return true;
+        }
+      }
+
+      checkEntriesForDuplicates = false;
+    }
+
+    return false;
   }
 }

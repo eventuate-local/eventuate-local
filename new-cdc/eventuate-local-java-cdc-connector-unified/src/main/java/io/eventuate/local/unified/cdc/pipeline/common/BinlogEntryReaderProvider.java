@@ -19,10 +19,6 @@ public class BinlogEntryReaderProvider {
     return clients.get(name);
   }
 
-  public String getReaderType(String name) {
-    return readerTypeByName.get(name);
-  }
-
   public void start() {
     clients.values().forEach(BinlogEntryReader::start);
   }

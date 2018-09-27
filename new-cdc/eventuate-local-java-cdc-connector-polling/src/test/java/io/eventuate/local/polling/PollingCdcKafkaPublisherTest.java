@@ -2,6 +2,7 @@ package io.eventuate.local.polling;
 
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
+import io.eventuate.local.common.DuplicatePublishingDetector;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
@@ -25,6 +26,9 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
   @Autowired
   private PollingDataProvider pollingDataProvider;
 
+  @Autowired
+  private DuplicatePublishingDetector duplicatePublishingDetector;
+
   @Before
   public void init() {
     super.init();
@@ -39,9 +43,10 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
 
   @Override
   protected CdcDataPublisher<PublishedEvent> createCdcKafkaPublisher() {
-    return new PollingCdcDataPublisher<>(() ->
+    return new CdcDataPublisher<>(() ->
             new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
                     EventuateKafkaProducerConfigurationProperties.empty()),
+            duplicatePublishingDetector,
             publishingStrategy);
   }
 

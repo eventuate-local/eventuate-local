@@ -31,7 +31,7 @@ public class MySqlBinlogEntryExtractor {
     this.eventuateSchema = eventuateSchema;
   }
 
-  public BinlogEntry extract(WriteRowsEventData eventData, String binlogFilename, long position) throws IOException {
+  public BinlogEntry extract(WriteRowsEventData eventData, String binlogFilename, long position) {
     if (columnOrders.isEmpty()) {
       try {
         getColumnOrders();

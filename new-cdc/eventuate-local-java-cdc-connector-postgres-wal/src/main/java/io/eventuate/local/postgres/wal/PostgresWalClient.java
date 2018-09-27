@@ -10,7 +10,6 @@ import org.postgresql.PGProperty;
 import org.postgresql.replication.LogSequenceNumber;
 import org.postgresql.replication.PGReplicationStream;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -21,7 +20,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class PostgresWalClient extends DbLogClient {
@@ -151,20 +149,10 @@ public class PostgresWalClient extends DbLogClient {
 
         postgresWalBinlogEntryExtractor
                 .extract(filteredChanges, stream.getLastReceiveLSN().asLong(), replicationSlotName)
-                .forEach(new Consumer<BinlogEntry>() {
-                  private boolean couldReadDuplicateEntries = true;
-
-                  @Override
-                  public void accept(BinlogEntry binlogEntry) {
-                    if (couldReadDuplicateEntries) {
-                      if (binlogFileOffset.map(s -> s.isSameOrAfter(binlogEntry.getBinlogFileOffset())).orElse(false)) {
-                        return;
-                      } else {
-                        couldReadDuplicateEntries = false;
-                      }
-                    }
-
+                .forEach(binlogEntry -> {
+                  if (!shouldSkipEntry(binlogFileOffset, binlogEntry)) {
                     binlogEntryHandler.publish(binlogEntry);
+                    offsetStore.save(binlogEntry.getBinlogFileOffset());
                   }
                 });
       });

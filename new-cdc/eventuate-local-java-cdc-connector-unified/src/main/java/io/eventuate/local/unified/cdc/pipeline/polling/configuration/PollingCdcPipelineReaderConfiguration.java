@@ -12,9 +12,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-public class PollingDefaultCdcPipelineReaderConfiguration extends CommonCdcDefaultPipelineReaderConfiguration {
+public class PollingCdcPipelineReaderConfiguration extends CommonCdcDefaultPipelineReaderConfiguration {
 
-  @Bean("evenutateLocalPollingCdcPipelineReaderFactory")
+  @Bean("eventuateLocalPollingCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory pollingCdcPipelineReaderFactory(CuratorFramework curatorFramework,
                                                                   BinlogEntryReaderProvider binlogEntryReaderProvider) {
 

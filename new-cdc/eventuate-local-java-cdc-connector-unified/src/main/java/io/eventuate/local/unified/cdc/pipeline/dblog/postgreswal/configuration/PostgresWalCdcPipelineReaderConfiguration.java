@@ -7,7 +7,7 @@ import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration.CommonDbLogCdcDefaultPipelineReaderConfiguration;
-import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.AbstractPostgresWalCdcPipelineReaderFactory;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.PostgresWalCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -16,20 +16,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-public class PostgresWalDefaultCdcPipelineReaderConfiguration extends CommonDbLogCdcDefaultPipelineReaderConfiguration {
+public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDefaultPipelineReaderConfiguration {
 
   @Bean("eventuateLocalPostgresWalCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory postgresWalCdcPipelineReaderFactory(CuratorFramework curatorFramework,
                                                                       BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                      EventuateKafkaProducer eventuateKafkaProducer) {
+                                                                      EventuateKafkaProducer eventuateKafkaProducer,
+                                                                      OffsetStoreFactory offsetStoreFactory) {
 
     return new PostgresWalCdcPipelineReaderFactory(curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer);
+            eventuateKafkaProducer,
+            offsetStoreFactory);
   }
 
   @Profile("PostgresWal")
@@ -38,13 +40,15 @@ public class PostgresWalDefaultCdcPipelineReaderConfiguration extends CommonDbLo
                                                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                             EventuateKafkaProducer eventuateKafkaProducer) {
+                                                                             EventuateKafkaProducer eventuateKafkaProducer,
+                                                                             OffsetStoreFactory offsetStoreFactory) {
 
     return new PostgresWalCdcPipelineReaderFactory(curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer);
+            eventuateKafkaProducer,
+            offsetStoreFactory);
   }
 
   @Profile("PostgresWal")
@@ -52,7 +56,7 @@ public class PostgresWalDefaultCdcPipelineReaderConfiguration extends CommonDbLo
   public CdcPipelineReaderProperties defaultPostgresWalPipelineReaderProperties() {
     PostgresWalCdcPipelineReaderProperties postgresWalCdcPipelineReaderProperties = createPostgresWalCdcPipelineReaderProperties();
 
-    postgresWalCdcPipelineReaderProperties.setType(AbstractPostgresWalCdcPipelineReaderFactory.TYPE);
+    postgresWalCdcPipelineReaderProperties.setType(PostgresWalCdcPipelineReaderFactory.TYPE);
 
 
     initCommonDbLogCdcPipelineReaderProperties(postgresWalCdcPipelineReaderProperties);

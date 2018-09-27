@@ -1,7 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog;
 
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.CommonDbLogPipelineReaderPropertyValidationTest;
-import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.AbstractMySqlBinlogCdcPipelineReaderFactory;
+import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.MySqlBinlogCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
 import org.junit.Assert;
 import org.junit.Test;
@@ -14,7 +14,7 @@ public class MySqlBinlogPipelineReaderPropertyValidationTest extends CommonDbLog
 
     assertExceptionMessage(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class, "type must not be null");
 
-    propertyBuilder.addString("type", AbstractMySqlBinlogCdcPipelineReaderFactory.TYPE);
+    propertyBuilder.addString("type", MySqlBinlogCdcPipelineReaderFactory.TYPE);
 
     testCommonRequiredProperties(MySqlBinlogCdcPipelineReaderProperties.class, propertyBuilder);
 

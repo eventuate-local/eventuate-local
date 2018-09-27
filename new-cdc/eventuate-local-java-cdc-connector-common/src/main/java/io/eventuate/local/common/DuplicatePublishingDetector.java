@@ -1,8 +1,9 @@
-package io.eventuate.local.db.log.common;
+package io.eventuate.local.common;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.PublishingFilter;
 import io.eventuate.local.java.kafka.consumer.ConsumerPropertiesFactory;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumer;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -87,10 +88,16 @@ public class DuplicatePublishingDetector implements PublishingFilter {
     }
 
     logger.info("Got records: {}", records.size());
-    Optional<BinlogFileOffset> max = StreamSupport.stream(records.spliterator(), false).map(record -> {
-      logger.info(String.format("got record: %s %s %s", record.partition(), record.offset(), record.value()));
-      return JSonMapper.fromJson(record.value(), PublishedEvent.class).getBinlogFileOffset();
-    }).filter(binlogFileOffset -> binlogFileOffset!=null).max((blfo1, blfo2) -> blfo1.isSameOrAfter(blfo2) ? 1 : -1);
+    Optional<BinlogFileOffset> max =
+            records
+                    .stream()
+                    .map(record -> {
+                      logger.info(String.format("got record: %s %s %s", record.partition(), record.offset(), record.value()));
+                      return JSonMapper.fromJson(record.value(), PublishedEvent.class).getBinlogFileOffset();
+                    })
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .max((blfo1, blfo2) -> blfo1.isSameOrAfter(blfo2) ? 1 : -1);
     consumer.close();
     return max;
   }

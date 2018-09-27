@@ -1,43 +1,66 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.postgres.wal.PostgresWalClient;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDbLogCdcPipelineReaderFactory;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
 
 public class PostgresWalCdcPipelineReaderFactory
-        extends AbstractPostgresWalCdcPipelineReaderFactory {
+        extends CommonDbLogCdcPipelineReaderFactory<PostgresWalCdcPipelineReaderProperties, PostgresWalClient> {
+
+  public static final String TYPE = "postgres-wal";
 
   public PostgresWalCdcPipelineReaderFactory(CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                             EventuateKafkaProducer eventuateKafkaProducer) {
+                                             EventuateKafkaProducer eventuateKafkaProducer,
+                                             OffsetStoreFactory offsetStoreFactory) {
 
     super(curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer);
-  }
-  @Override
-  protected OffsetStore createOffsetStore(PostgresWalCdcPipelineReaderProperties properties,
-                                          DataSource dataSource,
-                                          EventuateSchema eventuateSchema,
-                                          String clientName) {
-
-    return new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
-            clientName,
             eventuateKafkaProducer,
-            eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties);
+            offsetStoreFactory);
   }
 
+  @Override
+  public boolean supports(String type) {
+    return TYPE.equals(type);
+  }
+
+  @Override
+  public Class<PostgresWalCdcPipelineReaderProperties> propertyClass() {
+    return PostgresWalCdcPipelineReaderProperties.class;
+  }
+
+  @Override
+  public PostgresWalClient create(PostgresWalCdcPipelineReaderProperties postgresWalCdcPipelineReaderProperties) {
+
+    DataSource dataSource = createDataSource(postgresWalCdcPipelineReaderProperties);
+
+    return new PostgresWalClient(postgresWalCdcPipelineReaderProperties.getDataSourceUrl(),
+            postgresWalCdcPipelineReaderProperties.getDataSourceUserName(),
+            postgresWalCdcPipelineReaderProperties.getDataSourcePassword(),
+            postgresWalCdcPipelineReaderProperties.getBinlogConnectionTimeoutInMilliseconds(),
+            postgresWalCdcPipelineReaderProperties.getMaxAttemptsForBinlogConnection(),
+            postgresWalCdcPipelineReaderProperties.getPostgresWalIntervalInMilliseconds(),
+            postgresWalCdcPipelineReaderProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
+            postgresWalCdcPipelineReaderProperties.getPostgresReplicationSlotName(),
+            curatorFramework,
+            postgresWalCdcPipelineReaderProperties.getLeadershipLockPath(),
+            offsetStoreFactory.create(postgresWalCdcPipelineReaderProperties,
+                    dataSource,
+                    new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
+                    postgresWalCdcPipelineReaderProperties.getMySqlBinLogClientName()));
+  }
 }

@@ -14,14 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.*;
 
-@Configuration
-public class CdcPipelineConfiguration {
+public class CdcPipelineConfigurator {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   private PropertyReader propertyReader = new PropertyReader();
@@ -124,9 +122,7 @@ public class CdcPipelineConfiguration {
 
   private CdcPipeline<?> createCdcPipeline(CdcPipelineProperties properties) {
 
-    CdcPipelineFactory<?> cdcPipelineFactory =
-            findCdcPipelineFactory(properties.getType(), binlogEntryReaderProvider.getReaderType(properties.getReader()));
-
+    CdcPipelineFactory<?> cdcPipelineFactory = findCdcPipelineFactory(properties.getType());
     return cdcPipelineFactory.create(properties);
   }
 
@@ -150,13 +146,13 @@ public class CdcPipelineConfiguration {
             ((CdcPipelineReaderFactory)cdcPipelineReaderFactory).create(exactCdcPipelineReaderProperties));
   }
 
-  private CdcPipelineFactory<PublishedEvent> findCdcPipelineFactory(String type, String readerType) {
+  private CdcPipelineFactory<PublishedEvent> findCdcPipelineFactory(String type) {
     return cdcPipelineFactories
             .stream()
-            .filter(factory ->  factory.supports(type, readerType))
+            .filter(factory ->  factory.supports(type))
             .findAny()
             .orElseThrow(() ->
-                    new RuntimeException(String.format("reader factory not found for type %s",
+                    new RuntimeException(String.format("pipeline factory not found for type %s",
                             type)));
   }
 
@@ -166,7 +162,7 @@ public class CdcPipelineConfiguration {
             .filter(factory ->  factory.supports(type))
             .findAny()
             .orElseThrow(() ->
-                    new RuntimeException(String.format("pipeline factory not found for type %s",
+                    new RuntimeException(String.format("reader factory not found for type %s",
                             type)));
   }
 }

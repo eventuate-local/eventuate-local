@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 
 public class MySqlBinaryLogClient extends DbLogClient {
   private String name;
@@ -142,31 +141,16 @@ public class MySqlBinaryLogClient extends DbLogClient {
       binlogEntryHandlers
               .stream()
               .filter(bh -> bh.isFor(database, table, defaultDatabase))
-              .forEach(new Consumer<BinlogEntryHandler>() {
-                private boolean couldReadDuplicateEntries = true;
+              .forEach(binlogEntryHandler -> {
+                MySqlBinlogEntryExtractor extractor = new MySqlBinlogEntryExtractor(dataSource,
+                        binlogEntryHandler.getSourceTableNameSupplier().getSourceTableName(),
+                        binlogEntryHandler.getEventuateSchema());
 
-                @Override
-                public void accept(BinlogEntryHandler binlogEntryHandler) {
-                  try {
-                    MySqlBinlogEntryExtractor extractor = new MySqlBinlogEntryExtractor(dataSource,
-                            binlogEntryHandler.getSourceTableNameSupplier().getSourceTableName(),
-                            binlogEntryHandler.getEventuateSchema());
+                BinlogEntry entry = extractor.extract(eventData, binlogFilename, offset);
 
-                    BinlogEntry entry = extractor.extract(eventData, binlogFilename, offset);
-
-                    if (couldReadDuplicateEntries) {
-                      if (startingBinlogFileOffset.map(s -> s.isSameOrAfter(entry.getBinlogFileOffset())).orElse(false)) {
-                        return;
-                      } else {
-                        couldReadDuplicateEntries = false;
-                      }
-                    }
-
-                    binlogEntryHandler.publish(entry);
-
-                  } catch (IOException e) {
-                    throw new RuntimeException("Event row parsing exception", e);
-                  }
+                if (!shouldSkipEntry(startingBinlogFileOffset, entry)) {
+                  binlogEntryHandler.publish(entry);
+                  offsetStore.save(entry.getBinlogFileOffset());
                 }
               });
     }

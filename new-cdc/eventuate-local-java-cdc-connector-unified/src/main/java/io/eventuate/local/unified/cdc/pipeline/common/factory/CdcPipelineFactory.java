@@ -11,28 +11,25 @@ import java.util.function.Function;
 public class CdcPipelineFactory<EVENT extends BinLogEvent> {
 
   private String type;
-  private String readerType;
   private BinlogEntryReaderProvider binlogEntryReaderProvider;
   private CdcDataPublisher<EVENT> cdcDataPublisher;
   private Function<String, SourceTableNameSupplier> sourceTableNameSupplierFactory;
   private BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter;
 
   public CdcPipelineFactory(String type,
-                            String readerType,
                             BinlogEntryReaderProvider binlogEntryReaderProvider,
                             CdcDataPublisher<EVENT> cdcDataPublisher,
                             Function<String, SourceTableNameSupplier> sourceTableNameSupplierFactory,
                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter) {
     this.type = type;
-    this.readerType = readerType;
     this.binlogEntryReaderProvider = binlogEntryReaderProvider;
     this.cdcDataPublisher = cdcDataPublisher;
     this.sourceTableNameSupplierFactory = sourceTableNameSupplierFactory;
     this.binlogEntryToEventConverter = binlogEntryToEventConverter;
   }
 
-  public boolean supports(String type, String readerType) {
-    return this.type.equals(type) && this.readerType.equals(readerType);
+  public boolean supports(String type) {
+    return this.type.equals(type);
   }
 
   public CdcPipeline<EVENT> create(CdcPipelineProperties cdcPipelineProperties) {

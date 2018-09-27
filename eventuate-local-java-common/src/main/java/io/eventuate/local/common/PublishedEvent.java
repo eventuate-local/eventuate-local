@@ -77,8 +77,8 @@ public class PublishedEvent implements BinLogEvent {
   }
 
   @Override
-  public BinlogFileOffset getBinlogFileOffset() {
-    return binlogFileOffset;
+  public Optional<BinlogFileOffset> getBinlogFileOffset() {
+    return Optional.ofNullable(binlogFileOffset);
   }
 
   public void setBinlogFileOffset(BinlogFileOffset binlogFileOffset) {

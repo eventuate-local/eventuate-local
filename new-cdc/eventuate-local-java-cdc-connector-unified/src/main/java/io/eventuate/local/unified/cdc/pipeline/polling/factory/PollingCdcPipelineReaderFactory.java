@@ -22,15 +22,15 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
   }
 
   @Override
-  public PollingDao create(PollingPipelineReaderProperties pollingPipelineReaderProperties) {
+  public PollingDao create(PollingPipelineReaderProperties readerProperties) {
 
-    return new PollingDao(createDataSource(pollingPipelineReaderProperties),
-            pollingPipelineReaderProperties.getMaxEventsPerPolling(),
-            pollingPipelineReaderProperties.getMaxAttemptsForPolling(),
-            pollingPipelineReaderProperties.getPollingRetryIntervalInMilliseconds(),
-            pollingPipelineReaderProperties.getPollingIntervalInMilliseconds(),
+    return new PollingDao(createDataSource(readerProperties),
+            readerProperties.getMaxEventsPerPolling(),
+            readerProperties.getMaxAttemptsForPolling(),
+            readerProperties.getPollingRetryIntervalInMilliseconds(),
+            readerProperties.getPollingIntervalInMilliseconds(),
             curatorFramework,
-            pollingPipelineReaderProperties.getLeadershipLockPath());
+            readerProperties.getLeadershipLockPath());
   }
 
   @Override

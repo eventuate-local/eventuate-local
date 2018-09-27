@@ -44,23 +44,23 @@ public class PostgresWalCdcPipelineReaderFactory
   }
 
   @Override
-  public PostgresWalClient create(PostgresWalCdcPipelineReaderProperties postgresWalCdcPipelineReaderProperties) {
+  public PostgresWalClient create(PostgresWalCdcPipelineReaderProperties readerProperties) {
 
-    DataSource dataSource = createDataSource(postgresWalCdcPipelineReaderProperties);
+    DataSource dataSource = createDataSource(readerProperties);
 
-    return new PostgresWalClient(postgresWalCdcPipelineReaderProperties.getDataSourceUrl(),
-            postgresWalCdcPipelineReaderProperties.getDataSourceUserName(),
-            postgresWalCdcPipelineReaderProperties.getDataSourcePassword(),
-            postgresWalCdcPipelineReaderProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            postgresWalCdcPipelineReaderProperties.getMaxAttemptsForBinlogConnection(),
-            postgresWalCdcPipelineReaderProperties.getPostgresWalIntervalInMilliseconds(),
-            postgresWalCdcPipelineReaderProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
-            postgresWalCdcPipelineReaderProperties.getPostgresReplicationSlotName(),
+    return new PostgresWalClient(readerProperties.getDataSourceUrl(),
+            readerProperties.getDataSourceUserName(),
+            readerProperties.getDataSourcePassword(),
+            readerProperties.getBinlogConnectionTimeoutInMilliseconds(),
+            readerProperties.getMaxAttemptsForBinlogConnection(),
+            readerProperties.getPostgresWalIntervalInMilliseconds(),
+            readerProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
+            readerProperties.getPostgresReplicationSlotName(),
             curatorFramework,
-            postgresWalCdcPipelineReaderProperties.getLeadershipLockPath(),
-            offsetStoreFactory.create(postgresWalCdcPipelineReaderProperties,
+            readerProperties.getLeadershipLockPath(),
+            offsetStoreFactory.create(readerProperties,
                     dataSource,
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
-                    postgresWalCdcPipelineReaderProperties.getMySqlBinLogClientName()));
+                    readerProperties.getMySqlBinLogClientName()));
   }
 }

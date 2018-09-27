@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CdcPipelineFactoryConfiguration {
-  @Bean("evenutateLocalСdcPipelineFactory")
+  @Bean("eventuateLocalСdcPipelineFactory")
   public CdcPipelineFactory pollingCdcPipelineFactory(DataProducerFactory dataProducerFactory,
                                                       DuplicatePublishingDetector duplicatePublishingDetector,
                                                       BinlogEntryReaderProvider binlogEntryReaderProvider) {

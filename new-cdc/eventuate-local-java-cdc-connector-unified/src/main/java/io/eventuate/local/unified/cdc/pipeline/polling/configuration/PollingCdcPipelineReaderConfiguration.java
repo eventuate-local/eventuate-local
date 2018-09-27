@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 public class PollingCdcPipelineReaderConfiguration extends CommonCdcDefaultPipelineReaderConfiguration {
 
-  @Bean("evenutateLocalPollingCdcPipelineReaderFactory")
+  @Bean("eventuateLocalPollingCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory pollingCdcPipelineReaderFactory(CuratorFramework curatorFramework,
                                                                   BinlogEntryReaderProvider binlogEntryReaderProvider) {
 

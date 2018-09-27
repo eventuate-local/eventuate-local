@@ -39,13 +39,7 @@ public abstract class DbLogClient extends BinlogEntryReader {
   @Override
   public void start() {
     checkEntriesForDuplicates = true;
-    initPublisher();
     super.start();
-  }
-
-  private void initPublisher() {
-    binlogEntryHandlers.forEach(binlogEntryHandler ->
-      ((DbLogBasedCdcDataPublisher)binlogEntryHandler.getCdcDataPublisher()).initOffsetStore(offsetStore));
   }
 
   protected boolean shouldSkipEntry(Optional<BinlogFileOffset> startingBinlogFileOffset, BinlogEntry entry) {

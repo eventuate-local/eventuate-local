@@ -10,7 +10,7 @@ import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -82,11 +82,11 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
-            new DbLogBasedCdcDataPublisher<PublishedEvent>(null, null, null) {
+            new CdcDataPublisher<PublishedEvent>(null, null, null) {
               @Override
               public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
                 publishedEvents.add(publishedEvent);
-                offsetStore.save(publishedEvent.getBinlogFileOffset());
+                offsetStore.save(publishedEvent.getBinlogFileOffset().get());
               }
             });
 
@@ -113,11 +113,11 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
-            new DbLogBasedCdcDataPublisher<PublishedEvent>(null, null, null) {
+            new CdcDataPublisher<PublishedEvent>(null, null, null) {
               @Override
               public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
                 publishedEvents.add(publishedEvent);
-                offsetStore.save(publishedEvent.getBinlogFileOffset());
+                offsetStore.save(publishedEvent.getBinlogFileOffset().get());
               }
             });
 

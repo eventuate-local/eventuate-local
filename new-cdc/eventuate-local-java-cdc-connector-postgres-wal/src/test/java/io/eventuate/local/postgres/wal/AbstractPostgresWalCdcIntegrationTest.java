@@ -5,7 +5,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
-import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
@@ -73,7 +73,7 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
             eventuateSchema,
             sourceTableNameSupplier,
             new BinlogEntryToPublishedEventConverter(),
-            new DbLogBasedCdcDataPublisher<PublishedEvent>(null, null, null) {
+            new CdcDataPublisher<PublishedEvent>(null, null, null) {
               @Override
               public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
                 publishedEvents.add(publishedEvent);

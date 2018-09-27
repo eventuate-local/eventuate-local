@@ -152,6 +152,7 @@ public class PostgresWalClient extends DbLogClient {
                 .forEach(binlogEntry -> {
                   if (!shouldSkipEntry(binlogFileOffset, binlogEntry)) {
                     binlogEntryHandler.publish(binlogEntry);
+                    offsetStore.save(binlogEntry.getBinlogFileOffset());
                   }
                 });
       });

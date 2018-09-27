@@ -122,9 +122,7 @@ public class CdcPipelineConfigurator {
 
   private CdcPipeline<?> createCdcPipeline(CdcPipelineProperties properties) {
 
-    CdcPipelineFactory<?> cdcPipelineFactory =
-            findCdcPipelineFactory(properties.getType(), binlogEntryReaderProvider.getReaderType(properties.getReader()));
-
+    CdcPipelineFactory<?> cdcPipelineFactory = findCdcPipelineFactory(properties.getType());
     return cdcPipelineFactory.create(properties);
   }
 
@@ -148,10 +146,10 @@ public class CdcPipelineConfigurator {
             ((CdcPipelineReaderFactory)cdcPipelineReaderFactory).create(exactCdcPipelineReaderProperties));
   }
 
-  private CdcPipelineFactory<PublishedEvent> findCdcPipelineFactory(String type, String readerType) {
+  private CdcPipelineFactory<PublishedEvent> findCdcPipelineFactory(String type) {
     return cdcPipelineFactories
             .stream()
-            .filter(factory ->  factory.supports(type, readerType))
+            .filter(factory ->  factory.supports(type))
             .findAny()
             .orElseThrow(() ->
                     new RuntimeException(String.format("reader factory not found for type %s",

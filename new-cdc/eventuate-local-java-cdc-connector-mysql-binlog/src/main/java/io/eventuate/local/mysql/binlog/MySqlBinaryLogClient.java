@@ -150,6 +150,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
                 if (!shouldSkipEntry(startingBinlogFileOffset, entry)) {
                   binlogEntryHandler.publish(entry);
+                  offsetStore.save(entry.getBinlogFileOffset());
                 }
               });
     }

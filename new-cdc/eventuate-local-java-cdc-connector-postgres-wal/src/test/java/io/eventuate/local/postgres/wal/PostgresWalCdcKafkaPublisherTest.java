@@ -22,7 +22,7 @@ public class PostgresWalCdcKafkaPublisherTest extends AbstractDbLogBasedCdcKafka
     super.init();
 
     postgresWalClient.addBinlogEntryHandler(eventuateSchema,
-            sourceTableNameSupplier,
+            sourceTableNameSupplier.getSourceTableName(),
             new BinlogEntryToPublishedEventConverter(),
             cdcDataPublisher);
 

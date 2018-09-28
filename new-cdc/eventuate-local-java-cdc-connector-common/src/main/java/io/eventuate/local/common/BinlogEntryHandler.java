@@ -4,42 +4,38 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 
 public class BinlogEntryHandler<EVENT extends BinLogEvent> {
   protected EventuateSchema eventuateSchema;
-  protected SourceTableNameSupplier sourceTableNameSupplier;
+  protected String sourceTableName;
   protected BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter;
   protected CdcDataPublisher<EVENT> cdcDataPublisher;
 
   public BinlogEntryHandler(EventuateSchema eventuateSchema,
-                            SourceTableNameSupplier sourceTableNameSupplier,
+                            String sourceTableName,
                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                             CdcDataPublisher<EVENT> cdcDataPublisher) {
 
     this.eventuateSchema = eventuateSchema;
-    this.sourceTableNameSupplier = sourceTableNameSupplier;
+    this.sourceTableName = sourceTableName;
     this.binlogEntryToEventConverter = binlogEntryToEventConverter;
     this.cdcDataPublisher = cdcDataPublisher;
   }
 
   public String getQualifiedTable() {
-    return eventuateSchema.qualifyTable(sourceTableNameSupplier.getSourceTableName());
+    return eventuateSchema.qualifyTable(sourceTableName);
   }
 
   public EventuateSchema getEventuateSchema() {
     return eventuateSchema;
   }
 
-  public SourceTableNameSupplier getSourceTableNameSupplier() {
-    return sourceTableNameSupplier;
-  }
-
-  public CdcDataPublisher<EVENT> getCdcDataPublisher() {
-    return cdcDataPublisher;
+  public String getSourceTableName() {
+    return sourceTableName;
   }
 
   public boolean isFor(String requestedDatabase, String requestedTable, String defaultDatabase) {
     boolean schemasAreEqual = eventuateSchema.isEmpty() && requestedDatabase.equalsIgnoreCase(defaultDatabase) ||
             requestedDatabase.equalsIgnoreCase(eventuateSchema.getEventuateDatabaseSchema());
 
-    return schemasAreEqual && sourceTableNameSupplier.getSourceTableName().equalsIgnoreCase(requestedTable);
+    return schemasAreEqual && sourceTableName.equalsIgnoreCase(requestedTable);
   }
 
   public void publish(BinlogEntry binlogEntry) {

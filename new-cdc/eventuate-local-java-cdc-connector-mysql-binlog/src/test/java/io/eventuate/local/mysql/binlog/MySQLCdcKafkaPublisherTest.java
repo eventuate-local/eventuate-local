@@ -21,7 +21,7 @@ public class MySQLCdcKafkaPublisherTest extends AbstractDbLogBasedCdcKafkaPublis
     super.init();
 
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
-            sourceTableNameSupplier,
+            sourceTableNameSupplier.getSourceTableName(),
             new BinlogEntryToPublishedEventConverter(),
             cdcDataPublisher);
 

@@ -47,7 +47,7 @@ public class CdcPipelineProperties implements ValidatableProperties {
   }
 
   public String getSourceTableName() {
-    return sourceTableName;
+    return sourceTableName == null ? "events" : sourceTableName;
   }
 
   public void setSourceTableName(String sourceTableName) {

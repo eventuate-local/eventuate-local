@@ -28,12 +28,12 @@ public abstract class BinlogEntryReader {
   }
 
   public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
-                                                                SourceTableNameSupplier sourceTableNameSupplier,
+                                                                String sourceTableName,
                                                                 BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                                                                 CdcDataPublisher<EVENT> dataPublisher) {
 
     BinlogEntryHandler binlogEntryHandler =
-            new BinlogEntryHandler<>(eventuateSchema, sourceTableNameSupplier, binlogEntryToEventConverter, dataPublisher);
+            new BinlogEntryHandler<>(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }

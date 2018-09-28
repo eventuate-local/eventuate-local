@@ -115,7 +115,7 @@ public class PollingDao extends BinlogEntryReader {
             new SchemaAndTable(handler.getEventuateSchema(), handler.getSourceTableName());
 
     if (pkFields.containsKey(schemaAndTable)) {
-      pkFields.get(schemaAndTable);
+      return pkFields.get(schemaAndTable);
     }
 
     String pk = handleConnectionLost(() -> queryPrimaryKey(handler));

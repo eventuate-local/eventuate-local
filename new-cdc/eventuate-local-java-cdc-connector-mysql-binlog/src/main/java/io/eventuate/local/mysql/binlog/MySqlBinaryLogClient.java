@@ -6,6 +6,7 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -27,7 +28,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
   private String binlogFilename;
   private long offset;
-  private DataSource dataSource;
+  private MySqlBinlogEntryExtractor extractor;
   private int connectionTimeoutInMilliseconds;
   private int maxAttemptsForBinlogConnection;
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
@@ -48,7 +49,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
     super(dbUserName, dbPassword, dataSourceUrl, curatorFramework, leadershipLockPath, offsetStore);
 
     this.binlogClientUniqueId = binlogClientUniqueId;
-    this.dataSource = dataSource;
+    this.extractor = new MySqlBinlogEntryExtractor(dataSource);
     this.name = clientName;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
@@ -82,7 +83,14 @@ public class MySqlBinaryLogClient extends DbLogClient {
       switch (event.getHeader().getEventType()) {
         case TABLE_MAP: {
           TableMapEventData tableMapEvent = event.getData();
-          tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
+
+          if (tableMapEventByTableId.containsKey(tableMapEvent.getTableId())) {
+            break;
+          }
+
+          if (binlogEntryHandlers.stream().map(BinlogEntryHandler::getSourceTableName).anyMatch(tableMapEvent.getTable()::equals)) {
+            tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
+          }
           break;
         }
         case EXT_WRITE_ROWS: {
@@ -138,22 +146,16 @@ public class MySqlBinaryLogClient extends DbLogClient {
       String database = tableMapEventData.getDatabase();
       String table = tableMapEventData.getTable();
 
-      binlogEntryHandlers
+      BinlogEntry entry = extractor.extract(table, new EventuateSchema(defaultDatabase), eventData, binlogFilename, offset);
+
+      if (!shouldSkipEntry(startingBinlogFileOffset, entry)) {
+        binlogEntryHandlers
               .stream()
               .filter(bh -> bh.isFor(database, table, defaultDatabase))
-              .forEach(binlogEntryHandler -> {
-                MySqlBinlogEntryExtractor extractor = new MySqlBinlogEntryExtractor(dataSource,
-                        binlogEntryHandler.getSourceTableNameSupplier().getSourceTableName(),
-                        binlogEntryHandler.getEventuateSchema());
-
-                BinlogEntry entry = extractor.extract(eventData, binlogFilename, offset);
-
-                if (!shouldSkipEntry(startingBinlogFileOffset, entry)) {
-                  binlogEntryHandler.publish(entry);
-                  offsetStore.save(entry.getBinlogFileOffset());
-                }
-              });
+              .forEach(binlogEntryHandler -> binlogEntryHandler.publish(entry));
+      }
     }
+    offsetStore.save(new BinlogFileOffset(binlogFilename, offset));
   }
 
   private void connectWithRetriesOnFail() {

@@ -3,24 +3,36 @@ package io.eventuate.local.polling;
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.local.common.*;
 import org.apache.curator.framework.CuratorFramework;
+import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
 public class PollingDao extends BinlogEntryReader {
+  private static final String PUBLISHED_FIELD = "published";
+
+  private String database;
+  private DataSource dataSource;
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private int maxEventsPerPolling;
   private int maxAttemptsForPolling;
   private int pollingRetryIntervalInMilliseconds;
   private int pollingIntervalInMilliseconds;
+  private Map<SchemaAndTable, String> pkFields = new HashMap<>();
 
-  public PollingDao(DataSource dataSource,
+  public PollingDao(String dataSourceUrl,
+                    DataSource dataSource,
                     int maxEventsPerPolling,
                     int maxAttemptsForPolling,
                     int pollingRetryIntervalInMilliseconds,
@@ -34,6 +46,8 @@ public class PollingDao extends BinlogEntryReader {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
     }
 
+    this.database = JdbcUrlParser.parse(dataSourceUrl).getDatabase();
+    this.dataSource = dataSource;
     this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
     this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     this.maxEventsPerPolling = maxEventsPerPolling;
@@ -61,11 +75,11 @@ public class PollingDao extends BinlogEntryReader {
   }
 
   public void processEvents(BinlogEntryHandler handler) {
-    String idField = handler.getSourceTableNameSupplier().getIdField();
-    String publishedField = handler.getSourceTableNameSupplier().getPublishedField();
+
+    String pk = getPrimaryKey(handler);
 
     String findEventsQuery = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
-            handler.getQualifiedTable(), publishedField, idField);
+            handler.getQualifiedTable(), PUBLISHED_FIELD, pk);
 
     SqlRowSet sqlRowSet = handleConnectionLost(() ->
       namedParameterJdbcTemplate.queryForRowSet(findEventsQuery, ImmutableMap.of("limit", maxEventsPerPolling)));
@@ -73,7 +87,7 @@ public class PollingDao extends BinlogEntryReader {
     List<Object> ids = new ArrayList<>();
 
     while (sqlRowSet.next()) {
-      ids.add(sqlRowSet.getObject(handler.getSourceTableNameSupplier().getIdField()));
+      ids.add(sqlRowSet.getObject(pk));
 
       handler.publish(new BinlogEntry() {
         @Override
@@ -89,11 +103,58 @@ public class PollingDao extends BinlogEntryReader {
     }
 
     String markEventsAsReadQuery = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
-            handler.getQualifiedTable(),publishedField, idField);
+            handler.getQualifiedTable(), PUBLISHED_FIELD, pk);
 
     if (!ids.isEmpty()) {
       handleConnectionLost(() -> namedParameterJdbcTemplate.update(markEventsAsReadQuery, ImmutableMap.of("ids", ids)));
     }
+  }
+
+  private String getPrimaryKey(BinlogEntryHandler handler) {
+    SchemaAndTable schemaAndTable =
+            new SchemaAndTable(handler.getEventuateSchema(), handler.getSourceTableName());
+
+    if (pkFields.containsKey(schemaAndTable)) {
+      pkFields.get(schemaAndTable);
+    }
+
+    String pk = handleConnectionLost(() -> queryPrimaryKey(handler));
+
+    pkFields.put(schemaAndTable, pk);
+
+    return pk;
+  }
+
+  private String queryPrimaryKey(BinlogEntryHandler handler) throws SQLException {
+    String pk;
+    Connection connection = null;
+    try {
+      connection = dataSource.getConnection();
+      ResultSet resultSet = connection
+              .getMetaData()
+              .getPrimaryKeys(database,
+                      handler.getEventuateSchema().isEmpty() ? null : handler.getEventuateSchema().getEventuateDatabaseSchema(),
+                      handler.getSourceTableName());
+
+      if (resultSet.next()) {
+        pk = resultSet.getString("COLUMN_NAME");
+        if (resultSet.next()) {
+          throw new RuntimeException("Table %s has more than one primary key");
+        }
+      } else {
+        throw new RuntimeException("Cannot get table: result set is empty");
+      }
+    } finally {
+      try {
+        if (connection != null) {
+          connection.close();
+        }
+      } catch (SQLException e) {
+        logger.warn(e.getMessage(), e);
+      }
+    }
+
+    return pk;
   }
 
   private <T> T handleConnectionLost(Callable<T> query) {
@@ -105,12 +166,12 @@ public class PollingDao extends BinlogEntryReader {
         if (attempt > 0)
           logger.info("Reconnected to database");
         return result;
-      } catch (DataAccessResourceFailureException e) {
+      } catch (DataAccessResourceFailureException | PSQLException e) {
 
         logger.error(String.format("Could not access database %s - retrying in %s milliseconds", e.getMessage(), pollingRetryIntervalInMilliseconds), e);
 
         if (attempt++ >= maxAttemptsForPolling) {
-          throw e;
+          throw new RuntimeException(e);
         }
 
         try {

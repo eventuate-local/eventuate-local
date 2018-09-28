@@ -7,7 +7,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.EventuateConfigurationProperties;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.common.CdcDataPublisher;
@@ -80,7 +80,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     MySqlBinaryLogClient mySqlBinaryLogClient = createMySqlBinaryLogClient();
 
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
-            sourceTableNameSupplier,
+            sourceTableNameSupplier.getSourceTableName(),
             new BinlogEntryToPublishedEventConverter(),
             new CdcDataPublisher<PublishedEvent>(null, null, null) {
               @Override
@@ -111,7 +111,7 @@ public class MySQLClientNameTest extends AbstractCdcTest {
     offsetStore = createDatabaseOffsetKafkaStore(createMySqlBinaryLogClient());
 
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
-            sourceTableNameSupplier,
+            sourceTableNameSupplier.getSourceTableName(),
             new BinlogEntryToPublishedEventConverter(),
             new CdcDataPublisher<PublishedEvent>(null, null, null) {
               @Override

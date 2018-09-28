@@ -24,7 +24,8 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
   @Override
   public PollingDao create(PollingPipelineReaderProperties readerProperties) {
 
-    return new PollingDao(createDataSource(readerProperties),
+    return new PollingDao(readerProperties.getDataSourceUrl(),
+            createDataSource(readerProperties),
             readerProperties.getMaxEventsPerPolling(),
             readerProperties.getMaxAttemptsForPolling(),
             readerProperties.getPollingRetryIntervalInMilliseconds(),

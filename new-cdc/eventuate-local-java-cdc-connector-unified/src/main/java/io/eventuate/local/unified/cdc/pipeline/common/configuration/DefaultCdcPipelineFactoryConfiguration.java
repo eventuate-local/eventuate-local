@@ -3,7 +3,6 @@ package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEventPublishingStrategy;
-import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.common.DuplicatePublishingDetector;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
@@ -21,7 +20,6 @@ public class DefaultCdcPipelineFactoryConfiguration {
     return new CdcPipelineFactory<>("eventuate-local",
             binlogEntryReaderProvider,
             new CdcDataPublisher<>(dataProducerFactory, duplicatePublishingDetector,new PublishedEventPublishingStrategy()),
-            sourceTableName -> new SourceTableNameSupplier(sourceTableName, "events", "event_id", "published"),
             new BinlogEntryToPublishedEventConverter());
   }
 }

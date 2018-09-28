@@ -13,18 +13,15 @@ public class CdcPipelineFactory<EVENT extends BinLogEvent> {
   private String type;
   private BinlogEntryReaderProvider binlogEntryReaderProvider;
   private CdcDataPublisher<EVENT> cdcDataPublisher;
-  private Function<String, SourceTableNameSupplier> sourceTableNameSupplierFactory;
   private BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter;
 
   public CdcPipelineFactory(String type,
                             BinlogEntryReaderProvider binlogEntryReaderProvider,
                             CdcDataPublisher<EVENT> cdcDataPublisher,
-                            Function<String, SourceTableNameSupplier> sourceTableNameSupplierFactory,
                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter) {
     this.type = type;
     this.binlogEntryReaderProvider = binlogEntryReaderProvider;
     this.cdcDataPublisher = cdcDataPublisher;
-    this.sourceTableNameSupplierFactory = sourceTableNameSupplierFactory;
     this.binlogEntryToEventConverter = binlogEntryToEventConverter;
   }
 
@@ -36,7 +33,7 @@ public class CdcPipelineFactory<EVENT extends BinLogEvent> {
     BinlogEntryReader binlogEntryReader = binlogEntryReaderProvider.getReader(cdcPipelineProperties.getReader());
 
     binlogEntryReader.addBinlogEntryHandler(new EventuateSchema(cdcPipelineProperties.getEventuateDatabaseSchema()),
-            sourceTableNameSupplierFactory.apply(cdcPipelineProperties.getSourceTableName()),
+            cdcPipelineProperties.getSourceTableName(),
             binlogEntryToEventConverter,
             cdcDataPublisher);
 

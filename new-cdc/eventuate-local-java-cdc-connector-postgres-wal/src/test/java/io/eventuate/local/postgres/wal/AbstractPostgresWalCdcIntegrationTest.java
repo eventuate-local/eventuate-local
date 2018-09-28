@@ -9,6 +9,7 @@ import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import org.apache.curator.framework.CuratorFramework;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +72,7 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
 
     postgresWalClient.addBinlogEntryHandler(
             eventuateSchema,
-            sourceTableNameSupplier,
+            sourceTableNameSupplier.getSourceTableName(),
             new BinlogEntryToPublishedEventConverter(),
             new CdcDataPublisher<PublishedEvent>(null, null, null) {
               @Override

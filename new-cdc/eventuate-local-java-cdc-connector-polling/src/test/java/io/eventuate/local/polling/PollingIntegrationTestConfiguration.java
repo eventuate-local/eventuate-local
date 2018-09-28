@@ -7,6 +7,7 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -29,7 +30,7 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName(), "events", "event_id", "published");
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName() == null ? "events" : eventuateConfigurationProperties.getSourceTableName());
   }
 
   @Bean
@@ -67,11 +68,13 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDao pollingDao(EventuateConfigurationProperties eventuateConfigurationProperties,
+  public PollingDao pollingDao(@Value("${spring.datasource.url}") String dataSourceURL,
+                               EventuateConfigurationProperties eventuateConfigurationProperties,
                                DataSource dataSource,
                                CuratorFramework curatorFramework) {
 
-    return new PollingDao(dataSource,
+    return new PollingDao(dataSourceURL,
+            dataSource,
             eventuateConfigurationProperties.getMaxEventsPerPolling(),
             eventuateConfigurationProperties.getMaxAttemptsForPolling(),
             eventuateConfigurationProperties.getPollingRetryIntervalInMilliseconds(),

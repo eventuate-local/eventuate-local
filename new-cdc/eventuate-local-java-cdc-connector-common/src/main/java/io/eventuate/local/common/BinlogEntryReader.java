@@ -35,9 +35,10 @@ public abstract class BinlogEntryReader {
                                                                 CdcDataPublisher<EVENT> dataPublisher) {
 
     ResolvedEventuateSchema resolvedEventuateSchema = ResolvedEventuateSchema.make(eventuateSchema, JdbcUrlParser.parse(dataSourceUrl));
+    SchemaAndTable schemaAndTable = new SchemaAndTable(resolvedEventuateSchema.getEventuateDatabaseSchema(), sourceTableName);
 
     BinlogEntryHandler binlogEntryHandler =
-            new BinlogEntryHandler<>(resolvedEventuateSchema.getEventuateDatabaseSchema(), sourceTableName, binlogEntryToEventConverter, dataPublisher);
+            new BinlogEntryHandler<>(schemaAndTable, binlogEntryToEventConverter, dataPublisher);
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }

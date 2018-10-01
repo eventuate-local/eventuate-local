@@ -109,8 +109,7 @@ public class PollingDao extends BinlogEntryReader {
   }
 
   private String getPrimaryKey(BinlogEntryHandler handler) {
-    SchemaAndTable schemaAndTable =
-            new SchemaAndTable(handler.getEventuateSchema(), handler.getSourceTableName());
+    SchemaAndTable schemaAndTable = handler.getSchemaAndTable();
 
     if (pkFields.containsKey(schemaAndTable)) {
       return pkFields.get(schemaAndTable);
@@ -131,8 +130,8 @@ public class PollingDao extends BinlogEntryReader {
       ResultSet resultSet = connection
               .getMetaData()
               .getPrimaryKeys(null,
-                      handler.getEventuateSchema(),
-                      handler.getSourceTableName());
+                      handler.getSchemaAndTable().getSchema(),
+                      handler.getSchemaAndTable().getTableName());
 
       if (resultSet.next()) {
         pk = resultSet.getString("COLUMN_NAME");

@@ -1,36 +1,29 @@
 package io.eventuate.local.common;
 
 public class BinlogEntryHandler<EVENT extends BinLogEvent> {
-  protected String eventuateSchema;
-  protected String sourceTableName;
+  protected SchemaAndTable schemaAndTable;
   protected BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter;
   protected CdcDataPublisher<EVENT> cdcDataPublisher;
 
-  public BinlogEntryHandler(String eventuateSchema,
-                            String sourceTableName,
+  public BinlogEntryHandler(SchemaAndTable schemaAndTable,
                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                             CdcDataPublisher<EVENT> cdcDataPublisher) {
 
-    this.eventuateSchema = eventuateSchema;
-    this.sourceTableName = sourceTableName;
+    this.schemaAndTable = schemaAndTable;
     this.binlogEntryToEventConverter = binlogEntryToEventConverter;
     this.cdcDataPublisher = cdcDataPublisher;
   }
 
   public String getQualifiedTable() {
-    return String.format("%s.%s", eventuateSchema, sourceTableName);
+    return String.format("%s.%s", schemaAndTable.getSchema(), schemaAndTable.getTableName());
   }
 
-  public String getEventuateSchema() {
-    return eventuateSchema;
+  public SchemaAndTable getSchemaAndTable() {
+    return schemaAndTable;
   }
 
-  public String getSourceTableName() {
-    return sourceTableName;
-  }
-
-  public boolean isFor(String requestedDatabase, String requestedTable) {
-    return eventuateSchema.equals(requestedDatabase) && sourceTableName.equalsIgnoreCase(requestedTable);
+  public boolean isFor(SchemaAndTable schemaAndTable) {
+    return this.schemaAndTable.equals(schemaAndTable);
   }
 
   public void publish(BinlogEntry binlogEntry) {

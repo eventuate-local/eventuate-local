@@ -135,27 +135,31 @@ public class PostgresWalClient extends DbLogClient {
 
       PostgresWalMessage postgresWalMessage = JSonMapper.fromJson(messageString, PostgresWalMessage.class);
 
+      BinlogFileOffset offset = new BinlogFileOffset(replicationSlotName, stream.getLastReceiveLSN().asLong());
 
-      List<PostgresWalChange> inserts = Arrays
-              .stream(postgresWalMessage.getChange())
-              .filter(change -> change.getKind().equals("insert"))
-              .collect(Collectors.toList());
-
-      binlogEntryHandlers.forEach(binlogEntryHandler -> {
-        List<PostgresWalChange> filteredChanges = inserts
-                .stream()
-                .filter(change -> binlogEntryHandler.isFor(change.getSchema(), change.getTable()))
+      if (!shouldSkipEntry(binlogFileOffset, offset)) {
+        List<PostgresWalChange> inserts = Arrays
+                .stream(postgresWalMessage.getChange())
+                .filter(change -> change.getKind().equals("insert"))
                 .collect(Collectors.toList());
 
-        postgresWalBinlogEntryExtractor
-                .extract(filteredChanges, stream.getLastReceiveLSN().asLong(), replicationSlotName)
-                .forEach(binlogEntry -> {
-                  if (!shouldSkipEntry(binlogFileOffset, binlogEntry)) {
-                    binlogEntryHandler.publish(binlogEntry);
-                    offsetStore.save(binlogEntry.getBinlogFileOffset());
-                  }
-                });
-      });
+        binlogEntryHandlers.forEach(binlogEntryHandler -> {
+          List<PostgresWalChange> filteredChanges = inserts
+                  .stream()
+                  .filter(change -> binlogEntryHandler.isFor(new SchemaAndTable(change.getSchema(), change.getTable())))
+                  .collect(Collectors.toList());
+
+          postgresWalBinlogEntryExtractor
+                  .extract(filteredChanges, offset)
+                  .forEach(binlogEntry -> {
+                    if (!shouldSkipEntry(binlogFileOffset, offset)) {
+                      binlogEntryHandler.publish(binlogEntry);
+                    }
+                  });
+        });
+      }
+
+      offsetStore.save(offset);
 
       stream.setAppliedLSN(stream.getLastReceiveLSN());
       stream.setFlushedLSN(stream.getLastReceiveLSN());

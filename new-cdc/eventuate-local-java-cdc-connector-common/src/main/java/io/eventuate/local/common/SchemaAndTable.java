@@ -10,7 +10,15 @@ public class SchemaAndTable {
 
   public SchemaAndTable(String schema, String tableName) {
     this.schema = schema;
-    this.tableName = tableName;
+    this.tableName = tableName.toLowerCase();
+  }
+
+  public String getSchema() {
+    return schema;
+  }
+
+  public String getTableName() {
+    return tableName;
   }
 
   @Override

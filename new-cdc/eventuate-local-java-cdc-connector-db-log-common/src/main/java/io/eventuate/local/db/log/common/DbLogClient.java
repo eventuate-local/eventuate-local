@@ -41,12 +41,12 @@ public abstract class DbLogClient extends BinlogEntryReader {
     super.start();
   }
 
-  protected boolean shouldSkipEntry(Optional<BinlogFileOffset> startingBinlogFileOffset, BinlogEntry entry) {
+  protected boolean shouldSkipEntry(Optional<BinlogFileOffset> startingBinlogFileOffset, BinlogFileOffset offset) {
     if (checkEntriesForDuplicates) {
       if (startingBinlogFileOffset.isPresent()) {
         BinlogFileOffset startingOffset = startingBinlogFileOffset.get();
 
-        if (startingOffset.isSameOrAfter(entry.getBinlogFileOffset())) {
+        if (startingOffset.isSameOrAfter(offset)) {
           return true;
         }
       }

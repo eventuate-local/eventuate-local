@@ -9,7 +9,6 @@ public abstract class DbLogClient extends BinlogEntryReader {
 
   protected String dbUserName;
   protected String dbPassword;
-  protected String dataSourceUrl;
   protected String host;
   protected int port;
   protected String defaultDatabase;
@@ -23,7 +22,7 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      String leadershipLockPath,
                      OffsetStore offsetStore) {
 
-    super(curatorFramework, leadershipLockPath);
+    super(curatorFramework, leadershipLockPath, dataSourceUrl);
 
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;

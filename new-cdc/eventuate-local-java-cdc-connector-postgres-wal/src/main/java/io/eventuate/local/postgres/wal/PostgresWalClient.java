@@ -144,7 +144,7 @@ public class PostgresWalClient extends DbLogClient {
       binlogEntryHandlers.forEach(binlogEntryHandler -> {
         List<PostgresWalChange> filteredChanges = inserts
                 .stream()
-                .filter(change -> binlogEntryHandler.isFor(change.getSchema(), change.getTable(), defaultDatabase))
+                .filter(change -> binlogEntryHandler.isFor(change.getSchema(), change.getTable()))
                 .collect(Collectors.toList());
 
         postgresWalBinlogEntryExtractor

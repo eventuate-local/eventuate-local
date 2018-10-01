@@ -1,14 +1,12 @@
 package io.eventuate.local.common;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-
 public class BinlogEntryHandler<EVENT extends BinLogEvent> {
-  protected EventuateSchema eventuateSchema;
+  protected String eventuateSchema;
   protected String sourceTableName;
   protected BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter;
   protected CdcDataPublisher<EVENT> cdcDataPublisher;
 
-  public BinlogEntryHandler(EventuateSchema eventuateSchema,
+  public BinlogEntryHandler(String eventuateSchema,
                             String sourceTableName,
                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                             CdcDataPublisher<EVENT> cdcDataPublisher) {
@@ -20,10 +18,10 @@ public class BinlogEntryHandler<EVENT extends BinLogEvent> {
   }
 
   public String getQualifiedTable() {
-    return eventuateSchema.qualifyTable(sourceTableName);
+    return String.format("%s.%s", eventuateSchema, sourceTableName);
   }
 
-  public EventuateSchema getEventuateSchema() {
+  public String getEventuateSchema() {
     return eventuateSchema;
   }
 
@@ -31,11 +29,8 @@ public class BinlogEntryHandler<EVENT extends BinLogEvent> {
     return sourceTableName;
   }
 
-  public boolean isFor(String requestedDatabase, String requestedTable, String defaultDatabase) {
-    boolean schemasAreEqual = eventuateSchema.isEmpty() && requestedDatabase.equalsIgnoreCase(defaultDatabase) ||
-            requestedDatabase.equalsIgnoreCase(eventuateSchema.getEventuateDatabaseSchema());
-
-    return schemasAreEqual && sourceTableName.equalsIgnoreCase(requestedTable);
+  public boolean isFor(String requestedDatabase, String requestedTable) {
+    return eventuateSchema.equals(requestedDatabase) && sourceTableName.equalsIgnoreCase(requestedTable);
   }
 
   public void publish(BinlogEntry binlogEntry) {

@@ -22,7 +22,6 @@ import java.util.concurrent.CountDownLatch;
 public class PollingDao extends BinlogEntryReader {
   private static final String PUBLISHED_FIELD = "published";
 
-  private String database;
   private DataSource dataSource;
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private int maxEventsPerPolling;
@@ -40,13 +39,12 @@ public class PollingDao extends BinlogEntryReader {
                     CuratorFramework curatorFramework,
                     String leadershipLockPath) {
 
-    super(curatorFramework, leadershipLockPath);
+    super(curatorFramework, leadershipLockPath, dataSourceUrl);
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
     }
 
-    this.database = JdbcUrlParser.parse(dataSourceUrl).getDatabase();
     this.dataSource = dataSource;
     this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
     this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
@@ -132,8 +130,8 @@ public class PollingDao extends BinlogEntryReader {
       connection = dataSource.getConnection();
       ResultSet resultSet = connection
               .getMetaData()
-              .getPrimaryKeys(database,
-                      handler.getEventuateSchema().isEmpty() ? null : handler.getEventuateSchema().getEventuateDatabaseSchema(),
+              .getPrimaryKeys(null,
+                      handler.getEventuateSchema(),
                       handler.getSourceTableName());
 
       if (resultSet.next()) {

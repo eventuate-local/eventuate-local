@@ -6,7 +6,6 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -146,12 +145,12 @@ public class MySqlBinaryLogClient extends DbLogClient {
       String database = tableMapEventData.getDatabase();
       String table = tableMapEventData.getTable();
 
-      BinlogEntry entry = extractor.extract(table, new EventuateSchema(defaultDatabase), eventData, binlogFilename, offset);
+      BinlogEntry entry = extractor.extract(table, database, eventData, binlogFilename, offset);
 
       if (!shouldSkipEntry(startingBinlogFileOffset, entry)) {
         binlogEntryHandlers
               .stream()
-              .filter(bh -> bh.isFor(database, table, defaultDatabase))
+              .filter(bh -> bh.isFor(database, table))
               .forEach(binlogEntryHandler -> binlogEntryHandler.publish(entry));
       }
     }

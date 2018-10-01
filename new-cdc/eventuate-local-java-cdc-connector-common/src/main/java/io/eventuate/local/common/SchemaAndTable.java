@@ -8,8 +8,8 @@ public class SchemaAndTable {
   private String schema;
   private String tableName;
 
-  public SchemaAndTable(EventuateSchema schema, String tableName) {
-    this.schema = schema.getEventuateDatabaseSchema();
+  public SchemaAndTable(String schema, String tableName) {
+    this.schema = schema;
     this.tableName = tableName;
   }
 

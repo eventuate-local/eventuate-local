@@ -19,12 +19,14 @@ public abstract class BinlogEntryReader {
   protected List<BinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
   protected AtomicBoolean running = new AtomicBoolean(false);
   protected CountDownLatch stopCountDownLatch;
+  protected String dataSourceUrl;
   private LeaderSelector leaderSelector;
 
 
-  public BinlogEntryReader(CuratorFramework curatorFramework, String leadershipLockPath) {
+  public BinlogEntryReader(CuratorFramework curatorFramework, String leadershipLockPath, String dataSourceUrl) {
     this.curatorFramework = curatorFramework;
     this.leadershipLockPath = leadershipLockPath;
+    this.dataSourceUrl = dataSourceUrl;
   }
 
   public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
@@ -32,8 +34,10 @@ public abstract class BinlogEntryReader {
                                                                 BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                                                                 CdcDataPublisher<EVENT> dataPublisher) {
 
+    ResolvedEventuateSchema resolvedEventuateSchema = ResolvedEventuateSchema.make(eventuateSchema, JdbcUrlParser.parse(dataSourceUrl));
+
     BinlogEntryHandler binlogEntryHandler =
-            new BinlogEntryHandler<>(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
+            new BinlogEntryHandler<>(resolvedEventuateSchema.getEventuateDatabaseSchema(), sourceTableName, binlogEntryToEventConverter, dataPublisher);
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }

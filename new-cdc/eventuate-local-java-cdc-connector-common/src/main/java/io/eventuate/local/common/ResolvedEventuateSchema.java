@@ -15,6 +15,18 @@ public class ResolvedEventuateSchema {
   }
 
   public static ResolvedEventuateSchema make(EventuateSchema eventuateSchema, JdbcUrl jdbcUrl) {
-    return new ResolvedEventuateSchema(eventuateSchema.isEmpty() ? jdbcUrl.getDatabase() : eventuateSchema.getEventuateDatabaseSchema());
+    if (!eventuateSchema.isEmpty()) {
+      return new ResolvedEventuateSchema(eventuateSchema.getEventuateDatabaseSchema());
+    }
+
+    if (jdbcUrl.isMySql()) {
+      return new ResolvedEventuateSchema(jdbcUrl.getDatabase());
+    }
+
+    if (jdbcUrl.isPostgres()) {
+      return new ResolvedEventuateSchema("public");
+    }
+
+    throw new IllegalArgumentException("Unknown database"); // should not be here (JdbcUrlParser has this check)
   }
  }

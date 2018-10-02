@@ -33,16 +33,17 @@ public abstract class BinlogEntryReader {
                                                                 String sourceTableName,
                                                                 BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                                                                 CdcDataPublisher<EVENT> dataPublisher) {
+    if (eventuateSchema.isEmpty()) {
+      throw new IllegalArgumentException("The eventuate schema cannot be empty for the cdc processor.");
+    }
 
-    ResolvedEventuateSchema resolvedEventuateSchema = ResolvedEventuateSchema.make(eventuateSchema, JdbcUrlParser.parse(dataSourceUrl));
-    SchemaAndTable schemaAndTable = new SchemaAndTable(resolvedEventuateSchema.getEventuateDatabaseSchema(), sourceTableName);
+    SchemaAndTable schemaAndTable = new SchemaAndTable(eventuateSchema.getEventuateDatabaseSchema(), sourceTableName);
 
     BinlogEntryHandler binlogEntryHandler =
             new BinlogEntryHandler<>(schemaAndTable, binlogEntryToEventConverter, dataPublisher);
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }
-
 
   public void start() {
     leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,

@@ -143,20 +143,22 @@ public class PostgresWalClient extends DbLogClient {
                 .filter(change -> change.getKind().equals("insert"))
                 .collect(Collectors.toList());
 
-        binlogEntryHandlers.forEach(binlogEntryHandler -> {
-          List<PostgresWalChange> filteredChanges = inserts
-                  .stream()
-                  .filter(change -> binlogEntryHandler.isFor(new SchemaAndTable(change.getSchema(), change.getTable())))
-                  .collect(Collectors.toList());
+        if (!inserts.isEmpty()) {
+          binlogEntryHandlers.forEach(binlogEntryHandler -> {
+            List<PostgresWalChange> filteredChanges = inserts
+                    .stream()
+                    .filter(change -> binlogEntryHandler.isFor(new SchemaAndTable(change.getSchema(), change.getTable())))
+                    .collect(Collectors.toList());
 
-          postgresWalBinlogEntryExtractor
-                  .extract(filteredChanges, offset)
-                  .forEach(binlogEntry -> {
-                    if (!shouldSkipEntry(binlogFileOffset, offset)) {
-                      binlogEntryHandler.publish(binlogEntry);
-                    }
-                  });
-        });
+            postgresWalBinlogEntryExtractor
+                    .extract(filteredChanges, offset)
+                    .forEach(binlogEntry -> {
+                      if (!shouldSkipEntry(binlogFileOffset, offset)) {
+                        binlogEntryHandler.publish(binlogEntry);
+                      }
+                    });
+          });
+        }
       }
 
       offsetStore.save(offset);

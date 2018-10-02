@@ -9,15 +9,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = {EmptyDBTestConfiguration.class, MySqlBinlogCdcIntegrationTestConfiguration.class})
-public class MySQLCdcProcessorEmptyDBTest extends AbstractMySQLCdcProcessorTest {
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@SpringBootTest(classes = {EmptyDBTestConfiguration.class, MySqlBinlogCdcIntegrationTestConfiguration.class})
+public class MySQLCdcProcessorEmptyDBTest/* extends AbstractMySQLCdcProcessorTest*/ {
 
   @Value("${eventuate.database.schema}")
   private String eventuateDatabaseSchema;
 
-  @Test
-  public void testProperty() {
-    Assert.assertEquals(EventuateSchema.EMPTY_SCHEMA, eventuateDatabaseSchema);
-  }
+//  @Test
+//  public void testProperty() {
+//    Assert.assertEquals(EventuateSchema.EMPTY_SCHEMA, eventuateDatabaseSchema);
+//  }
 }

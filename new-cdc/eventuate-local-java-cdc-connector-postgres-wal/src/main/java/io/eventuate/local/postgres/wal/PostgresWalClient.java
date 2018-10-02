@@ -135,25 +135,19 @@ public class PostgresWalClient extends DbLogClient {
       BinlogFileOffset offset = new BinlogFileOffset(replicationSlotName, stream.getLastReceiveLSN().asLong());
 
       if (!shouldSkipEntry(binlogFileOffset, offset)) {
-        List<PostgresWalChange> inserts = Arrays
+        List<BinlogEntryWithSchemaAndTable> inserts = Arrays
                 .stream(postgresWalMessage.getChange())
                 .filter(change -> change.getKind().equals("insert"))
+                .map(change -> BinlogEntryWithSchemaAndTable.make(postgresWalBinlogEntryExtractor, change, offset))
                 .collect(Collectors.toList());
 
-        if (!inserts.isEmpty()) {
-          List<BinlogEntryWithSchemaAndTable> changes = inserts
-                  .stream()
-                  .map(change -> BinlogEntryWithSchemaAndTable.make(postgresWalBinlogEntryExtractor, change, offset))
-                  .collect(Collectors.toList());
-
           binlogEntryHandlers.forEach(handler ->
-            changes
+            inserts
                     .stream()
                     .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
                     .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
                     .forEach(handler::publish)
           );
-        }
       }
 
       offsetStore.save(offset);

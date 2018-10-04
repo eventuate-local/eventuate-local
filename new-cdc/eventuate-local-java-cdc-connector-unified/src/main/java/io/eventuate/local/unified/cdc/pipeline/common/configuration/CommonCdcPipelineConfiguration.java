@@ -1,15 +1,16 @@
 package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 
-import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.EventuateLocalZookeperConfigurationProperties;
-import io.eventuate.local.common.DuplicatePublishingDetector;
-import io.eventuate.local.common.PublishingFilter;
+import io.eventuate.local.common.*;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import io.eventuate.local.mysql.binlog.DebeziumBinlogOffsetKafkaStore;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
+import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
+import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.DebeziumOffsetStoreFactory;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -23,6 +24,34 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
         EventuateKafkaConsumerConfigurationProperties.class})
 public class CommonCdcPipelineConfiguration {
+
+  @Bean
+  public SourceTableNameSupplier sourceTableNameSupplier() {
+    return new SourceTableNameSupplier("events");
+  }
+
+  @Bean
+  public OffsetStoreFactory offsetStoreFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                               EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
+                                               EventuateKafkaProducer eventuateKafkaProducer) {
+
+    return (properties, dataSource, eventuateSchema, clientName) ->
+            new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
+                    clientName,
+                    eventuateKafkaProducer,
+                    eventuateKafkaConfigurationProperties,
+                    eventuateKafkaConsumerConfigurationProperties);
+  }
+
+  @Bean
+  public DebeziumOffsetStoreFactory mySqlBinLogOffsetStoreFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                  EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+
+    return (oldDbHistoryTopicName) ->
+            new DebeziumBinlogOffsetKafkaStore(oldDbHistoryTopicName,
+                    eventuateKafkaConfigurationProperties,
+                    eventuateKafkaConsumerConfigurationProperties);
+  }
 
   @Bean
   public BinlogEntryReaderProvider dbClientProvider() {

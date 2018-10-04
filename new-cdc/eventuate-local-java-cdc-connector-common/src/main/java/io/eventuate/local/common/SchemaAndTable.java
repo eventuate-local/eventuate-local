@@ -8,9 +8,17 @@ public class SchemaAndTable {
   private String schema;
   private String tableName;
 
-  public SchemaAndTable(EventuateSchema schema, String tableName) {
-    this.schema = schema.getEventuateDatabaseSchema();
-    this.tableName = tableName;
+  public SchemaAndTable(String schema, String tableName) {
+    this.schema = schema;
+    this.tableName = tableName.toLowerCase();
+  }
+
+  public String getSchema() {
+    return schema;
+  }
+
+  public String getTableName() {
+    return tableName;
   }
 
   @Override

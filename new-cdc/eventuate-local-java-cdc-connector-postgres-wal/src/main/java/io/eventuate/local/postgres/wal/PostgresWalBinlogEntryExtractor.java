@@ -9,26 +9,20 @@ import java.util.stream.Collectors;
 
 public class PostgresWalBinlogEntryExtractor {
 
-  public List<BinlogEntry> extract(List<PostgresWalChange> postgresWalChanges, long lastSequenceNumber, String slotName) {
+  public BinlogEntry extract(PostgresWalChange postgresWalChange, BinlogFileOffset offset) {
+    List<String> columns = Arrays.asList(postgresWalChange.getColumnnames());
+    List<String> values = Arrays.asList(postgresWalChange.getColumnvalues());
 
-    return postgresWalChanges
-            .stream()
-            .map(insertedEvent -> {
-              List<String> columns = Arrays.asList(insertedEvent.getColumnnames());
-              List<String> values = Arrays.asList(insertedEvent.getColumnvalues());
+    return new BinlogEntry() {
+      @Override
+      public Object getColumn(String name) {
+        return values.get(columns.indexOf(name));
+      }
 
-              return new BinlogEntry() {
-                @Override
-                public Object getColumn(String name) {
-                  return values.get(columns.indexOf(name));
-                }
-
-                @Override
-                public BinlogFileOffset getBinlogFileOffset() {
-                  return new BinlogFileOffset(slotName, lastSequenceNumber);
-                }
-              };
-            })
-            .collect(Collectors.toList());
+      @Override
+      public BinlogFileOffset getBinlogFileOffset() {
+        return offset;
+      }
+    };
   }
 }

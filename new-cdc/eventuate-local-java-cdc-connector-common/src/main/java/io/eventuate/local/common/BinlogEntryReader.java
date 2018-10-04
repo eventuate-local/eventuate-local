@@ -19,25 +19,31 @@ public abstract class BinlogEntryReader {
   protected List<BinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
   protected AtomicBoolean running = new AtomicBoolean(false);
   protected CountDownLatch stopCountDownLatch;
+  protected String dataSourceUrl;
   private LeaderSelector leaderSelector;
 
 
-  public BinlogEntryReader(CuratorFramework curatorFramework, String leadershipLockPath) {
+  public BinlogEntryReader(CuratorFramework curatorFramework, String leadershipLockPath, String dataSourceUrl) {
     this.curatorFramework = curatorFramework;
     this.leadershipLockPath = leadershipLockPath;
+    this.dataSourceUrl = dataSourceUrl;
   }
 
   public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
                                                                 String sourceTableName,
                                                                 BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                                                                 CdcDataPublisher<EVENT> dataPublisher) {
+    if (eventuateSchema.isEmpty()) {
+      throw new IllegalArgumentException("The eventuate schema cannot be empty for the cdc processor.");
+    }
+
+    SchemaAndTable schemaAndTable = new SchemaAndTable(eventuateSchema.getEventuateDatabaseSchema(), sourceTableName);
 
     BinlogEntryHandler binlogEntryHandler =
-            new BinlogEntryHandler<>(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
+            new BinlogEntryHandler<>(schemaAndTable, binlogEntryToEventConverter, dataPublisher);
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }
-
 
   public void start() {
     leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,

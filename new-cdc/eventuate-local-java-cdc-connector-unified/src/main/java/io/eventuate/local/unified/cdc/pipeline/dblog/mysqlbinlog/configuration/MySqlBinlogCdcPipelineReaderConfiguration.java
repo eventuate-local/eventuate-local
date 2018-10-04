@@ -4,11 +4,13 @@ import io.eventuate.local.common.MySqlBinlogCondition;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
+import io.eventuate.local.mysql.binlog.DebeziumBinlogOffsetKafkaStore;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration.CommonDbLogCdcDefaultPipelineReaderConfiguration;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
+import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.DebeziumOffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.MySqlBinlogCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
 import org.apache.curator.framework.CuratorFramework;
@@ -25,14 +27,16 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                                       EventuateKafkaProducer eventuateKafkaProducer,
-                                                                      OffsetStoreFactory offsetStoreFactory) {
+                                                                      OffsetStoreFactory offsetStoreFactory,
+                                                                      DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
     return new MySqlBinlogCdcPipelineReaderFactory(curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
-            offsetStoreFactory);
+            offsetStoreFactory,
+            debeziumOffsetStoreFactory);
   }
 
   @Conditional(MySqlBinlogCondition.class)
@@ -42,14 +46,16 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
                                                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                                        EventuateKafkaProducer eventuateKafkaProducer,
-                                                                       OffsetStoreFactory offsetStoreFactory) {
+                                                                       OffsetStoreFactory offsetStoreFactory,
+                                                                       DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
     return new MySqlBinlogCdcPipelineReaderFactory(curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
-            offsetStoreFactory);
+            offsetStoreFactory,
+            debeziumOffsetStoreFactory);
   }
 
   @Conditional(MySqlBinlogCondition.class)

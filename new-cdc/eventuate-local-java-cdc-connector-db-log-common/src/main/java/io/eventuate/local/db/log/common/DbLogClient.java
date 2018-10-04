@@ -9,7 +9,6 @@ public abstract class DbLogClient extends BinlogEntryReader {
 
   protected String dbUserName;
   protected String dbPassword;
-  protected String dataSourceUrl;
   protected String host;
   protected int port;
   protected String defaultDatabase;
@@ -23,7 +22,7 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      String leadershipLockPath,
                      OffsetStore offsetStore) {
 
-    super(curatorFramework, leadershipLockPath);
+    super(curatorFramework, leadershipLockPath, dataSourceUrl);
 
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;
@@ -42,12 +41,12 @@ public abstract class DbLogClient extends BinlogEntryReader {
     super.start();
   }
 
-  protected boolean shouldSkipEntry(Optional<BinlogFileOffset> startingBinlogFileOffset, BinlogEntry entry) {
+  protected boolean shouldSkipEntry(Optional<BinlogFileOffset> startingBinlogFileOffset, BinlogFileOffset offset) {
     if (checkEntriesForDuplicates) {
       if (startingBinlogFileOffset.isPresent()) {
         BinlogFileOffset startingOffset = startingBinlogFileOffset.get();
 
-        if (startingOffset.isSameOrAfter(entry.getBinlogFileOffset())) {
+        if (startingOffset.isSameOrAfter(offset)) {
           return true;
         }
       }

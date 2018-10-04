@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @Import({CommonCdcPipelineConfiguration.class,
-        CommonEventuateLocalConfiguration.class,
 
         CdcDefaultPipelinePropertiesConfiguration.class,
 

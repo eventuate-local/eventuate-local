@@ -14,10 +14,7 @@ import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -135,27 +132,25 @@ public class PostgresWalClient extends DbLogClient {
 
       PostgresWalMessage postgresWalMessage = JSonMapper.fromJson(messageString, PostgresWalMessage.class);
 
+      BinlogFileOffset offset = new BinlogFileOffset(replicationSlotName, stream.getLastReceiveLSN().asLong());
 
-      List<PostgresWalChange> inserts = Arrays
-              .stream(postgresWalMessage.getChange())
-              .filter(change -> change.getKind().equals("insert"))
-              .collect(Collectors.toList());
-
-      binlogEntryHandlers.forEach(binlogEntryHandler -> {
-        List<PostgresWalChange> filteredChanges = inserts
-                .stream()
-                .filter(change -> binlogEntryHandler.isFor(change.getSchema(), change.getTable(), defaultDatabase))
+      if (!shouldSkipEntry(binlogFileOffset, offset)) {
+        List<BinlogEntryWithSchemaAndTable> inserts = Arrays
+                .stream(postgresWalMessage.getChange())
+                .filter(change -> change.getKind().equals("insert"))
+                .map(change -> BinlogEntryWithSchemaAndTable.make(postgresWalBinlogEntryExtractor, change, offset))
                 .collect(Collectors.toList());
 
-        postgresWalBinlogEntryExtractor
-                .extract(filteredChanges, stream.getLastReceiveLSN().asLong(), replicationSlotName)
-                .forEach(binlogEntry -> {
-                  if (!shouldSkipEntry(binlogFileOffset, binlogEntry)) {
-                    binlogEntryHandler.publish(binlogEntry);
-                    offsetStore.save(binlogEntry.getBinlogFileOffset());
-                  }
-                });
-      });
+          binlogEntryHandlers.forEach(handler ->
+            inserts
+                    .stream()
+                    .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
+                    .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
+                    .forEach(handler::publish)
+          );
+      }
+
+      offsetStore.save(offset);
 
       stream.setAppliedLSN(stream.getLastReceiveLSN());
       stream.setFlushedLSN(stream.getLastReceiveLSN());
@@ -178,5 +173,31 @@ public class PostgresWalClient extends DbLogClient {
     int length = source.length - offset;
 
     return new String(source, offset, length);
+  }
+
+  private static class BinlogEntryWithSchemaAndTable {
+    private BinlogEntry binlogEntry;
+    private SchemaAndTable schemaAndTable;
+
+    public BinlogEntryWithSchemaAndTable(BinlogEntry binlogEntry, SchemaAndTable schemaAndTable) {
+      this.binlogEntry = binlogEntry;
+      this.schemaAndTable = schemaAndTable;
+    }
+
+    public BinlogEntry getBinlogEntry() {
+      return binlogEntry;
+    }
+
+    public SchemaAndTable getSchemaAndTable() {
+      return schemaAndTable;
+    }
+
+    public static BinlogEntryWithSchemaAndTable make(PostgresWalBinlogEntryExtractor extractor,
+                                                     PostgresWalChange change,
+                                                     BinlogFileOffset offset) {
+      BinlogEntry binlogEntry = extractor.extract(change, offset);
+      SchemaAndTable schemaAndTable = new SchemaAndTable(change.getSchema(), change.getTable());
+      return new BinlogEntryWithSchemaAndTable(binlogEntry, schemaAndTable);
+    }
   }
 }

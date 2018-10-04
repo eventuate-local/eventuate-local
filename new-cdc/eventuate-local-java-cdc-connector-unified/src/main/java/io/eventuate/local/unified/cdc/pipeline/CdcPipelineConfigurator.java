@@ -2,6 +2,7 @@ package io.eventuate.local.unified.cdc.pipeline;
 
 import io.eventuate.local.common.BinlogEntryReader;
 import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
 import io.eventuate.local.unified.cdc.pipeline.common.PropertyReader;
@@ -55,6 +56,9 @@ public class CdcPipelineConfigurator {
   @Autowired
   private BinlogEntryReaderProvider binlogEntryReaderProvider;
 
+  @Autowired
+  private SourceTableNameSupplier sourceTableNameSupplier;
+
   @PostConstruct
   public void initialize() {
     logger.info("Starting unified cdc pipelines");
@@ -97,6 +101,10 @@ public class CdcPipelineConfigurator {
             .convertMapToPropertyClass(properties, CdcPipelineProperties.class);
 
     cdcPipelineProperties.validate();
+
+    if (cdcPipelineProperties.getSourceTableName() == null) {
+      cdcPipelineProperties.setSourceTableName(sourceTableNameSupplier.getSourceTableName());
+    }
 
     CdcPipeline cdcPipeline = createCdcPipeline(cdcPipelineProperties);
     cdcPipeline.start();

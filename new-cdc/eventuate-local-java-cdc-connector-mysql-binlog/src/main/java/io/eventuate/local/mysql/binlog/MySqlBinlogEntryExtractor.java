@@ -1,7 +1,6 @@
 package io.eventuate.local.mysql.binlog;
 
 import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.SchemaAndTable;
@@ -25,10 +24,10 @@ public class MySqlBinlogEntryExtractor {
     this.dataSource = dataSource;
   }
 
-  public BinlogEntry extract(String sourceTableName, EventuateSchema eventuateSchema, WriteRowsEventData eventData, String binlogFilename, long position) {
-    if (!columnOrders.containsKey(new SchemaAndTable(eventuateSchema, sourceTableName))) {
+  public BinlogEntry extract(SchemaAndTable schemaAndTable, WriteRowsEventData eventData, String binlogFilename, long position) {
+    if (!columnOrders.containsKey(schemaAndTable)) {
       try {
-        getColumnOrders(sourceTableName, eventuateSchema);
+        getColumnOrders(schemaAndTable);
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
@@ -37,7 +36,7 @@ public class MySqlBinlogEntryExtractor {
     return new BinlogEntry() {
       @Override
       public Object getColumn(String name) {
-        return getValue(sourceTableName, eventuateSchema, eventData, name);
+        return getValue(schemaAndTable, eventData, name);
       }
 
       @Override
@@ -47,9 +46,7 @@ public class MySqlBinlogEntryExtractor {
     };
   }
 
-  private Serializable getValue(String sourceTableName, EventuateSchema eventuateSchema, WriteRowsEventData eventData, String columnName) {
-    SchemaAndTable schemaAndTable = new SchemaAndTable(eventuateSchema, sourceTableName);
-
+  private Serializable getValue(SchemaAndTable schemaAndTable, WriteRowsEventData eventData, String columnName) {
     if (columnOrders.containsKey(schemaAndTable)) {
       Map<String, Integer> order = columnOrders.get(schemaAndTable);
 
@@ -61,12 +58,11 @@ public class MySqlBinlogEntryExtractor {
     throw new RuntimeException("Column with name [" + columnName + "] not found");
   }
 
-  private void getColumnOrders(String sourceTableName, EventuateSchema eventuateSchema) throws SQLException {
+  private void getColumnOrders(SchemaAndTable schemaAndTable) throws SQLException {
     try (Connection connection = dataSource.getConnection()) {
       DatabaseMetaData metaData = connection.getMetaData();
 
-      try (ResultSet columnResultSet =
-                   metaData.getColumns(eventuateSchema.isEmpty() ? null : eventuateSchema.getEventuateDatabaseSchema(), "public", sourceTableName.toLowerCase(), null)) {
+      try (ResultSet columnResultSet = metaData.getColumns(null, schemaAndTable.getSchema(), schemaAndTable.getTableName(), null)) {
 
         Map<String, Integer> order = new HashMap<>();
 
@@ -76,7 +72,7 @@ public class MySqlBinlogEntryExtractor {
                   columnResultSet.getInt("ORDINAL_POSITION"));
         }
 
-        columnOrders.put(new SchemaAndTable(eventuateSchema, sourceTableName), order);
+        columnOrders.put(schemaAndTable, order);
       }
     }
   }

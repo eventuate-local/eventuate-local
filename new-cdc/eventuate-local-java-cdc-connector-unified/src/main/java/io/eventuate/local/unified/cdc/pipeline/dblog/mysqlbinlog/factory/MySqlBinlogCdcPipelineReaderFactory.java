@@ -17,12 +17,15 @@ import javax.sql.DataSource;
 public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineReaderFactory<MySqlBinlogCdcPipelineReaderProperties, MySqlBinaryLogClient> {
   public static final String TYPE = "mysql-binlog";
 
+  private DebeziumOffsetStoreFactory debeziumOffsetStoreFactory;
+
   public MySqlBinlogCdcPipelineReaderFactory(CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                              EventuateKafkaProducer eventuateKafkaProducer,
-                                             OffsetStoreFactory offsetStoreFactory) {
+                                             OffsetStoreFactory offsetStoreFactory,
+                                             DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
     super(curatorFramework,
             binlogEntryReaderProvider,
@@ -30,6 +33,8 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
             eventuateKafkaConsumerConfigurationProperties,
             eventuateKafkaProducer,
             offsetStoreFactory);
+
+    this.debeziumOffsetStoreFactory = debeziumOffsetStoreFactory;
   }
 
   @Override
@@ -60,17 +65,6 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                     dataSource,
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
                     readerProperties.getMySqlBinLogClientName()),
-            createDebeziumBinlogOffsetKafkaStore(readerProperties,
-                    eventuateKafkaConfigurationProperties,
-                    eventuateKafkaConsumerConfigurationProperties));
-  }
-
-  protected DebeziumBinlogOffsetKafkaStore createDebeziumBinlogOffsetKafkaStore(MySqlBinlogCdcPipelineReaderProperties mySqlBinlogCdcPipelineReaderProperties,
-                                                                                EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                                EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-
-    return new DebeziumBinlogOffsetKafkaStore(mySqlBinlogCdcPipelineReaderProperties.getOldDbHistoryTopicName(),
-            eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties);
+            debeziumOffsetStoreFactory.create(readerProperties.getOldDbHistoryTopicName()));
   }
 }

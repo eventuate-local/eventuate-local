@@ -6,7 +6,6 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -88,7 +87,13 @@ public class MySqlBinaryLogClient extends DbLogClient {
             break;
           }
 
-          if (binlogEntryHandlers.stream().map(BinlogEntryHandler::getSourceTableName).anyMatch(tableMapEvent.getTable()::equals)) {
+          boolean shouldHandleTable = binlogEntryHandlers
+                  .stream()
+                  .map(BinlogEntryHandler::getSchemaAndTable)
+                  .anyMatch(schemaAndTable ->
+                          schemaAndTable.equals(new SchemaAndTable(tableMapEvent.getDatabase(), tableMapEvent.getTable())));
+
+          if (shouldHandleTable) {
             tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
           }
           break;
@@ -113,16 +118,11 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
     connectWithRetriesOnFail();
 
-    while (running.get()) {
-      try {
-        Thread.sleep(10);
-      } catch (InterruptedException e) {
-        logger.error(e.getMessage(), e);
-        running.set(false);
-      }
+    try {
+      stopCountDownLatch.await();
+    } catch (InterruptedException e) {
+      logger.error(e.getMessage(), e);
     }
-
-    stopCountDownLatch.countDown();
   }
 
   private Optional<BinlogFileOffset> getStartingBinlogFileOffset() {
@@ -143,15 +143,14 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
       TableMapEventData tableMapEventData = tableMapEventByTableId.get(eventData.getTableId());
 
-      String database = tableMapEventData.getDatabase();
-      String table = tableMapEventData.getTable();
+      SchemaAndTable schemaAndTable = new SchemaAndTable(tableMapEventData.getDatabase(), tableMapEventData.getTable());
 
-      BinlogEntry entry = extractor.extract(table, new EventuateSchema(defaultDatabase), eventData, binlogFilename, offset);
+      BinlogEntry entry = extractor.extract(schemaAndTable, eventData, binlogFilename, offset);
 
-      if (!shouldSkipEntry(startingBinlogFileOffset, entry)) {
+      if (!shouldSkipEntry(startingBinlogFileOffset, entry.getBinlogFileOffset())) {
         binlogEntryHandlers
               .stream()
-              .filter(bh -> bh.isFor(database, table, defaultDatabase))
+              .filter(bh -> bh.isFor(schemaAndTable))
               .forEach(binlogEntryHandler -> binlogEntryHandler.publish(entry));
       }
     }
@@ -209,12 +208,16 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
   @Override
   protected void leaderStop() {
-    super.leaderStop();
+    if (!running.compareAndSet(true, false)) {
+      return;
+    }
 
     try {
       client.disconnect();
     } catch (IOException e) {
       logger.error("Cannot stop the MySqlBinaryLogClient", e);
     }
+
+    stopCountDownLatch.countDown();
   }
 }

@@ -9,7 +9,7 @@ dependencies {
     testCompile project(":eventuate-local-java-jdbc-autoconfigure")
 
     if (!project.hasProperty("excludeCdcLibs") ||  !excludeCdcLibs.toBoolean()) {
-        testCompile project(":eventuate-local-java-embedded-cdc-autoconfigure")
+        testCompile project(":new-cdc:eventuate-local-java-cdc-autoconfigure")
     }
 
     testCompile "junit:junit:4.11"

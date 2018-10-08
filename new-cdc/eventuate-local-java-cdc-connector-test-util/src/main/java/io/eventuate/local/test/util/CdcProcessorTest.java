@@ -2,9 +2,10 @@ package io.eventuate.local.test.util;
 
 import io.eventuate.Int128;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
-import io.eventuate.local.common.CdcProcessor;
+import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.PublishedEvent;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -12,35 +13,41 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcProcessorCommon{
 
+  @Autowired
+  protected EventuateJdbcAccess eventuateJdbcAccess;
+
   @Test
   public void shouldReadNewEventsOnly() throws InterruptedException {
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
-    CdcProcessor<PublishedEvent> cdcProcessor = createCdcProcessor();
-    cdcProcessor.start(publishedEvent -> {
+    prepareBinlogEntryHandler(publishedEvent -> {
       publishedEvents.add(publishedEvent);
       onEventSent(publishedEvent);
     });
+
+    startEventProcessing();
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
     waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData);
-    cdcProcessor.stop();
+    stopEventProcessing();
 
     publishedEvents.clear();
-    cdcProcessor.start(publishedEvent -> {
+    prepareBinlogEntryHandler(publishedEvent -> {
       publishedEvents.add(publishedEvent);
       onEventSent(publishedEvent);
     });
+    startEventProcessing();
     List<String> excludedIds = entityIdVersionAndEventIds.getEventIds().stream().map(Int128::asString).collect(Collectors.toList());
 
     accountCreatedEventData = generateAccountCreatedEvent();
-    entityIdVersionAndEventIds = updateEvent(entityIdVersionAndEventIds.getEntityId(), entityIdVersionAndEventIds.getEntityVersion(), accountCreatedEventData);
+    entityIdVersionAndEventIds = entityIdVersionAndEventIds = updateEvent(entityIdVersionAndEventIds.getEntityId(), entityIdVersionAndEventIds.getEntityVersion(), accountCreatedEventData);
     waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData, excludedIds);
-    cdcProcessor.stop();
+    stopEventProcessing();
   }
 
   @Test
@@ -50,11 +57,11 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
 
-    CdcProcessor<PublishedEvent> cdcProcessor = createCdcProcessor();
-    cdcProcessor.start(publishedEvents::add);
+    prepareBinlogEntryHandler(publishedEvents::add);
+    startEventProcessing();
 
-    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData);
-    cdcProcessor.stop();
+    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData);
+    stopEventProcessing();
   }
 
   private PublishedEvent waitForEventExcluding(BlockingQueue<PublishedEvent> publishedEvents, Int128 eventId, LocalDateTime deadline, String eventData, List<String> excludedIds) throws InterruptedException {
@@ -75,4 +82,9 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
       return result;
     throw new RuntimeException("event not found: " + eventId);
   }
+
+  protected abstract void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer);
+
+  protected abstract void startEventProcessing();
+  protected abstract void stopEventProcessing();
 }

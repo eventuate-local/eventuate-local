@@ -6,13 +6,15 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.PartitionInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class OffsetKafkaStore implements OffsetStore {
+
+  private Logger logger = LoggerFactory.getLogger(getClass());
 
   protected final String dbHistoryTopicName;
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
@@ -31,7 +33,7 @@ public abstract class OffsetKafkaStore implements OffsetStore {
   @Override
   public Optional<BinlogFileOffset> getLastBinlogFileOffset() {
     try (KafkaConsumer<String, String> consumer = createConsumer()) {
-      consumer.partitionsFor(dbHistoryTopicName);
+      getPartitionsForTopicRetryOnFail(consumer, 10);
       consumer.subscribe(Arrays.asList(dbHistoryTopicName));
 
       int count = N;
@@ -54,6 +56,23 @@ public abstract class OffsetKafkaStore implements OffsetStore {
         }
       }
       return Optional.ofNullable(result);
+    }
+  }
+
+  public List<PartitionInfo> getPartitionsForTopicRetryOnFail(KafkaConsumer<String, String> consumer, int attempts) {
+    try {
+      return consumer.partitionsFor(dbHistoryTopicName);
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      if (attempts > 0) {
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException ie) {
+          throw new RuntimeException(e);
+        }
+        return getPartitionsForTopicRetryOnFail(consumer, attempts - 1);
+      }
+      else throw new RuntimeException(e);
     }
   }
 

@@ -1,12 +1,14 @@
 package io.eventuate.local.test.util;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.CdcProcessor;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.PublishingStrategy;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,19 +22,25 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
 
   @Autowired
-  protected CdcProcessor<PublishedEvent> cdcProcessor;
+  protected PublishingStrategy<PublishedEvent> publishingStrategy;
+
+  protected CdcDataPublisher<PublishedEvent> cdcDataPublisher;
 
   @Autowired
-  protected PublishingStrategy<PublishedEvent> publishingStrategy;
+  protected EventuateSchema eventuateSchema;
+
+  @Autowired
+  protected SourceTableNameSupplier sourceTableNameSupplier;
+
+  @Before
+  public void init() {
+    super.init();
+    cdcDataPublisher = createCdcKafkaPublisher();
+    cdcDataPublisher.start();
+  }
 
   @Test
   public void shouldSendPublishedEventsToKafka() {
-    CdcDataPublisher<PublishedEvent> cdcDataPublisher = createCdcKafkaPublisher();
-
-    cdcDataPublisher.start();
-
-    cdcProcessor.start(cdcDataPublisher::handleEvent);
-
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
 
@@ -43,6 +51,8 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
     waitForEventInKafka(consumer, entityIdVersionAndEventIds.getEntityId(), LocalDateTime.now().plusSeconds(40));
     cdcDataPublisher.stop();
   }
+
+  public abstract void clear();
 
   protected abstract CdcDataPublisher<PublishedEvent> createCdcKafkaPublisher();
 }

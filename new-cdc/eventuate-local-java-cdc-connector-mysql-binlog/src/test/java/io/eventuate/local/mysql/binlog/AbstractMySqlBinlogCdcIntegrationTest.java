@@ -7,19 +7,16 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.javaclient.spring.jdbc.SaveUpdateResult;
-import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.JdbcUrl;
-import io.eventuate.local.common.JdbcUrlParser;
-import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.*;
+import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.test.util.AbstractCdcTest;
-import io.eventuate.local.testutil.CustomDBCreator;
 import org.junit.Test;
+import io.eventuate.local.testutil.CustomDBCreator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -27,6 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.fail;
 
@@ -39,13 +37,13 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   private EventuateConfigurationProperties eventuateConfigurationProperties;
 
   @Autowired
-  private WriteRowsEventDataParser eventDataParser;
-
-  @Autowired
   private SourceTableNameSupplier sourceTableNameSupplier;
 
   @Autowired
   private EventuateSchema eventuateSchema;
+
+  @Autowired
+  private MySqlBinaryLogClient mySqlBinaryLogClient;
 
   private String dataFile = "../../mysql/initialize-database.sql";
 
@@ -58,11 +56,12 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
   @Test
   public void shouldGetEvents() throws InterruptedException {
-    MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient = makeMySqlBinaryLogClient();
     try {
       BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-      mySqlBinaryLogClient.start(Optional.empty(), publishedEvents::add);
+      addBinlogEntryHandler(publishedEvents::add);
+      mySqlBinaryLogClient.start();
+
       String accountCreatedEventData = generateAccountCreatedEvent();
       EntityIdVersionAndEventIds saveResult = saveEvent(accountCreatedEventData);
 
@@ -70,7 +69,7 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
       EntityIdVersionAndEventIds updateResult = updateEvent(saveResult.getEntityId(), saveResult.getEntityVersion(), accountDebitedEventData);
 
       // Wait for 10 seconds
-      LocalDateTime deadline = LocalDateTime.now().plusSeconds(10);
+      LocalDateTime deadline = LocalDateTime.now().plusSeconds(40);
 
       waitForEvent(publishedEvents, saveResult.getEntityVersion(), deadline, accountCreatedEventData);
       waitForEvent(publishedEvents, updateResult.getEntityVersion(), deadline, accountDebitedEventData);
@@ -79,23 +78,8 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     }
   }
 
-  private MySqlBinaryLogClient<PublishedEvent> makeMySqlBinaryLogClient() {
-    JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceURL);
-    return new MySqlBinaryLogClient<>(eventDataParser,
-            eventuateConfigurationProperties.getDbUserName(),
-            eventuateConfigurationProperties.getDbPassword(),
-            jdbcUrl.getHost(),
-            jdbcUrl.getPort(),
-            eventuateConfigurationProperties.getBinlogClientId(),
-            ResolvedEventuateSchema.make(eventuateSchema, jdbcUrl), sourceTableNameSupplier.getSourceTableName(),
-            eventuateConfigurationProperties.getMySqlBinLogClientName(),
-            eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
-  }
-
   @Test
   public void shouldGetEventsFromOnlyEventuateSchema() throws InterruptedException {
-    MySqlBinaryLogClient<PublishedEvent> mySqlBinaryLogClient = makeMySqlBinaryLogClient();
 
     String otherSchemaName = "custom" + System.currentTimeMillis();
 
@@ -106,11 +90,13 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     try {
       BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-      mySqlBinaryLogClient.start(Optional.empty(), publishedEvents::add);
+      addBinlogEntryHandler(publishedEvents::add);
+      mySqlBinaryLogClient.start();
+
       String accountCreatedEventData = generateAccountCreatedEvent();
       EntityIdVersionAndEventIds saveResult = saveEvent(accountCreatedEventData);
 
-      LocalDateTime deadline = LocalDateTime.now().plusSeconds(10);
+      LocalDateTime deadline = LocalDateTime.now().plusSeconds(40);
 
       Int128 eventId = saveResult.getEntityVersion();
       String eventData = accountCreatedEventData;
@@ -135,6 +121,18 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     } finally {
       mySqlBinaryLogClient.stop();
     }
+  }
+
+  private void addBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
+    mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
+            sourceTableNameSupplier.getSourceTableName(),
+            new BinlogEntryToPublishedEventConverter(),
+            new CdcDataPublisher<PublishedEvent>(null, null, null) {
+              @Override
+              public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+                consumer.accept(publishedEvent);
+              }
+            });
   }
 
   private SaveUpdateResult insertEventIntoOtherSchema(String otherSchemaName) {

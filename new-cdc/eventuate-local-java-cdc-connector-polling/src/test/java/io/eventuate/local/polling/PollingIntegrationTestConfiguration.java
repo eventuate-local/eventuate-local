@@ -4,8 +4,13 @@ import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,6 +26,11 @@ import javax.sql.DataSource;
 @Import(EventuateDriverConfiguration.class)
 @EnableConfigurationProperties(EventuateKafkaProducerConfigurationProperties.class)
 public class PollingIntegrationTestConfiguration {
+
+  @Bean
+  public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName() == null ? "events" : eventuateConfigurationProperties.getSourceTableName());
+  }
 
   @Bean
   public EventuateConfigurationProperties eventuateConfigurationProperties() {
@@ -51,29 +61,43 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public CdcProcessor<PublishedEvent> pollingCdcProcessor(EventuateConfigurationProperties eventuateConfigurationProperties,
-          PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao) {
-    
-    return new PollingCdcProcessor<>(pollingDao, eventuateConfigurationProperties.getPollingIntervalInMilliseconds());
+  public PollingDataProvider pollingDataProvider() {
+    return new EventPollingDataProvider();
   }
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider(EventuateSchema eventuateSchema,
-          EventuateConfigurationProperties eventuateConfigurationProperties) {
-    return new EventPollingDataProvider(eventuateSchema);
+  public PollingDao pollingDao(@Value("${spring.datasource.url}") String dataSourceURL,
+                               EventuateConfigurationProperties eventuateConfigurationProperties,
+                               DataSource dataSource,
+                               CuratorFramework curatorFramework) {
+
+    return new PollingDao(dataSourceURL,
+            dataSource,
+            eventuateConfigurationProperties.getMaxEventsPerPolling(),
+            eventuateConfigurationProperties.getMaxAttemptsForPolling(),
+            eventuateConfigurationProperties.getPollingRetryIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath());
   }
 
   @Bean
-  @Profile("EventuatePolling")
-  public PollingDao<PublishedEventBean, PublishedEvent, String> pollingDao(EventuateConfigurationProperties eventuateConfigurationProperties,
-          PollingDataProvider<PublishedEventBean, PublishedEvent, String> pollingDataProvider,
-    DataSource dataSource) {
+  public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
+    RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+    CuratorFramework client = CuratorFrameworkFactory.
+            builder().retryPolicy(retryPolicy)
+            .connectString(eventuateLocalZookeperConfigurationProperties.getConnectionString())
+            .build();
+    client.start();
+    return client;
+  }
 
-    return new PollingDao<>(pollingDataProvider,
-      dataSource,
-      eventuateConfigurationProperties.getMaxEventsPerPolling(),
-      eventuateConfigurationProperties.getMaxAttemptsForPolling(),
-      eventuateConfigurationProperties.getPollingRetryIntervalInMilliseconds());
+  @Bean
+  public DuplicatePublishingDetector duplicatePublishingDetector(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                 EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+
+    return new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            eventuateKafkaConsumerConfigurationProperties);
   }
 }

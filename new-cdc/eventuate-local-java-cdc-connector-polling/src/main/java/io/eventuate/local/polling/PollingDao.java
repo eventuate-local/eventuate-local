@@ -1,73 +1,157 @@
 package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.eventuate.local.common.*;
+import org.apache.curator.framework.CuratorFramework;
+import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
+import java.util.concurrent.CountDownLatch;
 
-public class PollingDao<EVENT_BEAN, EVENT, ID> {
-  private Logger logger = LoggerFactory.getLogger(getClass());
+public class PollingDao extends BinlogEntryReader {
+  private static final String PUBLISHED_FIELD = "published";
 
-  private PollingDataProvider<EVENT_BEAN, EVENT, ID> pollingDataParser;
   private DataSource dataSource;
   private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private int maxEventsPerPolling;
   private int maxAttemptsForPolling;
   private int pollingRetryIntervalInMilliseconds;
+  private int pollingIntervalInMilliseconds;
+  private Map<SchemaAndTable, String> pkFields = new HashMap<>();
 
-  public PollingDao(PollingDataProvider<EVENT_BEAN, EVENT, ID> pollingDataParser,
-          DataSource dataSource,
-          int maxEventsPerPolling,
-          int maxAttemptsForPolling,
-          int pollingRetryIntervalInMilliseconds) {
+  public PollingDao(String dataSourceUrl,
+                    DataSource dataSource,
+                    int maxEventsPerPolling,
+                    int maxAttemptsForPolling,
+                    int pollingRetryIntervalInMilliseconds,
+                    int pollingIntervalInMilliseconds,
+                    CuratorFramework curatorFramework,
+                    String leadershipLockPath) {
+
+    super(curatorFramework, leadershipLockPath, dataSourceUrl);
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
     }
 
-    this.pollingDataParser = pollingDataParser;
     this.dataSource = dataSource;
+    this.pollingIntervalInMilliseconds = pollingIntervalInMilliseconds;
     this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     this.maxEventsPerPolling = maxEventsPerPolling;
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
   }
 
-  public int getMaxEventsPerPolling() {
-    return maxEventsPerPolling;
+  @Override
+  protected void leaderStart() {
+    stopCountDownLatch = new CountDownLatch(1);
+    running.set(true);
+
+    while (running.get()) {
+      binlogEntryHandlers.forEach(this::processEvents);
+
+      try {
+        Thread.sleep(pollingIntervalInMilliseconds);
+      } catch (InterruptedException e) {
+        logger.error(e.getMessage(), e);
+        running.set(false);
+      }
+    }
+
+    stopCountDownLatch.countDown();
   }
 
-  public void setMaxEventsPerPolling(int maxEventsPerPolling) {
-    this.maxEventsPerPolling = maxEventsPerPolling;
+  public void processEvents(BinlogEntryHandler handler) {
+
+    String pk = getPrimaryKey(handler);
+
+    String findEventsQuery = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
+            handler.getQualifiedTable(), PUBLISHED_FIELD, pk);
+
+    SqlRowSet sqlRowSet = handleConnectionLost(() ->
+      namedParameterJdbcTemplate.queryForRowSet(findEventsQuery, ImmutableMap.of("limit", maxEventsPerPolling)));
+
+    List<Object> ids = new ArrayList<>();
+
+    while (sqlRowSet.next()) {
+      ids.add(sqlRowSet.getObject(pk));
+
+      handler.publish(new BinlogEntry() {
+        @Override
+        public Object getColumn(String name) {
+          return sqlRowSet.getObject(name);
+        }
+
+        @Override
+        public BinlogFileOffset getBinlogFileOffset() {
+          return null;
+        }
+      });
+    }
+
+    String markEventsAsReadQuery = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
+            handler.getQualifiedTable(), PUBLISHED_FIELD, pk);
+
+    if (!ids.isEmpty()) {
+      handleConnectionLost(() -> namedParameterJdbcTemplate.update(markEventsAsReadQuery, ImmutableMap.of("ids", ids)));
+    }
   }
 
-  public List<EVENT> findEventsToPublish() {
+  private String getPrimaryKey(BinlogEntryHandler handler) {
+    SchemaAndTable schemaAndTable = handler.getSchemaAndTable();
 
+    if (pkFields.containsKey(schemaAndTable)) {
+      return pkFields.get(schemaAndTable);
+    }
 
-    String query = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
-      pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
+    String pk = handleConnectionLost(() -> queryPrimaryKey(handler));
 
-    List<EVENT_BEAN> messageBeans = handleConnectionLost(() -> namedParameterJdbcTemplate.query(query,
-      ImmutableMap.of("limit", maxEventsPerPolling), new BeanPropertyRowMapper(pollingDataParser.eventBeanClass())));
+    pkFields.put(schemaAndTable, pk);
 
-    return messageBeans.stream().map(pollingDataParser::transformEventBeanToEvent).collect(Collectors.toList());
+    return pk;
   }
 
-  public void markEventsAsPublished(List<EVENT> events) {
+  private String queryPrimaryKey(BinlogEntryHandler handler) throws SQLException {
+    String pk;
+    Connection connection = null;
+    try {
+      connection = dataSource.getConnection();
+      ResultSet resultSet = connection
+              .getMetaData()
+              .getPrimaryKeys(null,
+                      handler.getSchemaAndTable().getSchema(),
+                      handler.getSchemaAndTable().getTableName());
 
-    List<ID> ids = events.stream().map(message -> pollingDataParser.getId(message)).collect(Collectors.toList());
+      if (resultSet.next()) {
+        pk = resultSet.getString("COLUMN_NAME");
+        if (resultSet.next()) {
+          throw new RuntimeException("Table %s has more than one primary key");
+        }
+      } else {
+        throw new RuntimeException("Cannot get table: result set is empty");
+      }
+    } finally {
+      try {
+        if (connection != null) {
+          connection.close();
+        }
+      } catch (SQLException e) {
+        logger.warn(e.getMessage(), e);
+      }
+    }
 
-    String query = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
-        pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
-
-    handleConnectionLost(() -> namedParameterJdbcTemplate.update(query, ImmutableMap.of("ids", ids)));
+    return pk;
   }
 
   private <T> T handleConnectionLost(Callable<T> query) {
@@ -79,18 +163,20 @@ public class PollingDao<EVENT_BEAN, EVENT, ID> {
         if (attempt > 0)
           logger.info("Reconnected to database");
         return result;
-      } catch (DataAccessResourceFailureException e) {
+      } catch (DataAccessResourceFailureException | PSQLException e) {
 
         logger.error(String.format("Could not access database %s - retrying in %s milliseconds", e.getMessage(), pollingRetryIntervalInMilliseconds), e);
 
         if (attempt++ >= maxAttemptsForPolling) {
-          throw e;
+          throw new RuntimeException(e);
         }
 
         try {
           Thread.sleep(pollingRetryIntervalInMilliseconds);
         } catch (InterruptedException ie) {
-          logger.error(ie.getMessage(), ie);
+          running.set(false);
+          stopCountDownLatch.countDown();
+          throw new RuntimeException(ie);
         }
       } catch (Exception e) {
         throw new RuntimeException(e);

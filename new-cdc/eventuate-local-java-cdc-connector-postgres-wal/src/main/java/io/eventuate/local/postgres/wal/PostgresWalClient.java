@@ -1,76 +1,71 @@
 package io.eventuate.local.postgres.wal;
 
-
 import io.eventuate.javaclient.commonimpl.JSonMapper;
-import io.eventuate.local.common.BinLogEvent;
-import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
+import io.eventuate.local.db.log.common.OffsetStore;
+import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.PGConnection;
 import org.postgresql.PGProperty;
 import org.postgresql.replication.LogSequenceNumber;
 import org.postgresql.replication.PGReplicationStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
-public class PostgresWalClient<EVENT extends BinLogEvent> implements DbLogClient<EVENT> {
-  private Logger logger = LoggerFactory.getLogger(this.getClass());
-  private String url;
-  private String user;
-  private String password;
-  private PostgresWalMessageParser<EVENT> postgresWalMessageParser;
+public class PostgresWalClient extends DbLogClient {
+  private PostgresWalBinlogEntryExtractor postgresWalBinlogEntryExtractor;
   private int walIntervalInMilliseconds;
   private int connectionTimeoutInMilliseconds;
   private int maxAttemptsForBinlogConnection;
   private Connection connection;
   private PGReplicationStream stream;
-  private CountDownLatch countDownLatchForStop;
-  private boolean running;
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
 
-  public PostgresWalClient(PostgresWalMessageParser<EVENT> postgresWalMessageParser,
-                           String url,
+  public PostgresWalClient(String url,
                            String user,
                            String password,
                            int walIntervalInMilliseconds,
                            int connectionTimeoutInMilliseconds,
                            int maxAttemptsForBinlogConnection,
                            int replicationStatusIntervalInMilliseconds,
-                           String replicationSlotName) {
-    this.postgresWalMessageParser = postgresWalMessageParser;
-    this.url = url;
-    this.user = user;
-    this.password = password;
+                           String replicationSlotName,
+                           CuratorFramework curatorFramework,
+                           String leadershipLockPath,
+                           OffsetStore offsetStore) {
+
+    super(user, password, url, curatorFramework, leadershipLockPath, offsetStore);
+
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
     this.replicationStatusIntervalInMilliseconds = replicationStatusIntervalInMilliseconds;
     this.replicationSlotName = replicationSlotName;
+    this.postgresWalBinlogEntryExtractor = new PostgresWalBinlogEntryExtractor();
   }
 
-  public void start(Optional<BinlogFileOffset> binlogFileOffset, Consumer<EVENT> eventConsumer) {
-    running = true;
-    new Thread(() -> connectWithRetriesOnFail(binlogFileOffset, eventConsumer)).start();
+  @Override
+  protected void leaderStart() {
+    stopCountDownLatch = new CountDownLatch(1);
+    running.set(true);
+
+    connectWithRetriesOnFail(offsetStore.getLastBinlogFileOffset());
   }
 
-  private void connectWithRetriesOnFail(Optional<BinlogFileOffset> binlogFileOffset, Consumer<EVENT> eventConsumer) {
+  private void connectWithRetriesOnFail(Optional<BinlogFileOffset> binlogFileOffset) {
     for (int i = 1;; i++) {
       try {
         logger.info("trying to connect to postgres wal");
-        connectAndRun(binlogFileOffset, eventConsumer);
+        connectAndRun(binlogFileOffset);
         break;
-      } catch (SQLException | InterruptedException e) {
+      } catch (SQLException e) {
         logger.error("connection to posgres wal failed");
         if (i == maxAttemptsForBinlogConnection) {
           logger.error("connection attempts exceeded");
@@ -79,28 +74,26 @@ public class PostgresWalClient<EVENT extends BinLogEvent> implements DbLogClient
         try {
           Thread.sleep(connectionTimeoutInMilliseconds);
         } catch (InterruptedException ex) {
-          throw new RuntimeException(ex);
+          logger.error(e.getMessage(), e);
+          running.set(false);
+          stopCountDownLatch.countDown();
+          throw new RuntimeException(e);
         }
-      } catch (IOException e) {
-        logger.error(e.getMessage(), e);
-        throw new RuntimeException(e);
       }
     }
   }
 
-  private void connectAndRun(Optional<BinlogFileOffset> binlogFileOffset, Consumer<EVENT> eventConsumer)
-          throws SQLException, InterruptedException, IOException {
-
-    countDownLatchForStop = new CountDownLatch(1);
+  private void connectAndRun(Optional<BinlogFileOffset> binlogFileOffset)
+          throws SQLException {
 
     Properties props = new Properties();
-    PGProperty.USER.set(props, user);
-    PGProperty.PASSWORD.set(props, password);
+    PGProperty.USER.set(props, dbUserName);
+    PGProperty.PASSWORD.set(props, dbPassword);
     PGProperty.ASSUME_MIN_SERVER_VERSION.set(props, "9.4");
     PGProperty.REPLICATION.set(props, "database");
     PGProperty.PREFER_QUERY_MODE.set(props, "simple");
 
-    connection = DriverManager.getConnection(url, props);
+    connection = DriverManager.getConnection(dataSourceUrl, props);
 
     PGConnection replConnection = connection.unwrap(PGConnection.class);
 
@@ -119,12 +112,17 @@ public class PostgresWalClient<EVENT extends BinLogEvent> implements DbLogClient
 
     logger.info("connection to postgres wal succeed");
 
-    while (running) {
+    while (running.get()) {
       ByteBuffer messageBuffer = stream.readPending();
 
       if (messageBuffer == null) {
         logger.info("Got empty message, sleeping");
-        TimeUnit.MILLISECONDS.sleep(walIntervalInMilliseconds);
+        try {
+          TimeUnit.MILLISECONDS.sleep(walIntervalInMilliseconds);
+        } catch (InterruptedException e) {
+          logger.error(e.getMessage(), e);
+          running.set(false);
+        }
         continue;
       }
 
@@ -132,13 +130,32 @@ public class PostgresWalClient<EVENT extends BinLogEvent> implements DbLogClient
 
       logger.info("Got message: " + messageString);
 
-      postgresWalMessageParser
-                .parse(JSonMapper.fromJson(messageString, PostgresWalMessage.class), stream.getLastReceiveLSN().asLong(), replicationSlotName)
-                .forEach(eventConsumer);
+      PostgresWalMessage postgresWalMessage = JSonMapper.fromJson(messageString, PostgresWalMessage.class);
+
+      BinlogFileOffset offset = new BinlogFileOffset(replicationSlotName, stream.getLastReceiveLSN().asLong());
+
+      if (!shouldSkipEntry(binlogFileOffset, offset)) {
+        List<BinlogEntryWithSchemaAndTable> inserts = Arrays
+                .stream(postgresWalMessage.getChange())
+                .filter(change -> change.getKind().equals("insert"))
+                .map(change -> BinlogEntryWithSchemaAndTable.make(postgresWalBinlogEntryExtractor, change, offset))
+                .collect(Collectors.toList());
+
+          binlogEntryHandlers.forEach(handler ->
+            inserts
+                    .stream()
+                    .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
+                    .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
+                    .forEach(handler::publish)
+          );
+      }
+
+      offsetStore.save(offset);
 
       stream.setAppliedLSN(stream.getLastReceiveLSN());
       stream.setFlushedLSN(stream.getLastReceiveLSN());
     }
+
     try {
       stream.close();
       connection.close();
@@ -146,17 +163,8 @@ public class PostgresWalClient<EVENT extends BinLogEvent> implements DbLogClient
       logger.error(e.getMessage(), e);
       throw new RuntimeException(e);
     }
-    countDownLatchForStop.countDown();
-  }
 
-  public void stop() {
-    running = false;
-    try {
-      countDownLatchForStop.await();
-    } catch (InterruptedException e) {
-      logger.error(e.getMessage(), e);
-      throw new RuntimeException(e);
-    }
+    stopCountDownLatch.countDown();
   }
 
   private String extractStringFromBuffer(ByteBuffer byteBuffer) {
@@ -165,5 +173,31 @@ public class PostgresWalClient<EVENT extends BinLogEvent> implements DbLogClient
     int length = source.length - offset;
 
     return new String(source, offset, length);
+  }
+
+  private static class BinlogEntryWithSchemaAndTable {
+    private BinlogEntry binlogEntry;
+    private SchemaAndTable schemaAndTable;
+
+    public BinlogEntryWithSchemaAndTable(BinlogEntry binlogEntry, SchemaAndTable schemaAndTable) {
+      this.binlogEntry = binlogEntry;
+      this.schemaAndTable = schemaAndTable;
+    }
+
+    public BinlogEntry getBinlogEntry() {
+      return binlogEntry;
+    }
+
+    public SchemaAndTable getSchemaAndTable() {
+      return schemaAndTable;
+    }
+
+    public static BinlogEntryWithSchemaAndTable make(PostgresWalBinlogEntryExtractor extractor,
+                                                     PostgresWalChange change,
+                                                     BinlogFileOffset offset) {
+      BinlogEntry binlogEntry = extractor.extract(change, offset);
+      SchemaAndTable schemaAndTable = new SchemaAndTable(change.getSchema(), change.getTable());
+      return new BinlogEntryWithSchemaAndTable(binlogEntry, schemaAndTable);
+    }
   }
 }

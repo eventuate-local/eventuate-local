@@ -1,8 +1,0 @@
-dependencies {
-    compile project(":new-cdc:eventuate-local-java-cdc-connector-test-util")
-    compile project(":new-cdc:eventuate-local-java-cdc-connector-db-log-common")
-}
-
-test {
-    forkEvery 1
-}

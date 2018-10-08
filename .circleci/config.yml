@@ -64,42 +64,6 @@ jobs:
           path: ~/junit
       - store_artifacts:
           path: ~/junit
-  build-cdc-mysql:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-all-cdc-mysql.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-  build-cdc-mariadb:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-all-cdc-mariadb.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
   build-new-cdc-mysql:
     machine: true
     working_directory: ~/eventuate-local-java
@@ -216,12 +180,6 @@ workflows:
       - build-postgres-wal:
           requires:
             - build
-      - build-cdc-mysql:
-          requires:
-            - build
-      - build-cdc-mariadb:
-          requires:
-            - build-mariadb
       - build-new-cdc-mysql:
           requires:
             - build
@@ -240,8 +198,8 @@ workflows:
       - publish:
           requires:
             - build-postgres-wal
-            - build-cdc-mysql
             - build-new-cdc-mysql
+            - build-new-cdc-mariadb
             - build-new-cdc-postgres-wal
             - build-new-cdc-postgres-polling
             - build-new-cdc-unified

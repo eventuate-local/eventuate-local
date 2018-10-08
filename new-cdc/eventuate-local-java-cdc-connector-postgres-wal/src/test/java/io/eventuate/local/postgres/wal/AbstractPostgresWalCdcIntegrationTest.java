@@ -5,17 +5,14 @@ import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
-import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
-import io.eventuate.local.common.SourceTableNameSupplier;
 import org.apache.curator.framework.CuratorFramework;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -31,8 +28,6 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
   @Value("${spring.datasource.password}")
   private String dbPassword;
 
-  @Autowired
-  private DataSource dataSource;
 
   @Autowired
   private EventuateJdbcAccess eventuateJdbcAccess;
@@ -84,10 +79,10 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
     postgresWalClient.start();
 
     String accountCreatedEventData = generateAccountCreatedEvent();
-    EntityIdVersionAndEventIds saveResult = saveEvent(localAggregateCrud, accountCreatedEventData);
+    EntityIdVersionAndEventIds saveResult = saveEvent(accountCreatedEventData);
 
     String accountDebitedEventData = generateAccountDebitedEvent();
-    EntityIdVersionAndEventIds updateResult = updateEvent(saveResult.getEntityId(), saveResult.getEntityVersion(), localAggregateCrud, accountDebitedEventData);
+    EntityIdVersionAndEventIds updateResult = updateEvent(saveResult.getEntityId(), saveResult.getEntityVersion(), accountDebitedEventData);
 
     LocalDateTime deadline = LocalDateTime.now().plusSeconds(20);
 

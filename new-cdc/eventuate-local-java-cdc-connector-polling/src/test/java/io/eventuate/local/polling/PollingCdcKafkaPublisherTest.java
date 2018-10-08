@@ -24,9 +24,6 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
   private PollingDao pollingDao;
 
   @Autowired
-  private PollingDataProvider pollingDataProvider;
-
-  @Autowired
   private DuplicatePublishingDetector duplicatePublishingDetector;
 
   @Before

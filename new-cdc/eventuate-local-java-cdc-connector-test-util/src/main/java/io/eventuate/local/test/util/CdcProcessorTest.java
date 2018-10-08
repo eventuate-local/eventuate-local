@@ -4,8 +4,6 @@ import io.eventuate.Int128;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,17 +16,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public abstract class CdcProcessorTest extends AbstractCdcTest {
+public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcProcessorCommon{
 
   @Autowired
   protected EventuateJdbcAccess eventuateJdbcAccess;
-
-  protected EventuateLocalAggregateCrud localAggregateCrud;
-
-  @Before
-  public void init() {
-    localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
-  }
 
   @Test
   public void shouldReadNewEventsOnly() throws InterruptedException {
@@ -41,7 +32,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
     startEventProcessing();
 
     String accountCreatedEventData = generateAccountCreatedEvent();
-    EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
+    EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
     waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData);
     stopEventProcessing();
 
@@ -54,7 +45,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
     List<String> excludedIds = entityIdVersionAndEventIds.getEventIds().stream().map(Int128::asString).collect(Collectors.toList());
 
     accountCreatedEventData = generateAccountCreatedEvent();
-    entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
+    entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
     waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData, excludedIds);
     stopEventProcessing();
   }
@@ -64,7 +55,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
     String accountCreatedEventData = generateAccountCreatedEvent();
-    EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(localAggregateCrud, accountCreatedEventData);
+    EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
 
     prepareBinlogEntryHandler(publishedEvents::add);
     startEventProcessing();
@@ -94,7 +85,4 @@ public abstract class CdcProcessorTest extends AbstractCdcTest {
 
   protected abstract void startEventProcessing();
   protected abstract void stopEventProcessing();
-
-  protected void onEventSent(PublishedEvent publishedEvent) {
-  }
 }

@@ -1,12 +1,13 @@
 package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
-import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
-import io.eventuate.local.common.CdcDataPublisher;
+import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +45,7 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
   }
 
   @Override
-  protected void onEventSent(PublishedEvent publishedEvent) {
+  public void onEventSent(PublishedEvent publishedEvent) {
     offsetStore.save(publishedEvent.getBinlogFileOffset().get());
   }
 

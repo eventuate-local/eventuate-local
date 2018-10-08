@@ -2,6 +2,8 @@
 
 set -e
 
+. ./scripts/_set-env.sh
+
 if [ -z "$DOCKER_COMPOSE" ]; then
     echo setting DOCKER_COMPOSE
     export DOCKER_COMPOSE="docker-compose -f docker-compose-unified.yml -f docker-compose-new-cdc-unified.yml"

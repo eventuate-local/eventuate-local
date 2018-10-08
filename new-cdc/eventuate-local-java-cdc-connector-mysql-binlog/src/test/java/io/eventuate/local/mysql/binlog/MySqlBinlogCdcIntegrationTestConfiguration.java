@@ -5,8 +5,6 @@ import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
@@ -14,7 +12,6 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
-import io.eventuate.local.common.SourceTableNameSupplier;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -102,9 +99,9 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Conditional(MySqlBinlogCondition.class)
   @Primary
   public OffsetStore databaseOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                           EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                           EventuateKafkaProducer eventuateKafkaProducer,
-                                                           EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+                                              EventuateConfigurationProperties eventuateConfigurationProperties,
+                                              EventuateKafkaProducer eventuateKafkaProducer,
+                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
             eventuateConfigurationProperties.getMySqlBinLogClientName(),

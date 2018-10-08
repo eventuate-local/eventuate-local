@@ -33,7 +33,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
-    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData);
+    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(60), accountCreatedEventData);
     stopEventProcessing();
 
     publishedEvents.clear();
@@ -45,8 +45,8 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
     List<String> excludedIds = entityIdVersionAndEventIds.getEventIds().stream().map(Int128::asString).collect(Collectors.toList());
 
     accountCreatedEventData = generateAccountCreatedEvent();
-    entityIdVersionAndEventIds = entityIdVersionAndEventIds = updateEvent(entityIdVersionAndEventIds.getEntityId(), entityIdVersionAndEventIds.getEntityVersion(), accountCreatedEventData);
-    waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData, excludedIds);
+    entityIdVersionAndEventIds = updateEvent(entityIdVersionAndEventIds.getEntityId(), entityIdVersionAndEventIds.getEntityVersion(), accountCreatedEventData);
+    waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(60), accountCreatedEventData, excludedIds);
     stopEventProcessing();
   }
 
@@ -60,7 +60,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
     prepareBinlogEntryHandler(publishedEvents::add);
     startEventProcessing();
 
-    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData);
+    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(60), accountCreatedEventData);
     stopEventProcessing();
   }
 

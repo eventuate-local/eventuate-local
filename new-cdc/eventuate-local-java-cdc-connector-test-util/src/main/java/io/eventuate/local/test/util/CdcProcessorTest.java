@@ -33,7 +33,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
 
     String accountCreatedEventData = generateAccountCreatedEvent();
     EntityIdVersionAndEventIds entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
-    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData);
+    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData);
     stopEventProcessing();
 
     publishedEvents.clear();
@@ -45,8 +45,8 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
     List<String> excludedIds = entityIdVersionAndEventIds.getEventIds().stream().map(Int128::asString).collect(Collectors.toList());
 
     accountCreatedEventData = generateAccountCreatedEvent();
-    entityIdVersionAndEventIds = saveEvent(accountCreatedEventData);
-    waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData, excludedIds);
+    entityIdVersionAndEventIds = entityIdVersionAndEventIds = updateEvent(entityIdVersionAndEventIds.getEntityId(), entityIdVersionAndEventIds.getEntityVersion(), accountCreatedEventData);
+    waitForEventExcluding(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData, excludedIds);
     stopEventProcessing();
   }
 
@@ -60,7 +60,7 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
     prepareBinlogEntryHandler(publishedEvents::add);
     startEventProcessing();
 
-    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(20), accountCreatedEventData);
+    waitForEvent(publishedEvents, entityIdVersionAndEventIds.getEntityVersion(), LocalDateTime.now().plusSeconds(10), accountCreatedEventData);
     stopEventProcessing();
   }
 
@@ -70,10 +70,12 @@ public abstract class CdcProcessorTest extends AbstractCdcTest implements CdcPro
       long millis = ChronoUnit.MILLIS.between(deadline, LocalDateTime.now());
       PublishedEvent event = publishedEvents.poll(millis, TimeUnit.MILLISECONDS);
       if (event != null) {
-        if (event.getId().equals(eventId.asString()) && eventData.equals(event.getEventData()))
+        if (event.getId().equals(eventId.asString()) && eventData.equals(event.getEventData())) {
           result = event;
+          break;
+        }
         if (excludedIds.contains(event.getId()))
-          throw new RuntimeException("Wrong event found in the queue");
+          throw new RuntimeException("Event with excluded id found in the queue");
       }
     }
     if (result != null)

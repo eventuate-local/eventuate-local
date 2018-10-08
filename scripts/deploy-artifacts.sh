@@ -20,7 +20,6 @@ VERSION=$BRANCH
 # Dockerfiles look for snapshot version of JAR!
 
 $PREFIX ./gradlew assemble
-docker-compose -f docker-compose-mysql.yml -f docker-compose-cdc-mysql.yml build cdcservice mysql zookeeper kafka
 docker-compose -f docker-compose-mysql.yml -f docker-compose-new-cdc-mysql.yml build newcdcservice
 docker-compose -f docker-compose-postgres-wal.yml -f docker-compose-new-cdc-postgres-wal.yml build postgres
 

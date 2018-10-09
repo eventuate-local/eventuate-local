@@ -3,7 +3,7 @@ package io.eventuate.local.db.log.test.common;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
+import io.eventuate.local.common.DuplicatePublishingDetector;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.test.util.AbstractConnectorTest;

@@ -4,8 +4,6 @@ import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.DbLogBasedCdcDataPublisher;
-import io.eventuate.local.db.log.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -13,11 +11,16 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.testutil.SqlScriptEditor;
+import org.apache.curator.RetryPolicy;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.*;
 
+import javax.sql.DataSource;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -26,6 +29,11 @@ import java.util.stream.Collectors;
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
         EventuateKafkaConsumerConfigurationProperties.class})
 public class PostgresWalCdcIntegrationTestConfiguration {
+
+  @Bean
+  public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
+    return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName() == null ? "events" : eventuateConfigurationProperties.getSourceTableName());
+  }
 
   @Bean
   public EventuateConfigurationProperties eventuateConfigurationProperties() {
@@ -39,27 +47,25 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("PostgresWal")
-  public PostgresWalClient<PublishedEvent> postgresWalClient(@Value("${spring.datasource.url}") String dbUrl,
-                                                             @Value("${spring.datasource.username}") String dbUserName,
-                                                             @Value("${spring.datasource.password}") String dbPassword,
-                                                             EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                             PostgresWalMessageParser<PublishedEvent> postgresWalMessageParser) {
+  public PostgresWalClient postgresWalClient(@Value("${spring.datasource.url}") String dbUrl,
+                                             @Value("${spring.datasource.username}") String dbUserName,
+                                             @Value("${spring.datasource.password}") String dbPassword,
+                                             DataSource dataSource,
+                                             EventuateConfigurationProperties eventuateConfigurationProperties,
+                                             CuratorFramework curatorFramework,
+                                             OffsetStore offsetStore) {
 
-    return new PostgresWalClient<>(postgresWalMessageParser,
-            dbUrl,
+    return new PostgresWalClient(dbUrl,
             dbUserName,
             dbPassword,
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getPostgresReplicationSlotName());
-  }
-
-  @Bean
-  @Profile("PostgresWal")
-  public PostgresWalMessageParser<PublishedEvent> postgresWalMessageParser() {
-    return new PostgresWalJsonMessageParser();
+            eventuateConfigurationProperties.getPostgresReplicationSlotName(),
+            curatorFramework,
+            eventuateConfigurationProperties.getLeadershipLockPath(),
+            offsetStore);
   }
 
   @Bean
@@ -79,22 +85,12 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   @Profile("PostgresWal")
-  public CdcProcessor<PublishedEvent> cdcProcessor(PostgresWalClient<PublishedEvent> postgresWalClient,
-                                                   OffsetStore offsetStore) {
+  public CdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducerFactory dataProducerFactory,
+                                                                      EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                      EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
+                                                                      PublishingStrategy<PublishedEvent> publishingStrategy) {
 
-    return new PostgresWalCdcProcessor<>(postgresWalClient, offsetStore);
-  }
-
-  @Bean
-  @Profile("PostgresWal")
-  public DbLogBasedCdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducerFactory dataProducerFactory,
-                                                                                EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                                EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                                OffsetStore offsetStore,
-                                                                                PublishingStrategy<PublishedEvent> publishingStrategy) {
-
-    return new DbLogBasedCdcDataPublisher<>(dataProducerFactory,
-            offsetStore,
+    return new CdcDataPublisher<>(dataProducerFactory,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy);
   }
@@ -125,5 +121,21 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
       return sqlList.stream().map(s -> s.replace("eventuate", "custom")).collect(Collectors.toList());
     };
+  }
+
+  @Bean
+  public EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties() {
+    return new EventuateLocalZookeperConfigurationProperties();
+  }
+
+  @Bean
+  public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
+    RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
+    CuratorFramework client = CuratorFrameworkFactory.
+            builder().retryPolicy(retryPolicy)
+            .connectString(eventuateLocalZookeperConfigurationProperties.getConnectionString())
+            .build();
+    client.start();
+    return client;
   }
 }

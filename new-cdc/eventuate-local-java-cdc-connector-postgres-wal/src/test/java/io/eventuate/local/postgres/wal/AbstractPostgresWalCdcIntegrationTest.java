@@ -6,7 +6,6 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.db.log.common.OffsetStore;
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.apache.curator.framework.CuratorFramework;
 import org.junit.Test;
@@ -60,8 +59,6 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
             offsetStore);
-
-    EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 

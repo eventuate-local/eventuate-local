@@ -1,26 +1,22 @@
 package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
+import io.eventuate.local.common.CdcDataPublisher;
+import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.db.log.common.OffsetStore;
-import io.eventuate.local.db.log.test.common.OffsetStoreMock;
 import io.eventuate.local.test.util.CdcProcessorTest;
-import org.apache.curator.framework.CuratorFramework;
-import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import javax.sql.DataSource;
 import java.util.function.Consumer;
 
 public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
 
+  @Autowired
   private MySqlBinaryLogClient mySqlBinaryLogClient;
-
-  private OffsetStore offsetStore = new OffsetStoreMock();
-
-  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore = new DebeziumOffsetStoreMock();
 
   @Value("${spring.datasource.url}")
   private String dataSourceUrl;
@@ -32,32 +28,7 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
   private SourceTableNameSupplier sourceTableNameSupplier;
 
   @Autowired
-  private DataSource dataSource;
-
-  @Autowired
-  private EventuateConfigurationProperties eventuateConfigurationProperties;
-
-  @Autowired
-  private CuratorFramework curatorFramework;
-
-  @Override
-  @Before
-  public void init() {
-    super.init();
-    mySqlBinaryLogClient = new MySqlBinaryLogClient(
-            eventuateConfigurationProperties.getDbUserName(),
-            eventuateConfigurationProperties.getDbPassword(),
-            dataSourceUrl,
-            dataSource,
-            eventuateConfigurationProperties.getBinlogClientId(),
-            eventuateConfigurationProperties.getMySqlBinLogClientName(),
-            eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
-            curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath(),
-            offsetStore,
-            debeziumBinlogOffsetKafkaStore);
-  }
+  private OffsetStore offsetStore;
 
   @Override
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {

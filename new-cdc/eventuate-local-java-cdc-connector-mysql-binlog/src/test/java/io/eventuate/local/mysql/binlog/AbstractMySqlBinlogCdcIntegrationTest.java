@@ -9,18 +9,14 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.javaclient.spring.jdbc.SaveUpdateResult;
 import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
-import io.eventuate.local.db.log.test.common.OffsetStoreMock;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import io.eventuate.local.testutil.CustomDBCreator;
-import org.apache.curator.framework.CuratorFramework;
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -36,9 +32,6 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
   @Value("${spring.datasource.url}")
   private String dataSourceUrl;
-
-  @Autowired
-  private DataSource dataSource;
 
   @Autowired
   private EventuateConfigurationProperties eventuateConfigurationProperties;
@@ -59,32 +52,6 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
 
   @Autowired
   private JdbcTemplate jdbcTemplate;
-
-  @Autowired
-  private CuratorFramework curatorFramework;
-
-  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore = new DebeziumOffsetStoreMock();
-
-  @Override
-  @Before
-  public void init() {
-    super.init();
-
-    mySqlBinaryLogClient = new MySqlBinaryLogClient(
-            eventuateConfigurationProperties.getDbUserName(),
-            eventuateConfigurationProperties.getDbPassword(),
-            dataSourceUrl,
-            dataSource,
-            eventuateConfigurationProperties.getBinlogClientId(),
-            eventuateConfigurationProperties.getMySqlBinLogClientName(),
-            eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
-            curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath(),
-            new OffsetStoreMock(),
-            debeziumBinlogOffsetKafkaStore);
-  }
-
 
   @Test
   public void shouldGetEvents() throws InterruptedException {

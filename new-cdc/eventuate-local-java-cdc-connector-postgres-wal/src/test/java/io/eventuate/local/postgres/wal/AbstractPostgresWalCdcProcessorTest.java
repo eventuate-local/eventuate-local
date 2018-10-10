@@ -1,13 +1,13 @@
 package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
+import io.eventuate.local.common.CdcDataPublisher;
+import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.db.log.common.OffsetStore;
-import io.eventuate.local.db.log.test.common.OffsetStoreMock;
 import io.eventuate.local.test.util.CdcProcessorTest;
-import org.apache.curator.framework.CuratorFramework;
-import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -15,9 +15,11 @@ import java.util.function.Consumer;
 
 public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTest {
 
+  @Autowired
   private PostgresWalClient postgresWalClient;
 
-  private OffsetStore offsetStore = new OffsetStoreMock();
+  @Autowired
+  private OffsetStore offsetStore;
 
   @Value("${spring.datasource.url}")
   private String dataSourceUrl;
@@ -33,30 +35,6 @@ public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTe
 
   @Value("${spring.datasource.password}")
   private String dbPassword;
-
-  @Autowired
-  private EventuateConfigurationProperties eventuateConfigurationProperties;
-
-  @Autowired
-  private CuratorFramework curatorFramework;
-
-  @Override
-  @Before
-  public void init() {
-    super.init();
-
-    postgresWalClient = new PostgresWalClient(dataSourceUrl,
-            dbUserName,
-            dbPassword,
-            eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
-            eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getPostgresReplicationSlotName(),
-            curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath(),
-            offsetStore);
-  }
 
   @Override
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {

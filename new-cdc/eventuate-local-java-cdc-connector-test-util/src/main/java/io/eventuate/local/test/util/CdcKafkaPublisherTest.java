@@ -5,7 +5,6 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.PublishingStrategy;
-import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.junit.Before;

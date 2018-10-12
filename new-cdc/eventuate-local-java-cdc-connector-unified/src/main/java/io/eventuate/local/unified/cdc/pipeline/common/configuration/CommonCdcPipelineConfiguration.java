@@ -9,6 +9,7 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.mysql.binlog.DebeziumBinlogOffsetKafkaStore;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
+import io.eventuate.local.unified.cdc.pipeline.common.DefaultSourceTableNameResolver;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.DebeziumOffsetStoreFactory;
 import org.apache.curator.RetryPolicy;
@@ -24,10 +25,13 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
         EventuateKafkaConsumerConfigurationProperties.class})
 public class CommonCdcPipelineConfiguration {
-
   @Bean
-  public SourceTableNameSupplier sourceTableNameSupplier() {
-    return new SourceTableNameSupplier("events");
+  public DefaultSourceTableNameResolver defaultSourceTableNameResolver() {
+    return pipelineType -> {
+      if ("eventuate-local".equals(pipelineType) || "default".equals(pipelineType)) return "events";
+
+      throw new RuntimeException(String.format("Unknown pipeline type '%s'", pipelineType));
+    };
   }
 
   @Bean

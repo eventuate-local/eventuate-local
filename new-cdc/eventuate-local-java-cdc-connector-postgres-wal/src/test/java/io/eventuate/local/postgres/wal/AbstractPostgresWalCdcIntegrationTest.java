@@ -5,7 +5,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import org.junit.Test;

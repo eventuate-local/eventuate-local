@@ -11,6 +11,7 @@ import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.test.util.AbstractCdcTest;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.testutil.CustomDBCreator;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

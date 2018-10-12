@@ -2,9 +2,9 @@ package io.eventuate.local.unified.cdc.pipeline;
 
 import io.eventuate.local.common.BinlogEntryReader;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.SourceTableNameSupplier;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.CdcPipeline;
+import io.eventuate.local.unified.cdc.pipeline.common.DefaultSourceTableNameResolver;
 import io.eventuate.local.unified.cdc.pipeline.common.PropertyReader;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
@@ -57,7 +57,7 @@ public class CdcPipelineConfigurator {
   private BinlogEntryReaderProvider binlogEntryReaderProvider;
 
   @Autowired
-  private SourceTableNameSupplier sourceTableNameSupplier;
+  private DefaultSourceTableNameResolver defaultSourceTableNameResolver;
 
   @PostConstruct
   public void initialize() {
@@ -103,7 +103,7 @@ public class CdcPipelineConfigurator {
     cdcPipelineProperties.validate();
 
     if (cdcPipelineProperties.getSourceTableName() == null) {
-      cdcPipelineProperties.setSourceTableName(sourceTableNameSupplier.getSourceTableName());
+      cdcPipelineProperties.setSourceTableName(defaultSourceTableNameResolver.resolve(cdcPipelineProperties.getType()));
     }
 
     CdcPipeline cdcPipeline = createCdcPipeline(cdcPipelineProperties);
@@ -124,7 +124,6 @@ public class CdcPipelineConfigurator {
     BinlogEntryReader binlogEntryReader = defaultCdcPipelineReaderFactory.create(cdcDefaultPipelineReaderProperties);
 
     binlogEntryReaderProvider.addReader(cdcDefaultPipelineReaderProperties.getName(),
-            cdcDefaultPipelineReaderProperties.getType(),
             binlogEntryReader);
   }
 
@@ -150,7 +149,6 @@ public class CdcPipelineConfigurator {
     exactCdcPipelineReaderProperties.validate();
 
     binlogEntryReaderProvider.addReader(cdcPipelineReaderProperties.getName(),
-            cdcPipelineReaderProperties.getType(),
             ((CdcPipelineReaderFactory)cdcPipelineReaderFactory).create(exactCdcPipelineReaderProperties));
   }
 

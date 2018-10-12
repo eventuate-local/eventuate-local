@@ -8,11 +8,9 @@ import java.util.Map;
 public class BinlogEntryReaderProvider {
 
   private Map<String, BinlogEntryReader> clients = new HashMap<>();
-  private Map<String, String> readerTypeByName = new HashMap<>();
 
-  public void addReader(String name, String type, BinlogEntryReader reader) {
+  public void addReader(String name, BinlogEntryReader reader) {
     clients.put(name, reader);
-    readerTypeByName.put(name, type);
   }
 
   public BinlogEntryReader getReader(String name) {

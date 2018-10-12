@@ -9,6 +9,7 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.testutil.SqlScriptEditor;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;

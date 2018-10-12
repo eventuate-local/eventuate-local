@@ -3,16 +3,13 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.DuplicatePublishingDetector;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
-import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.testutil.SqlScriptEditor;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -21,7 +18,9 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import javax.sql.DataSource;
 import java.util.stream.Collectors;
@@ -49,7 +48,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  @Profile("PostgresWal")
   public PostgresWalClient postgresWalClient(@Value("${spring.datasource.url}") String dbUrl,
                                              @Value("${spring.datasource.username}") String dbUserName,
                                              @Value("${spring.datasource.password}") String dbPassword,
@@ -71,23 +69,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             offsetStore);
   }
 
-  @Bean
-  @Profile("PostgresWal")
-  @Primary
-  public OffsetStore databaseOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                           EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                           EventuateKafkaProducer eventuateKafkaProducer,
-                                                           EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-
-    return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
-            eventuateConfigurationProperties.getMySqlBinLogClientName(),
-            eventuateKafkaProducer,
-            eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties);
-  }
 
   @Bean
-  @Profile("PostgresWal")
   public CdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducerFactory dataProducerFactory,
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,

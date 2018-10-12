@@ -11,8 +11,9 @@ import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.test.util.AbstractCdcTest;
-import org.junit.Test;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.testutil.CustomDBCreator;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -31,7 +32,7 @@ import static org.junit.Assert.fail;
 public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcTest {
 
   @Value("${spring.datasource.url}")
-  private String dataSourceURL;
+  private String dataSourceUrl;
 
   @Autowired
   private EventuateConfigurationProperties eventuateConfigurationProperties;
@@ -53,13 +54,12 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   @Autowired
   private JdbcTemplate jdbcTemplate;
 
-
   @Test
   public void shouldGetEvents() throws InterruptedException {
     try {
       BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-      addBinlogEntryHandler(publishedEvents::add);
+      prepareBinlogEntryHandler(publishedEvents::add);
       mySqlBinaryLogClient.start();
 
       String accountCreatedEventData = generateAccountCreatedEvent();
@@ -90,7 +90,7 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     try {
       BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 
-      addBinlogEntryHandler(publishedEvents::add);
+      prepareBinlogEntryHandler(publishedEvents::add);
       mySqlBinaryLogClient.start();
 
       String accountCreatedEventData = generateAccountCreatedEvent();
@@ -123,7 +123,22 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
     }
   }
 
-  private void addBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
+  private SaveUpdateResult insertEventIntoOtherSchema(String otherSchemaName) {
+    EventuateLocalJdbcAccess eventuateLocalJdbcAccess = new EventuateLocalJdbcAccess(jdbcTemplate, new EventuateSchema(otherSchemaName));
+
+    return eventuateLocalJdbcAccess.save(Account.class.getName(), Collections.singletonList(new EventTypeAndData("Other-" + AccountCreatedEvent.class.getTypeName(), generateAccountCreatedEvent(), Optional.empty())), Optional.empty());
+  }
+
+  private void createOtherSchema(String otherSchemaName) {
+    CustomDBCreator dbCreator = new CustomDBCreator(dataFile, dataSourceUrl, driverClassName, eventuateConfigurationProperties.getDbUserName(), eventuateConfigurationProperties.getDbPassword());
+    dbCreator.create(sqlList -> {
+      sqlList.set(0, sqlList.get(0).replace("create database", "create database if not exists"));
+      for (int i = 0; i < 3; i++) sqlList.set(i, sqlList.get(i).replace("eventuate", otherSchemaName));
+      return sqlList;
+    });
+  }
+
+  protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
             new BinlogEntryToPublishedEventConverter(),
@@ -134,20 +149,4 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
               }
             });
   }
-
-  private SaveUpdateResult insertEventIntoOtherSchema(String otherSchemaName) {
-    EventuateLocalJdbcAccess eventuateLocalJdbcAccess = new EventuateLocalJdbcAccess(jdbcTemplate, new EventuateSchema(otherSchemaName));
-
-    return eventuateLocalJdbcAccess.save(Account.class.getName(), Collections.singletonList(new EventTypeAndData("Other-" + AccountCreatedEvent.class.getTypeName(), generateAccountCreatedEvent(), Optional.empty())), Optional.empty());
-  }
-
-  private void createOtherSchema(String otherSchemaName) {
-    CustomDBCreator dbCreator = new CustomDBCreator(dataFile, dataSourceURL, driverClassName, eventuateConfigurationProperties.getDbUserName(), eventuateConfigurationProperties.getDbPassword());
-    dbCreator.create(sqlList -> {
-      sqlList.set(0, sqlList.get(0).replace("create database", "create database if not exists"));
-      for (int i = 0; i < 3; i++) sqlList.set(i, sqlList.get(i).replace("eventuate", otherSchemaName));
-      return sqlList;
-    });
-  }
-
 }

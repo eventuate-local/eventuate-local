@@ -1,7 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 
 import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.unified.cdc.pipeline.common.DefaultSourceTableNameResolver;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +19,7 @@ public class CdcDefaultPipelinePropertiesConfiguration {
   protected EventuateConfigurationProperties eventuateConfigurationProperties;
 
   @Bean
-  public CdcPipelineProperties cdcPipelineProperties(SourceTableNameSupplier sourceTableNameSupplier) {
+  public CdcPipelineProperties cdcPipelineProperties(DefaultSourceTableNameResolver sourceTableNameResolver) {
     CdcPipelineProperties cdcPipelineProperties = new CdcPipelineProperties();
 
     cdcPipelineProperties.setType("default");
@@ -27,7 +27,7 @@ public class CdcDefaultPipelinePropertiesConfiguration {
     cdcPipelineProperties.setEventuateDatabaseSchema(eventuateDataBaseSchema);
     cdcPipelineProperties.setSourceTableName(Optional
             .ofNullable(eventuateConfigurationProperties.getSourceTableName())
-            .orElse(sourceTableNameSupplier.getSourceTableName()));
+            .orElse(sourceTableNameResolver.resolve("default")));
 
     return cdcPipelineProperties;
   }

@@ -4,7 +4,6 @@ import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
@@ -12,6 +11,7 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -19,7 +19,9 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -52,7 +54,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  @Conditional(MySqlBinlogCondition.class)
   public MySqlBinaryLogClient mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
@@ -76,7 +77,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  @Conditional(MySqlBinlogCondition.class)
   public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema, DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
     return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema);
@@ -96,38 +96,11 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  @Conditional(MySqlBinlogCondition.class)
-  @Primary
-  public OffsetStore databaseOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                              EventuateConfigurationProperties eventuateConfigurationProperties,
-                                              EventuateKafkaProducer eventuateKafkaProducer,
-                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-
-    return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
-            eventuateConfigurationProperties.getMySqlBinLogClientName(),
-            eventuateKafkaProducer,
-            eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties);
-  }
-
-  @Bean
   public PublishingStrategy<PublishedEvent> publishingStrategy() {
     return new PublishedEventPublishingStrategy();
   }
 
   @Bean
-  @Conditional(MySqlBinlogCondition.class)
-  public DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore(EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-
-    return new DebeziumBinlogOffsetKafkaStore(eventuateConfigurationProperties.getOldDbHistoryTopicName(),
-            eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties);
-  }
-
-  @Bean
-  @Conditional(MySqlBinlogCondition.class)
   public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducerFactory dataProducerFactory,
                                                             EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,

@@ -1,14 +1,13 @@
 package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
-import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
+import io.eventuate.local.common.CdcDataPublisher;
+import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
-import io.eventuate.local.db.log.common.OffsetStore;
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.local.test.util.AbstractCdcTest;
-import org.apache.curator.framework.CuratorFramework;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,12 +27,8 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
   @Value("${spring.datasource.password}")
   private String dbPassword;
 
-
   @Autowired
-  private EventuateJdbcAccess eventuateJdbcAccess;
-
-  @Autowired
-  private EventuateConfigurationProperties eventuateConfigurationProperties;
+  private PostgresWalClient postgresWalClient;
 
   @Autowired
   private SourceTableNameSupplier sourceTableNameSupplier;
@@ -41,27 +36,8 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
   @Autowired
   private EventuateSchema eventuateSchema;
 
-  @Autowired
-  private CuratorFramework curatorFramework;
-
-  @Autowired
-  private OffsetStore offsetStore;
-
   @Test
   public void shouldGetEvents() throws InterruptedException{
-    PostgresWalClient postgresWalClient = new PostgresWalClient(dataSourceURL,
-            dbUserName,
-            dbPassword,
-            eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
-            eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
-            eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getPostgresReplicationSlotName(),
-            curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath(),
-            offsetStore);
-
-    EventuateLocalAggregateCrud localAggregateCrud = new EventuateLocalAggregateCrud(eventuateJdbcAccess);
 
     BlockingQueue<PublishedEvent> publishedEvents = new LinkedBlockingDeque<>();
 

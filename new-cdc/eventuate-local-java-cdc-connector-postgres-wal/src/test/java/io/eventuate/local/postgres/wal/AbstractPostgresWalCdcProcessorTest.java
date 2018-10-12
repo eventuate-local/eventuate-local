@@ -4,7 +4,7 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.PublishedEvent;
-import io.eventuate.local.common.SourceTableNameSupplier;
+import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.test.util.CdcProcessorTest;
@@ -29,6 +29,12 @@ public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTe
 
   @Autowired
   private SourceTableNameSupplier sourceTableNameSupplier;
+
+  @Value("${spring.datasource.username}")
+  private String dbUserName;
+
+  @Value("${spring.datasource.password}")
+  private String dbPassword;
 
   @Override
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {

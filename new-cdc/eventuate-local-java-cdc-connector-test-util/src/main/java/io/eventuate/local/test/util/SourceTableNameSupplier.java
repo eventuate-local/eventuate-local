@@ -1,4 +1,4 @@
-package io.eventuate.local.common;
+package io.eventuate.local.test.util;
 
 
 public class SourceTableNameSupplier {

@@ -12,6 +12,7 @@ dependencies {
 
     compile project(":new-cdc:eventuate-local-java-cdc-connector-mysql-binlog")
 
+    testCompile "io.eventuate.client.java:eventuate-client-java-test-util:$eventuateClientVersion"
     testCompile "junit:junit:4.11"
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }

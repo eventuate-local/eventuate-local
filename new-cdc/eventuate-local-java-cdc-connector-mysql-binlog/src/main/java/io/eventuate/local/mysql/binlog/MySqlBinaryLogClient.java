@@ -6,7 +6,10 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.BinlogEntryHandler;
+import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
@@ -125,17 +128,27 @@ public class MySqlBinaryLogClient extends DbLogClient {
     }
   }
 
+  boolean skip = false;
+
   private Optional<BinlogFileOffset> getStartingBinlogFileOffset() {
+    debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
+
     Optional<BinlogFileOffset> binlogFileOffset = offsetStore.getLastBinlogFileOffset();
 
     if (!binlogFileOffset.isPresent()) {
       binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
+      skip = true;
     }
 
     return binlogFileOffset;
   }
 
   private void handleWriteRowsEvent(Event event, Optional<BinlogFileOffset> startingBinlogFileOffset) {
+    if (skip) {
+      skip = false;
+      return;
+    }
+
     logger.debug("Got binlog event {}", event);
     offset = ((EventHeaderV4) event.getHeader()).getPosition();
     WriteRowsEventData eventData = event.getData();

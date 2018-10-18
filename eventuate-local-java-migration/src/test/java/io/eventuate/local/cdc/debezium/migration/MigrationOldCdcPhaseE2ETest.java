@@ -6,6 +6,7 @@ import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.local.java.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
+import io.eventuate.testutil.Eventually;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +40,7 @@ public class MigrationOldCdcPhaseE2ETest {
   private EventuateKafkaAggregateSubscriptions eventuateKafkaAggregateSubscriptions;
 
   boolean received;
+  boolean secondEventFailed;
 
   @Test
   public void test() throws InterruptedException, ExecutionException {
@@ -48,7 +50,7 @@ public class MigrationOldCdcPhaseE2ETest {
 
     for (int i = 0; i < 2; i++) {
       eventuateJdbcEventStore.save(aggregateType,
-              Collections.singletonList(new EventTypeAndData(eventType, "{}", Optional.empty())), Optional.empty());
+              Collections.singletonList(new EventTypeAndData(eventType, String.format("event number: %s", i), Optional.empty())), Optional.empty());
     }
 
     BlockingQueue<Int128> result = new LinkedBlockingDeque<>();
@@ -62,12 +64,15 @@ public class MigrationOldCdcPhaseE2ETest {
                 result.add(se.getId());
                 return CompletableFuture.completedFuture(null);
               } else {
+                secondEventFailed = true;
                 CompletableFuture<?> future = new CompletableFuture<>();
                 future.completeExceptionally(new IllegalStateException());
                 return future;
               }
             }).get();
 
+
+    Eventually.eventually(() -> Assert.assertTrue(secondEventFailed));
 
     Assert.assertNotNull(result.poll(30, TimeUnit.SECONDS));
 

@@ -36,8 +36,12 @@ public class DebeziumBinlogOffsetKafkaStore extends OffsetKafkaStore {
       }
 
       Map<String, Object> valueMap = JSonMapper.fromJson(record.value(), Map.class);
-      Object position = valueMap.get("pos");
-      return new BinlogFileOffset((String)valueMap.get("file"), position instanceof Long ? ((Long) position) : ((Integer) position));
+
+      String file = (String)valueMap.get("file");
+      long position = ((Number)valueMap.get("pos")).longValue();
+      int rowsToSkip = valueMap.containsKey("row") ? ((Number)valueMap.get("row")).intValue() : 0;
+
+      return new BinlogFileOffset(file, position, rowsToSkip);
 
     } catch (Exception e) {
       logger.error(e.getMessage(), e);

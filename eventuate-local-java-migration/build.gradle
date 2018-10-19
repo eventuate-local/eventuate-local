@@ -18,5 +18,10 @@ dependencies {
 }
 
 test {
- forkEvery 1
+    if (System.env['E2EMigrationTest'] != 'true') {
+        exclude '**/MigrationOldCdcPhaseE2ETest**'
+        exclude '**/MigrationNewCdcPhaseE2ETest**'
+    }
+
+    forkEvery 1
 }

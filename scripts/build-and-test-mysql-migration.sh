@@ -2,6 +2,8 @@
 
 . ./scripts/set-env-mysql.sh
 
+export E2EMigrationTest=true
+
 set -e
 
 if [ -z "$DOCKER_COMPOSE" ]; then
@@ -20,6 +22,8 @@ $DOCKER_COMPOSE up --build -d mysql zookeeper kafka
 $DOCKER_COMPOSE up --build -d cdcservice
 
 ./scripts/wait-for-services.sh $DOCKER_HOST_IP 8099
+
+./gradlew :eventuate-local-java-migration:cleanTest
 
 ./gradlew eventuate-local-java-migration:test --tests "io.eventuate.local.cdc.debezium.migration.MigrationOldCdcPhaseE2ETest"
 

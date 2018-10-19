@@ -34,6 +34,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private int connectionTimeoutInMilliseconds;
   private int maxAttemptsForBinlogConnection;
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
+  private int rowsToSkip;
 
   public MySqlBinaryLogClient(String dbUserName,
                               String dbPassword,
@@ -77,6 +78,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
     Optional<BinlogFileOffset> binlogFileOffset = getStartingBinlogFileOffset();
 
     BinlogFileOffset bfo = binlogFileOffset.orElse(new BinlogFileOffset("", 4L));
+    rowsToSkip = bfo.getRowsToSkip();
 
     logger.info("mysql binlog starting offset {}", bfo);
     client.setBinlogFilename(bfo.getBinlogFilename());
@@ -145,6 +147,10 @@ public class MySqlBinaryLogClient extends DbLogClient {
   }
 
   private void handleWriteRowsEvent(Event event, Optional<BinlogFileOffset> startingBinlogFileOffset) {
+    if (rowsToSkip > 0) {
+      rowsToSkip--;
+      return;
+    }
 
     logger.info("Got binlog event {}", event);
     offset = ((EventHeaderV4) event.getHeader()).getPosition();

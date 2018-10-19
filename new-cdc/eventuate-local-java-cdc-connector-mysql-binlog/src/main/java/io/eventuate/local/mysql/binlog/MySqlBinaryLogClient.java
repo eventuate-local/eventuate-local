@@ -6,7 +6,10 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.BinlogEntryHandler;
+import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
@@ -31,6 +34,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private int connectionTimeoutInMilliseconds;
   private int maxAttemptsForBinlogConnection;
   private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
+  private int rowsToSkip;
 
   public MySqlBinaryLogClient(String dbUserName,
                               String dbPassword,
@@ -62,6 +66,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
   @Override
   protected void leaderStart() {
+    logger.info("mysql binlog client started");
+
     stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
@@ -72,8 +78,9 @@ public class MySqlBinaryLogClient extends DbLogClient {
     Optional<BinlogFileOffset> binlogFileOffset = getStartingBinlogFileOffset();
 
     BinlogFileOffset bfo = binlogFileOffset.orElse(new BinlogFileOffset("", 4L));
+    rowsToSkip = bfo.getRowsToSkip();
 
-    logger.debug("Starting with {}", bfo);
+    logger.info("mysql binlog starting offset {}", bfo);
     client.setBinlogFilename(bfo.getBinlogFilename());
     client.setBinlogPosition(bfo.getOffset());
 
@@ -128,17 +135,30 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private Optional<BinlogFileOffset> getStartingBinlogFileOffset() {
     Optional<BinlogFileOffset> binlogFileOffset = offsetStore.getLastBinlogFileOffset();
 
+    logger.info("mysql binlog client received offset from the offset store: {}", binlogFileOffset);
+
     if (!binlogFileOffset.isPresent()) {
+      logger.info("mysql binlog client received empty offset from the offset store, retrieving debezium offset");
       binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
+      logger.info("mysql binlog client received offset from the debezium offset store: {}", binlogFileOffset);
     }
 
     return binlogFileOffset;
   }
 
   private void handleWriteRowsEvent(Event event, Optional<BinlogFileOffset> startingBinlogFileOffset) {
-    logger.debug("Got binlog event {}", event);
+    if (rowsToSkip > 0) {
+      rowsToSkip--;
+      return;
+    }
+
+    logger.info("Got binlog event {}", event);
     offset = ((EventHeaderV4) event.getHeader()).getPosition();
     WriteRowsEventData eventData = event.getData();
+
+    BinlogFileOffset binlogFileOffset = new BinlogFileOffset(binlogFilename, offset);
+    logger.info("mysql binlog client got event with offset {}", binlogFileOffset);
+
     if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
 
       TableMapEventData tableMapEventData = tableMapEventByTableId.get(eventData.getTableId());
@@ -147,6 +167,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
       BinlogEntry entry = extractor.extract(schemaAndTable, eventData, binlogFilename, offset);
 
+
       if (!shouldSkipEntry(startingBinlogFileOffset, entry.getBinlogFileOffset())) {
         binlogEntryHandlers
               .stream()
@@ -154,7 +175,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
               .forEach(binlogEntryHandler -> binlogEntryHandler.publish(entry));
       }
     }
-    offsetStore.save(new BinlogFileOffset(binlogFilename, offset));
+
+    offsetStore.save(binlogFileOffset);
   }
 
   private void connectWithRetriesOnFail() {

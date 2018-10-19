@@ -1,5 +1,5 @@
 zookeeper:
-  image: eventuateio/eventuateio-local-zookeeper:0.10.0
+  build: ./zookeeper
   ports:
     - 2181:2181
     - 2888:2888
@@ -7,7 +7,7 @@ zookeeper:
 
 
 kafka:
-  image: eventuateio/eventuateio-local-kafka:0.10.0
+  build: ./kafka
   ports:
     - 9092:9092
   links:
@@ -18,7 +18,7 @@ kafka:
     - ZOOKEEPER_SERVERS=zookeeper:2181
 
 mysql:
-  image: eventuateio/eventuateio-local-mysql:0.10.0
+  build: ./mysql
   ports:
     - 3306:3306
   environment:
@@ -26,9 +26,8 @@ mysql:
     - MYSQL_USER=mysqluser
     - MYSQL_PASSWORD=mysqlpw
 
-
 cdcservice:
-  image: eventuateio/eventuateio-local-cdc-service:0.10.0
+  image: eventuateio/eventuateio-local-cdc-service:latest
   ports:
     - "8099:8080"
   links:
@@ -45,16 +44,21 @@ cdcservice:
     EVENTUATELOCAL_CDC_DB_USER_NAME: root
     EVENTUATELOCAL_CDC_DB_PASSWORD: rootpassword
 
-# consoleserver:
-#   build: eventuate-local-console/eventuate-local-console-server/docker
-#   links:
-#     - mysql
-#     - zookeeper
-#   ports:
-#     - "8080:8080"
-#   environment:
-#     SPRING_DATASOURCE_URL: jdbc:mysql://mysql/eventuate
-#     SPRING_DATASOURCE_USERNAME: mysqluser
-#     SPRING_DATASOURCE_PASSWORD: mysqlpw
-#     EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
-#     DEBUG: kafka-node:*
+newcdcservice:
+  build: ./new-cdc/eventuate-local-java-cdc-sql-service
+  ports:
+    - "8099:8080"
+  links:
+    - mysql
+    - kafka
+    - zookeeper
+  environment:
+    SPRING_DATASOURCE_URL: jdbc:mysql://mysql/eventuate
+    SPRING_DATASOURCE_USERNAME: mysqluser
+    SPRING_DATASOURCE_PASSWORD: mysqlpw
+    SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver
+    EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
+    EVENTUATELOCAL_CDC_DB_USER_NAME: root
+    EVENTUATELOCAL_CDC_DB_PASSWORD: rootpassword
+    EVENTUATELOCAL_CDC_BINLOG_CLIENT_ID: 1234567890

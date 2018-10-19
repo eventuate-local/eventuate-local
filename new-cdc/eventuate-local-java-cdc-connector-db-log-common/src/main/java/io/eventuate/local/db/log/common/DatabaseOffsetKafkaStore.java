@@ -6,6 +6,8 @@ import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,6 +15,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
+  protected Logger logger = LoggerFactory.getLogger(getClass());
 
   private final String dbLogClientName;
 
@@ -41,6 +44,7 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
 
   @Override
   public synchronized void save(BinlogFileOffset binlogFileOffset) {
+    logger.info("database offset kafka store updated offset to save to {}", binlogFileOffset);
     this.recordToSave = Optional.of(binlogFileOffset);
   }
 

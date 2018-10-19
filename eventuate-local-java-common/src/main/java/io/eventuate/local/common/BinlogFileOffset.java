@@ -7,13 +7,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class BinlogFileOffset {
   private String binlogFilename;
   private long offset;
+  private int rowsToSkip;
 
   public BinlogFileOffset() {
   }
 
   public BinlogFileOffset(String binlogFilename, long offset) {
-   this.binlogFilename = binlogFilename;
-   this.offset = offset;
+   this(binlogFilename, offset, 0);
+  }
+
+  public BinlogFileOffset(String binlogFilename, long offset, int rowsToSkip) {
+    this.binlogFilename = binlogFilename;
+    this.offset = offset;
+    this.rowsToSkip = rowsToSkip;
   }
 
   public String getBinlogFilename() {
@@ -30,6 +36,14 @@ public class BinlogFileOffset {
 
   public void setOffset(long offset) {
     this.offset = offset;
+  }
+
+  public int getRowsToSkip() {
+    return rowsToSkip;
+  }
+
+  public void setRowsToSkip(int rowsToSkip) {
+    this.rowsToSkip = rowsToSkip;
   }
 
   public boolean isSameOrAfter(BinlogFileOffset binlogFileOffset) {

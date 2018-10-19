@@ -2,8 +2,7 @@ package io.eventuate.local.unified.cdc.pipeline.common;
 
 import io.eventuate.local.common.BinlogEntryReader;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class BinlogEntryReaderProvider {
 
@@ -19,6 +18,10 @@ public class BinlogEntryReaderProvider {
 
   public void start() {
     clients.values().forEach(BinlogEntryReader::start);
+  }
+
+  public Collection<BinlogEntryReader> getAllReaders() {
+    return clients.values();
   }
 
   public void stop() {

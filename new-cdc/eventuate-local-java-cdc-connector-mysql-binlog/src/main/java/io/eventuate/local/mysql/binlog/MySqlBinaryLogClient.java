@@ -11,6 +11,7 @@ import io.eventuate.local.common.BinlogEntryHandler;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
+import io.eventuate.local.db.log.common.OffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -33,7 +34,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private MySqlBinlogEntryExtractor extractor;
   private int connectionTimeoutInMilliseconds;
   private int maxAttemptsForBinlogConnection;
-  private DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore;
+  private Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore;
   private int rowsToSkip;
 
   public MySqlBinaryLogClient(String dbUserName,
@@ -47,7 +48,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               CuratorFramework curatorFramework,
                               String leadershipLockPath,
                               OffsetStore offsetStore,
-                              DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+                              Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore) {
 
     super(dbUserName, dbPassword, dataSourceUrl, curatorFramework, leadershipLockPath, offsetStore);
 
@@ -70,7 +71,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
     }
 
     return debeziumBinlogOffsetKafkaStore
-            .getLastBinlogFileOffset()
+            .flatMap(OffsetKafkaStore::getLastBinlogFileOffset)
             .map(MigrationInfo::new);
   }
 
@@ -150,8 +151,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
     if (!binlogFileOffset.isPresent()) {
       logger.info("mysql binlog client received empty offset from the offset store, retrieving debezium offset");
-      binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
-
+      binlogFileOffset = debeziumBinlogOffsetKafkaStore.flatMap(OffsetKafkaStore::getLastBinlogFileOffset);
       logger.info("mysql binlog client received offset from the debezium offset store: {}", binlogFileOffset);
     }
 

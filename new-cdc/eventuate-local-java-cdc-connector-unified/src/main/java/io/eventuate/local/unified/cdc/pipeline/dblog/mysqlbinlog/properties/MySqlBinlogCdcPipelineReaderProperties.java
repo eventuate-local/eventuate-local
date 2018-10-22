@@ -7,7 +7,7 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
   private String cdcDbUserName;
   private String cdcDbPassword;
   private Long binlogClientId = System.currentTimeMillis();
-  private String oldDbHistoryTopicName = "eventuate.local.cdc.my-sql-connector.offset.storage";
+  private String oldDbHistoryTopicName;
 
   public void validate() {
     super.validate();

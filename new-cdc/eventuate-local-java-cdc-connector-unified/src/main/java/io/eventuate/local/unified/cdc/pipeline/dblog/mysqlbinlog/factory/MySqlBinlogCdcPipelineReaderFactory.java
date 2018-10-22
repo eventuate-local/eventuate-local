@@ -10,9 +10,11 @@ import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDbLogCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
+import org.apache.commons.lang.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 
 public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineReaderFactory<MySqlBinlogCdcPipelineReaderProperties, MySqlBinaryLogClient> {
   public static final String TYPE = "mysql-binlog";
@@ -51,6 +53,11 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
   public MySqlBinaryLogClient create(MySqlBinlogCdcPipelineReaderProperties readerProperties) {
     DataSource dataSource = createDataSource(readerProperties);
 
+    Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore =
+            StringUtils.isEmpty(readerProperties.getOldDbHistoryTopicName())
+                    ? Optional.empty()
+                    : Optional.of(debeziumOffsetStoreFactory.create(readerProperties.getOldDbHistoryTopicName()));
+
     return new MySqlBinaryLogClient(readerProperties.getCdcDbUserName(),
             readerProperties.getCdcDbPassword(),
             readerProperties.getDataSourceUrl(),
@@ -65,6 +72,6 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                     dataSource,
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
                     readerProperties.getMySqlBinLogClientName()),
-            debeziumOffsetStoreFactory.create(readerProperties.getOldDbHistoryTopicName()));
+            debeziumBinlogOffsetKafkaStore);
   }
 }

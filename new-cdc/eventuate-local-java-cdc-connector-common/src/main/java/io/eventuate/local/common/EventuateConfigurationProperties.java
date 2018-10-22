@@ -34,7 +34,7 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.leadership.lock.path:#{\"/eventuatelocal/cdc/leader\"}}")
   private String leadershipLockPath;
 
-  @Value("${eventuatelocal.cdc.old.db.history.topic.name:#{\"eventuate.local.cdc.my-sql-connector.offset.storage\"}}")
+  @Value("${eventuatelocal.cdc.old.db.history.topic.name:#{\"\"}}")
   private String oldDbHistoryTopicName;
 
   @Value("${eventuatelocal.cdc.my.sql.bin.log.client.name:#{\"MySqlBinLog\"}}")

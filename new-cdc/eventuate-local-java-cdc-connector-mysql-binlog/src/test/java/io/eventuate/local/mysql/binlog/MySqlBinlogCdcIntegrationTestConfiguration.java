@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 
 @Configuration
 @EnableAutoConfiguration
@@ -73,7 +74,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
             offsetStore,
-            debeziumBinlogOffsetKafkaStore);
+            Optional.of(debeziumBinlogOffsetKafkaStore));
   }
 
   @Bean

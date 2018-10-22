@@ -64,25 +64,14 @@ public class MySqlBinaryLogClient extends DbLogClient {
     return name;
   }
 
-  public MigrationInfo getMigrationInfo() {
-    boolean migration = false;
-
-    Optional<BinlogFileOffset> binlogFileOffset = offsetStore.getLastBinlogFileOffset();
-
-    logger.info("mysql binlog client received offset from the offset store: {}", binlogFileOffset);
-
-    if (!binlogFileOffset.isPresent()) {
-      logger.info("mysql binlog client received empty offset from the offset store, retrieving debezium offset");
-      binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
-
-      if (binlogFileOffset.isPresent()) {
-        migration = true;
-      }
-
-      logger.info("mysql binlog client received offset from the debezium offset store: {}", binlogFileOffset);
+  public Optional<MigrationInfo> getMigrationInfo() {
+    if (offsetStore.getLastBinlogFileOffset().isPresent()) {
+      return Optional.empty();
     }
 
-    return new MigrationInfo(name, binlogFileOffset, migration);
+    return debeziumBinlogOffsetKafkaStore
+            .getLastBinlogFileOffset()
+            .map(MigrationInfo::new);
   }
 
   @Override
@@ -155,7 +144,18 @@ public class MySqlBinaryLogClient extends DbLogClient {
   }
 
   private Optional<BinlogFileOffset> getStartingBinlogFileOffset() {
-    return getMigrationInfo().getBinlogFileOffset();
+    Optional<BinlogFileOffset> binlogFileOffset = offsetStore.getLastBinlogFileOffset();
+
+    logger.info("mysql binlog client received offset from the offset store: {}", binlogFileOffset);
+
+    if (!binlogFileOffset.isPresent()) {
+      logger.info("mysql binlog client received empty offset from the offset store, retrieving debezium offset");
+      binlogFileOffset = debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset();
+
+      logger.info("mysql binlog client received offset from the debezium offset store: {}", binlogFileOffset);
+    }
+
+    return binlogFileOffset;
   }
 
   private void handleWriteRowsEvent(Event event, Optional<BinlogFileOffset> startingBinlogFileOffset) {
@@ -256,40 +256,15 @@ public class MySqlBinaryLogClient extends DbLogClient {
   }
 
   public static class MigrationInfo {
-    private String clientName;
-    private Optional<BinlogFileOffset> binlogFileOffset;
-    private boolean migration;
+    private BinlogFileOffset binlogFileOffset;
 
-    public MigrationInfo(String clientName,
-                         Optional<BinlogFileOffset> binlogFileOffset,
-                         boolean migration) {
+    public MigrationInfo(BinlogFileOffset binlogFileOffset) {
 
-      this.clientName = clientName;
       this.binlogFileOffset = binlogFileOffset;
-      this.migration = migration;
     }
 
-    public String getClientName() {
-      return clientName;
-    }
-
-    public Optional<BinlogFileOffset> getBinlogFileOffset() {
+    public BinlogFileOffset getBinlogFileOffset() {
       return binlogFileOffset;
-    }
-
-    public boolean isMigration() {
-      return migration;
-    }
-
-    @Override
-    public String toString() {
-      if (migration) {
-        return String.format("MySqlBinaryLogClient '%s' received %s from the debezium storage, migration should be performed",
-                clientName, binlogFileOffset.get());
-      } else {
-        return String.format("MySqlBinaryLogClient '%s' received %s from the kafka database offset storage, migration should not be performed",
-                clientName, binlogFileOffset.map(BinlogFileOffset::toString).orElse("empty offset"));
-      }
     }
   }
 }

@@ -21,6 +21,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CdcPipelineConfigurator {
   private Logger logger = LoggerFactory.getLogger(getClass());
@@ -74,46 +75,65 @@ public class CdcPipelineConfigurator {
             })
             .forEach(this::createCdcPipelineReader);
 
-    if (!Boolean.parseBoolean(System.getProperty("dry-run-cdc-migration"))) {
-      Optional
-              .ofNullable(cdcPipelineJsonProperties)
-              .map(propertyReader::convertPropertiesToListOfMaps)
-              .orElseGet(() -> {
-                createStartSaveCdcDefaultPipeline(defaultCdcPipelineProperties);
-                return Collections.emptyList();
-              })
-              .forEach(this::createStartSaveCdcPipeline);
-
-      binlogEntryReaderProvider.start();
-
-      logger.info("Unified cdc pipelines are started");
+    if (Boolean.parseBoolean(System.getProperty("dry-run-cdc-migration"))) {
+      dryRun();
     } else {
-      logger.warn("Unified cdc pipelines are not started, 'dry-run-cdc-migration' option is used");
-
-      List<MySqlBinaryLogClient> clients = binlogEntryReaderProvider
-              .getAllReaders()
-              .stream()
-              .filter(binlogEntryReader -> binlogEntryReader instanceof MySqlBinaryLogClient)
-              .map(binlogEntryReader -> (MySqlBinaryLogClient)binlogEntryReader)
-              .collect(Collectors.toList());
-
-
-      clients.forEach(mySqlBinaryLogClient -> logger.info(mySqlBinaryLogClient.getMigrationInfo().toString()));
-
-      if (clients.isEmpty()) {
-        logger.info("There is no mysql binlog readers, migration information is unavailable.");
-      }
-
-      logger.warn("'dry-run-cdc-migration' option is used, application will be stopped.");
-      System.exit(0);
+      start();
     }
   }
+
 
   @PreDestroy
   public void stop() {
     binlogEntryReaderProvider.stop();
 
     cdcPipelines.forEach(CdcPipeline::stop);
+  }
+
+  private void start() {
+    Optional
+            .ofNullable(cdcPipelineJsonProperties)
+            .map(propertyReader::convertPropertiesToListOfMaps)
+            .orElseGet(() -> {
+              createStartSaveCdcDefaultPipeline(defaultCdcPipelineProperties);
+              return Collections.emptyList();
+            })
+            .forEach(this::createStartSaveCdcPipeline);
+
+    binlogEntryReaderProvider.start();
+
+    logger.info("Unified cdc pipelines are started");
+  }
+
+  private void dryRun() {
+    logger.warn("Unified cdc pipelines are not started, 'dry-run-cdc-migration' option is used");
+
+    List<MySqlBinaryLogClient> clients = binlogEntryReaderProvider
+            .getAllReaders()
+            .stream()
+            .filter(binlogEntryReader -> binlogEntryReader instanceof MySqlBinaryLogClient)
+            .map(binlogEntryReader -> (MySqlBinaryLogClient)binlogEntryReader)
+            .collect(Collectors.toList());
+
+    clients
+            .forEach(client -> {
+              Optional<MySqlBinaryLogClient.MigrationInfo> migrationInfo = client.getMigrationInfo();
+
+              String message = migrationInfo
+                      .map(info -> String.format("MySqlBinaryLogClient '%s' received '%s' from the debezium storage, migration should be performed",
+                              client.getName(), info.getBinlogFileOffset()))
+                      .orElse(String.format("MySqlBinaryLogClient '%s' did not receive offset from the debezium storage, migration should not be performed",
+                              client.getName()));
+
+              logger.info(message);
+            });
+
+    if (clients.isEmpty()) {
+      logger.info("There is no mysql binlog readers, migration information is unavailable.");
+    }
+
+    logger.warn("'dry-run-cdc-migration' option is used, application will be stopped.");
+    System.exit(0);
   }
 
   private void createStartSaveCdcPipeline(Map<String, Object> properties) {

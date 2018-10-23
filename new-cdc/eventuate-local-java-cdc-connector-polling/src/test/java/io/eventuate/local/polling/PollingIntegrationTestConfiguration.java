@@ -8,10 +8,12 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.test.util.SourceTableNameSupplier;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -68,19 +70,22 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDao pollingDao(@Value("${spring.datasource.url}") String dataSourceURL,
+  public PollingDao pollingDao(@Autowired(required = false) MeterRegistry meterRegistry,
+                               @Value("${spring.datasource.url}") String dataSourceURL,
                                EventuateConfigurationProperties eventuateConfigurationProperties,
                                DataSource dataSource,
                                CuratorFramework curatorFramework) {
 
-    return new PollingDao(dataSourceURL,
+    return new PollingDao(meterRegistry,
+            dataSourceURL,
             dataSource,
             eventuateConfigurationProperties.getMaxEventsPerPolling(),
             eventuateConfigurationProperties.getMaxAttemptsForPolling(),
             eventuateConfigurationProperties.getPollingRetryIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
             curatorFramework,
-            eventuateConfigurationProperties.getLeadershipLockPath());
+            eventuateConfigurationProperties.getLeadershipLockPath(),
+            eventuateConfigurationProperties.getBinlogClientId());
   }
 
   @Bean

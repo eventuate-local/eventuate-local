@@ -6,7 +6,6 @@ import org.springframework.util.Assert;
 public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipelineReaderProperties {
   private String cdcDbUserName;
   private String cdcDbPassword;
-  private Long binlogClientId = System.currentTimeMillis();
   private String oldDbHistoryTopicName;
 
   public void validate() {
@@ -29,14 +28,6 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
 
   public void setCdcDbPassword(String cdcDbPassword) {
     this.cdcDbPassword = cdcDbPassword;
-  }
-
-  public Long getBinlogClientId() {
-    return binlogClientId;
-  }
-
-  public void setBinlogClientId(Long binlogClientId) {
-    this.binlogClientId = binlogClientId;
   }
 
   public String getOldDbHistoryTopicName() {

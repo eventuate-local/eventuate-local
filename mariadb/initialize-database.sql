@@ -39,3 +39,8 @@ create table snapshots (
   triggering_events VARCHAR(1000),
   PRIMARY KEY(entity_type, entity_id, entity_version)
 );
+
+create table cdc_monitoring (
+  reader_id BIGINT PRIMARY KEY,
+  last_time BIGINT
+);

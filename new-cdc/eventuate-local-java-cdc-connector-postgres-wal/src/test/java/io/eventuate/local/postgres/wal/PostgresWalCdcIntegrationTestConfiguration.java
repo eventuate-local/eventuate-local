@@ -11,10 +11,12 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.testutil.SqlScriptEditor;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -48,7 +50,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  public PostgresWalClient postgresWalClient(@Value("${spring.datasource.url}") String dbUrl,
+  public PostgresWalClient postgresWalClient(@Autowired(required = false) MeterRegistry meterRegistry,
+                                             @Value("${spring.datasource.url}") String dbUrl,
                                              @Value("${spring.datasource.username}") String dbUserName,
                                              @Value("${spring.datasource.password}") String dbPassword,
                                              DataSource dataSource,
@@ -56,7 +59,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                              CuratorFramework curatorFramework,
                                              OffsetStore offsetStore) {
 
-    return new PostgresWalClient(dbUrl,
+    return new PostgresWalClient(meterRegistry,
+            dbUrl,
             dbUserName,
             dbPassword,
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
@@ -66,7 +70,9 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getPostgresReplicationSlotName(),
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
-            offsetStore);
+            offsetStore,
+            dataSource,
+            eventuateConfigurationProperties.getBinlogClientId());
   }
 
 

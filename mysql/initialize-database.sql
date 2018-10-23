@@ -6,6 +6,7 @@ USE eventuate;
 DROP table IF EXISTS events;
 DROP table IF EXISTS  entities;
 DROP table IF EXISTS  snapshots;
+DROP table IF EXISTS cdc_monitoring;
 
 create table events (
   event_id varchar(1000) PRIMARY KEY,
@@ -38,4 +39,9 @@ create table snapshots (
   snapshot_json VARCHAR(1000) NOT NULL,
   triggering_events VARCHAR(1000),
   PRIMARY KEY(entity_type, entity_id, entity_version)
+);
+
+create table cdc_monitoring (
+  reader_id BIGINT PRIMARY KEY,
+  last_time BIGINT
 );

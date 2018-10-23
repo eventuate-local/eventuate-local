@@ -7,6 +7,7 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
@@ -20,14 +21,15 @@ public abstract class CommonDbLogCdcPipelineReaderFactory<PROPERTIES extends Cdc
   protected OffsetStoreFactory offsetStoreFactory;
 
 
-  public CommonDbLogCdcPipelineReaderFactory(CuratorFramework curatorFramework,
+  public CommonDbLogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+                                             CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                              EventuateKafkaProducer eventuateKafkaProducer,
                                              OffsetStoreFactory offsetStoreFactory) {
 
-    super(curatorFramework, binlogEntryReaderProvider);
+    super(meterRegistry, curatorFramework, binlogEntryReaderProvider);
 
     this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
     this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;

@@ -4,12 +4,14 @@ import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.PGConnection;
 import org.postgresql.PGProperty;
 import org.postgresql.replication.LogSequenceNumber;
 import org.postgresql.replication.PGReplicationStream;
 
+import javax.sql.DataSource;
 import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -29,7 +31,8 @@ public class PostgresWalClient extends DbLogClient {
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
 
-  public PostgresWalClient(String url,
+  public PostgresWalClient(MeterRegistry meterRegistry,
+                           String url,
                            String user,
                            String password,
                            int walIntervalInMilliseconds,
@@ -39,9 +42,11 @@ public class PostgresWalClient extends DbLogClient {
                            String replicationSlotName,
                            CuratorFramework curatorFramework,
                            String leadershipLockPath,
-                           OffsetStore offsetStore) {
+                           OffsetStore offsetStore,
+                           DataSource dataSource,
+                           Long uniqueId) {
 
-    super(user, password, url, curatorFramework, leadershipLockPath, offsetStore);
+    super(meterRegistry, user, password, url, curatorFramework, leadershipLockPath, offsetStore, dataSource, uniqueId);
 
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
@@ -53,6 +58,8 @@ public class PostgresWalClient extends DbLogClient {
 
   @Override
   protected void leaderStart() {
+    super.leaderStart();
+
     stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
@@ -141,13 +148,14 @@ public class PostgresWalClient extends DbLogClient {
                 .map(change -> BinlogEntryWithSchemaAndTable.make(postgresWalBinlogEntryExtractor, change, offset))
                 .collect(Collectors.toList());
 
-          binlogEntryHandlers.forEach(handler ->
-            inserts
+        if (!inserts.isEmpty()) onEventReceived();
+
+        binlogEntryHandlers.forEach(handler ->
+                inserts
                     .stream()
                     .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
                     .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
-                    .forEach(handler::publish)
-          );
+                    .forEach(handler::publish));
       }
 
       offsetStore.save(offset);

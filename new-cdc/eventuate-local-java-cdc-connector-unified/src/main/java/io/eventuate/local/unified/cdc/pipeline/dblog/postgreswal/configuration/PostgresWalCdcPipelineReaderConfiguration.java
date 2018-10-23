@@ -10,7 +10,9 @@ import io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration.Common
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.PostgresWalCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -19,14 +21,16 @@ import org.springframework.context.annotation.Profile;
 public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDefaultPipelineReaderConfiguration {
 
   @Bean("eventuateLocalPostgresWalCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory postgresWalCdcPipelineReaderFactory(CuratorFramework curatorFramework,
+  public CdcPipelineReaderFactory postgresWalCdcPipelineReaderFactory(@Autowired(required = false) MeterRegistry meterRegistry,
+                                                                      CuratorFramework curatorFramework,
                                                                       BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                                       EventuateKafkaProducer eventuateKafkaProducer,
                                                                       OffsetStoreFactory offsetStoreFactory) {
 
-    return new PostgresWalCdcPipelineReaderFactory(curatorFramework,
+    return new PostgresWalCdcPipelineReaderFactory(meterRegistry,
+            curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
@@ -36,14 +40,16 @@ public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
 
   @Profile("PostgresWal")
   @Bean("defaultCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory defaultPostgresWalCdcPipelineReaderFactory(CuratorFramework curatorFramework,
+  public CdcPipelineReaderFactory defaultPostgresWalCdcPipelineReaderFactory(@Autowired(required = false) MeterRegistry meterRegistry,
+                                                                             CuratorFramework curatorFramework,
                                                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                                              EventuateKafkaProducer eventuateKafkaProducer,
                                                                              OffsetStoreFactory offsetStoreFactory) {
 
-    return new PostgresWalCdcPipelineReaderFactory(curatorFramework,
+    return new PostgresWalCdcPipelineReaderFactory(meterRegistry,
+            curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,

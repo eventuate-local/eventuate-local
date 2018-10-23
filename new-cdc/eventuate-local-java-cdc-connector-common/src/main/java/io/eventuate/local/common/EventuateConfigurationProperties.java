@@ -13,7 +13,7 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.db.history.topic.name:#{\"db.history.topic\"}}")
   private String dbHistoryTopicName;
 
-  @Value("${eventuatelocal.cdc.binlog.client.id:#{T(java.lang.System).currentTimeMillis()}}")
+  @Value("${eventuatelocal.cdc.binlog.client.id:#{T(java.lang.System).nanoTime()}}")
   private long binlogClientId;
 
   @Value("${eventuatelocal.cdc.source.table.name:#{null}}")

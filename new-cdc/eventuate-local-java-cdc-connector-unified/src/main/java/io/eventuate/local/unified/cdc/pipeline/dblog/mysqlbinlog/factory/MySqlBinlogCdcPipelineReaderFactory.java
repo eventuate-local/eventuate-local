@@ -10,6 +10,7 @@ import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDbLogCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.lang.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -21,7 +22,8 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
 
   private DebeziumOffsetStoreFactory debeziumOffsetStoreFactory;
 
-  public MySqlBinlogCdcPipelineReaderFactory(CuratorFramework curatorFramework,
+  public MySqlBinlogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+                                             CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
@@ -29,7 +31,8 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                                              OffsetStoreFactory offsetStoreFactory,
                                              DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
-    super(curatorFramework,
+    super(meterRegistry,
+            curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
@@ -58,7 +61,8 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                     ? Optional.empty()
                     : Optional.of(debeziumOffsetStoreFactory.create(readerProperties.getOldDbHistoryTopicName()));
 
-    return new MySqlBinaryLogClient(readerProperties.getCdcDbUserName(),
+    return new MySqlBinaryLogClient(meterRegistry,
+            readerProperties.getCdcDbUserName(),
             readerProperties.getCdcDbPassword(),
             readerProperties.getDataSourceUrl(),
             createDataSource(readerProperties),

@@ -13,6 +13,7 @@ import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
@@ -37,7 +38,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore;
   private int rowsToSkip;
 
-  public MySqlBinaryLogClient(String dbUserName,
+  public MySqlBinaryLogClient(MeterRegistry meterRegistry,
+                              String dbUserName,
                               String dbPassword,
                               String dataSourceUrl,
                               DataSource dataSource,
@@ -50,7 +52,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               OffsetStore offsetStore,
                               Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore) {
 
-    super(dbUserName, dbPassword, dataSourceUrl, curatorFramework, leadershipLockPath, offsetStore);
+    super(meterRegistry, dbUserName, dbPassword, dataSourceUrl, curatorFramework, leadershipLockPath, offsetStore, dataSource, binlogClientUniqueId);
 
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.extractor = new MySqlBinlogEntryExtractor(dataSource);
@@ -77,6 +79,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
   @Override
   protected void leaderStart() {
+    super.leaderStart();
 
     logger.info("mysql binlog client started");
 
@@ -172,6 +175,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
     logger.info("mysql binlog client got event with offset {}", binlogFileOffset);
 
     if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
+
+      onEventReceived();
 
       TableMapEventData tableMapEventData = tableMapEventByTableId.get(eventData.getTableId());
 

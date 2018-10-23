@@ -1,8 +1,10 @@
 package io.eventuate.local.db.log.common;
 
 import io.eventuate.local.common.*;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 
+import javax.sql.DataSource;
 import java.util.Optional;
 
 public abstract class DbLogClient extends BinlogEntryReader {
@@ -15,14 +17,17 @@ public abstract class DbLogClient extends BinlogEntryReader {
   protected OffsetStore offsetStore;
   private boolean checkEntriesForDuplicates;
 
-  public DbLogClient(String dbUserName,
+  public DbLogClient(MeterRegistry meterRegistry,
+                     String dbUserName,
                      String dbPassword,
                      String dataSourceUrl,
                      CuratorFramework curatorFramework,
                      String leadershipLockPath,
-                     OffsetStore offsetStore) {
+                     OffsetStore offsetStore,
+                     DataSource dataSource,
+                     long binlogClientUniqueId) {
 
-    super(curatorFramework, leadershipLockPath, dataSourceUrl);
+    super(meterRegistry, curatorFramework, leadershipLockPath, dataSourceUrl, dataSource, binlogClientUniqueId);
 
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;

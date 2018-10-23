@@ -12,10 +12,12 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.test.util.SourceTableNameSupplier;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -55,7 +57,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  public MySqlBinaryLogClient mySqlBinaryLogClient(@Value("${spring.datasource.url}") String dataSourceURL,
+  public MySqlBinaryLogClient mySqlBinaryLogClient(@Autowired(required = false) MeterRegistry meterRegistry,
+                                                   @Value("${spring.datasource.url}") String dataSourceURL,
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
                                                    CuratorFramework curatorFramework,
@@ -63,6 +66,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
                                                    DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
 
     return new MySqlBinaryLogClient(
+            meterRegistry,
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             dataSourceURL,

@@ -72,7 +72,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getLeadershipLockPath(),
             offsetStore,
             dataSource,
-            eventuateConfigurationProperties.getBinlogClientId());
+            eventuateConfigurationProperties.getBinlogClientId(),
+            eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds());
   }
 
 

@@ -1,6 +1,7 @@
 package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -44,9 +45,19 @@ public class PostgresWalClient extends DbLogClient {
                            String leadershipLockPath,
                            OffsetStore offsetStore,
                            DataSource dataSource,
-                           Long uniqueId) {
+                           long uniqueId,
+                           long replicationLagMeasuringIntervalInMilliseconds) {
 
-    super(meterRegistry, user, password, url, curatorFramework, leadershipLockPath, offsetStore, dataSource, uniqueId);
+    super(meterRegistry,
+            user,
+            password,
+            url,
+            curatorFramework,
+            leadershipLockPath,
+            offsetStore,
+            dataSource,
+            uniqueId,
+            replicationLagMeasuringIntervalInMilliseconds);
 
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
@@ -139,6 +150,8 @@ public class PostgresWalClient extends DbLogClient {
 
       PostgresWalMessage postgresWalMessage = JSonMapper.fromJson(messageString, PostgresWalMessage.class);
 
+      checkMonitoringChange(postgresWalMessage);
+
       BinlogFileOffset offset = new BinlogFileOffset(replicationSlotName, stream.getLastReceiveLSN().asLong());
 
       if (!shouldSkipEntry(binlogFileOffset, offset)) {
@@ -148,7 +161,7 @@ public class PostgresWalClient extends DbLogClient {
                 .map(change -> BinlogEntryWithSchemaAndTable.make(postgresWalBinlogEntryExtractor, change, offset))
                 .collect(Collectors.toList());
 
-        if (!inserts.isEmpty()) onEventReceived();
+        if (!inserts.isEmpty()) onMonitoringEventReceived();
 
         binlogEntryHandlers.forEach(handler ->
                 inserts
@@ -173,6 +186,22 @@ public class PostgresWalClient extends DbLogClient {
     }
 
     stopCountDownLatch.countDown();
+  }
+
+  private void checkMonitoringChange(PostgresWalMessage postgresWalMessage) {
+    Optional<PostgresWalChange> monitoringChange = Arrays
+            .stream(postgresWalMessage.getChange())
+            .filter(change -> {
+              SchemaAndTable expectedSchemaAndTable =
+                      new SchemaAndTable(new EventuateSchema().getEventuateDatabaseSchema(), "cdc_monitoring");
+
+              return expectedSchemaAndTable.equals(new SchemaAndTable(change.getSchema(), change.getTable()));
+            })
+            .findAny();
+
+    if (monitoringChange.isPresent()) {
+      onMonitoringEventReceived();
+    }
   }
 
   private String extractStringFromBuffer(ByteBuffer byteBuffer) {

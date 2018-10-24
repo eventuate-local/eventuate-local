@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,8 +25,6 @@ public abstract class BinlogEntryReader {
   protected DataSource dataSource;
   protected long binlogClientUniqueId;
   private LeaderSelector leaderSelector;
-  private CdcMonitoringDao cdcMonitoringDao;
-  private CdcMonitoringDataPublisher cdcMonitoringDataPublisher = new CdcMonitoringDataPublisher();
 
   public BinlogEntryReader(MeterRegistry meterRegistry,
                            CuratorFramework curatorFramework,
@@ -42,7 +39,6 @@ public abstract class BinlogEntryReader {
     this.dataSourceUrl = dataSourceUrl;
     this.dataSource = dataSource;
     this.binlogClientUniqueId = binlogClientUniqueId;
-    this.cdcMonitoringDao = new CdcMonitoringDao(dataSource, new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA));
   }
 
   public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
@@ -74,73 +70,17 @@ public abstract class BinlogEntryReader {
     binlogEntryHandlers.clear();
   }
 
-  protected void leaderStart() {
-    if (meterRegistry != null) {
-      cdcMonitoringDataPublisher.start();
-    }
-  }
+  protected abstract void leaderStart();
 
   protected void leaderStop() {
     if (!running.compareAndSet(true, false)) {
       return;
     }
 
-    if (meterRegistry != null) {
-      cdcMonitoringDataPublisher.stop();
-    }
-
     try {
       stopCountDownLatch.await();
     } catch (InterruptedException e) {
       logger.error(e.getMessage(), e);
-      return;
-    }
-  }
-
-  protected void onEventReceived() {
-    if (meterRegistry != null) {
-      Optional<Long> lastUpdate = cdcMonitoringDao.selectLastTimeUpdate(binlogClientUniqueId);
-
-      lastUpdate
-              .map(lu -> System.currentTimeMillis() - lu)
-              .ifPresent(lag -> meterRegistry.gauge("eventuate.replication.lag", lag));
-    }
-  }
-
-  private class CdcMonitoringDataPublisher {
-    private volatile boolean run = false;
-    private CountDownLatch countDownLatch;
-
-    public void start() {
-      countDownLatch = new CountDownLatch(1);
-      run = true;
-      publish();
-    }
-
-    public void stop() {
-      run = false;
-      try {
-        countDownLatch.await();
-      } catch (InterruptedException e) {
-        logger.warn(e.getMessage(), e);
-      }
-    }
-
-    private void publish() {
-      new Thread(() -> {
-        while (run) {
-
-          cdcMonitoringDao.update(binlogClientUniqueId);
-
-          try {
-            Thread.sleep(1000);
-          } catch (InterruptedException e) {
-            logger.warn(e.getMessage(), e);
-          }
-        }
-
-        countDownLatch.countDown();
-      }).start();
     }
   }
 }

@@ -78,7 +78,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
             offsetStore,
-            Optional.of(debeziumBinlogOffsetKafkaStore));
+            Optional.of(debeziumBinlogOffsetKafkaStore),
+            eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds());
   }
 
   @Bean

@@ -76,6 +76,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                     dataSource,
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
                     readerProperties.getMySqlBinLogClientName()),
-            debeziumBinlogOffsetKafkaStore);
+            debeziumBinlogOffsetKafkaStore,
+            readerProperties.getReplicationLagMeasuringIntervalInMilliseconds());
   }
 }

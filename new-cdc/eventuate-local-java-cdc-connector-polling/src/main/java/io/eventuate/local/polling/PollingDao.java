@@ -58,8 +58,6 @@ public class PollingDao extends BinlogEntryReader {
 
   @Override
   protected void leaderStart() {
-    super.leaderStart();
-
     stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
@@ -90,8 +88,6 @@ public class PollingDao extends BinlogEntryReader {
     List<Object> ids = new ArrayList<>();
 
     while (sqlRowSet.next()) {
-      onEventReceived();
-
       ids.add(sqlRowSet.getObject(pk));
 
       handler.publish(new BinlogEntry() {

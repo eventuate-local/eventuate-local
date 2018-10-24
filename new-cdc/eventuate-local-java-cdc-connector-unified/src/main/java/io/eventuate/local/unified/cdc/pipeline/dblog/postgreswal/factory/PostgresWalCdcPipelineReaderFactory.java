@@ -67,6 +67,7 @@ public class PostgresWalCdcPipelineReaderFactory
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
                     readerProperties.getMySqlBinLogClientName()),
             dataSource,
-            readerProperties.getBinlogClientId());
+            readerProperties.getBinlogClientId(),
+            readerProperties.getReplicationLagMeasuringIntervalInMilliseconds());
   }
 }

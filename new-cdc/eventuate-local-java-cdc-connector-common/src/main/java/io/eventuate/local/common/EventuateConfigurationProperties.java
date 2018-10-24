@@ -46,6 +46,9 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.max.attempts.for.binlog.connection:#{100}}")
   private int maxAttemptsForBinlogConnection;
 
+  @Value("${eventuatelocal.cdc.replication.lag.measuring.interval.in.milliseconds:#{10000}}")
+  private Long replicationLagMeasuringIntervalInMilliseconds;
+
   private int postgresWalIntervalInMilliseconds = 10;
 
   private int postgresReplicationStatusIntervalInMilliseconds = 1000;
@@ -134,5 +137,9 @@ public class EventuateConfigurationProperties {
 
   public void setPostgresReplicationSlotName(String postgresReplicationSlotName) {
     this.postgresReplicationSlotName = postgresReplicationSlotName;
+  }
+
+  public Long getReplicationLagMeasuringIntervalInMilliseconds() {
+    return replicationLagMeasuringIntervalInMilliseconds;
   }
 }

@@ -31,6 +31,7 @@ public class PostgresWalClient extends DbLogClient {
   private PGReplicationStream stream;
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
+  private long maxOffsetReceived = 0;
 
   public PostgresWalClient(MeterRegistry meterRegistry,
                            String url,
@@ -119,6 +120,8 @@ public class PostgresWalClient extends DbLogClient {
             .flatMap(offset -> Optional.ofNullable(offset.getOffset()).map(LogSequenceNumber::valueOf))
             .orElse(LogSequenceNumber.valueOf("0/0"));
 
+    logger.info("started with offset: {} == {}", lsn, lsn.asLong());
+
     stream = replConnection.getReplicationAPI()
             .replicationStream()
             .logical()
@@ -146,13 +149,28 @@ public class PostgresWalClient extends DbLogClient {
 
       String messageString = extractStringFromBuffer(messageBuffer);
 
-      logger.info("Got message: " + messageString);
+      logger.info("Got message: {}", messageString);
 
       PostgresWalMessage postgresWalMessage = JSonMapper.fromJson(messageString, PostgresWalMessage.class);
 
       checkMonitoringChange(postgresWalMessage);
 
-      BinlogFileOffset offset = new BinlogFileOffset(replicationSlotName, stream.getLastReceiveLSN().asLong());
+      LogSequenceNumber lastReceivedLSN = stream.getLastReceiveLSN();
+
+      logger.info("received offset: {} == {}", lastReceivedLSN, lastReceivedLSN.asLong());
+
+      if (lastReceivedLSN.asLong() > maxOffsetReceived) {
+        maxOffsetReceived = lastReceivedLSN.asLong();
+      }
+
+      BinlogFileOffset offset = new BinlogFileOffset(replicationSlotName, maxOffsetReceived);
+
+      String tables = Arrays
+              .stream(postgresWalMessage.getChange())
+              .map(PostgresWalChange::getTable)
+              .collect(Collectors.joining(",", "tables: ", ""));
+
+      logger.info(tables);
 
       if (!shouldSkipEntry(binlogFileOffset, offset)) {
         List<BinlogEntryWithSchemaAndTable> inserts = Arrays
@@ -160,8 +178,6 @@ public class PostgresWalClient extends DbLogClient {
                 .filter(change -> change.getKind().equals("insert"))
                 .map(change -> BinlogEntryWithSchemaAndTable.make(postgresWalBinlogEntryExtractor, change, offset))
                 .collect(Collectors.toList());
-
-        if (!inserts.isEmpty()) onMonitoringEventReceived();
 
         binlogEntryHandlers.forEach(handler ->
                 inserts
@@ -173,8 +189,8 @@ public class PostgresWalClient extends DbLogClient {
 
       offsetStore.save(offset);
 
-      stream.setAppliedLSN(stream.getLastReceiveLSN());
-      stream.setFlushedLSN(stream.getLastReceiveLSN());
+      stream.setAppliedLSN(LogSequenceNumber.valueOf(maxOffsetReceived));
+      stream.setFlushedLSN(LogSequenceNumber.valueOf(maxOffsetReceived));
     }
 
     try {

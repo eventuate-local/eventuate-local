@@ -10,12 +10,12 @@ public class OffsetStoreMock implements OffsetStore {
   Optional<BinlogFileOffset> binlogFileOffset = Optional.empty();
 
   @Override
-  public Optional<BinlogFileOffset> getLastBinlogFileOffset() {
+  public synchronized Optional<BinlogFileOffset> getLastBinlogFileOffset() {
     return binlogFileOffset;
   }
 
   @Override
-  public void save(BinlogFileOffset binlogFileOffset) {
+  public synchronized void save(BinlogFileOffset binlogFileOffset) {
     this.binlogFileOffset = Optional.ofNullable(binlogFileOffset);
   }
 

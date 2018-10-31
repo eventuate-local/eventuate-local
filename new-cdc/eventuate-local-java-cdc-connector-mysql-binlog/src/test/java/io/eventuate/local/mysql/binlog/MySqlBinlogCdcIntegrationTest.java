@@ -6,7 +6,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {MySqlBinlogCdcIntegrationTestConfiguration.class,
-        OffsetStoreMockConfiguration.class,
-        DebeziumOffsetStoreMockConfiguration.class})
+        OffsetStoreMockConfiguration.class})
 public class MySqlBinlogCdcIntegrationTest extends AbstractMySqlBinlogCdcIntegrationTest {
 }

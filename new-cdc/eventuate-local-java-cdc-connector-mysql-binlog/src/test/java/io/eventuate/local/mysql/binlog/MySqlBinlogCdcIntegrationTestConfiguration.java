@@ -62,8 +62,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
                                                    CuratorFramework curatorFramework,
-                                                   OffsetStore offsetStore,
-                                                   DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore) {
+                                                   OffsetStore offsetStore) {
 
     return new MySqlBinaryLogClient(
             meterRegistry,
@@ -78,7 +77,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
             offsetStore,
-            Optional.of(debeziumBinlogOffsetKafkaStore),
+            Optional.empty(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds());
   }
 

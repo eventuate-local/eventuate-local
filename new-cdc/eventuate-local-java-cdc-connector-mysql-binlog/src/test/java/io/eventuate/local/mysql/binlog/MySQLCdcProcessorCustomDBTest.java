@@ -12,8 +12,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {CustomDBTestConfiguration.class,
         MySqlBinlogCdcIntegrationTestConfiguration.class,
-        OffsetStoreMockConfiguration.class,
-        DebeziumOffsetStoreMockConfiguration.class})
+        OffsetStoreMockConfiguration.class})
 public class MySQLCdcProcessorCustomDBTest extends AbstractMySQLCdcProcessorTest {
 
   @Autowired

@@ -1,6 +1,5 @@
 package io.eventuate.local.mysql.binlog;
 
-import io.eventuate.local.db.log.test.common.OffsetStoreMockConfiguration;
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
 import io.eventuate.local.testutil.SqlScriptEditor;

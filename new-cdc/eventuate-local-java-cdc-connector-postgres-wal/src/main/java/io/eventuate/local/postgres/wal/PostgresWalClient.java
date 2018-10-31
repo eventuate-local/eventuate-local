@@ -47,7 +47,6 @@ public class PostgresWalClient extends DbLogClient {
                            String replicationSlotName,
                            CuratorFramework curatorFramework,
                            String leadershipLockPath,
-                           OffsetStore offsetStore,
                            DataSource dataSource,
                            long uniqueId,
                            long replicationLagMeasuringIntervalInMilliseconds) {
@@ -58,7 +57,6 @@ public class PostgresWalClient extends DbLogClient {
             url,
             curatorFramework,
             leadershipLockPath,
-            offsetStore,
             dataSource,
             uniqueId,
             replicationLagMeasuringIntervalInMilliseconds);

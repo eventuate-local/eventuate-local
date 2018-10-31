@@ -21,6 +21,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
   public static final String TYPE = "mysql-binlog";
 
   private DebeziumOffsetStoreFactory debeziumOffsetStoreFactory;
+  private OffsetStoreFactory offsetStoreFactory;
 
   public MySqlBinlogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
                                              CuratorFramework curatorFramework,
@@ -36,10 +37,10 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer,
-            offsetStoreFactory);
+            eventuateKafkaProducer);
 
     this.debeziumOffsetStoreFactory = debeziumOffsetStoreFactory;
+    this.offsetStoreFactory = offsetStoreFactory;
   }
 
   @Override

@@ -21,7 +21,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CdcPipelineConfigurator {
   private Logger logger = LoggerFactory.getLogger(getClass());

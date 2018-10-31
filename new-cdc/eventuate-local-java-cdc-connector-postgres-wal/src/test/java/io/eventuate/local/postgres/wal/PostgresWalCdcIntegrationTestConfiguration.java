@@ -3,7 +3,6 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -56,8 +55,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                              @Value("${spring.datasource.password}") String dbPassword,
                                              DataSource dataSource,
                                              EventuateConfigurationProperties eventuateConfigurationProperties,
-                                             CuratorFramework curatorFramework,
-                                             OffsetStore offsetStore) {
+                                             CuratorFramework curatorFramework) {
 
     return new PostgresWalClient(meterRegistry,
             dbUrl,
@@ -70,7 +68,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getPostgresReplicationSlotName(),
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
-            offsetStore,
             dataSource,
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds());

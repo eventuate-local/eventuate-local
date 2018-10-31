@@ -10,15 +10,12 @@ import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineRead
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 
-import javax.sql.DataSource;
-
 public abstract class CommonDbLogCdcPipelineReaderFactory<PROPERTIES extends CdcPipelineReaderProperties, READER extends BinlogEntryReader>
         extends CommonCdcPipelineReaderFactory<PROPERTIES, READER> {
 
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
   protected EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
   protected EventuateKafkaProducer eventuateKafkaProducer;
-  protected OffsetStoreFactory offsetStoreFactory;
 
 
   public CommonDbLogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
@@ -26,14 +23,12 @@ public abstract class CommonDbLogCdcPipelineReaderFactory<PROPERTIES extends Cdc
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                             EventuateKafkaProducer eventuateKafkaProducer,
-                                             OffsetStoreFactory offsetStoreFactory) {
+                                             EventuateKafkaProducer eventuateKafkaProducer) {
 
     super(meterRegistry, curatorFramework, binlogEntryReaderProvider);
 
     this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
     this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
-    this.offsetStoreFactory = offsetStoreFactory;
   }
 }

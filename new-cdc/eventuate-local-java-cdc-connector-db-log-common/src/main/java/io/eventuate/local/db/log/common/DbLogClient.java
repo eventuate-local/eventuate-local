@@ -15,7 +15,6 @@ public abstract class DbLogClient extends BinlogEntryReader {
   protected String host;
   protected int port;
   protected String defaultDatabase;
-  protected OffsetStore offsetStore;
   private boolean checkEntriesForDuplicates;
   private CdcMonitoringDataPublisher cdcMonitoringDataPublisher;
 
@@ -25,7 +24,6 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      String dataSourceUrl,
                      CuratorFramework curatorFramework,
                      String leadershipLockPath,
-                     OffsetStore offsetStore,
                      DataSource dataSource,
                      long binlogClientUniqueId,
                      long replicationLagMeasuringIntervalInMilliseconds) {
@@ -35,7 +33,6 @@ public abstract class DbLogClient extends BinlogEntryReader {
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;
     this.dataSourceUrl = dataSourceUrl;
-    this.offsetStore = offsetStore;
 
     JdbcUrl jdbcUrl = JdbcUrlParser.parse(dataSourceUrl);
     host = jdbcUrl.getHost();

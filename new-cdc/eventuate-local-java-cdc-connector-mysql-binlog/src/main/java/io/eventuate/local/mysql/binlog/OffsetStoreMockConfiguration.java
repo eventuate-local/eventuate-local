@@ -1,4 +1,4 @@
-package io.eventuate.local.db.log.test.common;
+package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.local.db.log.common.OffsetStore;
 import org.springframework.context.annotation.Bean;

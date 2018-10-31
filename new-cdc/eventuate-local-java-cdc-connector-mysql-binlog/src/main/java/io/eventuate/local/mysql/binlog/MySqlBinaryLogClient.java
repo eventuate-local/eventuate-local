@@ -38,6 +38,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private int maxAttemptsForBinlogConnection;
   private Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore;
   private int rowsToSkip;
+  private OffsetStore offsetStore;
+
 //  private Optional<Long> cdcMonitoringTableId = Optional.empty();
 
   public MySqlBinaryLogClient(MeterRegistry meterRegistry,
@@ -61,7 +63,6 @@ public class MySqlBinaryLogClient extends DbLogClient {
             dataSourceUrl,
             curatorFramework,
             leadershipLockPath,
-            offsetStore,
             dataSource,
             binlogClientUniqueId,
             replicationLagMeasuringIntervalInMilliseconds);

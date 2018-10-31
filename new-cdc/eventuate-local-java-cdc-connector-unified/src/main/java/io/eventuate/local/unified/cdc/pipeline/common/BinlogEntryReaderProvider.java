@@ -2,7 +2,9 @@ package io.eventuate.local.unified.cdc.pipeline.common;
 
 import io.eventuate.local.common.BinlogEntryReader;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BinlogEntryReaderProvider {
 

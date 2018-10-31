@@ -3,6 +3,7 @@ CREATE SCHEMA eventuate;
 DROP TABLE IF EXISTS eventuate.events CASCADE;
 DROP TABLE IF EXISTS eventuate.entities CASCADE;
 DROP TABLE IF EXISTS eventuate.snapshots CASCADE;
+DROP TABLE IF EXISTS eventuate.cdc_monitoring CASCADE;
 
 CREATE TABLE eventuate.events (
   event_id VARCHAR(1000) PRIMARY KEY,
@@ -35,4 +36,9 @@ CREATE TABLE eventuate.snapshots (
   snapshot_json VARCHAR(1000) NOT NULL,
   triggering_events VARCHAR(1000),
   PRIMARY KEY(entity_type, entity_id, entity_version)
+);
+
+CREATE TABLE eventuate.cdc_monitoring (
+  reader_id BIGINT PRIMARY KEY,
+  last_time BIGINT
 );

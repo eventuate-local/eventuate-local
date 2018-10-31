@@ -13,7 +13,7 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.db.history.topic.name:#{\"db.history.topic\"}}")
   private String dbHistoryTopicName;
 
-  @Value("${eventuatelocal.cdc.binlog.client.id:#{T(java.lang.System).currentTimeMillis()}}")
+  @Value("${eventuatelocal.cdc.binlog.client.id:#{T(java.lang.System).nanoTime()}}")
   private long binlogClientId;
 
   @Value("${eventuatelocal.cdc.source.table.name:#{null}}")
@@ -34,7 +34,7 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.leadership.lock.path:#{\"/eventuatelocal/cdc/leader\"}}")
   private String leadershipLockPath;
 
-  @Value("${eventuatelocal.cdc.old.db.history.topic.name:#{\"eventuate.local.cdc.my-sql-connector.offset.storage\"}}")
+  @Value("${eventuatelocal.cdc.old.db.history.topic.name:#{\"\"}}")
   private String oldDbHistoryTopicName;
 
   @Value("${eventuatelocal.cdc.my.sql.bin.log.client.name:#{\"MySqlBinLog\"}}")
@@ -45,6 +45,9 @@ public class EventuateConfigurationProperties {
 
   @Value("${eventuatelocal.cdc.max.attempts.for.binlog.connection:#{100}}")
   private int maxAttemptsForBinlogConnection;
+
+  @Value("${eventuatelocal.cdc.replication.lag.measuring.interval.in.milliseconds:#{10000}}")
+  private Long replicationLagMeasuringIntervalInMilliseconds;
 
   private int postgresWalIntervalInMilliseconds = 10;
 
@@ -134,5 +137,9 @@ public class EventuateConfigurationProperties {
 
   public void setPostgresReplicationSlotName(String postgresReplicationSlotName) {
     this.postgresReplicationSlotName = postgresReplicationSlotName;
+  }
+
+  public Long getReplicationLagMeasuringIntervalInMilliseconds() {
+    return replicationLagMeasuringIntervalInMilliseconds;
   }
 }

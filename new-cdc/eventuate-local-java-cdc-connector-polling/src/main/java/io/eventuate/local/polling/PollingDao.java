@@ -2,6 +2,7 @@ package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.local.common.*;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -30,16 +31,18 @@ public class PollingDao extends BinlogEntryReader {
   private int pollingIntervalInMilliseconds;
   private Map<SchemaAndTable, String> pkFields = new HashMap<>();
 
-  public PollingDao(String dataSourceUrl,
+  public PollingDao(MeterRegistry meterRegistry,
+                    String dataSourceUrl,
                     DataSource dataSource,
                     int maxEventsPerPolling,
                     int maxAttemptsForPolling,
                     int pollingRetryIntervalInMilliseconds,
                     int pollingIntervalInMilliseconds,
                     CuratorFramework curatorFramework,
-                    String leadershipLockPath) {
+                    String leadershipLockPath,
+                    long uniqueId) {
 
-    super(curatorFramework, leadershipLockPath, dataSourceUrl);
+    super(meterRegistry, curatorFramework, leadershipLockPath, dataSourceUrl, dataSource, uniqueId);
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");

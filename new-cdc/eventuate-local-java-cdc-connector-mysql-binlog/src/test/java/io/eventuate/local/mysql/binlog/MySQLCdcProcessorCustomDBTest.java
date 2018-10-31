@@ -1,6 +1,5 @@
 package io.eventuate.local.mysql.binlog;
 
-import io.eventuate.local.db.log.test.common.OffsetStoreMockConfiguration;
 import io.eventuate.local.testutil.CustomDBCreator;
 import io.eventuate.local.testutil.CustomDBTestConfiguration;
 import io.eventuate.local.testutil.SqlScriptEditor;
@@ -13,8 +12,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {CustomDBTestConfiguration.class,
         MySqlBinlogCdcIntegrationTestConfiguration.class,
-        OffsetStoreMockConfiguration.class,
-        DebeziumOffsetStoreMockConfiguration.class})
+        OffsetStoreMockConfiguration.class})
 public class MySQLCdcProcessorCustomDBTest extends AbstractMySQLCdcProcessorTest {
 
   @Autowired

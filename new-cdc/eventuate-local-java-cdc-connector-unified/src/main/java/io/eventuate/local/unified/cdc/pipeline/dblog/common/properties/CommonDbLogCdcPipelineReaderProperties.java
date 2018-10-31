@@ -7,6 +7,7 @@ public abstract class CommonDbLogCdcPipelineReaderProperties extends CdcPipeline
   private String dbHistoryTopicName = "db.history.topic";
   private Integer binlogConnectionTimeoutInMilliseconds = 5000;
   private Integer maxAttemptsForBinlogConnection = 100;
+  private Long replicationLagMeasuringIntervalInMilliseconds = 10000L;
 
   public String getMySqlBinLogClientName() {
     return mySqlBinLogClientName;
@@ -38,5 +39,13 @@ public abstract class CommonDbLogCdcPipelineReaderProperties extends CdcPipeline
 
   public void setMaxAttemptsForBinlogConnection(Integer maxAttemptsForBinlogConnection) {
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
+  }
+
+  public Long getReplicationLagMeasuringIntervalInMilliseconds() {
+    return replicationLagMeasuringIntervalInMilliseconds;
+  }
+
+  public void setReplicationLagMeasuringIntervalInMilliseconds(Long replicationLagMeasuringIntervalInMilliseconds) {
+    this.replicationLagMeasuringIntervalInMilliseconds = replicationLagMeasuringIntervalInMilliseconds;
   }
 }

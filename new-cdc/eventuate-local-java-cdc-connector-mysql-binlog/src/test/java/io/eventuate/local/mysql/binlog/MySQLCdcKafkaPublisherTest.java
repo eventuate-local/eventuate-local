@@ -2,7 +2,6 @@ package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.db.log.test.common.AbstractDbLogBasedCdcKafkaPublisherTest;
-import io.eventuate.local.db.log.test.common.KafkaOffsetStoreConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;

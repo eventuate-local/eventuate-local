@@ -1,6 +1,9 @@
 package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.DuplicatePublishingDetector;
+import io.eventuate.local.common.EventuateConfigurationProperties;
+import io.eventuate.local.common.EventuateLocalZookeperConfigurationProperties;
+import io.eventuate.local.common.PublishingFilter;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;

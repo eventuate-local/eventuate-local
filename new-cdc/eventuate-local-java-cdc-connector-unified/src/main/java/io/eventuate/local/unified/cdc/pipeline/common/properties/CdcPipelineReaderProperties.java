@@ -14,6 +14,8 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
   private String dataSourcePassword;
   private String dataSourceDriverClassName;
   private String leadershipLockPath;
+  private Long binlogClientId = System.nanoTime();
+
 
   @Override
   public void validate() {
@@ -80,6 +82,14 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
 
   public void setDataSourceDriverClassName(String dataSourceDriverClassName) {
     this.dataSourceDriverClassName = dataSourceDriverClassName;
+  }
+
+  public Long getBinlogClientId() {
+    return binlogClientId;
+  }
+
+  public void setBinlogClientId(Long binlogClientId) {
+    this.binlogClientId = binlogClientId;
   }
 
   @Override

@@ -2,7 +2,8 @@ package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.*;
+import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -17,7 +18,10 @@ import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -31,7 +35,6 @@ public class PostgresWalClient extends DbLogClient {
   private PGReplicationStream stream;
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
-  private long maxOffsetReceived = 0;
 
   public PostgresWalClient(MeterRegistry meterRegistry,
                            String url,
@@ -75,14 +78,14 @@ public class PostgresWalClient extends DbLogClient {
     stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
-    connectWithRetriesOnFail(offsetStore.getLastBinlogFileOffset());
+    connectWithRetriesOnFail();
   }
 
-  private void connectWithRetriesOnFail(Optional<BinlogFileOffset> binlogFileOffset) {
+  private void connectWithRetriesOnFail() {
     for (int i = 1;; i++) {
       try {
         logger.info("trying to connect to postgres wal");
-        connectAndRun(binlogFileOffset);
+        connectAndRun();
         break;
       } catch (SQLException e) {
         logger.error("connection to posgres wal failed");
@@ -102,7 +105,7 @@ public class PostgresWalClient extends DbLogClient {
     }
   }
 
-  private void connectAndRun(Optional<BinlogFileOffset> binlogFileOffset)
+  private void connectAndRun()
           throws SQLException {
 
     Properties props = new Properties();
@@ -116,22 +119,18 @@ public class PostgresWalClient extends DbLogClient {
 
     PGConnection replConnection = connection.unwrap(PGConnection.class);
 
-    LogSequenceNumber lsn = binlogFileOffset
-            .flatMap(offset -> Optional.ofNullable(offset.getOffset()).map(LogSequenceNumber::valueOf))
-            .orElse(LogSequenceNumber.valueOf("0/0"));
-
-    logger.info("started with offset: {} == {}", lsn, lsn.asLong());
-
     stream = replConnection.getReplicationAPI()
             .replicationStream()
             .logical()
             .withSlotName(replicationSlotName)
             .withSlotOption("include-xids", false)
+            .withSlotOption("write-in-chunks", true)
             .withStatusInterval(replicationStatusIntervalInMilliseconds, TimeUnit.MILLISECONDS)
-            .withStartPosition(lsn)
             .start();
 
     logger.info("connection to postgres wal succeed");
+
+    StringBuilder messageBuilder = new StringBuilder();
 
     while (running.get()) {
       ByteBuffer messageBuffer = stream.readPending();
@@ -147,7 +146,16 @@ public class PostgresWalClient extends DbLogClient {
         continue;
       }
 
-      String messageString = extractStringFromBuffer(messageBuffer);
+      String messagePart = extractStringFromBuffer(messageBuffer);
+
+      messageBuilder.append(messagePart);
+
+      if (!"]}".equals(messagePart)) {
+        continue;
+      }
+
+      String messageString = messageBuilder.toString();
+      messageBuilder.setLength(0);
 
       logger.info("Got message: {}", messageString);
 
@@ -159,38 +167,23 @@ public class PostgresWalClient extends DbLogClient {
 
       logger.info("received offset: {} == {}", lastReceivedLSN, lastReceivedLSN.asLong());
 
-      if (lastReceivedLSN.asLong() > maxOffsetReceived) {
-        maxOffsetReceived = lastReceivedLSN.asLong();
-      }
-
-      BinlogFileOffset offset = new BinlogFileOffset(replicationSlotName, maxOffsetReceived);
-
-      String tables = Arrays
+      List<BinlogEntryWithSchemaAndTable> inserts = Arrays
               .stream(postgresWalMessage.getChange())
-              .map(PostgresWalChange::getTable)
-              .collect(Collectors.joining(",", "tables: ", ""));
+              .filter(change -> change.getKind().equals("insert"))
+              .map(change -> BinlogEntryWithSchemaAndTable.make(postgresWalBinlogEntryExtractor, change))
+              .collect(Collectors.toList());
 
-      logger.info(tables);
+      binlogEntryHandlers.forEach(handler ->
+              inserts
+                  .stream()
+                  .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
+                  .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
+                  .forEach(handler::publish));
 
-      if (!shouldSkipEntry(binlogFileOffset, offset)) {
-        List<BinlogEntryWithSchemaAndTable> inserts = Arrays
-                .stream(postgresWalMessage.getChange())
-                .filter(change -> change.getKind().equals("insert"))
-                .map(change -> BinlogEntryWithSchemaAndTable.make(postgresWalBinlogEntryExtractor, change, offset))
-                .collect(Collectors.toList());
 
-        binlogEntryHandlers.forEach(handler ->
-                inserts
-                    .stream()
-                    .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
-                    .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
-                    .forEach(handler::publish));
-      }
-
-      offsetStore.save(offset);
-
-      stream.setAppliedLSN(LogSequenceNumber.valueOf(maxOffsetReceived));
-      stream.setFlushedLSN(LogSequenceNumber.valueOf(maxOffsetReceived));
+      stream.setAppliedLSN(stream.getLastReceiveLSN());
+      stream.setFlushedLSN(stream.getLastReceiveLSN());
+      stream.forceUpdateStatus();
     }
 
     try {
@@ -246,9 +239,9 @@ public class PostgresWalClient extends DbLogClient {
     }
 
     public static BinlogEntryWithSchemaAndTable make(PostgresWalBinlogEntryExtractor extractor,
-                                                     PostgresWalChange change,
-                                                     BinlogFileOffset offset) {
-      BinlogEntry binlogEntry = extractor.extract(change, offset);
+                                                     PostgresWalChange change) {
+
+      BinlogEntry binlogEntry = extractor.extract(change);
       SchemaAndTable schemaAndTable = new SchemaAndTable(change.getSchema(), change.getTable());
       return new BinlogEntryWithSchemaAndTable(binlogEntry, schemaAndTable);
     }

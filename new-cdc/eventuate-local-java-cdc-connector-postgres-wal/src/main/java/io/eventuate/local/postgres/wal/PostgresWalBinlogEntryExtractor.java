@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 public class PostgresWalBinlogEntryExtractor {
 
-  public BinlogEntry extract(PostgresWalChange postgresWalChange, BinlogFileOffset offset) {
+  public BinlogEntry extract(PostgresWalChange postgresWalChange) {
     List<String> columns = Arrays.asList(postgresWalChange.getColumnnames());
     List<String> values = Arrays.asList(postgresWalChange.getColumnvalues());
 
@@ -21,7 +21,7 @@ public class PostgresWalBinlogEntryExtractor {
 
       @Override
       public BinlogFileOffset getBinlogFileOffset() {
-        return offset;
+        return new BinlogFileOffset();
       }
     };
   }

@@ -21,7 +21,7 @@ public class PostgresWalBinlogEntryExtractor {
 
       @Override
       public BinlogFileOffset getBinlogFileOffset() {
-        return new BinlogFileOffset();
+        return null;
       }
     };
   }

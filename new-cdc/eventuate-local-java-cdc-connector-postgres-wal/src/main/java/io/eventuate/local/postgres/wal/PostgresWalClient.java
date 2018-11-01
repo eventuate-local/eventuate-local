@@ -207,7 +207,7 @@ public class PostgresWalClient extends DbLogClient {
             .findAny();
 
     if (monitoringChange.isPresent()) {
-      onMonitoringEventReceived();
+      onMonitoringEventReceived(0); //TODO: extract timestamp from cdc_monitoring
     }
   }
 

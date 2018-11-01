@@ -80,7 +80,7 @@ public abstract class DbLogClient extends BinlogEntryReader {
     cdcMonitoringDataPublisher.stop();
   }
 
-  protected void onMonitoringEventReceived() {
-    cdcMonitoringDataPublisher.eventReceived();
+  protected void onMonitoringEventReceived(long timestamp) {
+    cdcMonitoringDataPublisher.eventReceived(timestamp);
   }
 }

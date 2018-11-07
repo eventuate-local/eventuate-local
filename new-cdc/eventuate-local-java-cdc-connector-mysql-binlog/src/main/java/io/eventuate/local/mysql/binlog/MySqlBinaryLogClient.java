@@ -130,6 +130,9 @@ public class MySqlBinaryLogClient extends DbLogClient {
         case TABLE_MAP: {
           TableMapEventData tableMapEvent = event.getData();
 
+          cdcMonitoringTableId = Optional.empty();
+          tableMapEventByTableId.clear();
+
           SchemaAndTable schemaAndTable = new SchemaAndTable(tableMapEvent.getDatabase(), tableMapEvent.getTable());
 
           if (schemaAndTable.equals(MONITORING_SCHEMA_AND_TABLE)) {

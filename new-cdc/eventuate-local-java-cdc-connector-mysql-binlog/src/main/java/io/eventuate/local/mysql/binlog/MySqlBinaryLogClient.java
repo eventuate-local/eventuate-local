@@ -132,10 +132,6 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
           SchemaAndTable schemaAndTable = new SchemaAndTable(tableMapEvent.getDatabase(), tableMapEvent.getTable());
 
-          if (tableMapEventByTableId.containsKey(tableMapEvent.getTableId())) {
-            break;
-          }
-
           if (schemaAndTable.equals(MONITORING_SCHEMA_AND_TABLE)) {
             cdcMonitoringTableId = Optional.of(tableMapEvent.getTableId());
             tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);

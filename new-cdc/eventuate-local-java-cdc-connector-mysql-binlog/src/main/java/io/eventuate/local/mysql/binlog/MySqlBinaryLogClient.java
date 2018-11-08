@@ -66,7 +66,9 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               String leadershipLockPath,
                               OffsetStore offsetStore,
                               Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore,
-                              long replicationLagMeasuringIntervalInMilliseconds) {
+                              long replicationLagMeasuringIntervalInMilliseconds,
+                              int monitoringRetryIntervalInMilliseconds,
+                              int monitoringRetryAttempts) {
 
     super(meterRegistry,
             dbUserName,
@@ -76,7 +78,9 @@ public class MySqlBinaryLogClient extends DbLogClient {
             leadershipLockPath,
             dataSource,
             binlogClientUniqueId,
-            replicationLagMeasuringIntervalInMilliseconds);
+            replicationLagMeasuringIntervalInMilliseconds,
+            monitoringRetryIntervalInMilliseconds,
+            monitoringRetryAttempts);
 
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.extractor = new MySqlBinlogEntryExtractor(dataSource);

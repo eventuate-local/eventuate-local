@@ -51,15 +51,17 @@ public class PostgresWalCdcPipelineReaderFactory
             readerProperties.getDataSourceUrl(),
             readerProperties.getDataSourceUserName(),
             readerProperties.getDataSourcePassword(),
+            readerProperties.getPostgresWalIntervalInMilliseconds(),
             readerProperties.getBinlogConnectionTimeoutInMilliseconds(),
             readerProperties.getMaxAttemptsForBinlogConnection(),
-            readerProperties.getPostgresWalIntervalInMilliseconds(),
             readerProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             readerProperties.getPostgresReplicationSlotName(),
             curatorFramework,
             readerProperties.getLeadershipLockPath(),
             dataSource,
             readerProperties.getBinlogClientId(),
-            readerProperties.getReplicationLagMeasuringIntervalInMilliseconds());
+            readerProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
+            readerProperties.getMonitoringRetryIntervalInMilliseconds(),
+            readerProperties.getMonitoringRetryAttempts());
   }
 }

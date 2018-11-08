@@ -49,7 +49,13 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.replication.lag.measuring.interval.in.milliseconds:#{10000}}")
   private Long replicationLagMeasuringIntervalInMilliseconds;
 
-  private int postgresWalIntervalInMilliseconds = 10;
+  @Value("${eventuatelocal.cdc.monitoring.retry.interval.in.milliseconds:#{500}}")
+  private int monitoringRetryIntervalInMilliseconds;
+
+  @Value("${eventuatelocal.cdc.monitoring.retry.attempts:#{1000}}")
+  private int monitoringRetryAttempts;
+
+  private int postgresWalIntervalInMilliseconds = 500;
 
   private int postgresReplicationStatusIntervalInMilliseconds = 1000;
 
@@ -141,5 +147,13 @@ public class EventuateConfigurationProperties {
 
   public Long getReplicationLagMeasuringIntervalInMilliseconds() {
     return replicationLagMeasuringIntervalInMilliseconds;
+  }
+
+  public int getMonitoringRetryIntervalInMilliseconds() {
+    return monitoringRetryIntervalInMilliseconds;
+  }
+
+  public int getMonitoringRetryAttempts() {
+    return monitoringRetryAttempts;
   }
 }

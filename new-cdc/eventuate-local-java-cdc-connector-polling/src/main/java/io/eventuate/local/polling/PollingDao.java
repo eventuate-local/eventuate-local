@@ -82,8 +82,10 @@ public class PollingDao extends BinlogEntryReader {
     String findEventsQuery = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
             handler.getQualifiedTable(), PUBLISHED_FIELD, pk);
 
-    SqlRowSet sqlRowSet = handleConnectionLost(() ->
-      namedParameterJdbcTemplate.queryForRowSet(findEventsQuery, ImmutableMap.of("limit", maxEventsPerPolling)));
+    SqlRowSet sqlRowSet = DaoUtils.handleConnectionLost(maxAttemptsForPolling,
+            pollingRetryIntervalInMilliseconds,
+            () -> namedParameterJdbcTemplate.queryForRowSet(findEventsQuery, ImmutableMap.of("limit", maxEventsPerPolling)),
+            this::onInterrupted);
 
     List<Object> ids = new ArrayList<>();
 
@@ -107,7 +109,11 @@ public class PollingDao extends BinlogEntryReader {
             handler.getQualifiedTable(), PUBLISHED_FIELD, pk);
 
     if (!ids.isEmpty()) {
-      handleConnectionLost(() -> namedParameterJdbcTemplate.update(markEventsAsReadQuery, ImmutableMap.of("ids", ids)));
+
+      DaoUtils.handleConnectionLost(maxAttemptsForPolling,
+              pollingRetryIntervalInMilliseconds,
+              () -> namedParameterJdbcTemplate.update(markEventsAsReadQuery, ImmutableMap.of("ids", ids)),
+              this::onInterrupted);
     }
   }
 
@@ -118,7 +124,10 @@ public class PollingDao extends BinlogEntryReader {
       return pkFields.get(schemaAndTable);
     }
 
-    String pk = handleConnectionLost(() -> queryPrimaryKey(handler));
+    String pk = DaoUtils.handleConnectionLost(maxAttemptsForPolling,
+            pollingRetryIntervalInMilliseconds,
+            () -> queryPrimaryKey(handler),
+            this::onInterrupted);
 
     pkFields.put(schemaAndTable, pk);
 
@@ -157,33 +166,8 @@ public class PollingDao extends BinlogEntryReader {
     return pk;
   }
 
-  private <T> T handleConnectionLost(Callable<T> query) {
-    int attempt = 0;
-
-    while(true) {
-      try {
-        T result = query.call();
-        if (attempt > 0)
-          logger.info("Reconnected to database");
-        return result;
-      } catch (DataAccessResourceFailureException | PSQLException e) {
-
-        logger.error(String.format("Could not access database %s - retrying in %s milliseconds", e.getMessage(), pollingRetryIntervalInMilliseconds), e);
-
-        if (attempt++ >= maxAttemptsForPolling) {
-          throw new RuntimeException(e);
-        }
-
-        try {
-          Thread.sleep(pollingRetryIntervalInMilliseconds);
-        } catch (InterruptedException ie) {
-          running.set(false);
-          stopCountDownLatch.countDown();
-          throw new RuntimeException(ie);
-        }
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
+  private void onInterrupted() {
+    running.set(false);
+    stopCountDownLatch.countDown();
   }
 }

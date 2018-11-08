@@ -49,7 +49,9 @@ public class PostgresWalClient extends DbLogClient {
                            String leadershipLockPath,
                            DataSource dataSource,
                            long uniqueId,
-                           long replicationLagMeasuringIntervalInMilliseconds) {
+                           long replicationLagMeasuringIntervalInMilliseconds,
+                           int monitoringRetryIntervalInMilliseconds,
+                           int monitoringRetryAttempts) {
 
     super(meterRegistry,
             user,
@@ -59,7 +61,9 @@ public class PostgresWalClient extends DbLogClient {
             leadershipLockPath,
             dataSource,
             uniqueId,
-            replicationLagMeasuringIntervalInMilliseconds);
+            replicationLagMeasuringIntervalInMilliseconds,
+            monitoringRetryIntervalInMilliseconds,
+            monitoringRetryAttempts);
 
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
@@ -206,9 +210,10 @@ public class PostgresWalClient extends DbLogClient {
             })
             .findAny();
 
-    if (monitoringChange.isPresent()) {
-      onMonitoringEventReceived(0); //TODO: extract timestamp from cdc_monitoring
-    }
+    monitoringChange.ifPresent(change -> {
+      int index = Arrays.asList(change.getColumnnames()).indexOf("last_time");
+      onMonitoringEventReceived(Long.parseLong(change.getColumnvalues()[index]));
+    });
   }
 
   private String extractStringFromBuffer(ByteBuffer byteBuffer) {

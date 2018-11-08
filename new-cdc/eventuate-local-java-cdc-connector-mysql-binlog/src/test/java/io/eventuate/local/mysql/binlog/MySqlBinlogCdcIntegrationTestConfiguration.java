@@ -78,7 +78,9 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getLeadershipLockPath(),
             offsetStore,
             Optional.empty(),
-            eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds());
+            eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getMonitoringRetryAttempts());
   }
 
   @Bean

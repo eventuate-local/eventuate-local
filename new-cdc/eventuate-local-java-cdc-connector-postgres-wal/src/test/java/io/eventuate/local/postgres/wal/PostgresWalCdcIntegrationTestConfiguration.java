@@ -61,16 +61,18 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             dbUrl,
             dbUserName,
             dbPassword,
+            eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
-            eventuateConfigurationProperties.getPostgresWalIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationSlotName(),
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
             dataSource,
             eventuateConfigurationProperties.getBinlogClientId(),
-            eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds());
+            eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getMonitoringRetryAttempts());
   }
 
 

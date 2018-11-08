@@ -26,7 +26,9 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      String leadershipLockPath,
                      DataSource dataSource,
                      long binlogClientUniqueId,
-                     long replicationLagMeasuringIntervalInMilliseconds) {
+                     long replicationLagMeasuringIntervalInMilliseconds,
+                     int monitoringRetryIntervalInMilliseconds,
+                     int monitoringRetryAttempts) {
 
     super(meterRegistry, curatorFramework, leadershipLockPath, dataSourceUrl, dataSource, binlogClientUniqueId);
 
@@ -39,7 +41,10 @@ public abstract class DbLogClient extends BinlogEntryReader {
     port = jdbcUrl.getPort();
     defaultDatabase = jdbcUrl.getDatabase();
 
-    CdcMonitoringDao cdcMonitoringDao = new CdcMonitoringDao(dataSource, new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA));
+    CdcMonitoringDao cdcMonitoringDao = new CdcMonitoringDao(dataSource,
+            new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
+            monitoringRetryIntervalInMilliseconds,
+            monitoringRetryAttempts);
 
     cdcMonitoringDataPublisher = new CdcMonitoringDataPublisher(meterRegistry,
             cdcMonitoringDao,
@@ -80,7 +85,7 @@ public abstract class DbLogClient extends BinlogEntryReader {
     cdcMonitoringDataPublisher.stop();
   }
 
-  protected void onMonitoringEventReceived() {
-    cdcMonitoringDataPublisher.eventReceived();
+  protected void onMonitoringEventReceived(long timestamp) {
+    cdcMonitoringDataPublisher.eventReceived(timestamp);
   }
 }

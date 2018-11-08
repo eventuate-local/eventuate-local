@@ -51,7 +51,7 @@ public class CdcMonitoringDataPublisher {
     }, 0, replicationLagMeasuringIntervalInMilliseconds);
   }
 
-  public void eventReceived() {
+  public void eventReceived(long timestamp) {
 
     if (meterRegistry == null) {
       return;
@@ -59,11 +59,7 @@ public class CdcMonitoringDataPublisher {
 
     lastTimeEventReceived = System.currentTimeMillis();
 
-    Optional<Long> lastUpdate = cdcMonitoringDao.selectLastTimeUpdate(binlogClientId);
-
-    lastUpdate
-            .map(lu -> System.currentTimeMillis() - lu)
-            .ifPresent(lag::set);
+    lag.set(System.currentTimeMillis() - timestamp);
   }
 
   public void stop() {

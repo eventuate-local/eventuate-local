@@ -212,13 +212,12 @@ public class MySqlBinaryLogClient extends DbLogClient {
     }
 
     logger.info("Got binlog event {}", event);
-    offset = ((EventHeaderV4) event.getHeader()).getPosition();
     WriteRowsEventData eventData = event.getData();
 
-    BinlogFileOffset binlogFileOffset = new BinlogFileOffset(binlogFilename, offset);
-    logger.info("mysql binlog client got event with offset {}", binlogFileOffset);
+    offset = extractOffset(event);
+    logger.info("mysql binlog client got event with offset {}/{}", binlogFilename, offset);
 
-    if (cdcMonitoringTableId.map(id -> id.equals(eventData.getTableId())).orElse(false)) {
+    if (isCdcMonitoringTableId(eventData.getTableId())) {
       onMonitoringEventReceived(timestampExtractor.extract(MONITORING_SCHEMA_AND_TABLE, eventData));
     }
     else if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
@@ -237,7 +236,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
       }
     }
 
-    offsetStore.save(binlogFileOffset);
+    saveOffset(event);
   }
 
   private void handleUpdateRowsEvent(Event event) {
@@ -247,13 +246,25 @@ public class MySqlBinaryLogClient extends DbLogClient {
       return;
     }
 
-    if (cdcMonitoringTableId.map(id -> id.equals(eventData.getTableId())).orElse(false)) {
+    if (isCdcMonitoringTableId(eventData.getTableId())) {
       onMonitoringEventReceived(timestampExtractor.extract(MONITORING_SCHEMA_AND_TABLE, eventData));
     }
 
-    offset = ((EventHeaderV4) event.getHeader()).getPosition();
+    saveOffset(event);
+  }
+
+  private long extractOffset(Event event) {
+    return ((EventHeaderV4) event.getHeader()).getPosition();
+  }
+
+  private void saveOffset(Event event) {
+    offset = extractOffset(event);
     BinlogFileOffset binlogFileOffset = new BinlogFileOffset(binlogFilename, offset);
     offsetStore.save(binlogFileOffset);
+  }
+
+  private boolean isCdcMonitoringTableId(Long id) {
+    return cdcMonitoringTableId.map(id::equals).orElse(false);
   }
 
   private void connectWithRetriesOnFail() {

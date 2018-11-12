@@ -11,4 +11,4 @@ scrape_configs:
     metrics_path: '/prometheus'
     scrape_interval: 3s
     static_configs:
-    - targets: ["172.17.0.1:8099"]
+    - targets: ["newcdcservice:8080"]

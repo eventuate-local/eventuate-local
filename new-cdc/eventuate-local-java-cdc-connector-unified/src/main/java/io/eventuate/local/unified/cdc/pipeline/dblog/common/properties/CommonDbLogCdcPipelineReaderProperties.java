@@ -8,8 +8,7 @@ public abstract class CommonDbLogCdcPipelineReaderProperties extends CdcPipeline
   private Integer binlogConnectionTimeoutInMilliseconds = 5000;
   private Integer maxAttemptsForBinlogConnection = 100;
   private Long replicationLagMeasuringIntervalInMilliseconds = 10000L;
-  private int monitoringRetryIntervalInMilliseconds = 500;
-  private int monitoringRetryAttempts = 1000;
+
 
   public String getMySqlBinLogClientName() {
     return mySqlBinLogClientName;
@@ -49,13 +48,5 @@ public abstract class CommonDbLogCdcPipelineReaderProperties extends CdcPipeline
 
   public void setReplicationLagMeasuringIntervalInMilliseconds(Long replicationLagMeasuringIntervalInMilliseconds) {
     this.replicationLagMeasuringIntervalInMilliseconds = replicationLagMeasuringIntervalInMilliseconds;
-  }
-
-  public int getMonitoringRetryIntervalInMilliseconds() {
-    return monitoringRetryIntervalInMilliseconds;
-  }
-
-  public int getMonitoringRetryAttempts() {
-    return monitoringRetryAttempts;
   }
 }

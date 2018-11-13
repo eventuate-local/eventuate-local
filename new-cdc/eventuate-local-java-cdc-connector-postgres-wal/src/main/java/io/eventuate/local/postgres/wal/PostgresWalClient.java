@@ -5,7 +5,6 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
-import io.eventuate.local.db.log.common.OffsetStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.PGConnection;
@@ -90,6 +89,7 @@ public class PostgresWalClient extends DbLogClient {
         connectAndRun();
         break;
       } catch (SQLException e) {
+        dbLogMetrics.onDisconnected();
         logger.error("connection to posgres wal failed");
         if (i == maxAttemptsForBinlogConnection) {
           logger.error("connection attempts exceeded");
@@ -130,6 +130,8 @@ public class PostgresWalClient extends DbLogClient {
             .withStatusInterval(replicationStatusIntervalInMilliseconds, TimeUnit.MILLISECONDS)
             .start();
 
+    dbLogMetrics.onConnected();
+
     logger.info("connection to postgres wal succeed");
 
     StringBuilder messageBuilder = new StringBuilder();
@@ -156,6 +158,8 @@ public class PostgresWalClient extends DbLogClient {
         continue;
       }
 
+      dbLogMetrics.onBinlogEntryProcessed();
+
       String messageString = messageBuilder.toString();
       messageBuilder.setLength(0);
 
@@ -180,7 +184,10 @@ public class PostgresWalClient extends DbLogClient {
                   .stream()
                   .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
                   .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
-                  .forEach(handler::publish));
+                  .forEach(e -> {
+                    handler.publish(e);
+                    commonCdcMetrics.onMessageProcessed();
+                  }));
 
 
       stream.setAppliedLSN(stream.getLastReceiveLSN());
@@ -212,7 +219,8 @@ public class PostgresWalClient extends DbLogClient {
 
     monitoringChange.ifPresent(change -> {
       int index = Arrays.asList(change.getColumnnames()).indexOf("last_time");
-      onMonitoringEventReceived(Long.parseLong(change.getColumnvalues()[index]));
+      dbLogMetrics.onLagMeasurementEventReceived(Long.parseLong(change.getColumnvalues()[index]));
+      commonCdcMetrics.onMessageProcessed();
     });
   }
 

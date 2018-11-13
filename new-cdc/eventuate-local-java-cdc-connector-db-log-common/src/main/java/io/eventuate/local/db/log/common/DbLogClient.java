@@ -1,6 +1,5 @@
 package io.eventuate.local.db.log.common;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
@@ -15,8 +14,8 @@ public abstract class DbLogClient extends BinlogEntryReader {
   protected String host;
   protected int port;
   protected String defaultDatabase;
+  protected DbLogMetrics dbLogMetrics;
   private boolean checkEntriesForDuplicates;
-  private CdcMonitoringDataPublisher cdcMonitoringDataPublisher;
 
   public DbLogClient(MeterRegistry meterRegistry,
                      String dbUserName,
@@ -30,7 +29,19 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      int monitoringRetryIntervalInMilliseconds,
                      int monitoringRetryAttempts) {
 
-    super(meterRegistry, curatorFramework, leadershipLockPath, dataSourceUrl, dataSource, binlogClientUniqueId);
+    super(meterRegistry,
+            curatorFramework,
+            leadershipLockPath,
+            dataSourceUrl,
+            dataSource,
+            binlogClientUniqueId,
+            monitoringRetryIntervalInMilliseconds,
+            monitoringRetryAttempts);
+
+    dbLogMetrics = new DbLogMetrics(meterRegistry,
+            cdcMonitoringDao,
+            binlogClientUniqueId,
+            replicationLagMeasuringIntervalInMilliseconds);
 
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;
@@ -40,16 +51,6 @@ public abstract class DbLogClient extends BinlogEntryReader {
     host = jdbcUrl.getHost();
     port = jdbcUrl.getPort();
     defaultDatabase = jdbcUrl.getDatabase();
-
-    CdcMonitoringDao cdcMonitoringDao = new CdcMonitoringDao(dataSource,
-            new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
-            monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts);
-
-    cdcMonitoringDataPublisher = new CdcMonitoringDataPublisher(meterRegistry,
-            cdcMonitoringDao,
-            binlogClientUniqueId,
-            replicationLagMeasuringIntervalInMilliseconds);
   }
 
   @Override
@@ -76,16 +77,13 @@ public abstract class DbLogClient extends BinlogEntryReader {
 
   @Override
   protected void leaderStart() {
-    cdcMonitoringDataPublisher.start();
+    super.leaderStart();
+    dbLogMetrics.start();
   }
 
+  @Override
   protected void leaderStop() {
     super.leaderStop();
-
-    cdcMonitoringDataPublisher.stop();
-  }
-
-  protected void onMonitoringEventReceived(long timestamp) {
-    cdcMonitoringDataPublisher.eventReceived(timestamp);
+    dbLogMetrics.stop();
   }
 }

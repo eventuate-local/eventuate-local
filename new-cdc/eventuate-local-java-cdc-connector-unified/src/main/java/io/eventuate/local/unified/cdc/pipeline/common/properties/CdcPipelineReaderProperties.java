@@ -15,7 +15,8 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
   private String dataSourceDriverClassName;
   private String leadershipLockPath;
   private Long binlogClientId = System.nanoTime();
-
+  private int monitoringRetryIntervalInMilliseconds = 500;
+  private int monitoringRetryAttempts = 1000;
 
   @Override
   public void validate() {
@@ -90,6 +91,15 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
 
   public void setBinlogClientId(Long binlogClientId) {
     this.binlogClientId = binlogClientId;
+  }
+
+
+  public int getMonitoringRetryIntervalInMilliseconds() {
+    return monitoringRetryIntervalInMilliseconds;
+  }
+
+  public int getMonitoringRetryAttempts() {
+    return monitoringRetryAttempts;
   }
 
   @Override

@@ -85,7 +85,9 @@ public class PollingIntegrationTestConfiguration {
             eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
-            eventuateConfigurationProperties.getBinlogClientId());
+            eventuateConfigurationProperties.getBinlogClientId(),
+            eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getMonitoringRetryAttempts());
   }
 
   @Bean

@@ -24,6 +24,8 @@ public abstract class BinlogEntryReader {
   protected String dataSourceUrl;
   protected DataSource dataSource;
   protected long binlogClientUniqueId;
+  protected CdcMonitoringDao cdcMonitoringDao;
+  protected CommonCdcMetrics commonCdcMetrics;
   private LeaderSelector leaderSelector;
 
   public BinlogEntryReader(MeterRegistry meterRegistry,
@@ -31,7 +33,9 @@ public abstract class BinlogEntryReader {
                            String leadershipLockPath,
                            String dataSourceUrl,
                            DataSource dataSource,
-                           long binlogClientUniqueId) {
+                           long binlogClientUniqueId,
+                           int monitoringRetryIntervalInMilliseconds,
+                           int monitoringRetryAttempts) {
 
     this.meterRegistry = meterRegistry;
     this.curatorFramework = curatorFramework;
@@ -39,6 +43,14 @@ public abstract class BinlogEntryReader {
     this.dataSourceUrl = dataSourceUrl;
     this.dataSource = dataSource;
     this.binlogClientUniqueId = binlogClientUniqueId;
+
+
+    cdcMonitoringDao = new CdcMonitoringDao(dataSource,
+            new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
+            monitoringRetryIntervalInMilliseconds,
+            monitoringRetryAttempts);
+
+    commonCdcMetrics = new CommonCdcMetrics(meterRegistry, binlogClientUniqueId);
   }
 
   public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
@@ -70,7 +82,9 @@ public abstract class BinlogEntryReader {
     binlogEntryHandlers.clear();
   }
 
-  protected abstract void leaderStart();
+  protected void leaderStart() {
+    commonCdcMetrics.setLeader(true);
+  }
 
   protected void leaderStop() {
     if (!running.compareAndSet(true, false)) {
@@ -82,5 +96,6 @@ public abstract class BinlogEntryReader {
     } catch (InterruptedException e) {
       logger.error(e.getMessage(), e);
     }
+    commonCdcMetrics.setLeader(false);
   }
 }

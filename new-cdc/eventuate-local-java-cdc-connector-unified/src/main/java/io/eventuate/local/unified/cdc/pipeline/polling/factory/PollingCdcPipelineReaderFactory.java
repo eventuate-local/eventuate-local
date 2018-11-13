@@ -35,7 +35,9 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
             readerProperties.getPollingIntervalInMilliseconds(),
             curatorFramework,
             readerProperties.getLeadershipLockPath(),
-            readerProperties.getBinlogClientId());
+            readerProperties.getBinlogClientId(),
+            readerProperties.getMonitoringRetryIntervalInMilliseconds(),
+            readerProperties.getMonitoringRetryAttempts());
   }
 
   @Override

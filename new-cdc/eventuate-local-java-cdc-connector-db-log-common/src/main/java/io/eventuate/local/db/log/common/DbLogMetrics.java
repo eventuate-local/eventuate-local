@@ -1,17 +1,13 @@
-package io.eventuate.local.common;
+package io.eventuate.local.db.log.common;
 
+import io.eventuate.local.common.CdcMonitoringDao;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class CdcMonitoringDataPublisher {
-  protected Logger logger = LoggerFactory.getLogger(getClass());
-
+public class DbLogMetrics {
   private Timer eventPublisherTimer;
 
   private MeterRegistry meterRegistry;
@@ -21,12 +17,15 @@ public class CdcMonitoringDataPublisher {
 
   private AtomicLong lag = new AtomicLong(-1);
   private Number lagAge = new AtomicLong(-1);
+  private AtomicInteger connected = new AtomicInteger(0);
+  private AtomicLong connectionAttempts = new AtomicLong(0);
+
   private long lastTimeEventReceived = -1;
 
-  public CdcMonitoringDataPublisher(MeterRegistry meterRegistry,
-                                    CdcMonitoringDao cdcMonitoringDao,
-                                    long binlogClientId,
-                                    long replicationLagMeasuringIntervalInMilliseconds) {
+  public DbLogMetrics(MeterRegistry meterRegistry,
+                      CdcMonitoringDao cdcMonitoringDao,
+                      long binlogClientId,
+                      long replicationLagMeasuringIntervalInMilliseconds) {
 
     this.meterRegistry = meterRegistry;
     this.cdcMonitoringDao = cdcMonitoringDao;
@@ -41,17 +40,18 @@ public class CdcMonitoringDataPublisher {
       return;
     }
 
-    eventPublisherTimer = new Timer();
-
-    eventPublisherTimer.scheduleAtFixedRate(new TimerTask() {
-      @Override
-      public void run() {
-        cdcMonitoringDao.update(binlogClientId);
-      }
-    }, 0, replicationLagMeasuringIntervalInMilliseconds);
+    initLagMeasurementTimer();
   }
 
-  public void eventReceived(long timestamp) {
+  public void stop() {
+    if (meterRegistry == null) {
+      return;
+    }
+
+    eventPublisherTimer.cancel();
+  }
+
+  public void onLagMeasurementEventReceived(long timestamp) {
 
     if (meterRegistry == null) {
       return;
@@ -62,12 +62,32 @@ public class CdcMonitoringDataPublisher {
     lag.set(System.currentTimeMillis() - timestamp);
   }
 
-  public void stop() {
-    if (meterRegistry == null) {
-      return;
-    }
+  public void onMessageProcessed() {
+    meterRegistry.counter("eventuate.messages.processed." + binlogClientId).increment();
+  }
 
-    eventPublisherTimer.cancel();
+  public void onBinlogEntryProcessed() {
+    meterRegistry.counter("eventuate.binlog.entries.processed." + binlogClientId).increment();
+  }
+
+  public void onConnected() {
+    connected.set(1);
+    meterRegistry.counter("eventuate.connection.attempts." + binlogClientId).increment();
+  }
+
+  public void onDisconnected() {
+    connected.set(0);
+  }
+
+  private void initLagMeasurementTimer() {
+    eventPublisherTimer = new Timer();
+
+    eventPublisherTimer.scheduleAtFixedRate(new TimerTask() {
+      @Override
+      public void run() {
+        cdcMonitoringDao.update(binlogClientId);
+      }
+    }, 0, replicationLagMeasuringIntervalInMilliseconds);
   }
 
   private void initMetrics() {
@@ -100,6 +120,7 @@ public class CdcMonitoringDataPublisher {
 
       meterRegistry.gauge("eventuate.replication.lag.age." + binlogClientId, lagAge);
       meterRegistry.gauge("eventuate.replication.lag." + binlogClientId, lag);
+      meterRegistry.gauge("eventuate.connected.to.database." + binlogClientId, connected);
     }
   }
 }

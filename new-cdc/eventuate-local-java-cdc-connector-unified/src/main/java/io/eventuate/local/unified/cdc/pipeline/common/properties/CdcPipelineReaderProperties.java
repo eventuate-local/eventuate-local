@@ -17,6 +17,7 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
   private Long binlogClientId = System.nanoTime();
   private int monitoringRetryIntervalInMilliseconds = 500;
   private int monitoringRetryAttempts = 1000;
+  private int maxEventIntervalToAssumeReaderHealthy = 60000;
 
   @Override
   public void validate() {
@@ -98,8 +99,24 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
     return monitoringRetryIntervalInMilliseconds;
   }
 
+  public void setMonitoringRetryIntervalInMilliseconds(int monitoringRetryIntervalInMilliseconds) {
+    this.monitoringRetryIntervalInMilliseconds = monitoringRetryIntervalInMilliseconds;
+  }
+
   public int getMonitoringRetryAttempts() {
     return monitoringRetryAttempts;
+  }
+
+  public void setMonitoringRetryAttempts(int monitoringRetryAttempts) {
+    this.monitoringRetryAttempts = monitoringRetryAttempts;
+  }
+
+  public int getMaxEventIntervalToAssumeReaderHealthy() {
+    return maxEventIntervalToAssumeReaderHealthy;
+  }
+
+  public void setMaxEventIntervalToAssumeReaderHealthy(int maxEventIntervalToAssumeReaderHealthy) {
+    this.maxEventIntervalToAssumeReaderHealthy = maxEventIntervalToAssumeReaderHealthy;
   }
 
   @Override

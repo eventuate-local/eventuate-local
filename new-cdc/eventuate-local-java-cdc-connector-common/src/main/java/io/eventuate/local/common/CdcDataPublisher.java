@@ -5,6 +5,7 @@ import io.eventuate.local.java.common.broker.DataProducer;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.apache.zookeeper.Op;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +19,10 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CdcDataPublisher<EVENT extends BinLogEvent> {
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  @Autowired(required = false)
   protected MeterRegistry meterRegistry;
+  protected HealthCheck healthCheck;
+
+  protected Optional<HealthCheck.HealthComponent> healthComponent;
 
   protected PublishingStrategy<EVENT> publishingStrategy;
   protected DataProducerFactory dataProducerFactory;
@@ -33,7 +36,9 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
 
   public CdcDataPublisher(DataProducerFactory dataProducerFactory,
                           PublishingFilter publishingFilter,
-                          PublishingStrategy<EVENT> publishingStrategy) {
+                          PublishingStrategy<EVENT> publishingStrategy,
+                          MeterRegistry meterRegistry,
+                          HealthCheck healthCheck) {
 
     this.dataProducerFactory = dataProducerFactory;
     this.publishingStrategy = publishingStrategy;
@@ -52,6 +57,8 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
   }
 
   public void start() {
+    healthComponent = Optional.ofNullable(healthCheck).map(HealthCheck::getHealthComponent);
+
     logger.debug("Starting CdcDataPublisher");
     producer = dataProducerFactory.create();
     logger.debug("Starting CdcDataPublisher");
@@ -61,6 +68,8 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
     logger.debug("Stopping data producer");
     if (producer != null)
       producer.close();
+
+    healthComponent.ifPresent(healthCheck::returnHealthComponent);
   }
 
   public void handleEvent(EVENT publishedEvent) throws EventuateLocalPublishingException {
@@ -83,6 +92,8 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
                   json
           ).get(10, TimeUnit.SECONDS);
 
+          healthComponent.ifPresent(HealthCheck.HealthComponent::markAsHealthy);
+
           publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> histogramEventAge.ifPresent(x -> x.set(System.currentTimeMillis() - time)));
           meterEventsPublished.ifPresent(Counter::increment);
         } else {
@@ -91,7 +102,9 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
         }
         return;
       } catch (Exception e) {
-        logger.warn("error publishing to " + aggregateTopic, e);
+        String error = "error publishing to " + aggregateTopic;
+        healthComponent.ifPresent(hc -> hc.markAsUnhealthy(error));
+        logger.warn(error, e);
         meterEventsRetries.ifPresent(Counter::increment);
         lastException = e;
 

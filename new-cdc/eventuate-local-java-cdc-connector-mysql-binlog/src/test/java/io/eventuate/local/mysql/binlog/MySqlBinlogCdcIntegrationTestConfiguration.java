@@ -58,6 +58,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   public MySqlBinaryLogClient mySqlBinaryLogClient(@Autowired(required = false) MeterRegistry meterRegistry,
+                                                   @Autowired(required = false) HealthCheck healthCheck,
                                                    @Value("${spring.datasource.url}") String dataSourceURL,
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
@@ -66,6 +67,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
     return new MySqlBinaryLogClient(
             meterRegistry,
+            healthCheck,
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             dataSourceURL,
@@ -80,7 +82,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             Optional.empty(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getMonitoringRetryAttempts());
+            eventuateConfigurationProperties.getMonitoringRetryAttempts(),
+            eventuateConfigurationProperties.getMaxEventIntervalToAssumeReaderHealthy());
   }
 
   @Bean
@@ -115,7 +118,9 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
     return new CdcDataPublisher<>(dataProducerFactory,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
-            publishingStrategy);
+            publishingStrategy,
+            null,
+            null);
   }
 
   @Bean

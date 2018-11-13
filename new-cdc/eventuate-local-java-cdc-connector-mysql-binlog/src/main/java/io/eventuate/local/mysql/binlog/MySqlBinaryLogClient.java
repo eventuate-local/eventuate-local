@@ -7,10 +7,7 @@ import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.google.common.collect.ImmutableSet;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntry;
-import io.eventuate.local.common.BinlogEntryHandler;
-import io.eventuate.local.common.BinlogFileOffset;
-import io.eventuate.local.common.SchemaAndTable;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -52,6 +49,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private Optional<Long> cdcMonitoringTableId = Optional.empty();
 
   public MySqlBinaryLogClient(MeterRegistry meterRegistry,
+                              HealthCheck healthCheck,
                               String dbUserName,
                               String dbPassword,
                               String dataSourceUrl,
@@ -66,9 +64,11 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore,
                               long replicationLagMeasuringIntervalInMilliseconds,
                               int monitoringRetryIntervalInMilliseconds,
-                              int monitoringRetryAttempts) {
+                              int monitoringRetryAttempts,
+                              int maxEventIntervalToAssumeReaderHealthy) {
 
     super(meterRegistry,
+            healthCheck,
             dbUserName,
             dbPassword,
             dataSourceUrl,
@@ -78,7 +78,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
             binlogClientUniqueId,
             replicationLagMeasuringIntervalInMilliseconds,
             monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts);
+            monitoringRetryAttempts,
+            maxEventIntervalToAssumeReaderHealthy);
 
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.extractor = new MySqlBinlogEntryExtractor(dataSource);
@@ -235,7 +236,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
       }
     }
 
-    commonCdcMetrics.onMessageProcessed();
+    onEventReceived();
     saveOffset(event);
   }
 
@@ -250,7 +251,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
       dbLogMetrics.onLagMeasurementEventReceived(timestampExtractor.extract(MONITORING_SCHEMA_AND_TABLE, eventData));
     }
 
-    commonCdcMetrics.onMessageProcessed();
+    onEventReceived();
     saveOffset(event);
   }
 
@@ -273,11 +274,11 @@ public class MySqlBinaryLogClient extends DbLogClient {
       try {
         logger.info("trying to connect to mysql binlog");
         client.connect(connectionTimeoutInMilliseconds);
-        dbLogMetrics.onConnected();
+        onConnected();
         logger.info("connection to mysql binlog succeed");
         break;
       } catch (TimeoutException | IOException e) {
-        dbLogMetrics.onDisconnected();
+        onDisconnected();
         logger.error("connection to mysql binlog failed");
         if (i == maxAttemptsForBinlogConnection) {
           logger.error("connection attempts exceeded");

@@ -3,6 +3,7 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -36,6 +37,7 @@ public class PostgresWalClient extends DbLogClient {
   private String replicationSlotName;
 
   public PostgresWalClient(MeterRegistry meterRegistry,
+                           HealthCheck healthCheck,
                            String url,
                            String user,
                            String password,
@@ -50,9 +52,11 @@ public class PostgresWalClient extends DbLogClient {
                            long uniqueId,
                            long replicationLagMeasuringIntervalInMilliseconds,
                            int monitoringRetryIntervalInMilliseconds,
-                           int monitoringRetryAttempts) {
+                           int monitoringRetryAttempts,
+                           int maxEventIntervalToAssumeReaderHealthy) {
 
     super(meterRegistry,
+            healthCheck,
             user,
             password,
             url,
@@ -62,7 +66,8 @@ public class PostgresWalClient extends DbLogClient {
             uniqueId,
             replicationLagMeasuringIntervalInMilliseconds,
             monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts);
+            monitoringRetryAttempts,
+            maxEventIntervalToAssumeReaderHealthy);
 
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
@@ -89,7 +94,7 @@ public class PostgresWalClient extends DbLogClient {
         connectAndRun();
         break;
       } catch (SQLException e) {
-        dbLogMetrics.onDisconnected();
+        onDisconnected();
         logger.error("connection to posgres wal failed");
         if (i == maxAttemptsForBinlogConnection) {
           logger.error("connection attempts exceeded");
@@ -130,7 +135,7 @@ public class PostgresWalClient extends DbLogClient {
             .withStatusInterval(replicationStatusIntervalInMilliseconds, TimeUnit.MILLISECONDS)
             .start();
 
-    dbLogMetrics.onConnected();
+    onConnected();
 
     logger.info("connection to postgres wal succeed");
 
@@ -186,7 +191,7 @@ public class PostgresWalClient extends DbLogClient {
                   .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
                   .forEach(e -> {
                     handler.publish(e);
-                    commonCdcMetrics.onMessageProcessed();
+                    onEventReceived();
                   }));
 
 
@@ -220,7 +225,7 @@ public class PostgresWalClient extends DbLogClient {
     monitoringChange.ifPresent(change -> {
       int index = Arrays.asList(change.getColumnnames()).indexOf("last_time");
       dbLogMetrics.onLagMeasurementEventReceived(Long.parseLong(change.getColumnvalues()[index]));
-      commonCdcMetrics.onMessageProcessed();
+      onEventReceived();
     });
   }
 

@@ -1,5 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.factory;
 
+import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.polling.PollingDao;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
@@ -12,10 +13,11 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
   public static final String TYPE = "polling";
 
   public PollingCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+                                         HealthCheck healthCheck,
                                          CuratorFramework curatorFramework,
                                          BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
-    super(meterRegistry, curatorFramework, binlogEntryReaderProvider);
+    super(meterRegistry, healthCheck, curatorFramework, binlogEntryReaderProvider);
   }
 
   @Override
@@ -27,6 +29,7 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
   public PollingDao create(PollingPipelineReaderProperties readerProperties) {
 
     return new PollingDao(meterRegistry,
+            healthCheck,
             readerProperties.getDataSourceUrl(),
             createDataSource(readerProperties),
             readerProperties.getMaxEventsPerPolling(),
@@ -37,7 +40,8 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
             readerProperties.getLeadershipLockPath(),
             readerProperties.getBinlogClientId(),
             readerProperties.getMonitoringRetryIntervalInMilliseconds(),
-            readerProperties.getMonitoringRetryAttempts());
+            readerProperties.getMonitoringRetryAttempts(),
+            readerProperties.getMaxEventIntervalToAssumeReaderHealthy());
   }
 
   @Override

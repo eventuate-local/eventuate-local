@@ -44,7 +44,9 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
             new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
                     EventuateKafkaProducerConfigurationProperties.empty()),
             duplicatePublishingDetector,
-            publishingStrategy);
+            publishingStrategy,
+            null,
+            null);
   }
 
   @Override

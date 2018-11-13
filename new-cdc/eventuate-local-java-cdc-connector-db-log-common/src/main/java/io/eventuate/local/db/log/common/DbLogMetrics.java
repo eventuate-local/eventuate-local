@@ -18,7 +18,6 @@ public class DbLogMetrics {
   private AtomicLong lag = new AtomicLong(-1);
   private Number lagAge = new AtomicLong(-1);
   private AtomicInteger connected = new AtomicInteger(0);
-  private AtomicLong connectionAttempts = new AtomicLong(0);
 
   private long lastTimeEventReceived = -1;
 
@@ -63,16 +62,16 @@ public class DbLogMetrics {
   }
 
   public void onMessageProcessed() {
-    meterRegistry.counter("eventuate.messages.processed." + binlogClientId).increment();
+    meterRegistry.counter(makeMetricName("eventuate.messages.processed")).increment();
   }
 
   public void onBinlogEntryProcessed() {
-    meterRegistry.counter("eventuate.binlog.entries.processed." + binlogClientId).increment();
+    meterRegistry.counter(makeMetricName("eventuate.binlog.entries.processed")).increment();
   }
 
   public void onConnected() {
     connected.set(1);
-    meterRegistry.counter("eventuate.connection.attempts." + binlogClientId).increment();
+    meterRegistry.counter(makeMetricName("eventuate.connection.attempts")).increment();
   }
 
   public void onDisconnected() {
@@ -118,9 +117,13 @@ public class DbLogMetrics {
         }
       };
 
-      meterRegistry.gauge("eventuate.replication.lag.age." + binlogClientId, lagAge);
-      meterRegistry.gauge("eventuate.replication.lag." + binlogClientId, lag);
-      meterRegistry.gauge("eventuate.connected.to.database." + binlogClientId, connected);
+      meterRegistry.gauge(makeMetricName("eventuate.replication.lag.age"), lagAge);
+      meterRegistry.gauge(makeMetricName("eventuate.replication.lag"), lag);
+      meterRegistry.gauge(makeMetricName("eventuate.connected.to.database"), connected);
     }
+  }
+
+  private String makeMetricName(String metric) {
+    return String.format("%s.%s", metric, binlogClientId);
   }
 }

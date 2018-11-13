@@ -24,7 +24,7 @@ public class CommonCdcMetrics {
   }
 
   public void onMessageProcessed() {
-    meterRegistry.counter("eventuate.messages.processed." + binlogClientId).increment();
+    meterRegistry.counter(makeMetricName("eventuate.messages.processed")).increment();
   }
 
   private void initMetrics() {
@@ -32,6 +32,10 @@ public class CommonCdcMetrics {
       return;
     }
 
-    meterRegistry.gauge("eventuate.leader." + binlogClientId, leader);
+    meterRegistry.gauge(makeMetricName("eventuate.leader"), leader);
+  }
+
+  private String makeMetricName(String metric) {
+    return String.format("%s.%s", metric, binlogClientId);
   }
 }

@@ -3,18 +3,13 @@ package io.eventuate.local.common;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CommonCdcMetrics {
-  private MeterRegistry meterRegistry;
-  private long binlogClientId;
-
+public class CommonCdcMetrics extends AbstractCdcMetrics {
   private AtomicInteger leader = new AtomicInteger(0);
-
 
   public CommonCdcMetrics(MeterRegistry meterRegistry,
                           long binlogClientId) {
 
-    this.meterRegistry = meterRegistry;
-    this.binlogClientId = binlogClientId;
+    super(meterRegistry, binlogClientId);
 
     initMetrics();
   }
@@ -24,7 +19,7 @@ public class CommonCdcMetrics {
   }
 
   public void onMessageProcessed() {
-    meterRegistry.counter(makeMetricName("eventuate.messages.processed")).increment();
+    meterRegistry.counter("eventuate.cdc.messages.processed", tags).increment();
   }
 
   private void initMetrics() {
@@ -32,10 +27,6 @@ public class CommonCdcMetrics {
       return;
     }
 
-    meterRegistry.gauge(makeMetricName("eventuate.leader"), leader);
-  }
-
-  private String makeMetricName(String metric) {
-    return String.format("%s.%s", metric, binlogClientId);
+    meterRegistry.gauge("eventuate.cdc.leader", tags, leader);
   }
 }

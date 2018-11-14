@@ -92,7 +92,7 @@ public abstract class BinlogEntryReader {
   }
 
   public void stop() {
-    healthComponent.ifPresent(healthCheck::returnHealthComponent);
+    healthComponent.ifPresent(hc -> healthCheck.returnHealthComponent(hc));
     leaderSelector.close();
     leaderStop();
     binlogEntryHandlers.clear();
@@ -125,6 +125,10 @@ public abstract class BinlogEntryReader {
       logger.error(e.getMessage(), e);
     }
 
+    stopMetrics();
+  }
+
+  protected void stopMetrics() {
     commonCdcMetrics.setLeader(false);
 
     healthComponent.ifPresent(hc -> {

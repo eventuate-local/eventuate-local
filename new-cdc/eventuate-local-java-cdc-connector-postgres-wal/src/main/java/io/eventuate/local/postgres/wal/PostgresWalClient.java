@@ -88,7 +88,7 @@ public class PostgresWalClient extends DbLogClient {
   }
 
   private void connectWithRetriesOnFail() {
-    for (int i = 1;; i++) {
+    for (int i = 1; running.get(); i++) {
       try {
         logger.info("trying to connect to postgres wal");
         connectAndRun();
@@ -110,6 +110,7 @@ public class PostgresWalClient extends DbLogClient {
         }
       }
     }
+    stopCountDownLatch.countDown();
   }
 
   private void connectAndRun()

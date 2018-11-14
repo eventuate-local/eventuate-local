@@ -86,8 +86,8 @@ public abstract class DbLogClient extends BinlogEntryReader {
   }
 
   @Override
-  protected void leaderStop() {
-    super.leaderStop();
+  protected void stopMetrics() {
+    super.stopMetrics();
     dbLogMetrics.stop();
   }
 

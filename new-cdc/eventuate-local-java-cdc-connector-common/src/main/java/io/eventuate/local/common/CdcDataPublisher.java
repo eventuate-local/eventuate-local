@@ -43,6 +43,8 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
     this.dataProducerFactory = dataProducerFactory;
     this.publishingStrategy = publishingStrategy;
     this.publishingFilter = publishingFilter;
+    this.meterRegistry = meterRegistry;
+    this.healthCheck = healthCheck;
   }
 
   @PostConstruct
@@ -69,7 +71,7 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
     if (producer != null)
       producer.close();
 
-    healthComponent.ifPresent(healthCheck::returnHealthComponent);
+    healthComponent.ifPresent(hc -> healthCheck.returnHealthComponent(hc));
   }
 
   public void handleEvent(EVENT publishedEvent) throws EventuateLocalPublishingException {
@@ -102,6 +104,7 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
         }
         return;
       } catch (Exception e) {
+
         String error = "error publishing to " + aggregateTopic;
         healthComponent.ifPresent(hc -> hc.markAsUnhealthy(error));
         logger.warn(error, e);

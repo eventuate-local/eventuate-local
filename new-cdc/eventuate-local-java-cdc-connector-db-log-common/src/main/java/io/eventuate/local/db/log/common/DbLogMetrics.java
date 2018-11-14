@@ -1,18 +1,20 @@
 package io.eventuate.local.db.log.common;
 
+import com.google.common.collect.ImmutableList;
+import io.eventuate.local.common.AbstractCdcMetrics;
 import io.eventuate.local.common.CdcMonitoringDao;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class DbLogMetrics {
+public class DbLogMetrics extends AbstractCdcMetrics {
   private Timer eventPublisherTimer;
 
-  private MeterRegistry meterRegistry;
   private CdcMonitoringDao cdcMonitoringDao;
-  private long binlogClientId;
   private long replicationLagMeasuringIntervalInMilliseconds;
 
   private AtomicLong lag = new AtomicLong(-1);
@@ -26,10 +28,11 @@ public class DbLogMetrics {
                       long binlogClientId,
                       long replicationLagMeasuringIntervalInMilliseconds) {
 
-    this.meterRegistry = meterRegistry;
+    super(meterRegistry, binlogClientId);
+
     this.cdcMonitoringDao = cdcMonitoringDao;
-    this.binlogClientId = binlogClientId;
     this.replicationLagMeasuringIntervalInMilliseconds = replicationLagMeasuringIntervalInMilliseconds;
+    tags = ImmutableList.of(Tag.of("binlogClientId", String.valueOf(binlogClientId)));
 
     initMetrics();
   }
@@ -61,17 +64,13 @@ public class DbLogMetrics {
     lag.set(System.currentTimeMillis() - timestamp);
   }
 
-  public void onMessageProcessed() {
-    meterRegistry.counter(makeMetricName("eventuate.messages.processed")).increment();
-  }
-
   public void onBinlogEntryProcessed() {
-    meterRegistry.counter(makeMetricName("eventuate.binlog.entries.processed")).increment();
+    meterRegistry.counter("eventuate.cdc.binlog.entries.processed", tags).increment();
   }
 
   public void onConnected() {
     connected.set(1);
-    meterRegistry.counter(makeMetricName("eventuate.connection.attempts")).increment();
+    meterRegistry.counter("eventuate.cdc.connection.attempts", tags).increment();
   }
 
   public void onDisconnected() {
@@ -117,13 +116,9 @@ public class DbLogMetrics {
         }
       };
 
-      meterRegistry.gauge(makeMetricName("eventuate.replication.lag.age"), lagAge);
-      meterRegistry.gauge(makeMetricName("eventuate.replication.lag"), lag);
-      meterRegistry.gauge(makeMetricName("eventuate.connected.to.database"), connected);
+      meterRegistry.gauge("eventuate.cdc.replication.lag.age", tags, lagAge);
+      meterRegistry.gauge("eventuate.cdc.replication.lag", tags, lag);
+      meterRegistry.gauge("eventuate.cdc.connected.to.database", tags, connected);
     }
-  }
-
-  private String makeMetricName(String metric) {
-    return String.format("%s.%s", metric, binlogClientId);
   }
 }

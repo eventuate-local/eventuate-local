@@ -2,6 +2,7 @@ package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.local.common.*;
+import io.eventuate.local.common.exception.ConnectionLostHandlerInterruptedException;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PollingDao extends BinlogEntryReader {
   private static final String PUBLISHED_FIELD = "published";
@@ -70,15 +72,19 @@ public class PollingDao extends BinlogEntryReader {
     stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
-    while (running.get()) {
-      binlogEntryHandlers.forEach(this::processEvents);
+    try {
+      while (running.get()) {
+        binlogEntryHandlers.forEach(this::processEvents);
 
-      try {
-        Thread.sleep(pollingIntervalInMilliseconds);
-      } catch (InterruptedException e) {
-        logger.error(e.getMessage(), e);
-        running.set(false);
+        try {
+          Thread.sleep(pollingIntervalInMilliseconds);
+        } catch (InterruptedException e) {
+          logger.error(e.getMessage(), e);
+          running.set(false);
+        }
       }
+    } catch (ConnectionLostHandlerInterruptedException e) {
+      logger.info(e.getMessage(), e);
     }
 
     stopCountDownLatch.countDown();
@@ -94,7 +100,8 @@ public class PollingDao extends BinlogEntryReader {
     SqlRowSet sqlRowSet = DaoUtils.handleConnectionLost(maxAttemptsForPolling,
             pollingRetryIntervalInMilliseconds,
             () -> namedParameterJdbcTemplate.queryForRowSet(findEventsQuery, ImmutableMap.of("limit", maxEventsPerPolling)),
-            this::onInterrupted);
+            this::onInterrupted,
+            running);
 
     List<Object> ids = new ArrayList<>();
 
@@ -124,7 +131,8 @@ public class PollingDao extends BinlogEntryReader {
       DaoUtils.handleConnectionLost(maxAttemptsForPolling,
               pollingRetryIntervalInMilliseconds,
               () -> namedParameterJdbcTemplate.update(markEventsAsReadQuery, ImmutableMap.of("ids", ids)),
-              this::onInterrupted);
+              this::onInterrupted,
+              running);
     }
   }
 
@@ -138,7 +146,8 @@ public class PollingDao extends BinlogEntryReader {
     String pk = DaoUtils.handleConnectionLost(maxAttemptsForPolling,
             pollingRetryIntervalInMilliseconds,
             () -> queryPrimaryKey(handler),
-            this::onInterrupted);
+            this::onInterrupted,
+            running);
 
     pkFields.put(schemaAndTable, pk);
 

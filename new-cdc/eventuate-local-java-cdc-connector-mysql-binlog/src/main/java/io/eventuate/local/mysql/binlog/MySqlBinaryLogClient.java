@@ -332,6 +332,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
       logger.error("Cannot stop the MySqlBinaryLogClient", e);
     }
 
+    stopMetrics();
+
     stopCountDownLatch.countDown();
   }
 

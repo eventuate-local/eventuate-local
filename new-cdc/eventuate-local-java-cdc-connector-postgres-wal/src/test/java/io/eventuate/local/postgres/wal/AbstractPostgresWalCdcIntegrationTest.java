@@ -45,7 +45,7 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
             eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
             new BinlogEntryToPublishedEventConverter(),
-            new CdcDataPublisher<PublishedEvent>(null, null, null) {
+            new CdcDataPublisher<PublishedEvent>(null, null, null, null, null) {
               @Override
               public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
                 publishedEvents.add(publishedEvent);

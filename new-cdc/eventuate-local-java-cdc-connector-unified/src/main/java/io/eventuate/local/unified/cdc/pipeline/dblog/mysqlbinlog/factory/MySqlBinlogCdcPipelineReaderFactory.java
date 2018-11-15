@@ -1,6 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -24,6 +25,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
   private OffsetStoreFactory offsetStoreFactory;
 
   public MySqlBinlogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+                                             HealthCheck healthCheck,
                                              CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
@@ -33,6 +35,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                                              DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
     super(meterRegistry,
+            healthCheck,
             curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
@@ -63,6 +66,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                     : Optional.of(debeziumOffsetStoreFactory.create(readerProperties.getOldDbHistoryTopicName()));
 
     return new MySqlBinaryLogClient(meterRegistry,
+            healthCheck,
             readerProperties.getCdcDbUserName(),
             readerProperties.getCdcDbPassword(),
             readerProperties.getDataSourceUrl(),
@@ -80,6 +84,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
             debeziumBinlogOffsetKafkaStore,
             readerProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             readerProperties.getMonitoringRetryIntervalInMilliseconds(),
-            readerProperties.getMonitoringRetryAttempts());
+            readerProperties.getMonitoringRetryAttempts(),
+            readerProperties.getMaxEventIntervalToAssumeReaderHealthy());
   }
 }

@@ -1,6 +1,5 @@
 package io.eventuate.local.db.log.common;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
@@ -15,10 +14,11 @@ public abstract class DbLogClient extends BinlogEntryReader {
   protected String host;
   protected int port;
   protected String defaultDatabase;
+  protected DbLogMetrics dbLogMetrics;
   private boolean checkEntriesForDuplicates;
-  private CdcMonitoringDataPublisher cdcMonitoringDataPublisher;
 
   public DbLogClient(MeterRegistry meterRegistry,
+                     HealthCheck healthCheck,
                      String dbUserName,
                      String dbPassword,
                      String dataSourceUrl,
@@ -28,9 +28,24 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      long binlogClientUniqueId,
                      long replicationLagMeasuringIntervalInMilliseconds,
                      int monitoringRetryIntervalInMilliseconds,
-                     int monitoringRetryAttempts) {
+                     int monitoringRetryAttempts,
+                     int maxEventIntervalToAssumeReaderHealthy) {
 
-    super(meterRegistry, curatorFramework, leadershipLockPath, dataSourceUrl, dataSource, binlogClientUniqueId);
+    super(meterRegistry,
+            healthCheck,
+            curatorFramework,
+            leadershipLockPath,
+            dataSourceUrl,
+            dataSource,
+            binlogClientUniqueId,
+            monitoringRetryIntervalInMilliseconds,
+            monitoringRetryAttempts,
+            maxEventIntervalToAssumeReaderHealthy);
+
+    dbLogMetrics = new DbLogMetrics(meterRegistry,
+            cdcMonitoringDao,
+            binlogClientUniqueId,
+            replicationLagMeasuringIntervalInMilliseconds);
 
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;
@@ -40,16 +55,6 @@ public abstract class DbLogClient extends BinlogEntryReader {
     host = jdbcUrl.getHost();
     port = jdbcUrl.getPort();
     defaultDatabase = jdbcUrl.getDatabase();
-
-    CdcMonitoringDao cdcMonitoringDao = new CdcMonitoringDao(dataSource,
-            new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
-            monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts);
-
-    cdcMonitoringDataPublisher = new CdcMonitoringDataPublisher(meterRegistry,
-            cdcMonitoringDao,
-            binlogClientUniqueId,
-            replicationLagMeasuringIntervalInMilliseconds);
   }
 
   @Override
@@ -76,16 +81,25 @@ public abstract class DbLogClient extends BinlogEntryReader {
 
   @Override
   protected void leaderStart() {
-    cdcMonitoringDataPublisher.start();
+    super.leaderStart();
+    dbLogMetrics.start();
   }
 
-  protected void leaderStop() {
-    super.leaderStop();
-
-    cdcMonitoringDataPublisher.stop();
+  @Override
+  protected void stopMetrics() {
+    super.stopMetrics();
+    dbLogMetrics.stop();
   }
 
-  protected void onMonitoringEventReceived(long timestamp) {
-    cdcMonitoringDataPublisher.eventReceived(timestamp);
+  protected void onConnected() {
+    dbLogMetrics.onConnected();
+    if (checkIfEventIsReceivedRecently()) {
+      healthComponent.ifPresent(HealthCheck.HealthComponent::markAsHealthy);
+    }
+  }
+
+  protected void onDisconnected() {
+    dbLogMetrics.onDisconnected();
+    healthComponent.ifPresent(hc -> hc.markAsUnhealthy(String.format("Reader with id %s disconnected", binlogClientUniqueId)));
   }
 }

@@ -16,6 +16,8 @@ public abstract class AbstractDbLogBasedCdcKafkaPublisherTest extends CdcKafkaPu
     return new CdcDataPublisher<>(() ->
             new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(), EventuateKafkaProducerConfigurationProperties.empty()),
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), EventuateKafkaConsumerConfigurationProperties.empty()),
-            publishingStrategy);
+            publishingStrategy,
+            null,
+            null);
   }
 }

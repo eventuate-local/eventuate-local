@@ -50,6 +50,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   public PostgresWalClient postgresWalClient(@Autowired(required = false) MeterRegistry meterRegistry,
+                                             @Autowired(required = false) HealthCheck healthCheck,
                                              @Value("${spring.datasource.url}") String dbUrl,
                                              @Value("${spring.datasource.username}") String dbUserName,
                                              @Value("${spring.datasource.password}") String dbPassword,
@@ -58,6 +59,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                              CuratorFramework curatorFramework) {
 
     return new PostgresWalClient(meterRegistry,
+            healthCheck,
             dbUrl,
             dbUserName,
             dbPassword,
@@ -72,7 +74,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getMonitoringRetryAttempts());
+            eventuateConfigurationProperties.getMonitoringRetryAttempts(),
+            eventuateConfigurationProperties.getMaxEventIntervalToAssumeReaderHealthy());
   }
 
 
@@ -84,7 +87,9 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
     return new CdcDataPublisher<>(dataProducerFactory,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
-            publishingStrategy);
+            publishingStrategy,
+            null,
+            null);
   }
 
   @Bean

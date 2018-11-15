@@ -1,9 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 
-import io.eventuate.local.common.DuplicatePublishingDetector;
-import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.EventuateLocalZookeperConfigurationProperties;
-import io.eventuate.local.common.PublishingFilter;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -28,6 +25,12 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
         EventuateKafkaConsumerConfigurationProperties.class})
 public class CommonCdcPipelineConfiguration {
+
+  @Bean
+  public HealthCheck healthCheck() {
+    return new HealthCheck();
+  }
+
   @Bean
   public DefaultSourceTableNameResolver defaultSourceTableNameResolver() {
     return pipelineType -> {

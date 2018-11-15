@@ -2,10 +2,9 @@ package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.local.common.*;
+import io.eventuate.local.common.exception.ConnectionLostHandlerInterruptedException;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
-import org.postgresql.util.PSQLException;
-import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
@@ -13,12 +12,9 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PollingDao extends BinlogEntryReader {
   private static final String PUBLISHED_FIELD = "published";
@@ -32,6 +28,7 @@ public class PollingDao extends BinlogEntryReader {
   private Map<SchemaAndTable, String> pkFields = new HashMap<>();
 
   public PollingDao(MeterRegistry meterRegistry,
+                    HealthCheck healthCheck,
                     String dataSourceUrl,
                     DataSource dataSource,
                     int maxEventsPerPolling,
@@ -40,9 +37,21 @@ public class PollingDao extends BinlogEntryReader {
                     int pollingIntervalInMilliseconds,
                     CuratorFramework curatorFramework,
                     String leadershipLockPath,
-                    long uniqueId) {
+                    long uniqueId,
+                    int monitoringRetryIntervalInMilliseconds,
+                    int monitoringRetryAttempts,
+                    int maxEventIntervalToAssumeReaderHealthy) {
 
-    super(meterRegistry, curatorFramework, leadershipLockPath, dataSourceUrl, dataSource, uniqueId);
+    super(meterRegistry,
+            healthCheck,
+            curatorFramework,
+            leadershipLockPath,
+            dataSourceUrl,
+            dataSource,
+            uniqueId,
+            monitoringRetryIntervalInMilliseconds,
+            monitoringRetryAttempts,
+            maxEventIntervalToAssumeReaderHealthy);
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
@@ -58,18 +67,24 @@ public class PollingDao extends BinlogEntryReader {
 
   @Override
   protected void leaderStart() {
+    super.leaderStart();
+
     stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
-    while (running.get()) {
-      binlogEntryHandlers.forEach(this::processEvents);
+    try {
+      while (running.get()) {
+        binlogEntryHandlers.forEach(this::processEvents);
 
-      try {
-        Thread.sleep(pollingIntervalInMilliseconds);
-      } catch (InterruptedException e) {
-        logger.error(e.getMessage(), e);
-        running.set(false);
+        try {
+          Thread.sleep(pollingIntervalInMilliseconds);
+        } catch (InterruptedException e) {
+          logger.error(e.getMessage(), e);
+          running.set(false);
+        }
       }
+    } catch (ConnectionLostHandlerInterruptedException e) {
+      logger.info(e.getMessage(), e);
     }
 
     stopCountDownLatch.countDown();
@@ -85,7 +100,8 @@ public class PollingDao extends BinlogEntryReader {
     SqlRowSet sqlRowSet = DaoUtils.handleConnectionLost(maxAttemptsForPolling,
             pollingRetryIntervalInMilliseconds,
             () -> namedParameterJdbcTemplate.queryForRowSet(findEventsQuery, ImmutableMap.of("limit", maxEventsPerPolling)),
-            this::onInterrupted);
+            this::onInterrupted,
+            running);
 
     List<Object> ids = new ArrayList<>();
 
@@ -103,6 +119,8 @@ public class PollingDao extends BinlogEntryReader {
           return null;
         }
       });
+
+      onEventReceived();
     }
 
     String markEventsAsReadQuery = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
@@ -113,7 +131,8 @@ public class PollingDao extends BinlogEntryReader {
       DaoUtils.handleConnectionLost(maxAttemptsForPolling,
               pollingRetryIntervalInMilliseconds,
               () -> namedParameterJdbcTemplate.update(markEventsAsReadQuery, ImmutableMap.of("ids", ids)),
-              this::onInterrupted);
+              this::onInterrupted,
+              running);
     }
   }
 
@@ -127,7 +146,8 @@ public class PollingDao extends BinlogEntryReader {
     String pk = DaoUtils.handleConnectionLost(maxAttemptsForPolling,
             pollingRetryIntervalInMilliseconds,
             () -> queryPrimaryKey(handler),
-            this::onInterrupted);
+            this::onInterrupted,
+            running);
 
     pkFields.put(schemaAndTable, pk);
 

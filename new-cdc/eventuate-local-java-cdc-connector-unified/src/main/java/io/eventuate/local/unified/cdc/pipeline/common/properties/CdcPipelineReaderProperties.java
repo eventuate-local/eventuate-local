@@ -15,7 +15,9 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
   private String dataSourceDriverClassName;
   private String leadershipLockPath;
   private Long binlogClientId = System.nanoTime();
-
+  private int monitoringRetryIntervalInMilliseconds = 500;
+  private int monitoringRetryAttempts = 1000;
+  private int maxEventIntervalToAssumeReaderHealthy = 60000;
 
   @Override
   public void validate() {
@@ -90,6 +92,31 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
 
   public void setBinlogClientId(Long binlogClientId) {
     this.binlogClientId = binlogClientId;
+  }
+
+
+  public int getMonitoringRetryIntervalInMilliseconds() {
+    return monitoringRetryIntervalInMilliseconds;
+  }
+
+  public void setMonitoringRetryIntervalInMilliseconds(int monitoringRetryIntervalInMilliseconds) {
+    this.monitoringRetryIntervalInMilliseconds = monitoringRetryIntervalInMilliseconds;
+  }
+
+  public int getMonitoringRetryAttempts() {
+    return monitoringRetryAttempts;
+  }
+
+  public void setMonitoringRetryAttempts(int monitoringRetryAttempts) {
+    this.monitoringRetryAttempts = monitoringRetryAttempts;
+  }
+
+  public int getMaxEventIntervalToAssumeReaderHealthy() {
+    return maxEventIntervalToAssumeReaderHealthy;
+  }
+
+  public void setMaxEventIntervalToAssumeReaderHealthy(int maxEventIntervalToAssumeReaderHealthy) {
+    this.maxEventIntervalToAssumeReaderHealthy = maxEventIntervalToAssumeReaderHealthy;
   }
 
   @Override

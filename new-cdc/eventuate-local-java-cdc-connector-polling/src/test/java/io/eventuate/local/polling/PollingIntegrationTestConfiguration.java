@@ -71,12 +71,14 @@ public class PollingIntegrationTestConfiguration {
   @Bean
   @Profile("EventuatePolling")
   public PollingDao pollingDao(@Autowired(required = false) MeterRegistry meterRegistry,
+                               @Autowired(required = false) HealthCheck healthCheck,
                                @Value("${spring.datasource.url}") String dataSourceURL,
                                EventuateConfigurationProperties eventuateConfigurationProperties,
                                DataSource dataSource,
                                CuratorFramework curatorFramework) {
 
     return new PollingDao(meterRegistry,
+            healthCheck,
             dataSourceURL,
             dataSource,
             eventuateConfigurationProperties.getMaxEventsPerPolling(),
@@ -85,7 +87,10 @@ public class PollingIntegrationTestConfiguration {
             eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
-            eventuateConfigurationProperties.getBinlogClientId());
+            eventuateConfigurationProperties.getBinlogClientId(),
+            eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
+            eventuateConfigurationProperties.getMonitoringRetryAttempts(),
+            eventuateConfigurationProperties.getMaxEventIntervalToAssumeReaderHealthy());
   }
 
   @Bean

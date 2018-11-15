@@ -3,9 +3,9 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
-import io.eventuate.local.db.log.common.OffsetStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.PGConnection;
@@ -37,6 +37,7 @@ public class PostgresWalClient extends DbLogClient {
   private String replicationSlotName;
 
   public PostgresWalClient(MeterRegistry meterRegistry,
+                           HealthCheck healthCheck,
                            String url,
                            String user,
                            String password,
@@ -51,9 +52,11 @@ public class PostgresWalClient extends DbLogClient {
                            long uniqueId,
                            long replicationLagMeasuringIntervalInMilliseconds,
                            int monitoringRetryIntervalInMilliseconds,
-                           int monitoringRetryAttempts) {
+                           int monitoringRetryAttempts,
+                           int maxEventIntervalToAssumeReaderHealthy) {
 
     super(meterRegistry,
+            healthCheck,
             user,
             password,
             url,
@@ -63,7 +66,8 @@ public class PostgresWalClient extends DbLogClient {
             uniqueId,
             replicationLagMeasuringIntervalInMilliseconds,
             monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts);
+            monitoringRetryAttempts,
+            maxEventIntervalToAssumeReaderHealthy);
 
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
@@ -84,12 +88,13 @@ public class PostgresWalClient extends DbLogClient {
   }
 
   private void connectWithRetriesOnFail() {
-    for (int i = 1;; i++) {
+    for (int i = 1; running.get(); i++) {
       try {
         logger.info("trying to connect to postgres wal");
         connectAndRun();
         break;
       } catch (SQLException e) {
+        onDisconnected();
         logger.error("connection to posgres wal failed");
         if (i == maxAttemptsForBinlogConnection) {
           logger.error("connection attempts exceeded");
@@ -105,6 +110,7 @@ public class PostgresWalClient extends DbLogClient {
         }
       }
     }
+    stopCountDownLatch.countDown();
   }
 
   private void connectAndRun()
@@ -129,6 +135,8 @@ public class PostgresWalClient extends DbLogClient {
             .withSlotOption("write-in-chunks", true)
             .withStatusInterval(replicationStatusIntervalInMilliseconds, TimeUnit.MILLISECONDS)
             .start();
+
+    onConnected();
 
     logger.info("connection to postgres wal succeed");
 
@@ -156,6 +164,8 @@ public class PostgresWalClient extends DbLogClient {
         continue;
       }
 
+      dbLogMetrics.onBinlogEntryProcessed();
+
       String messageString = messageBuilder.toString();
       messageBuilder.setLength(0);
 
@@ -180,7 +190,10 @@ public class PostgresWalClient extends DbLogClient {
                   .stream()
                   .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
                   .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
-                  .forEach(handler::publish));
+                  .forEach(e -> {
+                    handler.publish(e);
+                    onEventReceived();
+                  }));
 
 
       stream.setAppliedLSN(stream.getLastReceiveLSN());
@@ -212,7 +225,8 @@ public class PostgresWalClient extends DbLogClient {
 
     monitoringChange.ifPresent(change -> {
       int index = Arrays.asList(change.getColumnnames()).indexOf("last_time");
-      onMonitoringEventReceived(Long.parseLong(change.getColumnvalues()[index]));
+      dbLogMetrics.onLagMeasurementEventReceived(Long.parseLong(change.getColumnvalues()[index]));
+      onEventReceived();
     });
   }
 

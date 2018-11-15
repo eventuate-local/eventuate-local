@@ -35,13 +35,13 @@ $DOCKER_COMPOSE up -d
 
 # Assert healthcheck good
 
-echo testing restart Postgres restart scenario $(date)
+echo testing Postgres and zookeeper restart scenario $(date)
 
-$DOCKER_COMPOSE stop postgres
+$DOCKER_COMPOSE stop postgres zookeeper
 
 sleep 10
 
-$DOCKER_COMPOSE start postgres
+$DOCKER_COMPOSE start postgres zookeeper
 
 
 ./scripts/wait-for-postgres.sh

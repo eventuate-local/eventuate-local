@@ -17,7 +17,7 @@ public class DaoUtils {
                                            AtomicBoolean shouldRetryFlag) {
     int attempt = 0;
 
-    while(shouldRetryFlag.get()) {
+    while(shouldRetryFlag.get() || attempt == 0) {
       try {
         T result = query.call();
         if (attempt > 0)

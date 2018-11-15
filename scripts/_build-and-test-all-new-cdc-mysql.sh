@@ -39,13 +39,13 @@ echo waiting for MySQL
 
 # Assert healthcheck good
 
-echo testing restart MySQL restart scenario $(date)
+echo testing MySQL and zookeeper restart scenario $(date)
 
-$DOCKER_COMPOSE stop ${database}
+$DOCKER_COMPOSE stop ${database} zookeeper
 
 sleep 10
 
-$DOCKER_COMPOSE start ${database}
+$DOCKER_COMPOSE start ${database} zookeeper
 
 ./scripts/wait-for-mysql.sh
 

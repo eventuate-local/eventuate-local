@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class BinlogEntryReader {
   protected Logger logger = LoggerFactory.getLogger(getClass());
-  protected MeterRegistry meterRegistry;
+  protected Optional<MeterRegistry> meterRegistry;
   protected CuratorFramework curatorFramework;
   protected String leadershipLockPath;
   protected List<BinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
@@ -33,12 +33,12 @@ public abstract class BinlogEntryReader {
 
   private long lastEventTime;
   private int maxEventIntervalToAssumeReaderHealthy;
-  private HealthCheck healthCheck;
+  private Optional<HealthCheck> healthCheck;
   private LeaderSelector leaderSelector;
   private Timer healthCheckTimer;
 
-  public BinlogEntryReader(MeterRegistry meterRegistry,
-                           HealthCheck healthCheck,
+  public BinlogEntryReader(Optional<MeterRegistry> meterRegistry,
+                           Optional<HealthCheck> healthCheck,
                            CuratorFramework curatorFramework,
                            String leadershipLockPath,
                            String dataSourceUrl,
@@ -83,7 +83,7 @@ public abstract class BinlogEntryReader {
   }
 
   public void start() {
-    healthComponent = Optional.ofNullable(healthCheck).map(HealthCheck::getHealthComponent);
+    healthComponent = healthCheck.map(HealthCheck::getHealthComponent);
 
     leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,
             new EventuateLeaderSelectorListener(this::leaderStart, this::leaderStop));
@@ -92,7 +92,8 @@ public abstract class BinlogEntryReader {
   }
 
   public void stop() {
-    healthComponent.ifPresent(hc -> healthCheck.returnHealthComponent(hc));
+    healthCheck.ifPresent(hc -> healthComponent.ifPresent(hc::returnHealthComponent));
+
     leaderSelector.close();
     leaderStop();
     binlogEntryHandlers.clear();

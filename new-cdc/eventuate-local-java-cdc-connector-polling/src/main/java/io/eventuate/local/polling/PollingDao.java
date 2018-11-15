@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
+import javax.swing.text.html.Option;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,8 +28,8 @@ public class PollingDao extends BinlogEntryReader {
   private int pollingIntervalInMilliseconds;
   private Map<SchemaAndTable, String> pkFields = new HashMap<>();
 
-  public PollingDao(MeterRegistry meterRegistry,
-                    HealthCheck healthCheck,
+  public PollingDao(Optional<MeterRegistry> meterRegistry,
+                    Optional<HealthCheck> healthCheck,
                     String dataSourceUrl,
                     DataSource dataSource,
                     int maxEventsPerPolling,

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
+import javax.swing.text.html.Option;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -19,8 +20,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CdcDataPublisher<EVENT extends BinLogEvent> {
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-  protected MeterRegistry meterRegistry;
-  protected HealthCheck healthCheck;
+  protected Optional<MeterRegistry> meterRegistry;
+  protected Optional<HealthCheck> healthCheck;
 
   protected Optional<HealthCheck.HealthComponent> healthComponent;
 
@@ -37,8 +38,8 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
   public CdcDataPublisher(DataProducerFactory dataProducerFactory,
                           PublishingFilter publishingFilter,
                           PublishingStrategy<EVENT> publishingStrategy,
-                          MeterRegistry meterRegistry,
-                          HealthCheck healthCheck) {
+                          Optional<MeterRegistry> meterRegistry,
+                          Optional<HealthCheck> healthCheck) {
 
     this.dataProducerFactory = dataProducerFactory;
     this.publishingStrategy = publishingStrategy;
@@ -51,15 +52,15 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
   private void initMetrics() {
     if (meterRegistry != null) {
 
-      histogramEventAge = Optional.of(meterRegistry.gauge("histogram.event.age", new AtomicLong(0)));
-      meterEventsPublished = Optional.of(meterRegistry.counter("meter.events.published"));
-      meterEventsDuplicates = Optional.of(meterRegistry.counter("meter.events.duplicates"));
-      meterEventsRetries = Optional.of(meterRegistry.counter("meter.events.retries"));
+      histogramEventAge = meterRegistry.map(mr -> mr.gauge("histogram.event.age", new AtomicLong(0)));
+      meterEventsPublished = meterRegistry.map(mr -> mr.counter("meter.events.published"));
+      meterEventsDuplicates = meterRegistry.map(mr -> mr.counter("meter.events.duplicates"));
+      meterEventsRetries = meterRegistry.map(mr -> mr.counter("meter.events.retries"));
     }
   }
 
   public void start() {
-    healthComponent = Optional.ofNullable(healthCheck).map(HealthCheck::getHealthComponent);
+    healthComponent = healthCheck.map(HealthCheck::getHealthComponent);
 
     logger.debug("Starting CdcDataPublisher");
     producer = dataProducerFactory.create();
@@ -71,7 +72,7 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
     if (producer != null)
       producer.close();
 
-    healthComponent.ifPresent(hc -> healthCheck.returnHealthComponent(hc));
+    healthCheck.ifPresent(hc -> healthComponent.ifPresent(hc::returnHealthComponent));
   }
 
   public void handleEvent(EVENT publishedEvent) throws EventuateLocalPublishingException {

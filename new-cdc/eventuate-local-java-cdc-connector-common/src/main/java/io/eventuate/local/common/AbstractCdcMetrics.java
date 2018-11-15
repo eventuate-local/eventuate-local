@@ -5,13 +5,14 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 
 import java.util.List;
+import java.util.Optional;
 
 public class AbstractCdcMetrics {
-  protected MeterRegistry meterRegistry;
+  protected Optional<MeterRegistry> meterRegistry;
   protected List<Tag> tags;
   protected long binlogClientId;
 
-  public AbstractCdcMetrics(MeterRegistry meterRegistry,
+  public AbstractCdcMetrics(Optional<MeterRegistry> meterRegistry,
                             long binlogClientId) {
 
     this.meterRegistry = meterRegistry;

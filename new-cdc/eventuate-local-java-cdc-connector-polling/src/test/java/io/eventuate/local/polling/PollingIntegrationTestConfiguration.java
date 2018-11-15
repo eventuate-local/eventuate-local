@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 
 @Configuration
 @EnableAutoConfiguration
@@ -77,8 +78,8 @@ public class PollingIntegrationTestConfiguration {
                                DataSource dataSource,
                                CuratorFramework curatorFramework) {
 
-    return new PollingDao(meterRegistry,
-            healthCheck,
+    return new PollingDao(Optional.ofNullable(meterRegistry),
+            Optional.ofNullable(healthCheck),
             dataSourceURL,
             dataSource,
             eventuateConfigurationProperties.getMaxEventsPerPolling(),

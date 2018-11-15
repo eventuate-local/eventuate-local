@@ -8,6 +8,8 @@ import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.test.util.CdcKafkaPublisherTest;
 
+import java.util.Optional;
+
 
 public abstract class AbstractDbLogBasedCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
 
@@ -17,7 +19,7 @@ public abstract class AbstractDbLogBasedCdcKafkaPublisherTest extends CdcKafkaPu
             new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(), EventuateKafkaProducerConfigurationProperties.empty()),
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), EventuateKafkaConsumerConfigurationProperties.empty()),
             publishingStrategy,
-            null,
-            null);
+            Optional.empty(),
+            Optional.empty());
   }
 }

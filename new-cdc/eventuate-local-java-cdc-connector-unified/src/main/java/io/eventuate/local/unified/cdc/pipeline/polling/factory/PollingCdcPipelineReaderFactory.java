@@ -8,6 +8,8 @@ import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelin
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 
+import java.util.Optional;
+
 public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFactory<PollingPipelineReaderProperties, PollingDao> {
 
   public static final String TYPE = "polling";
@@ -28,8 +30,8 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
   @Override
   public PollingDao create(PollingPipelineReaderProperties readerProperties) {
 
-    return new PollingDao(meterRegistry,
-            healthCheck,
+    return new PollingDao(Optional.ofNullable(meterRegistry),
+            Optional.ofNullable(healthCheck),
             readerProperties.getDataSourceUrl(),
             createDataSource(readerProperties),
             readerProperties.getMaxEventsPerPolling(),

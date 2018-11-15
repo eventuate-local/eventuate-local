@@ -48,8 +48,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
   private Optional<Long> cdcMonitoringTableId = Optional.empty();
 
-  public MySqlBinaryLogClient(MeterRegistry meterRegistry,
-                              HealthCheck healthCheck,
+  public MySqlBinaryLogClient(Optional<MeterRegistry> meterRegistry,
+                              Optional<HealthCheck> healthCheck,
                               String dbUserName,
                               String dbPassword,
                               String dataSourceUrl,

@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -58,8 +59,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                              EventuateConfigurationProperties eventuateConfigurationProperties,
                                              CuratorFramework curatorFramework) {
 
-    return new PostgresWalClient(meterRegistry,
-            healthCheck,
+    return new PostgresWalClient(Optional.ofNullable(meterRegistry),
+            Optional.ofNullable(healthCheck),
             dbUrl,
             dbUserName,
             dbPassword,
@@ -88,8 +89,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
     return new CdcDataPublisher<>(dataProducerFactory,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy,
-            null,
-            null);
+            Optional.empty(),
+            Optional.empty());
   }
 
   @Bean

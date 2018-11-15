@@ -66,8 +66,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
                                                    OffsetStore offsetStore) {
 
     return new MySqlBinaryLogClient(
-            meterRegistry,
-            healthCheck,
+            Optional.ofNullable(meterRegistry),
+            Optional.ofNullable(healthCheck),
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             dataSourceURL,
@@ -119,8 +119,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
     return new CdcDataPublisher<>(dataProducerFactory,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy,
-            null,
-            null);
+            Optional.empty(),
+            Optional.empty());
   }
 
   @Bean

@@ -1,12 +1,14 @@
 package io.eventuate.local.common;
 
 import io.micrometer.core.instrument.MeterRegistry;
+
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CommonCdcMetrics extends AbstractCdcMetrics {
   private AtomicInteger leader = new AtomicInteger(0);
 
-  public CommonCdcMetrics(MeterRegistry meterRegistry,
+  public CommonCdcMetrics(Optional<MeterRegistry> meterRegistry,
                           long binlogClientId) {
 
     super(meterRegistry, binlogClientId);
@@ -19,7 +21,7 @@ public class CommonCdcMetrics extends AbstractCdcMetrics {
   }
 
   public void onMessageProcessed() {
-    meterRegistry.counter("eventuate.cdc.messages.processed", tags).increment();
+    meterRegistry.ifPresent(mr -> mr.counter("eventuate.cdc.messages.processed", tags).increment());
   }
 
   private void initMetrics() {
@@ -27,6 +29,6 @@ public class CommonCdcMetrics extends AbstractCdcMetrics {
       return;
     }
 
-    meterRegistry.gauge("eventuate.cdc.leader", tags, leader);
+    meterRegistry.ifPresent(mr -> mr.gauge("eventuate.cdc.leader", tags, leader));
   }
 }

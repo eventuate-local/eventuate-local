@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Optional;
+
 @Configuration
 public class DefaultCdcPipelineFactoryConfiguration {
   @Bean("defaultCdcPipelineFactory")
@@ -23,8 +25,8 @@ public class DefaultCdcPipelineFactoryConfiguration {
             new CdcDataPublisher<>(dataProducerFactory,
                     publishingFilter,
                     new PublishedEventPublishingStrategy(),
-                    meterRegistry,
-                    healthCheck),
+                    Optional.ofNullable(meterRegistry),
+                    Optional.ofNullable(healthCheck)),
             new BinlogEntryToPublishedEventConverter());
   }
 }

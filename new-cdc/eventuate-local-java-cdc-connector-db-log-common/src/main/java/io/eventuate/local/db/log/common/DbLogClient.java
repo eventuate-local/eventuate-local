@@ -17,8 +17,8 @@ public abstract class DbLogClient extends BinlogEntryReader {
   protected DbLogMetrics dbLogMetrics;
   private boolean checkEntriesForDuplicates;
 
-  public DbLogClient(MeterRegistry meterRegistry,
-                     HealthCheck healthCheck,
+  public DbLogClient(Optional<MeterRegistry> meterRegistry,
+                     Optional<HealthCheck> healthCheck,
                      String dbUserName,
                      String dbPassword,
                      String dataSourceUrl,

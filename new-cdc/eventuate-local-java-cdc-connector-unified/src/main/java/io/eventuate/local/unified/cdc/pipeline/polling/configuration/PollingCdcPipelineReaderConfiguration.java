@@ -9,7 +9,6 @@ import io.eventuate.local.unified.cdc.pipeline.polling.factory.PollingCdcPipelin
 import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -18,8 +17,8 @@ import org.springframework.context.annotation.Profile;
 public class PollingCdcPipelineReaderConfiguration extends CommonCdcDefaultPipelineReaderConfiguration {
 
   @Bean("eventuateLocalPollingCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory pollingCdcPipelineReaderFactory(@Autowired(required = false) MeterRegistry meterRegistry,
-                                                                  @Autowired(required = false) HealthCheck healthCheck,
+  public CdcPipelineReaderFactory pollingCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+                                                                  HealthCheck healthCheck,
                                                                   CuratorFramework curatorFramework,
                                                                   BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
@@ -28,8 +27,8 @@ public class PollingCdcPipelineReaderConfiguration extends CommonCdcDefaultPipel
 
   @Profile("EventuatePolling")
   @Bean("defaultCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory defaultPollingCdcPipelineReaderFactory(@Autowired(required = false) MeterRegistry meterRegistry,
-                                                                         @Autowired(required = false) HealthCheck healthCheck,
+  public CdcPipelineReaderFactory defaultPollingCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+                                                                         HealthCheck healthCheck,
                                                                          CuratorFramework curatorFramework,
                                                                          BinlogEntryReaderProvider binlogEntryReaderProvider) {
 

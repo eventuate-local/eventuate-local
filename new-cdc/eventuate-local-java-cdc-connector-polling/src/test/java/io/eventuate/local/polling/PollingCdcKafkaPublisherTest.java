@@ -47,8 +47,8 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
                     EventuateKafkaProducerConfigurationProperties.empty()),
             duplicatePublishingDetector,
             publishingStrategy,
-            Optional.empty(),
-            Optional.empty());
+            meterRegistry,
+            healthCheck);
   }
 
   @Override

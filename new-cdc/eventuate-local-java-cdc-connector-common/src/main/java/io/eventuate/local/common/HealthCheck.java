@@ -15,8 +15,16 @@ public class HealthCheck implements HealthIndicator {
   private Set<HealthComponent> healthComponents = new HashSet<>();
 
   public HealthComponent getHealthComponent() {
+    return getHealthComponent(Optional.empty());
+  }
+
+  public HealthComponent getHealthComponent(Runnable callback) {
+    return getHealthComponent(Optional.of(callback));
+  }
+
+  private HealthComponent getHealthComponent(Optional<Runnable> callback) {
     synchronized (monitor) {
-      HealthComponent healthComponent = new HealthComponent();
+      HealthComponent healthComponent = new HealthComponent(callback);
       healthComponents.add(healthComponent);
       return healthComponent;
     }
@@ -34,6 +42,7 @@ public class HealthCheck implements HealthIndicator {
     synchronized (monitor) {
       messages = healthComponents
               .stream()
+              .peek(healthComponent -> healthComponent.healthCheckCallback.ifPresent(Runnable::run))
               .filter(healthComponent -> !healthComponent.healthy)
               .map(healthComponent -> healthComponent.message)
               .collect(Collectors.toList());
@@ -56,18 +65,25 @@ public class HealthCheck implements HealthIndicator {
   public class HealthComponent {
     private UUID id = UUID.randomUUID();
 
-    private volatile boolean healthy = true;
+    private Optional<Runnable> healthCheckCallback;
+    private boolean healthy = true;
     private String message;
 
-    private HealthComponent() {
+    private HealthComponent(Optional<Runnable> healthCheckCallback) {
+      this.healthCheckCallback = healthCheckCallback;
     }
 
-    public void markAsHealthy() {
+    public synchronized void markAsHealthy() {
       healthy = true;
     }
 
-    public void markAsUnhealthy(String reason) {
-      synchronized (monitor) {
+    public synchronized void markAsUnhealthy(String reason) {
+      healthy = false;
+      message = reason;
+    }
+
+    public synchronized void markAsUnhealthyIfHealthy(String reason) {
+      if (healthy) {
         healthy = false;
         message = reason;
       }

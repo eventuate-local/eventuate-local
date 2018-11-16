@@ -12,7 +12,6 @@ import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.Postgre
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -21,8 +20,8 @@ import org.springframework.context.annotation.Profile;
 public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDefaultPipelineReaderConfiguration {
 
   @Bean("eventuateLocalPostgresWalCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory postgresWalCdcPipelineReaderFactory(@Autowired(required = false) MeterRegistry meterRegistry,
-                                                                      @Autowired(required = false) HealthCheck healthCheck,
+  public CdcPipelineReaderFactory postgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+                                                                      HealthCheck healthCheck,
                                                                       CuratorFramework curatorFramework,
                                                                       BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
@@ -40,8 +39,8 @@ public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
 
   @Profile("PostgresWal")
   @Bean("defaultCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory defaultPostgresWalCdcPipelineReaderFactory(@Autowired(required = false) MeterRegistry meterRegistry,
-                                                                             @Autowired(required = false) HealthCheck healthCheck,
+  public CdcPipelineReaderFactory defaultPostgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+                                                                             HealthCheck healthCheck,
                                                                              CuratorFramework curatorFramework,
                                                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,

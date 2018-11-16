@@ -36,8 +36,8 @@ public class PostgresWalClient extends DbLogClient {
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
 
-  public PostgresWalClient(Optional<MeterRegistry> meterRegistry,
-                           Optional<HealthCheck> healthCheck,
+  public PostgresWalClient(MeterRegistry meterRegistry,
+                           HealthCheck healthCheck,
                            String url,
                            String user,
                            String password,

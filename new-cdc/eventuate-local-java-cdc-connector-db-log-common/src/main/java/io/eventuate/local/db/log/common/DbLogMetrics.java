@@ -6,7 +6,6 @@ import io.eventuate.local.common.CdcMonitoringDao;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 
-import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,7 +23,7 @@ public class DbLogMetrics extends AbstractCdcMetrics {
 
   private long lastTimeEventReceived = -1;
 
-  public DbLogMetrics(Optional<MeterRegistry> meterRegistry,
+  public DbLogMetrics(MeterRegistry meterRegistry,
                       CdcMonitoringDao cdcMonitoringDao,
                       long binlogClientId,
                       long replicationLagMeasuringIntervalInMilliseconds) {
@@ -66,12 +65,12 @@ public class DbLogMetrics extends AbstractCdcMetrics {
   }
 
   public void onBinlogEntryProcessed() {
-    meterRegistry.ifPresent(mr -> mr.counter("eventuate.cdc.binlog.entries.processed", tags).increment());
+    meterRegistry.counter("eventuate.cdc.binlog.entries.processed", tags).increment();
   }
 
   public void onConnected() {
     connected.set(1);
-    meterRegistry.ifPresent(mr -> mr.counter("eventuate.cdc.connection.attempts", tags).increment());
+    meterRegistry.counter("eventuate.cdc.connection.attempts", tags).increment();
   }
 
   public void onDisconnected() {
@@ -117,9 +116,9 @@ public class DbLogMetrics extends AbstractCdcMetrics {
         }
       };
 
-      meterRegistry.ifPresent(mr -> mr.gauge("eventuate.cdc.replication.lag.age", tags, lagAge));
-      meterRegistry.ifPresent(mr -> mr.gauge("eventuate.cdc.replication.lag", tags, lag));
-      meterRegistry.ifPresent(mr -> mr.gauge("eventuate.cdc.connected.to.database", tags, connected));
+      meterRegistry.gauge("eventuate.cdc.replication.lag.age", tags, lagAge);
+      meterRegistry.gauge("eventuate.cdc.replication.lag", tags, lag);
+      meterRegistry.gauge("eventuate.cdc.connected.to.database", tags, connected);
     }
   }
 }

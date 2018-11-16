@@ -65,8 +65,8 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                     ? Optional.empty()
                     : Optional.of(debeziumOffsetStoreFactory.create(readerProperties.getOldDbHistoryTopicName()));
 
-    return new MySqlBinaryLogClient(Optional.ofNullable(meterRegistry),
-            Optional.ofNullable(healthCheck),
+    return new MySqlBinaryLogClient(meterRegistry,
+            healthCheck,
             readerProperties.getCdcDbUserName(),
             readerProperties.getCdcDbPassword(),
             readerProperties.getDataSourceUrl(),

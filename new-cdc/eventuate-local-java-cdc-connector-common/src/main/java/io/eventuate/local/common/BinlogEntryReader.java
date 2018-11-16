@@ -9,16 +9,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.util.List;
-import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class BinlogEntryReader {
   protected Logger logger = LoggerFactory.getLogger(getClass());
-  protected Optional<MeterRegistry> meterRegistry;
+  protected MeterRegistry meterRegistry;
   protected CuratorFramework curatorFramework;
   protected String leadershipLockPath;
   protected List<BinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
@@ -29,16 +26,15 @@ public abstract class BinlogEntryReader {
   protected long binlogClientUniqueId;
   protected CdcMonitoringDao cdcMonitoringDao;
   protected CommonCdcMetrics commonCdcMetrics;
-  protected Optional<HealthCheck.HealthComponent> healthComponent;
+  protected HealthCheck.HealthComponent healthComponent;
 
-  private long lastEventTime;
+  private long lastEventTime = System.currentTimeMillis();
   private int maxEventIntervalToAssumeReaderHealthy;
-  private Optional<HealthCheck> healthCheck;
+  private HealthCheck healthCheck;
   private LeaderSelector leaderSelector;
-  private Timer healthCheckTimer;
 
-  public BinlogEntryReader(Optional<MeterRegistry> meterRegistry,
-                           Optional<HealthCheck> healthCheck,
+  public BinlogEntryReader(MeterRegistry meterRegistry,
+                           HealthCheck healthCheck,
                            CuratorFramework curatorFramework,
                            String leadershipLockPath,
                            String dataSourceUrl,
@@ -83,7 +79,7 @@ public abstract class BinlogEntryReader {
   }
 
   public void start() {
-    healthComponent = healthCheck.map(HealthCheck::getHealthComponent);
+    healthComponent = healthCheck.getHealthComponent(this::checkIfEventIsReceivedRecently);
 
     leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,
             new EventuateLeaderSelectorListener(this::leaderStart, this::leaderStop));
@@ -92,7 +88,7 @@ public abstract class BinlogEntryReader {
   }
 
   public void stop() {
-    healthCheck.ifPresent(hc -> healthComponent.ifPresent(hc::returnHealthComponent));
+    healthCheck.returnHealthComponent(healthComponent);
 
     leaderSelector.close();
     leaderStop();
@@ -101,18 +97,6 @@ public abstract class BinlogEntryReader {
 
   protected void leaderStart() {
     commonCdcMetrics.setLeader(true);
-
-    healthComponent.ifPresent(hc -> {
-      healthCheckTimer = new Timer();
-      healthCheckTimer.scheduleAtFixedRate(new TimerTask() {
-        @Override
-        public void run() {
-          if (!checkIfEventIsReceivedRecently()) {
-            hc.markAsUnhealthy(String.format("No events received recently by reader %s", binlogClientUniqueId));
-          }
-        }
-      }, maxEventIntervalToAssumeReaderHealthy, maxEventIntervalToAssumeReaderHealthy);
-    });
   }
 
   protected void leaderStop() {
@@ -131,20 +115,18 @@ public abstract class BinlogEntryReader {
 
   protected void stopMetrics() {
     commonCdcMetrics.setLeader(false);
-
-    healthComponent.ifPresent(hc -> {
-      healthCheckTimer.cancel();
-      hc.markAsHealthy();
-    });
+    healthComponent.markAsHealthy();
   }
 
   protected void onEventReceived() {
     commonCdcMetrics.onMessageProcessed();
     lastEventTime = System.currentTimeMillis();
-    healthComponent.ifPresent(HealthCheck.HealthComponent::markAsHealthy);
+    healthComponent.markAsHealthy();
   }
 
-  protected boolean checkIfEventIsReceivedRecently() {
-    return System.currentTimeMillis() - lastEventTime < maxEventIntervalToAssumeReaderHealthy;
+  protected void checkIfEventIsReceivedRecently() {
+    if (System.currentTimeMillis() - lastEventTime > maxEventIntervalToAssumeReaderHealthy) {
+      healthComponent.markAsUnhealthyIfHealthy(String.format("No events received recently by reader %s", binlogClientUniqueId));
+    }
   }
 }

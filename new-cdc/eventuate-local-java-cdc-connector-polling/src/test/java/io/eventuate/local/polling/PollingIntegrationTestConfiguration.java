@@ -32,6 +32,11 @@ import java.util.Optional;
 public class PollingIntegrationTestConfiguration {
 
   @Bean
+  public HealthCheck healthCheck() {
+    return new HealthCheck();
+  }
+
+  @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
     return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName() == null ? "events" : eventuateConfigurationProperties.getSourceTableName());
   }
@@ -78,8 +83,8 @@ public class PollingIntegrationTestConfiguration {
                                DataSource dataSource,
                                CuratorFramework curatorFramework) {
 
-    return new PollingDao(Optional.ofNullable(meterRegistry),
-            Optional.ofNullable(healthCheck),
+    return new PollingDao(meterRegistry,
+            healthCheck,
             dataSourceURL,
             dataSource,
             eventuateConfigurationProperties.getMaxEventsPerPolling(),

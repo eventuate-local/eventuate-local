@@ -12,7 +12,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
-import java.util.Optional;
 
 public class PostgresWalCdcPipelineReaderFactory
         extends CommonDbLogCdcPipelineReaderFactory<PostgresWalCdcPipelineReaderProperties, PostgresWalClient> {
@@ -51,8 +50,8 @@ public class PostgresWalCdcPipelineReaderFactory
 
     DataSource dataSource = createDataSource(readerProperties);
 
-    return new PostgresWalClient(Optional.ofNullable(meterRegistry),
-            Optional.ofNullable(healthCheck),
+    return new PostgresWalClient(meterRegistry,
+            healthCheck,
             readerProperties.getDataSourceUrl(),
             readerProperties.getDataSourceUserName(),
             readerProperties.getDataSourcePassword(),

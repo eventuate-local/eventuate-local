@@ -29,6 +29,19 @@ Eventuate Local has a change data capture (CDC) component that
 
 The CDC component runs either embedded within each application or as a service `cdcservice`.
 
+== Got questions?
+
+Don't hesitate to create an issue or see
+
+* https://groups.google.com/d/forum/eventuate-users[Mailing list]
+* https://eventuate-users.slack.com[Slack]. https://eventuateusersslack.herokuapp.com/[Get invite]
+* http://eventuate.io/contact.html[Contact us].
+
+== Need support?
+
+Take a look at the http://eventuate.io/support.html[available paid support] options.
+
+
 = Setting up Eventuate Local
 
 To use Eventuate Local you need to

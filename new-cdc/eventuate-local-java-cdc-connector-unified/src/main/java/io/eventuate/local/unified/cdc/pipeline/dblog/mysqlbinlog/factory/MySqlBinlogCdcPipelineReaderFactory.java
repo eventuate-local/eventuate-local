@@ -25,7 +25,6 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
   private OffsetStoreFactory offsetStoreFactory;
 
   public MySqlBinlogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                             HealthCheck healthCheck,
                                              CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
@@ -35,7 +34,6 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                                              DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
     super(meterRegistry,
-            healthCheck,
             curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
@@ -66,7 +64,6 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                     : Optional.of(debeziumOffsetStoreFactory.create(readerProperties.getOldDbHistoryTopicName()));
 
     return new MySqlBinaryLogClient(meterRegistry,
-            healthCheck,
             readerProperties.getCdcDbUserName(),
             readerProperties.getCdcDbPassword(),
             readerProperties.getDataSourceUrl(),
@@ -84,7 +81,6 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
             debeziumBinlogOffsetKafkaStore,
             readerProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             readerProperties.getMonitoringRetryIntervalInMilliseconds(),
-            readerProperties.getMonitoringRetryAttempts(),
-            readerProperties.getMaxEventIntervalToAssumeReaderHealthy());
+            readerProperties.getMonitoringRetryAttempts());
   }
 }

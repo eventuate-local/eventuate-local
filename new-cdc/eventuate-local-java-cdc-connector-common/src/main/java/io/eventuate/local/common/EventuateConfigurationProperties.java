@@ -55,9 +55,6 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.monitoring.retry.attempts:#{1000}}")
   private int monitoringRetryAttempts;
 
-  @Value("${eventuatelocal.cdc.max.event.interval.to.assume.reader.healthy:#{60000}}")
-  private int maxEventIntervalToAssumeReaderHealthy;
-
   private int postgresWalIntervalInMilliseconds = 500;
 
   private int postgresReplicationStatusIntervalInMilliseconds = 1000;
@@ -158,9 +155,5 @@ public class EventuateConfigurationProperties {
 
   public int getMonitoringRetryAttempts() {
     return monitoringRetryAttempts;
-  }
-
-  public int getMaxEventIntervalToAssumeReaderHealthy() {
-    return maxEventIntervalToAssumeReaderHealthy;
   }
 }

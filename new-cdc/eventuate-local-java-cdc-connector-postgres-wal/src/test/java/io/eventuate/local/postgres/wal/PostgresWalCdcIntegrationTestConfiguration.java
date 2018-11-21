@@ -56,7 +56,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
   @Bean
   public PostgresWalClient postgresWalClient(MeterRegistry meterRegistry,
-                                             HealthCheck healthCheck,
                                              @Value("${spring.datasource.url}") String dbUrl,
                                              @Value("${spring.datasource.username}") String dbUserName,
                                              @Value("${spring.datasource.password}") String dbPassword,
@@ -65,7 +64,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                              CuratorFramework curatorFramework) {
 
     return new PostgresWalClient(meterRegistry,
-            healthCheck,
             dbUrl,
             dbUserName,
             dbPassword,
@@ -80,8 +78,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getMonitoringRetryAttempts(),
-            eventuateConfigurationProperties.getMaxEventIntervalToAssumeReaderHealthy());
+            eventuateConfigurationProperties.getMonitoringRetryAttempts());
   }
 
 

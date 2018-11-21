@@ -8,6 +8,7 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.mysql.binlog.DebeziumBinlogOffsetKafkaStore;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderHealthCheck;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.DefaultSourceTableNameResolver;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
@@ -29,6 +30,11 @@ public class CommonCdcPipelineConfiguration {
   @Bean
   public HealthCheck healthCheck() {
     return new HealthCheck();
+  }
+
+  @Bean
+  public BinlogEntryReaderHealthCheck binlogEntryReaderHealthCheck() {
+    return new BinlogEntryReaderHealthCheck();
   }
 
   @Bean

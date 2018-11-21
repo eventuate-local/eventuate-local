@@ -14,17 +14,14 @@ abstract public class CommonCdcPipelineReaderFactory<PROPERTIES extends CdcPipel
         implements CdcPipelineReaderFactory<PROPERTIES, READER> {
 
   protected MeterRegistry meterRegistry;
-  protected HealthCheck healthCheck;
   protected CuratorFramework curatorFramework;
   protected BinlogEntryReaderProvider binlogEntryReaderProvider;
 
 
   public CommonCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                        HealthCheck healthCheck,
                                         CuratorFramework curatorFramework,
                                         BinlogEntryReaderProvider binlogEntryReaderProvider) {
     this.meterRegistry = meterRegistry;
-    this.healthCheck = healthCheck;
     this.curatorFramework = curatorFramework;
     this.binlogEntryReaderProvider = binlogEntryReaderProvider;
   }

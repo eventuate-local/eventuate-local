@@ -63,7 +63,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   public MySqlBinaryLogClient mySqlBinaryLogClient(@Autowired MeterRegistry meterRegistry,
-                                                   @Autowired HealthCheck healthCheck,
                                                    @Value("${spring.datasource.url}") String dataSourceURL,
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
@@ -72,7 +71,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
     return new MySqlBinaryLogClient(
             meterRegistry,
-            healthCheck,
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
             dataSourceURL,
@@ -87,8 +85,7 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             Optional.empty(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getMonitoringRetryAttempts(),
-            eventuateConfigurationProperties.getMaxEventIntervalToAssumeReaderHealthy());
+            eventuateConfigurationProperties.getMonitoringRetryAttempts());
   }
 
   @Bean

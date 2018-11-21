@@ -20,14 +20,13 @@ public abstract class CommonDbLogCdcPipelineReaderFactory<PROPERTIES extends Cdc
 
 
   public CommonDbLogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                             HealthCheck healthCheck,
                                              CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                              EventuateKafkaProducer eventuateKafkaProducer) {
 
-    super(meterRegistry, healthCheck, curatorFramework, binlogEntryReaderProvider);
+    super(meterRegistry, curatorFramework, binlogEntryReaderProvider);
 
     this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
     this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;

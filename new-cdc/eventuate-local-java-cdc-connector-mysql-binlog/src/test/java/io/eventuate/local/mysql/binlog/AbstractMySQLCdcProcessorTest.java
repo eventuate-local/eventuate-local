@@ -11,6 +11,7 @@ import io.eventuate.local.test.util.SourceTableNameSupplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {

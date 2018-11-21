@@ -23,12 +23,18 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 
 @Configuration
 @EnableAutoConfiguration
 @Import(EventuateDriverConfiguration.class)
 @EnableConfigurationProperties(EventuateKafkaProducerConfigurationProperties.class)
 public class PollingIntegrationTestConfiguration {
+
+  @Bean
+  public HealthCheck healthCheck() {
+    return new HealthCheck();
+  }
 
   @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {

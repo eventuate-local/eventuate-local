@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -32,6 +33,11 @@ import java.util.stream.Collectors;
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
         EventuateKafkaConsumerConfigurationProperties.class})
 public class PostgresWalCdcIntegrationTestConfiguration {
+
+  @Bean
+  public HealthCheck healthCheck() {
+    return new HealthCheck();
+  }
 
   @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
@@ -49,8 +55,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  public PostgresWalClient postgresWalClient(@Autowired(required = false) MeterRegistry meterRegistry,
-                                             @Autowired(required = false) HealthCheck healthCheck,
+  public PostgresWalClient postgresWalClient(MeterRegistry meterRegistry,
+                                             HealthCheck healthCheck,
                                              @Value("${spring.datasource.url}") String dbUrl,
                                              @Value("${spring.datasource.username}") String dbUserName,
                                              @Value("${spring.datasource.password}") String dbPassword,
@@ -83,13 +89,15 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   public CdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducerFactory dataProducerFactory,
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                      PublishingStrategy<PublishedEvent> publishingStrategy) {
+                                                                      PublishingStrategy<PublishedEvent> publishingStrategy,
+                                                                      MeterRegistry meterRegistry,
+                                                                      HealthCheck healthCheck) {
 
     return new CdcDataPublisher<>(dataProducerFactory,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy,
-            null,
-            null);
+            meterRegistry,
+            healthCheck);
   }
 
   @Bean

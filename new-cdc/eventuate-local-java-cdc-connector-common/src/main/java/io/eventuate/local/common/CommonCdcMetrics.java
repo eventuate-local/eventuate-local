@@ -1,6 +1,7 @@
 package io.eventuate.local.common;
 
 import io.micrometer.core.instrument.MeterRegistry;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CommonCdcMetrics extends AbstractCdcMetrics {

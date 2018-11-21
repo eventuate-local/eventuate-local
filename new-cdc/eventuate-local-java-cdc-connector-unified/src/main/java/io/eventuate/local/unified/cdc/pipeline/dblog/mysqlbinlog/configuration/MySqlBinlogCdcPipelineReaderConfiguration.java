@@ -15,7 +15,6 @@ import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.MySqlBi
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -24,8 +23,8 @@ import org.springframework.context.annotation.Configuration;
 public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDefaultPipelineReaderConfiguration {
 
   @Bean("eventuateLocalMySqlBinlogCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory mySqlBinlogCdcPipelineReaderFactory(@Autowired(required = false) MeterRegistry meterRegistry,
-                                                                      @Autowired(required = false) HealthCheck healthCheck,
+  public CdcPipelineReaderFactory mySqlBinlogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+                                                                      HealthCheck healthCheck,
                                                                       CuratorFramework curatorFramework,
                                                                       BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
@@ -47,8 +46,8 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
 
   @Conditional(MySqlBinlogCondition.class)
   @Bean("defaultCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory defaultMySqlBinlogCdcPipelineFactory(@Autowired(required = false) MeterRegistry meterRegistry,
-                                                                       @Autowired(required = false) HealthCheck healthCheck,
+  public CdcPipelineReaderFactory defaultMySqlBinlogCdcPipelineFactory(MeterRegistry meterRegistry,
+                                                                       HealthCheck healthCheck,
                                                                        CuratorFramework curatorFramework,
                                                                        BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,

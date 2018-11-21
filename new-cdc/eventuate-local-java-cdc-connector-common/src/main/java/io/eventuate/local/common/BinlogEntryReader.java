@@ -9,9 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.util.List;
-import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,13 +26,12 @@ public abstract class BinlogEntryReader {
   protected long binlogClientUniqueId;
   protected CdcMonitoringDao cdcMonitoringDao;
   protected CommonCdcMetrics commonCdcMetrics;
-  protected Optional<HealthCheck.HealthComponent> healthComponent;
+  protected HealthCheck.HealthComponent healthComponent;
 
-  private long lastEventTime;
+  private long lastEventTime = System.currentTimeMillis();
   private int maxEventIntervalToAssumeReaderHealthy;
   private HealthCheck healthCheck;
   private LeaderSelector leaderSelector;
-  private Timer healthCheckTimer;
 
   public BinlogEntryReader(MeterRegistry meterRegistry,
                            HealthCheck healthCheck,
@@ -83,7 +79,7 @@ public abstract class BinlogEntryReader {
   }
 
   public void start() {
-    healthComponent = Optional.ofNullable(healthCheck).map(HealthCheck::getHealthComponent);
+    healthComponent = healthCheck.getHealthComponent(this::checkIfEventIsReceivedRecently);
 
     leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,
             new EventuateLeaderSelectorListener(this::leaderStart, this::leaderStop));
@@ -92,7 +88,8 @@ public abstract class BinlogEntryReader {
   }
 
   public void stop() {
-    healthComponent.ifPresent(hc -> healthCheck.returnHealthComponent(hc));
+    healthCheck.returnHealthComponent(healthComponent);
+
     leaderSelector.close();
     leaderStop();
     binlogEntryHandlers.clear();
@@ -100,18 +97,6 @@ public abstract class BinlogEntryReader {
 
   protected void leaderStart() {
     commonCdcMetrics.setLeader(true);
-
-    healthComponent.ifPresent(hc -> {
-      healthCheckTimer = new Timer();
-      healthCheckTimer.scheduleAtFixedRate(new TimerTask() {
-        @Override
-        public void run() {
-          if (!checkIfEventIsReceivedRecently()) {
-            hc.markAsUnhealthy(String.format("No events received recently by reader %s", binlogClientUniqueId));
-          }
-        }
-      }, maxEventIntervalToAssumeReaderHealthy, maxEventIntervalToAssumeReaderHealthy);
-    });
   }
 
   protected void leaderStop() {
@@ -130,20 +115,18 @@ public abstract class BinlogEntryReader {
 
   protected void stopMetrics() {
     commonCdcMetrics.setLeader(false);
-
-    healthComponent.ifPresent(hc -> {
-      healthCheckTimer.cancel();
-      hc.markAsHealthy();
-    });
+    healthComponent.markAsHealthy();
   }
 
   protected void onEventReceived() {
     commonCdcMetrics.onMessageProcessed();
     lastEventTime = System.currentTimeMillis();
-    healthComponent.ifPresent(HealthCheck.HealthComponent::markAsHealthy);
+    healthComponent.markAsHealthy();
   }
 
-  protected boolean checkIfEventIsReceivedRecently() {
-    return System.currentTimeMillis() - lastEventTime < maxEventIntervalToAssumeReaderHealthy;
+  protected void checkIfEventIsReceivedRecently() {
+    if (System.currentTimeMillis() - lastEventTime > maxEventIntervalToAssumeReaderHealthy) {
+      healthComponent.markAsUnhealthyIfHealthy(String.format("No events received recently by reader %s", binlogClientUniqueId));
+    }
   }
 }

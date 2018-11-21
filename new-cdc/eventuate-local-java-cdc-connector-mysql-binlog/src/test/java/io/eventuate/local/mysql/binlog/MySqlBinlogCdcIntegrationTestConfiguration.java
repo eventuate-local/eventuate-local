@@ -37,6 +37,11 @@ import java.util.Optional;
 public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
+  public HealthCheck healthCheck() {
+    return new HealthCheck();
+  }
+
+  @Bean
   public EventuateConfigurationProperties eventuateConfigurationProperties() {
     return new EventuateConfigurationProperties();
   }
@@ -57,8 +62,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  public MySqlBinaryLogClient mySqlBinaryLogClient(@Autowired(required = false) MeterRegistry meterRegistry,
-                                                   @Autowired(required = false) HealthCheck healthCheck,
+  public MySqlBinaryLogClient mySqlBinaryLogClient(@Autowired MeterRegistry meterRegistry,
+                                                   @Autowired HealthCheck healthCheck,
                                                    @Value("${spring.datasource.url}") String dataSourceURL,
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,

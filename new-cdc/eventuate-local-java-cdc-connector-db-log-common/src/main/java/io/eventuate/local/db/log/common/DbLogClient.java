@@ -93,13 +93,11 @@ public abstract class DbLogClient extends BinlogEntryReader {
 
   protected void onConnected() {
     dbLogMetrics.onConnected();
-    if (checkIfEventIsReceivedRecently()) {
-      healthComponent.ifPresent(HealthCheck.HealthComponent::markAsHealthy);
-    }
+    healthComponent.markAsHealthy();
   }
 
   protected void onDisconnected() {
     dbLogMetrics.onDisconnected();
-    healthComponent.ifPresent(hc -> hc.markAsUnhealthy(String.format("Reader with id %s disconnected", binlogClientUniqueId)));
+    healthComponent.markAsUnhealthy(String.format("Reader with id %s disconnected", binlogClientUniqueId));
   }
 }

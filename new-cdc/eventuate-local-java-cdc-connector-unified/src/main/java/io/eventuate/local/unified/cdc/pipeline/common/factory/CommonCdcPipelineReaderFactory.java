@@ -2,7 +2,6 @@ package io.eventuate.local.unified.cdc.pipeline.common.factory;
 
 import com.zaxxer.hikari.HikariDataSource;
 import io.eventuate.local.common.BinlogEntryReader;
-import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;

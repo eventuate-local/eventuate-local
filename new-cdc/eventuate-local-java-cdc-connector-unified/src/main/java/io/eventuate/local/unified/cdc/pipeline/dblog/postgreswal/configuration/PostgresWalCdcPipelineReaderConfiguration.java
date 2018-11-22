@@ -1,6 +1,5 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.configuration;
 
-import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;

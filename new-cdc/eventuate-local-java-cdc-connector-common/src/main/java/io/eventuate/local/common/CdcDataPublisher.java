@@ -16,10 +16,6 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
   protected MeterRegistry meterRegistry;
-  protected HealthCheck healthCheck;
-
-  protected HealthCheck.HealthComponent healthComponent;
-
   protected PublishingStrategy<EVENT> publishingStrategy;
   protected DataProducerFactory dataProducerFactory;
   protected DataProducer producer;
@@ -29,20 +25,23 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
   protected AtomicLong histogramEventAge;
 
   private PublishingFilter publishingFilter;
+  private volatile boolean lastMessagePublishingFailed;
 
   public CdcDataPublisher(DataProducerFactory dataProducerFactory,
                           PublishingFilter publishingFilter,
                           PublishingStrategy<EVENT> publishingStrategy,
-                          MeterRegistry meterRegistry,
-                          HealthCheck healthCheck) {
+                          MeterRegistry meterRegistry) {
 
     this.dataProducerFactory = dataProducerFactory;
     this.publishingStrategy = publishingStrategy;
     this.publishingFilter = publishingFilter;
     this.meterRegistry = meterRegistry;
-    this.healthCheck = healthCheck;
 
     initMetrics();
+  }
+
+  public boolean isLastMessagePublishingFailed() {
+    return lastMessagePublishingFailed;
   }
 
   private void initMetrics() {
@@ -55,8 +54,6 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
   }
 
   public void start() {
-    healthComponent = healthCheck.getHealthComponent();
-
     logger.debug("Starting CdcDataPublisher");
     producer = dataProducerFactory.create();
     logger.debug("Starting CdcDataPublisher");
@@ -66,8 +63,6 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
     logger.debug("Stopping data producer");
     if (producer != null)
       producer.close();
-
-    healthCheck.returnHealthComponent(healthComponent);
   }
 
   public void handleEvent(EVENT publishedEvent) throws EventuateLocalPublishingException {
@@ -90,7 +85,7 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
                   json
           ).get(10, TimeUnit.SECONDS);
 
-          healthComponent.markAsHealthy();
+          lastMessagePublishingFailed = false;
 
           publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> histogramEventAge.set(System.currentTimeMillis() - time));
           meterEventsPublished.increment();
@@ -101,9 +96,8 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
         return;
       } catch (Exception e) {
 
-        String error = "error publishing to " + aggregateTopic;
-        healthComponent.markAsUnhealthy(error);
-        logger.warn(error, e);
+        lastMessagePublishingFailed = true;
+        logger.warn("error publishing to " + aggregateTopic, e);
         meterEventsRetries.increment();
         lastException = e;
 

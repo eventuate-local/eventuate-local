@@ -1,22 +1,26 @@
-package io.eventuate.local.unified.cdc.pipeline.common;
+package io.eventuate.local.unified.cdc.pipeline.common.health;
 
 import io.eventuate.local.common.BinlogEntryReader;
 import io.eventuate.local.db.log.common.DbLogClient;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
-public class BinlogEntryReaderHealthCheck implements HealthIndicator {
+public class BinlogEntryReaderHealthCheck extends AbstractHealthCheck {
 
   @Value("${eventuatelocal.cdc.max.event.interval.to.assume.reader.healthy:#{60000}}")
   private long maxEventIntervalToAssumeReaderHealthy;
 
-  @Autowired
   private BinlogEntryReaderProvider binlogEntryReaderProvider;
+
+  public BinlogEntryReaderHealthCheck(BinlogEntryReaderProvider binlogEntryReaderProvider) {
+    this.binlogEntryReaderProvider = binlogEntryReaderProvider;
+  }
 
   @Override
   public Health health() {
@@ -39,17 +43,7 @@ public class BinlogEntryReaderHealthCheck implements HealthIndicator {
             })
             .collect(Collectors.toList());
 
-    if (!errorMessages.isEmpty()) {
-      Health.Builder builder = Health.down();
-
-      for (int i = 1; i <= errorMessages.size(); i++) {
-        builder.withDetail("error-" + i, errorMessages.get(i - 1));
-      }
-
-      return builder.build();
-    }
-
-    return Health.up().build();
+    return checkErrors(errorMessages);
   }
 
   private List<String> checkDbLogReaderHealth(DbLogClient dbLogClient) {

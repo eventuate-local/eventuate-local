@@ -39,7 +39,7 @@ public abstract class AbstractPostgresWalCdcProcessorTest extends CdcProcessorTe
     postgresWalClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
             new BinlogEntryToPublishedEventConverter(),
-            new CdcDataPublisher<PublishedEvent>(null, null, null, null, null) {
+            new CdcDataPublisher<PublishedEvent>(null, null, null, null) {
               @Override
               public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
                 consumer.accept(publishedEvent);

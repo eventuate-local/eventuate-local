@@ -37,11 +37,6 @@ import java.util.Optional;
 public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
-  public HealthCheck healthCheck() {
-    return new HealthCheck();
-  }
-
-  @Bean
   public EventuateConfigurationProperties eventuateConfigurationProperties() {
     return new EventuateConfigurationProperties();
   }
@@ -121,7 +116,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
     return new CdcDataPublisher<>(dataProducerFactory,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy,
-            null,
             null);
   }
 

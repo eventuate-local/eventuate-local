@@ -8,9 +8,10 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.mysql.binlog.DebeziumBinlogOffsetKafkaStore;
-import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderHealthCheck;
+import io.eventuate.local.unified.cdc.pipeline.common.health.BinlogEntryReaderHealthCheck;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.DefaultSourceTableNameResolver;
+import io.eventuate.local.unified.cdc.pipeline.common.health.CdcDataPublisherHealthCheck;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.DebeziumOffsetStoreFactory;
 import org.apache.curator.RetryPolicy;
@@ -28,13 +29,13 @@ import org.springframework.context.annotation.Configuration;
 public class CommonCdcPipelineConfiguration {
 
   @Bean
-  public HealthCheck healthCheck() {
-    return new HealthCheck();
+  public BinlogEntryReaderHealthCheck binlogEntryReaderHealthCheck(BinlogEntryReaderProvider binlogEntryReaderProvider) {
+    return new BinlogEntryReaderHealthCheck(binlogEntryReaderProvider);
   }
 
   @Bean
-  public BinlogEntryReaderHealthCheck binlogEntryReaderHealthCheck() {
-    return new BinlogEntryReaderHealthCheck();
+  public CdcDataPublisherHealthCheck cdcDataPublisherHealthCheck(CdcDataPublisher cdcDataPublisher) {
+    return new CdcDataPublisherHealthCheck(cdcDataPublisher);
   }
 
   @Bean

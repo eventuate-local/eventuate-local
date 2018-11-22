@@ -15,7 +15,6 @@ import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -24,7 +23,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import javax.sql.DataSource;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -33,11 +31,6 @@ import java.util.stream.Collectors;
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
         EventuateKafkaConsumerConfigurationProperties.class})
 public class PostgresWalCdcIntegrationTestConfiguration {
-
-  @Bean
-  public HealthCheck healthCheck() {
-    return new HealthCheck();
-  }
 
   @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
@@ -87,14 +80,12 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                                       PublishingStrategy<PublishedEvent> publishingStrategy,
-                                                                      MeterRegistry meterRegistry,
-                                                                      HealthCheck healthCheck) {
+                                                                      MeterRegistry meterRegistry) {
 
     return new CdcDataPublisher<>(dataProducerFactory,
             new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
             publishingStrategy,
-            meterRegistry,
-            healthCheck);
+            meterRegistry);
   }
 
   @Bean

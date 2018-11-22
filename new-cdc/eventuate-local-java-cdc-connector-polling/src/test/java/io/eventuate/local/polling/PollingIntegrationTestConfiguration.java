@@ -31,11 +31,6 @@ import javax.sql.DataSource;
 public class PollingIntegrationTestConfiguration {
 
   @Bean
-  public HealthCheck healthCheck() {
-    return new HealthCheck();
-  }
-
-  @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
     return new SourceTableNameSupplier(eventuateConfigurationProperties.getSourceTableName() == null ? "events" : eventuateConfigurationProperties.getSourceTableName());
   }

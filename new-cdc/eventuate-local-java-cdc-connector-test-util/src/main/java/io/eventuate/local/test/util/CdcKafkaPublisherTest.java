@@ -3,7 +3,6 @@ package io.eventuate.local.test.util;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.common.PublishingStrategy;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -21,9 +20,6 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
 
   @Autowired
   protected MeterRegistry meterRegistry;
-
-  @Autowired
-  protected HealthCheck healthCheck;
 
   @Autowired
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;

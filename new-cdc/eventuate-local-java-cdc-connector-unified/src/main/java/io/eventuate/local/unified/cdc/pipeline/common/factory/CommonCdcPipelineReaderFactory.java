@@ -2,7 +2,6 @@ package io.eventuate.local.unified.cdc.pipeline.common.factory;
 
 import com.zaxxer.hikari.HikariDataSource;
 import io.eventuate.local.common.BinlogEntryReader;
-import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -14,17 +13,14 @@ abstract public class CommonCdcPipelineReaderFactory<PROPERTIES extends CdcPipel
         implements CdcPipelineReaderFactory<PROPERTIES, READER> {
 
   protected MeterRegistry meterRegistry;
-  protected HealthCheck healthCheck;
   protected CuratorFramework curatorFramework;
   protected BinlogEntryReaderProvider binlogEntryReaderProvider;
 
 
   public CommonCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                        HealthCheck healthCheck,
                                         CuratorFramework curatorFramework,
                                         BinlogEntryReaderProvider binlogEntryReaderProvider) {
     this.meterRegistry = meterRegistry;
-    this.healthCheck = healthCheck;
     this.curatorFramework = curatorFramework;
     this.binlogEntryReaderProvider = binlogEntryReaderProvider;
   }

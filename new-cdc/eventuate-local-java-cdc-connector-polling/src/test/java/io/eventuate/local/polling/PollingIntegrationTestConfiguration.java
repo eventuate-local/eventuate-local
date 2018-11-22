@@ -23,18 +23,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
-import java.util.Optional;
 
 @Configuration
 @EnableAutoConfiguration
 @Import(EventuateDriverConfiguration.class)
 @EnableConfigurationProperties(EventuateKafkaProducerConfigurationProperties.class)
 public class PollingIntegrationTestConfiguration {
-
-  @Bean
-  public HealthCheck healthCheck() {
-    return new HealthCheck();
-  }
 
   @Bean
   public SourceTableNameSupplier sourceTableNameSupplier(EventuateConfigurationProperties eventuateConfigurationProperties) {
@@ -77,14 +71,12 @@ public class PollingIntegrationTestConfiguration {
   @Bean
   @Profile("EventuatePolling")
   public PollingDao pollingDao(@Autowired(required = false) MeterRegistry meterRegistry,
-                               @Autowired(required = false) HealthCheck healthCheck,
                                @Value("${spring.datasource.url}") String dataSourceURL,
                                EventuateConfigurationProperties eventuateConfigurationProperties,
                                DataSource dataSource,
                                CuratorFramework curatorFramework) {
 
     return new PollingDao(meterRegistry,
-            healthCheck,
             dataSourceURL,
             dataSource,
             eventuateConfigurationProperties.getMaxEventsPerPolling(),
@@ -95,8 +87,7 @@ public class PollingIntegrationTestConfiguration {
             eventuateConfigurationProperties.getLeadershipLockPath(),
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getMonitoringRetryAttempts(),
-            eventuateConfigurationProperties.getMaxEventIntervalToAssumeReaderHealthy());
+            eventuateConfigurationProperties.getMonitoringRetryAttempts());
   }
 
   @Bean

@@ -3,7 +3,6 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
-import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -37,7 +36,6 @@ public class PostgresWalClient extends DbLogClient {
   private String replicationSlotName;
 
   public PostgresWalClient(MeterRegistry meterRegistry,
-                           HealthCheck healthCheck,
                            String url,
                            String user,
                            String password,
@@ -52,11 +50,9 @@ public class PostgresWalClient extends DbLogClient {
                            long uniqueId,
                            long replicationLagMeasuringIntervalInMilliseconds,
                            int monitoringRetryIntervalInMilliseconds,
-                           int monitoringRetryAttempts,
-                           int maxEventIntervalToAssumeReaderHealthy) {
+                           int monitoringRetryAttempts) {
 
     super(meterRegistry,
-            healthCheck,
             user,
             password,
             url,
@@ -66,8 +62,7 @@ public class PostgresWalClient extends DbLogClient {
             uniqueId,
             replicationLagMeasuringIntervalInMilliseconds,
             monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts,
-            maxEventIntervalToAssumeReaderHealthy);
+            monitoringRetryAttempts);
 
     this.walIntervalInMilliseconds = walIntervalInMilliseconds;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;

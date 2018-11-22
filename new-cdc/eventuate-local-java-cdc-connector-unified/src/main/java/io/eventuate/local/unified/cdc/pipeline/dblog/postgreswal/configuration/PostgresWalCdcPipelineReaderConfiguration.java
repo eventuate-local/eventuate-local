@@ -1,6 +1,5 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.configuration;
 
-import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -21,7 +20,6 @@ public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
 
   @Bean("eventuateLocalPostgresWalCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory postgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                                                      HealthCheck healthCheck,
                                                                       CuratorFramework curatorFramework,
                                                                       BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
@@ -29,7 +27,6 @@ public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
                                                                       EventuateKafkaProducer eventuateKafkaProducer) {
 
     return new PostgresWalCdcPipelineReaderFactory(meterRegistry,
-            healthCheck,
             curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
@@ -40,7 +37,6 @@ public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
   @Profile("PostgresWal")
   @Bean("defaultCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory defaultPostgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                                                             HealthCheck healthCheck,
                                                                              CuratorFramework curatorFramework,
                                                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
@@ -48,7 +44,6 @@ public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
                                                                              EventuateKafkaProducer eventuateKafkaProducer) {
 
     return new PostgresWalCdcPipelineReaderFactory(meterRegistry,
-            healthCheck,
             curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,

@@ -16,9 +16,9 @@ public abstract class DbLogClient extends BinlogEntryReader {
   protected String defaultDatabase;
   protected DbLogMetrics dbLogMetrics;
   private boolean checkEntriesForDuplicates;
+  protected volatile boolean connected;
 
   public DbLogClient(MeterRegistry meterRegistry,
-                     HealthCheck healthCheck,
                      String dbUserName,
                      String dbPassword,
                      String dataSourceUrl,
@@ -28,19 +28,16 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      long binlogClientUniqueId,
                      long replicationLagMeasuringIntervalInMilliseconds,
                      int monitoringRetryIntervalInMilliseconds,
-                     int monitoringRetryAttempts,
-                     int maxEventIntervalToAssumeReaderHealthy) {
+                     int monitoringRetryAttempts) {
 
     super(meterRegistry,
-            healthCheck,
             curatorFramework,
             leadershipLockPath,
             dataSourceUrl,
             dataSource,
             binlogClientUniqueId,
             monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts,
-            maxEventIntervalToAssumeReaderHealthy);
+            monitoringRetryAttempts);
 
     dbLogMetrics = new DbLogMetrics(meterRegistry,
             cdcMonitoringDao,
@@ -55,6 +52,10 @@ public abstract class DbLogClient extends BinlogEntryReader {
     host = jdbcUrl.getHost();
     port = jdbcUrl.getPort();
     defaultDatabase = jdbcUrl.getDatabase();
+  }
+
+  public boolean isConnected() {
+    return connected;
   }
 
   @Override
@@ -93,11 +94,11 @@ public abstract class DbLogClient extends BinlogEntryReader {
 
   protected void onConnected() {
     dbLogMetrics.onConnected();
-    healthComponent.markAsHealthy();
+    connected = true;
   }
 
   protected void onDisconnected() {
     dbLogMetrics.onDisconnected();
-    healthComponent.markAsUnhealthy(String.format("Reader with id %s disconnected", binlogClientUniqueId));
+    connected = false;
   }
 }

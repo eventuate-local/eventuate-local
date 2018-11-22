@@ -1,6 +1,5 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
-import io.eventuate.local.common.HealthCheck;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -19,7 +18,6 @@ public class PostgresWalCdcPipelineReaderFactory
   public static final String TYPE = "postgres-wal";
 
   public PostgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                             HealthCheck healthCheck,
                                              CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
@@ -27,7 +25,6 @@ public class PostgresWalCdcPipelineReaderFactory
                                              EventuateKafkaProducer eventuateKafkaProducer) {
 
     super(meterRegistry,
-            healthCheck,
             curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
@@ -51,7 +48,6 @@ public class PostgresWalCdcPipelineReaderFactory
     DataSource dataSource = createDataSource(readerProperties);
 
     return new PostgresWalClient(meterRegistry,
-            healthCheck,
             readerProperties.getDataSourceUrl(),
             readerProperties.getDataSourceUserName(),
             readerProperties.getDataSourcePassword(),
@@ -66,7 +62,6 @@ public class PostgresWalCdcPipelineReaderFactory
             readerProperties.getBinlogClientId(),
             readerProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             readerProperties.getMonitoringRetryIntervalInMilliseconds(),
-            readerProperties.getMonitoringRetryAttempts(),
-            readerProperties.getMaxEventIntervalToAssumeReaderHealthy());
+            readerProperties.getMonitoringRetryAttempts());
   }
 }

@@ -49,7 +49,6 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private Optional<Long> cdcMonitoringTableId = Optional.empty();
 
   public MySqlBinaryLogClient(MeterRegistry meterRegistry,
-                              HealthCheck healthCheck,
                               String dbUserName,
                               String dbPassword,
                               String dataSourceUrl,
@@ -64,11 +63,9 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore,
                               long replicationLagMeasuringIntervalInMilliseconds,
                               int monitoringRetryIntervalInMilliseconds,
-                              int monitoringRetryAttempts,
-                              int maxEventIntervalToAssumeReaderHealthy) {
+                              int monitoringRetryAttempts) {
 
     super(meterRegistry,
-            healthCheck,
             dbUserName,
             dbPassword,
             dataSourceUrl,
@@ -78,8 +75,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
             binlogClientUniqueId,
             replicationLagMeasuringIntervalInMilliseconds,
             monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts,
-            maxEventIntervalToAssumeReaderHealthy);
+            monitoringRetryAttempts);
 
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.extractor = new MySqlBinlogEntryExtractor(dataSource);

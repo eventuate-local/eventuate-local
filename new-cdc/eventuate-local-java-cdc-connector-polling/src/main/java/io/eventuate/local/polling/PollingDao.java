@@ -27,7 +27,6 @@ public class PollingDao extends BinlogEntryReader {
   private Map<SchemaAndTable, String> pkFields = new HashMap<>();
 
   public PollingDao(MeterRegistry meterRegistry,
-                    HealthCheck healthCheck,
                     String dataSourceUrl,
                     DataSource dataSource,
                     int maxEventsPerPolling,
@@ -38,19 +37,16 @@ public class PollingDao extends BinlogEntryReader {
                     String leadershipLockPath,
                     long uniqueId,
                     int monitoringRetryIntervalInMilliseconds,
-                    int monitoringRetryAttempts,
-                    int maxEventIntervalToAssumeReaderHealthy) {
+                    int monitoringRetryAttempts) {
 
     super(meterRegistry,
-            healthCheck,
             curatorFramework,
             leadershipLockPath,
             dataSourceUrl,
             dataSource,
             uniqueId,
             monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts,
-            maxEventIntervalToAssumeReaderHealthy);
+            monitoringRetryAttempts);
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");

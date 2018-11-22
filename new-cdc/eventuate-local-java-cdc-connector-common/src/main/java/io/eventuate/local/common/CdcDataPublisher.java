@@ -46,10 +46,10 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
 
   private void initMetrics() {
     if (meterRegistry != null) {
-      histogramEventAge = meterRegistry.gauge("histogram.event.age", new AtomicLong(0));
-      meterEventsPublished = meterRegistry.counter("meter.events.published");
-      meterEventsDuplicates = meterRegistry.counter("meter.events.duplicates");
-      meterEventsRetries = meterRegistry.counter("meter.events.retries");
+      histogramEventAge = meterRegistry.gauge("eventuate.cdc.event.age", new AtomicLong(0));
+      meterEventsPublished = meterRegistry.counter("eventuate.cdc.events.published");
+      meterEventsDuplicates = meterRegistry.counter("eventuate.cdc.events.duplicates");
+      meterEventsRetries = meterRegistry.counter("eventuate.cdc.events.retries");
     }
   }
 

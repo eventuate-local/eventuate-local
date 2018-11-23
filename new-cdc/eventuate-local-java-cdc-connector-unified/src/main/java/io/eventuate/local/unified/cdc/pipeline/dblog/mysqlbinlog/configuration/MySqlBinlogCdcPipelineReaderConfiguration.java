@@ -72,6 +72,8 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
     initCommonDbLogCdcPipelineReaderProperties(mySqlBinlogCdcPipelineReaderProperties);
     initCdcPipelineReaderProperties(mySqlBinlogCdcPipelineReaderProperties);
 
+    mySqlBinlogCdcPipelineReaderProperties.setMySqlBinLogClientName(eventuateConfigurationProperties.getMySqlBinLogClientName());
+
     return mySqlBinlogCdcPipelineReaderProperties;
   }
 
@@ -80,7 +82,6 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
 
     mySqlBinlogCdcPipelineReaderProperties.setCdcDbUserName(eventuateConfigurationProperties.getDbUserName());
     mySqlBinlogCdcPipelineReaderProperties.setCdcDbPassword(eventuateConfigurationProperties.getDbPassword());
-    mySqlBinlogCdcPipelineReaderProperties.setBinlogClientId(eventuateConfigurationProperties.getBinlogClientId());
     mySqlBinlogCdcPipelineReaderProperties.setOldDbHistoryTopicName(eventuateConfigurationProperties.getOldDbHistoryTopicName());
 
     return mySqlBinlogCdcPipelineReaderProperties;

@@ -29,6 +29,8 @@ public class MySqlBinlogPipelineReaderPropertyValidationTest extends CommonDbLog
 
     testCommonDbLogDefaultProperties(mySqlBinlogCdcPipelineReaderProperties);
 
-    Assert.assertNotNull(mySqlBinlogCdcPipelineReaderProperties.getBinlogClientId());
+    propertyBuilder.addString("mySqlBinLogClientName", "1");
+
+    Assert.assertEquals("1", mySqlBinlogCdcPipelineReaderProperties.getMySqlBinLogClientName());
   }
 }

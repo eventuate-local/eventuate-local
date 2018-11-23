@@ -7,6 +7,7 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
   private String cdcDbUserName;
   private String cdcDbPassword;
   private String oldDbHistoryTopicName;
+  private String mySqlBinLogClientName;
 
   public void validate() {
     super.validate();
@@ -36,5 +37,13 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
 
   public void setOldDbHistoryTopicName(String oldDbHistoryTopicName) {
     this.oldDbHistoryTopicName = oldDbHistoryTopicName;
+  }
+
+  public String getMySqlBinLogClientName() {
+    return mySqlBinLogClientName != null ? mySqlBinLogClientName : String.valueOf(getBinlogClientId());
+  }
+
+  public void setMySqlBinLogClientName(String mySqlBinLogClientName) {
+    this.mySqlBinLogClientName = mySqlBinLogClientName;
   }
 }

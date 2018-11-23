@@ -14,7 +14,7 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
   private String dataSourcePassword;
   private String dataSourceDriverClassName;
   private String leadershipLockPath;
-  private Long binlogClientId = System.nanoTime();
+  private Long binlogClientId;
   private int monitoringRetryIntervalInMilliseconds = 500;
   private int monitoringRetryAttempts = 1000;
 
@@ -27,6 +27,7 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
     Assert.notNull(dataSourcePassword, "dataSourcePassword must not be null");
     Assert.notNull(dataSourceDriverClassName, "dataSourceDriverClassName must not be null");
     Assert.notNull(leadershipLockPath, "leadershipLockPath must not be null");
+    Assert.notNull(binlogClientId, "binlogClientId must not be null");
   }
 
   public String getName() {

@@ -13,8 +13,8 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.db.history.topic.name:#{\"db.history.topic\"}}")
   private String dbHistoryTopicName;
 
-  @Value("${eventuatelocal.cdc.binlog.client.id:#{T(java.lang.System).nanoTime()}}")
-  private long binlogClientId;
+  @Value("${eventuatelocal.cdc.binlog.client.id:#{null}}")
+  private Long binlogClientId;
 
   @Value("${eventuatelocal.cdc.source.table.name:#{null}}")
   private String sourceTableName;
@@ -37,7 +37,7 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.old.db.history.topic.name:#{\"\"}}")
   private String oldDbHistoryTopicName;
 
-  @Value("${eventuatelocal.cdc.my.sql.bin.log.client.name:#{\"MySqlBinLog\"}}")
+  @Value("${eventuatelocal.cdc.my.sql.bin.log.client.name:#{null}}")
   private String mySqlBinLogClientName;
 
   @Value("${eventuatelocal.cdc.binlog.connection.timeout.in.milliseconds:#{5000}}")
@@ -73,7 +73,7 @@ public class EventuateConfigurationProperties {
     return dbHistoryTopicName;
   }
 
-  public long getBinlogClientId() {
+  public Long getBinlogClientId() {
     return binlogClientId;
   }
 
@@ -106,7 +106,7 @@ public class EventuateConfigurationProperties {
   }
 
   public String getMySqlBinLogClientName() {
-    return mySqlBinLogClientName;
+    return mySqlBinLogClientName != null ? mySqlBinLogClientName : String.valueOf(getBinlogClientId());
   }
 
   public int getBinlogConnectionTimeoutInMilliseconds() {

@@ -3,6 +3,7 @@ package io.eventuate.local.db.log.common;
 import com.google.common.collect.ImmutableList;
 import io.eventuate.local.common.AbstractCdcMetrics;
 import io.eventuate.local.common.CdcMonitoringDao;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 
@@ -17,7 +18,7 @@ public class DbLogMetrics extends AbstractCdcMetrics {
   private CdcMonitoringDao cdcMonitoringDao;
   private long replicationLagMeasuringIntervalInMilliseconds;
 
-  private AtomicLong lag = new AtomicLong(-1);
+  private DistributionSummary lag;
   private Number lagAge = new AtomicLong(-1);
   private AtomicInteger connected = new AtomicInteger(0);
 
@@ -61,7 +62,7 @@ public class DbLogMetrics extends AbstractCdcMetrics {
 
     lastTimeEventReceived = System.currentTimeMillis();
 
-    lag.set(System.currentTimeMillis() - timestamp);
+    lag.record(System.currentTimeMillis() - timestamp);
   }
 
   public void onBinlogEntryProcessed() {
@@ -116,8 +117,8 @@ public class DbLogMetrics extends AbstractCdcMetrics {
         }
       };
 
+      lag = meterRegistry.summary("eventuate.cdc.replication.lag", tags);
       meterRegistry.gauge("eventuate.cdc.replication.lag.age", tags, lagAge);
-      meterRegistry.gauge("eventuate.cdc.replication.lag", tags, lag);
       meterRegistry.gauge("eventuate.cdc.connected.to.database", tags, connected);
     }
   }

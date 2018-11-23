@@ -62,4 +62,4 @@ newcdcservice:
     EVENTUATELOCAL_CDC_DB_USER_NAME: root
     EVENTUATELOCAL_CDC_DB_PASSWORD: rootpassword
     EVENTUATELOCAL_CDC_BINLOG_CLIENT_ID: 1234567890
-    EVENTUATELOCAL_CDC_OLD_DB_HISTORY_TOPIC_NAME: eventuate.local.cdc.my-sql-connector.offset.storage
+    EVENTUATELOCAL_CDC_OLD_DEBEZIUM_DB_HISTORY_TOPIC_NAME: eventuate.local.cdc.my-sql-connector.offset.storage

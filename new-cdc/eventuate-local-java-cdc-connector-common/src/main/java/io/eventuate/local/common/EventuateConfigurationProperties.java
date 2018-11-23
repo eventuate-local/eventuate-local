@@ -34,8 +34,8 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.leadership.lock.path:#{\"/eventuatelocal/cdc/leader\"}}")
   private String leadershipLockPath;
 
-  @Value("${eventuatelocal.cdc.old.db.history.topic.name:#{\"\"}}")
-  private String oldDbHistoryTopicName;
+  @Value("${eventuatelocal.cdc.old.debezium.db.history.topic.name:#{null}}")
+  private String oldDebeziumDbHistoryTopicName;
 
   @Value("${eventuatelocal.cdc.my.sql.bin.log.client.name:#{null}}")
   private String mySqlBinLogClientName;
@@ -101,8 +101,8 @@ public class EventuateConfigurationProperties {
     return leadershipLockPath;
   }
 
-  public String getOldDbHistoryTopicName() {
-    return oldDbHistoryTopicName;
+  public String getOldDebeziumDbHistoryTopicName() {
+    return oldDebeziumDbHistoryTopicName;
   }
 
   public String getMySqlBinLogClientName() {

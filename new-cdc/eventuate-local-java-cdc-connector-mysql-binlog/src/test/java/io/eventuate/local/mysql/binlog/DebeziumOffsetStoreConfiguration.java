@@ -14,7 +14,7 @@ public class DebeziumOffsetStoreConfiguration {
                                                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
-    return new DebeziumBinlogOffsetKafkaStore(eventuateConfigurationProperties.getOldDbHistoryTopicName(),
+    return new DebeziumBinlogOffsetKafkaStore(eventuateConfigurationProperties.getOldDebeziumDbHistoryTopicName(),
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);
   }

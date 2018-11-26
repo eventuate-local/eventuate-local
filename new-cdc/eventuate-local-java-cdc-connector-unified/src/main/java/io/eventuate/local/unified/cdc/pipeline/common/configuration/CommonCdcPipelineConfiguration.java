@@ -12,6 +12,8 @@ import io.eventuate.local.unified.cdc.pipeline.common.health.BinlogEntryReaderHe
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.DefaultSourceTableNameResolver;
 import io.eventuate.local.unified.cdc.pipeline.common.health.CdcDataPublisherHealthCheck;
+import io.eventuate.local.unified.cdc.pipeline.common.health.KafkaHealthCheck;
+import io.eventuate.local.unified.cdc.pipeline.common.health.ZookeeperHealthCheck;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.DebeziumOffsetStoreFactory;
 import org.apache.curator.RetryPolicy;
@@ -36,6 +38,16 @@ public class CommonCdcPipelineConfiguration {
   @Bean
   public CdcDataPublisherHealthCheck cdcDataPublisherHealthCheck(CdcDataPublisher cdcDataPublisher) {
     return new CdcDataPublisherHealthCheck(cdcDataPublisher);
+  }
+
+  @Bean
+  public ZookeeperHealthCheck zookeeperHealthCheck() {
+    return new ZookeeperHealthCheck();
+  }
+
+  @Bean
+  public KafkaHealthCheck kafkaHealthCheck() {
+    return new KafkaHealthCheck();
   }
 
   @Bean

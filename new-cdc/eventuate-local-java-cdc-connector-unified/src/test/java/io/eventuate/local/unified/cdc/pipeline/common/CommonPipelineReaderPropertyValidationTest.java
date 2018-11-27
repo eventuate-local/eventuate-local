@@ -24,5 +24,8 @@ public class CommonPipelineReaderPropertyValidationTest extends CommonPropertyVa
     assertExceptionMessage(propertyBuilder.toString(), propertyClass, "leadershipLockPath must not be null");
 
     propertyBuilder.addString("leadershipLockPath", "/eventuate/leader/test");
+    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "binlogClientId must not be null");
+
+    propertyBuilder.addString("binlogClientId", "1");
   }
 }

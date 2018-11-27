@@ -6,7 +6,6 @@ import org.junit.Assert;
 
 public class CommonDbLogPipelineReaderPropertyValidationTest extends CommonPipelineReaderPropertyValidationTest {
   protected void testCommonDbLogDefaultProperties(CommonDbLogCdcPipelineReaderProperties commonDbLogCdcPipelineReaderProperties) {
-    Assert.assertEquals("MySqlBinLog", commonDbLogCdcPipelineReaderProperties.getMySqlBinLogClientName());
     Assert.assertEquals(5000, (int)commonDbLogCdcPipelineReaderProperties.getBinlogConnectionTimeoutInMilliseconds());
     Assert.assertEquals(100, (int)commonDbLogCdcPipelineReaderProperties.getMaxAttemptsForBinlogConnection());
   }

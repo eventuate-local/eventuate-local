@@ -58,9 +58,9 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
     DataSource dataSource = createDataSource(readerProperties);
 
     Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore =
-            StringUtils.isBlank(readerProperties.getOldDbHistoryTopicName())
+            StringUtils.isBlank(readerProperties.getOldDebeziumDbHistoryTopicName())
                     ? Optional.empty()
-                    : Optional.of(debeziumOffsetStoreFactory.create(readerProperties.getOldDbHistoryTopicName()));
+                    : Optional.of(debeziumOffsetStoreFactory.create(readerProperties.getOldDebeziumDbHistoryTopicName()));
 
     return new MySqlBinaryLogClient(meterRegistry,
             readerProperties.getCdcDbUserName(),

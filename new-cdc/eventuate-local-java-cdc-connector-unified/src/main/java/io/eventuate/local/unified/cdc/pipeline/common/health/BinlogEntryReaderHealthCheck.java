@@ -43,7 +43,7 @@ public class BinlogEntryReaderHealthCheck extends AbstractHealthCheck {
             })
             .collect(Collectors.toList());
 
-    return checkErrors(errorMessages);
+    return makeHealthFromErrors(errorMessages);
   }
 
   private List<String> checkDbLogReaderHealth(DbLogClient dbLogClient) {

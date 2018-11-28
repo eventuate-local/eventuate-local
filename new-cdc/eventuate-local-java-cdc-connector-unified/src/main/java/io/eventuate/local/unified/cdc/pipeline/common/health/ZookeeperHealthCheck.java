@@ -38,6 +38,6 @@ public class ZookeeperHealthCheck extends AbstractHealthCheck {
       }
     }
 
-    return checkErrors(errors);
+    return makeHealthFromErrors(errors);
   }
 }

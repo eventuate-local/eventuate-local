@@ -1,6 +1,7 @@
 package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.ConnectionLostHandlerInterruptedException;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -25,6 +26,8 @@ public class PollingDao extends BinlogEntryReader {
   private int pollingRetryIntervalInMilliseconds;
   private int pollingIntervalInMilliseconds;
   private Map<SchemaAndTable, String> pkFields = new HashMap<>();
+
+  private PollingProcessingStatusService pollingProcessingStatusService;
 
   public PollingDao(MeterRegistry meterRegistry,
                     String dataSourceUrl,
@@ -58,6 +61,19 @@ public class PollingDao extends BinlogEntryReader {
     this.maxEventsPerPolling = maxEventsPerPolling;
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
+
+    pollingProcessingStatusService = new PollingProcessingStatusService(dataSource, PUBLISHED_FIELD);
+  }
+
+  @Override
+  public CdcProcessingStatusService getCdcProcessingStatusService() {
+    return pollingProcessingStatusService;
+  }
+
+  @Override
+  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema, String sourceTableName, BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter, CdcDataPublisher<EVENT> dataPublisher) {
+    super.addBinlogEntryHandler(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
+    pollingProcessingStatusService.addTable(sourceTableName);
   }
 
   @Override

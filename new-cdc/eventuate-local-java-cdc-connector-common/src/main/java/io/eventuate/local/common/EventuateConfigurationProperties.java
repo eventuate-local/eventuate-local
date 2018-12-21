@@ -61,6 +61,12 @@ public class EventuateConfigurationProperties {
 
   private String postgresReplicationSlotName = "eventuate_slot";
 
+  @Value("${eventuatelocal.cdc.additional.service.replication.slot.name:#{\"eventuate_offset_control_slot\"}}")
+  private String additionalServiceReplicationSlotName;
+
+  @Value("${eventuatelocal.cdc.wait.for.offset.sync.timeout.in.milliseconds:#{60000}}")
+  private long waitForOffsetSyncTimeoutInMilliseconds;
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -155,5 +161,13 @@ public class EventuateConfigurationProperties {
 
   public int getMonitoringRetryAttempts() {
     return monitoringRetryAttempts;
+  }
+
+  public String getAdditionalServiceReplicationSlotName() {
+    return additionalServiceReplicationSlotName;
+  }
+
+  public long getWaitForOffsetSyncTimeoutInMilliseconds() {
+    return waitForOffsetSyncTimeoutInMilliseconds;
   }
 }

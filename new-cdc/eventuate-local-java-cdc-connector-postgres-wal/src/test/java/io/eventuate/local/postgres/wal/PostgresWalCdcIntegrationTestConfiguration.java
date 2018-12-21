@@ -71,7 +71,9 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getBinlogClientId(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getMonitoringRetryAttempts());
+            eventuateConfigurationProperties.getMonitoringRetryAttempts(),
+            eventuateConfigurationProperties.getAdditionalServiceReplicationSlotName(),
+            eventuateConfigurationProperties.getWaitForOffsetSyncTimeoutInMilliseconds());
   }
 
 

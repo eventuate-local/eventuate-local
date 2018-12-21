@@ -7,6 +7,8 @@ public class PostgresWalCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
   private Integer postgresWalIntervalInMilliseconds = 500;
   private Integer postgresReplicationStatusIntervalInMilliseconds = 1000;
   private String postgresReplicationSlotName = "eventuate_slot";
+  private String additionalServiceReplicationSlotName = "eventuate_offset_control_slot";
+  private long waitForOffsetSyncTimeoutInMilliseconds = 60000;
 
   public Integer getPostgresWalIntervalInMilliseconds() {
     return postgresWalIntervalInMilliseconds;
@@ -30,5 +32,21 @@ public class PostgresWalCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
 
   public void setPostgresReplicationSlotName(String postgresReplicationSlotName) {
     this.postgresReplicationSlotName = postgresReplicationSlotName;
+  }
+
+  public String getAdditionalServiceReplicationSlotName() {
+    return additionalServiceReplicationSlotName;
+  }
+
+  public void setAdditionalServiceReplicationSlotName(String additionalServiceReplicationSlotName) {
+    this.additionalServiceReplicationSlotName = additionalServiceReplicationSlotName;
+  }
+
+  public long getWaitForOffsetSyncTimeoutInMilliseconds() {
+    return waitForOffsetSyncTimeoutInMilliseconds;
+  }
+
+  public void setWaitForOffsetSyncTimeoutInMilliseconds(long waitForOffsetSyncTimeoutInMilliseconds) {
+    this.waitForOffsetSyncTimeoutInMilliseconds = waitForOffsetSyncTimeoutInMilliseconds;
   }
 }

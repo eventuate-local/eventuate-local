@@ -4,13 +4,13 @@ import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.java.common.broker.DataProducer;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class CdcDataPublisher<EVENT extends BinLogEvent> {
   private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -22,7 +22,7 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
   protected Counter meterEventsPublished;
   protected Counter meterEventsDuplicates;
   protected Counter meterEventsRetries;
-  protected AtomicLong histogramEventAge;
+  protected DistributionSummary distributionSummaryEventAge;
 
   private PublishingFilter publishingFilter;
   private volatile boolean lastMessagePublishingFailed;
@@ -46,7 +46,7 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
 
   private void initMetrics() {
     if (meterRegistry != null) {
-      histogramEventAge = meterRegistry.gauge("eventuate.cdc.event.age", new AtomicLong(0));
+      distributionSummaryEventAge = meterRegistry.summary("eventuate.cdc.event.age");
       meterEventsPublished = meterRegistry.counter("eventuate.cdc.events.published");
       meterEventsDuplicates = meterRegistry.counter("eventuate.cdc.events.duplicates");
       meterEventsRetries = meterRegistry.counter("eventuate.cdc.events.retries");
@@ -87,7 +87,7 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
 
           lastMessagePublishingFailed = false;
 
-          publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> histogramEventAge.set(System.currentTimeMillis() - time));
+          publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> distributionSummaryEventAge.record(System.currentTimeMillis() - time));
           meterEventsPublished.increment();
         } else {
           logger.debug("Duplicate event {}", publishedEvent);

@@ -47,6 +47,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private OffsetStore offsetStore;
 
   private Optional<Long> cdcMonitoringTableId = Optional.empty();
+  private MySqlCdcProcessingStatusService mySqlCdcProcessingStatusService;
 
   public MySqlBinaryLogClient(MeterRegistry meterRegistry,
                               String dbUserName,
@@ -85,7 +86,10 @@ public class MySqlBinaryLogClient extends DbLogClient {
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
     this.offsetStore = offsetStore;
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
+
+    mySqlCdcProcessingStatusService = new MySqlCdcProcessingStatusService(dataSourceUrl, dbUserName, dbPassword);
   }
+
 
   public String getName() {
     return name;
@@ -99,6 +103,11 @@ public class MySqlBinaryLogClient extends DbLogClient {
     return debeziumBinlogOffsetKafkaStore
             .flatMap(OffsetKafkaStore::getLastBinlogFileOffset)
             .map(MigrationInfo::new);
+  }
+
+  @Override
+  public CdcProcessingStatusService getCdcProcessingStatusService() {
+    return mySqlCdcProcessingStatusService;
   }
 
   @Override
@@ -176,6 +185,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
           break;
         }
       }
+
+      saveEndingOffsetOfLastProcessedEvent(event);
     });
 
     connectWithRetriesOnFail();
@@ -331,6 +342,13 @@ public class MySqlBinaryLogClient extends DbLogClient {
     stopMetrics();
 
     stopCountDownLatch.countDown();
+  }
+
+  private void saveEndingOffsetOfLastProcessedEvent(Event event) {
+    long position = ((EventHeaderV4) event.getHeader()).getNextPosition();
+    if (mySqlCdcProcessingStatusService != null) {
+      mySqlCdcProcessingStatusService.saveEndingOffsetOfLastProcessedEvent(position);
+    }
   }
 
   public static class MigrationInfo {

@@ -56,6 +56,8 @@ public abstract class BinlogEntryReader {
     commonCdcMetrics = new CommonCdcMetrics(meterRegistry, binlogClientUniqueId);
   }
 
+  public abstract CdcProcessingStatusService getCdcProcessingStatusService();
+
   public long getBinlogClientUniqueId() {
     return binlogClientUniqueId;
   }

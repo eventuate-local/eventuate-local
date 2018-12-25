@@ -3,6 +3,7 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.CdcProcessingStatusService;
 import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -34,6 +35,7 @@ public class PostgresWalClient extends DbLogClient {
   private PGReplicationStream stream;
   private int replicationStatusIntervalInMilliseconds;
   private String replicationSlotName;
+  private PostgresWalCdcProcessingStatusService postgresWalCdcProcessingStatusService;
 
   public PostgresWalClient(MeterRegistry meterRegistry,
                            String url,
@@ -50,7 +52,9 @@ public class PostgresWalClient extends DbLogClient {
                            long uniqueId,
                            long replicationLagMeasuringIntervalInMilliseconds,
                            int monitoringRetryIntervalInMilliseconds,
-                           int monitoringRetryAttempts) {
+                           int monitoringRetryAttempts,
+                           String additionalServiceReplicationSlotName,
+                           long waitForOffsetSyncTimeoutInMilliseconds) {
 
     super(meterRegistry,
             user,
@@ -70,7 +74,17 @@ public class PostgresWalClient extends DbLogClient {
     this.replicationStatusIntervalInMilliseconds = replicationStatusIntervalInMilliseconds;
     this.replicationSlotName = replicationSlotName;
     this.postgresWalBinlogEntryExtractor = new PostgresWalBinlogEntryExtractor();
+
+    postgresWalCdcProcessingStatusService = new PostgresWalCdcProcessingStatusService(dataSource,
+            additionalServiceReplicationSlotName,
+            waitForOffsetSyncTimeoutInMilliseconds);
   }
+
+  @Override
+  public CdcProcessingStatusService getCdcProcessingStatusService() {
+    return postgresWalCdcProcessingStatusService;
+  }
+
 
   @Override
   protected void leaderStart() {
@@ -141,6 +155,7 @@ public class PostgresWalClient extends DbLogClient {
       ByteBuffer messageBuffer = stream.readPending();
 
       if (messageBuffer == null) {
+        saveOffsetOfLastProcessedEvent();
         logger.info("Got empty message, sleeping");
         try {
           TimeUnit.MILLISECONDS.sleep(walIntervalInMilliseconds);
@@ -194,6 +209,7 @@ public class PostgresWalClient extends DbLogClient {
       stream.setAppliedLSN(stream.getLastReceiveLSN());
       stream.setFlushedLSN(stream.getLastReceiveLSN());
       stream.forceUpdateStatus();
+      saveOffsetOfLastProcessedEvent();
     }
 
     try {
@@ -231,6 +247,12 @@ public class PostgresWalClient extends DbLogClient {
     int length = source.length - offset;
 
     return new String(source, offset, length);
+  }
+
+  private void saveOffsetOfLastProcessedEvent() {
+    if (postgresWalCdcProcessingStatusService != null) {
+      postgresWalCdcProcessingStatusService.saveEndingOffsetOfLastProcessedEvent(stream.getLastReceiveLSN().asLong());
+    }
   }
 
   private static class BinlogEntryWithSchemaAndTable {

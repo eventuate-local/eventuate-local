@@ -18,6 +18,15 @@ public class BinlogEntryReaderProvider {
     return clients.get(name);
   }
 
+  public BinlogEntryReader getReaderById(long id) {
+    return clients
+            .values()
+            .stream()
+            .filter(reader -> reader.getBinlogClientUniqueId() == id)
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(String.format("reader with id %s not found", id)));
+  }
+
   public void start() {
     clients.values().forEach(BinlogEntryReader::start);
   }

@@ -6,7 +6,7 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import java.util.List;
 
 public abstract class AbstractHealthCheck implements HealthIndicator {
-  protected Health checkErrors(List<String> errorMessages) {
+  protected Health makeHealthFromErrors(List<String> errorMessages) {
     if (!errorMessages.isEmpty()) {
       Health.Builder builder = Health.down();
 

@@ -10,13 +10,12 @@ import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
 
   @Autowired
-  private PollingDao pollingDao;
+  protected PollingDao pollingDao;
 
   @Autowired
   private PollingDataProvider pollingDataProvider;

@@ -25,6 +25,6 @@ public class CdcDataPublisherHealthCheck extends AbstractHealthCheck {
                     Collections.singletonList("Last event publishing failed") :
                     Collections.emptyList();
 
-    return checkErrors(errors);
+    return makeHealthFromErrors(errors);
   }
 }

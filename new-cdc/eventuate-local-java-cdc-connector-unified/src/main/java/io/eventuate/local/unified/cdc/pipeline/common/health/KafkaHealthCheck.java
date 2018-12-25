@@ -30,7 +30,7 @@ public class KafkaHealthCheck extends AbstractHealthCheck {
     KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProperties);
 
     try {
-      consumer.partitionsFor("sometopic");
+      consumer.partitionsFor("__consumer_offsets");
       errors = Collections.emptyList();
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
@@ -43,6 +43,6 @@ public class KafkaHealthCheck extends AbstractHealthCheck {
       }
     }
 
-    return checkErrors(errors);
+    return makeHealthFromErrors(errors);
   }
 }

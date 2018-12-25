@@ -62,6 +62,8 @@ public class PostgresWalCdcPipelineReaderFactory
             readerProperties.getBinlogClientId(),
             readerProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             readerProperties.getMonitoringRetryIntervalInMilliseconds(),
-            readerProperties.getMonitoringRetryAttempts());
+            readerProperties.getMonitoringRetryAttempts(),
+            readerProperties.getAdditionalServiceReplicationSlotName(),
+            readerProperties.getWaitForOffsetSyncTimeoutInMilliseconds());
   }
 }

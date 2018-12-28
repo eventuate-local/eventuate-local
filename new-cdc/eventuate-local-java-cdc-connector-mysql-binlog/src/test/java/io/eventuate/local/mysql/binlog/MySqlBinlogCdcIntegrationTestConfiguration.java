@@ -80,7 +80,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             Optional.empty(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getMonitoringRetryAttempts());
+            eventuateConfigurationProperties.getMonitoringRetryAttempts(),
+            eventuateConfigurationProperties.isUseGTIDsWhenPossible());
   }
 
   @Bean

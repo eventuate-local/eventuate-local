@@ -4,6 +4,7 @@ package io.eventuate.local.mysql.binlog;
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
+import com.github.shyiko.mysql.binlog.event.deserialization.GtidEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.google.common.collect.ImmutableSet;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
@@ -13,6 +14,9 @@ import io.eventuate.local.db.log.common.OffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -24,6 +28,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
   private static final Set<EventType> SUPPORTED_EVENTS = ImmutableSet.of(EventType.TABLE_MAP,
           EventType.ROTATE,
+          EventType.GTID,
           EventType.WRITE_ROWS,
           EventType.EXT_WRITE_ROWS,
           EventType.UPDATE_ROWS,
@@ -45,9 +50,13 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore;
   private int rowsToSkip;
   private OffsetStore offsetStore;
+  private boolean useGTIDsWhenPossible;
 
   private Optional<Long> cdcMonitoringTableId = Optional.empty();
   private MySqlCdcProcessingStatusService mySqlCdcProcessingStatusService;
+
+  private Optional<Gtid> lastGTID = Optional.empty();
+  private DataSource rootDataSource;
 
   public MySqlBinaryLogClient(MeterRegistry meterRegistry,
                               String dbUserName,
@@ -64,7 +73,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore,
                               long replicationLagMeasuringIntervalInMilliseconds,
                               int monitoringRetryIntervalInMilliseconds,
-                              int monitoringRetryAttempts) {
+                              int monitoringRetryAttempts,
+                              boolean useGTIDsWhenPossible) {
 
     super(meterRegistry,
             dbUserName,
@@ -78,6 +88,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
             monitoringRetryIntervalInMilliseconds,
             monitoringRetryAttempts);
 
+    useGTIDsWhenPossible = true;
+
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.extractor = new MySqlBinlogEntryExtractor(dataSource);
     this.timestampExtractor = new MySqlBinlogCdcMonitoringTimestampExtractor(dataSource);
@@ -86,8 +98,12 @@ public class MySqlBinaryLogClient extends DbLogClient {
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
     this.offsetStore = offsetStore;
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
+    this.useGTIDsWhenPossible = useGTIDsWhenPossible;
 
-    mySqlCdcProcessingStatusService = new MySqlCdcProcessingStatusService(dataSourceUrl, dbUserName, dbPassword);
+    rootDataSource = createRootDataSource(dataSourceUrl, dbUserName, dbPassword);
+
+    mySqlCdcProcessingStatusService = new MySqlCdcProcessingStatusService(rootDataSource);
+
   }
 
 
@@ -129,8 +145,15 @@ public class MySqlBinaryLogClient extends DbLogClient {
     rowsToSkip = bfo.getRowsToSkip();
 
     logger.info("mysql binlog starting offset {}", bfo);
-    client.setBinlogFilename(bfo.getBinlogFilename());
-    client.setBinlogPosition(bfo.getOffset());
+
+    if (useGTIDsWhenPossible && isGTIDSupported() && bfo.getGtid().isPresent()) {
+      logger.info(String.format("GTID exists: %s, used as starting point", bfo.getGtid().get()));
+      client.setGtidSet(bfo.getGtid().get().getValue());
+    } else {
+      logger.info("GTID does not exist starting using offset and binlog file name");
+      client.setBinlogPosition(bfo.getOffset());
+      client.setBinlogFilename(bfo.getBinlogFilename());
+    }
 
     client.setEventDeserializer(getEventDeserializer());
     client.registerEventListener(event -> {
@@ -184,8 +207,18 @@ public class MySqlBinaryLogClient extends DbLogClient {
           }
           break;
         }
-      }
+        case GTID: {
+          if (!useGTIDsWhenPossible) {
+            break;
+          }
 
+          GtidEventData gtidEventData = event.getData();
+          Gtid gtid = new Gtid(gtidEventData.getGtid());
+          lastGTID = Optional.of(gtid);
+          logger.info(String.format("received GTID %s", gtid));
+          break;
+        }
+      }
       saveEndingOffsetOfLastProcessedEvent(event);
     });
 
@@ -196,6 +229,20 @@ public class MySqlBinaryLogClient extends DbLogClient {
     } catch (InterruptedException e) {
       logger.error(e.getMessage(), e);
     }
+  }
+
+  private boolean isGTIDSupported() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(rootDataSource);
+
+    SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet("SHOW GLOBAL VARIABLES LIKE 'GTID_MODE'");
+
+    if (sqlRowSet.next()) {
+      boolean supported = !"OFF".equalsIgnoreCase(sqlRowSet.getString(2));
+      logger.info("GTID mode support = %s", supported);
+      return supported;
+    }
+
+    return false;
   }
 
   private Optional<BinlogFileOffset> getStartingBinlogFileOffset() {
@@ -232,8 +279,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
       SchemaAndTable schemaAndTable = new SchemaAndTable(tableMapEventData.getDatabase(), tableMapEventData.getTable());
 
-      BinlogEntry entry = extractor.extract(schemaAndTable, eventData, binlogFilename, offset);
-
+      BinlogEntry entry = extractor.extract(schemaAndTable, eventData, binlogFilename, offset, lastGTID);
 
       if (!shouldSkipEntry(startingBinlogFileOffset, entry.getBinlogFileOffset())) {
         binlogEntryHandlers
@@ -268,7 +314,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
   private void saveOffset(Event event) {
     offset = extractOffset(event);
-    BinlogFileOffset binlogFileOffset = new BinlogFileOffset(binlogFilename, offset);
+    BinlogFileOffset binlogFileOffset = new BinlogFileOffset(binlogFilename, offset, lastGTID);
     offsetStore.save(binlogFileOffset);
   }
 
@@ -324,6 +370,9 @@ public class MySqlBinaryLogClient extends DbLogClient {
     eventDeserializer.setEventDataDeserializer(EventType.EXT_UPDATE_ROWS,
             new UpdateRowsDeserializer(tableMapEventByTableId, dbLogMetrics).setMayContainExtraInformation(true));
 
+    eventDeserializer.setEventDataDeserializer(EventType.GTID,
+            new GtidEventDataDeserializer());
+
     return eventDeserializer;
   }
 
@@ -349,6 +398,15 @@ public class MySqlBinaryLogClient extends DbLogClient {
     if (mySqlCdcProcessingStatusService != null) {
       mySqlCdcProcessingStatusService.saveEndingOffsetOfLastProcessedEvent(position);
     }
+  }
+
+  private DataSource createRootDataSource(String dbUrl, String dbUser, String dbPassword) {
+    DriverManagerDataSource dataSource = new DriverManagerDataSource();
+    dataSource.setDriverClassName(com.mysql.jdbc.Driver.class.getName());
+    dataSource.setUrl(dbUrl);
+    dataSource.setUsername(dbUser);
+    dataSource.setPassword(dbPassword);
+    return dataSource;
   }
 
   public static class MigrationInfo {

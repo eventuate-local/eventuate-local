@@ -81,7 +81,7 @@ public class BinlogFileOffset {
 
     Optional<Boolean> gtidResult = gtid.flatMap(gtid1 ->
       binlogFileOffset.getGtid().flatMap(gtid2 ->
-              Optional.of(gtid1.getLastId() > gtid2.getLastId())));
+              Optional.of(gtid1.getTransactionNumber() > gtid2.getTransactionNumber())));
 
     if (gtidResult.isPresent()) {
       return gtidResult.get();

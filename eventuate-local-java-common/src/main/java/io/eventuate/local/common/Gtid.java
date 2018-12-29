@@ -22,14 +22,8 @@ public class Gtid {
     this.value = value;
   }
 
-  public long getLastId() {
-    String id = value.split(":")[1];
-
-    if (id.contains("-")) {
-      id = id.split("-")[1];
-    }
-
-    return Long.parseLong(id);
+  public long getTransactionNumber() {
+    return Long.parseLong(value.split(":")[1]);
   }
 
   @Override

@@ -88,8 +88,6 @@ public class MySqlBinaryLogClient extends DbLogClient {
             monitoringRetryIntervalInMilliseconds,
             monitoringRetryAttempts);
 
-    useGTIDsWhenPossible = true;
-
     this.binlogClientUniqueId = binlogClientUniqueId;
     this.extractor = new MySqlBinlogEntryExtractor(dataSource);
     this.timestampExtractor = new MySqlBinlogCdcMonitoringTimestampExtractor(dataSource);

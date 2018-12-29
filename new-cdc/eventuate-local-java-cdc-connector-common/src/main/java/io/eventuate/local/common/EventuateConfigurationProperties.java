@@ -67,7 +67,7 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.wait.for.offset.sync.timeout.in.milliseconds:#{60000}}")
   private long waitForOffsetSyncTimeoutInMilliseconds;
 
-  @Value("${eventuatelocal.cdc.use.gtid.when.possible:#{true}}")
+  @Value("${eventuatelocal.cdc.use.gtid.when.possible:#{false}}")
   private boolean useGTIDsWhenPossible;
 
   public String getDbUserName() {

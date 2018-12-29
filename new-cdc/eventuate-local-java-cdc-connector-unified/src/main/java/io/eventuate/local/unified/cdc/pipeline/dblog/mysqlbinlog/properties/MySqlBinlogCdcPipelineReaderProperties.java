@@ -8,7 +8,7 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
   private String cdcDbPassword;
   private String oldDebeziumDbHistoryTopicName;
   private String mySqlBinLogClientName;
-  private boolean useGTIDsWhenPossible = true;
+  private boolean useGTIDsWhenPossible = false;
 
   public void validate() {
     super.validate();

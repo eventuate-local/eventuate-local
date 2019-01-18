@@ -24,6 +24,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -44,11 +45,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   @Bean
   public EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties() {
     return new EventuateLocalZookeperConfigurationProperties();
-  }
-
-  @Bean
-  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
-    return new EventuateSchema(eventuateDatabaseSchema);
   }
 
   @Bean
@@ -81,12 +77,6 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryAttempts());
-  }
-
-  @Bean
-  public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema, DataSource db) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema);
   }
 
   @Bean

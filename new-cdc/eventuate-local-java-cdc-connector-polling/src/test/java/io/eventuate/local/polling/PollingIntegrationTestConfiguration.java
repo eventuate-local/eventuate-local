@@ -46,11 +46,6 @@ public class PollingIntegrationTestConfiguration {
   }
 
   @Bean
-  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
-    return new EventuateSchema(eventuateDatabaseSchema);
-  }
-
-  @Bean
   public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                        EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
     return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),

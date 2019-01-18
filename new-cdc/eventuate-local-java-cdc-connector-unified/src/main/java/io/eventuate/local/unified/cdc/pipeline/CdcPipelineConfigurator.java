@@ -1,5 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.eventuate.local.common.BinlogEntryReader;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.mysql.binlog.MySqlBinaryLogClient;
@@ -11,11 +12,11 @@ import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineFactory
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineProperties;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
+import io.eventuate.local.unified.cdc.pipeline.common.properties.RawUnifiedCdcProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -28,12 +29,6 @@ public class CdcPipelineConfigurator {
   private PropertyReader propertyReader = new PropertyReader();
 
   private List<CdcPipeline> cdcPipelines = new ArrayList<>();
-
-  @Value("${eventuate.cdc.pipeline.properties:#{null}}")
-  private String cdcPipelineJsonProperties;
-
-  @Value("${eventuate.cdc.pipeline.reader.properties:#{null}}")
-  private String cdcPipelineReaderJsonProperties;
 
   @Autowired
   private Collection<CdcPipelineFactory> cdcPipelineFactories;
@@ -61,18 +56,18 @@ public class CdcPipelineConfigurator {
   @Autowired
   private DefaultSourceTableNameResolver defaultSourceTableNameResolver;
 
+  @Autowired
+  private RawUnifiedCdcProperties rawUnifiedCdcProperties;
+
   @PostConstruct
   public void initialize() {
     logger.info("Starting unified cdc pipelines");
 
-    Optional
-            .ofNullable(cdcPipelineReaderJsonProperties)
-            .map(propertyReader::convertPropertiesToListOfMaps)
-            .orElseGet(() -> {
-              createStartSaveCdcDefaultPipelineReader(defaultCdcPipelineReaderProperties);
-              return Collections.emptyList();
-            })
-            .forEach(this::createCdcPipelineReader);
+    if (rawUnifiedCdcProperties.getReader() == null || rawUnifiedCdcProperties.getReader().isEmpty()) {
+      createStartSaveCdcDefaultPipelineReader(defaultCdcPipelineReaderProperties);
+    } else {
+      rawUnifiedCdcProperties.getReader().values().forEach(this::createCdcPipelineReader);
+    }
 
     if (Boolean.parseBoolean(System.getProperty("dry-run-cdc-migration"))) {
       dryRun();
@@ -90,14 +85,12 @@ public class CdcPipelineConfigurator {
   }
 
   private void start() {
-    Optional
-            .ofNullable(cdcPipelineJsonProperties)
-            .map(propertyReader::convertPropertiesToListOfMaps)
-            .orElseGet(() -> {
-              createStartSaveCdcDefaultPipeline(defaultCdcPipelineProperties);
-              return Collections.emptyList();
-            })
-            .forEach(this::createStartSaveCdcPipeline);
+
+    if (rawUnifiedCdcProperties.getPipeline() == null || rawUnifiedCdcProperties.getPipeline().isEmpty()) {
+      createStartSaveCdcDefaultPipeline(defaultCdcPipelineProperties);
+    } else {
+      rawUnifiedCdcProperties.getPipeline().values().forEach(this::createStartSaveCdcPipeline);
+    }
 
     binlogEntryReaderProvider.start();
 

@@ -1,7 +1,6 @@
 package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
@@ -40,11 +39,6 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   @Bean
   public EventuateConfigurationProperties eventuateConfigurationProperties() {
     return new EventuateConfigurationProperties();
-  }
-
-  @Bean
-  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
-    return new EventuateSchema(eventuateDatabaseSchema);
   }
 
   @Bean

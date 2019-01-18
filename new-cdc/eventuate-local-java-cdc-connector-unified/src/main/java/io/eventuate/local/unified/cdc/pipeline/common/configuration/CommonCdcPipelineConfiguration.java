@@ -68,7 +68,7 @@ public class CommonCdcPipelineConfiguration {
                                                EventuateKafkaProducer eventuateKafkaProducer) {
 
     return (properties, dataSource, eventuateSchema, clientName) ->
-            new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
+            new DatabaseOffsetKafkaStore(properties.getOffsetStorageTopicName(),
                     clientName,
                     eventuateKafkaProducer,
                     eventuateKafkaConfigurationProperties,

@@ -32,7 +32,7 @@ public class PropertyReaderTest {
   @Test
   public void testUnknownProperties() {
     List<Map<String, Object>> propertyMaps = propertyReader
-            .convertPropertiesToListOfMaps("[{\"type\" : \"mysql\", \"reader\" : \"reader1\", \"somePropName\" : \"somePropValue\"}]");
+            .convertPropertiesToListOfMaps("[{\"type\" : \"mysql\", \"reader\" : \"reader1\", \"somepropname\" : \"somepropvalue\"}]");
 
     Assert.assertEquals(1, propertyMaps.size());
 
@@ -47,6 +47,6 @@ public class PropertyReaderTest {
     }
 
     Assert.assertNotNull(exception);
-    Assert.assertEquals("Unknown properties: [somePropName]", exception.getMessage());
+    Assert.assertEquals("Unknown properties: [somepropname]", exception.getMessage());
   }
 }

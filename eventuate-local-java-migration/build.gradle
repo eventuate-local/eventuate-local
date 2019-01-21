@@ -14,7 +14,7 @@ dependencies {
 
     testCompile "io.eventuate.client.java:eventuate-client-java-test-util:$eventuateClientVersion"
     testCompile "junit:junit:4.11"
-    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootCdcVersion"
 }
 
 test {

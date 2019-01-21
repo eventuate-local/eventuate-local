@@ -10,6 +10,6 @@ public class CommonDbLogCdcDefaultPipelineReaderConfiguration extends CommonCdcD
   protected void initCommonDbLogCdcPipelineReaderProperties(CommonDbLogCdcPipelineReaderProperties commonDbLogCdcPipelineReaderProperties) {
     commonDbLogCdcPipelineReaderProperties.setBinlogConnectionTimeoutInMilliseconds(eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds());
     commonDbLogCdcPipelineReaderProperties.setMaxAttemptsForBinlogConnection(eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection());
-    commonDbLogCdcPipelineReaderProperties.setDbHistoryTopicName(eventuateConfigurationProperties.getDbHistoryTopicName());
+    commonDbLogCdcPipelineReaderProperties.setOffsetStorageTopicName(eventuateConfigurationProperties.getOffsetStorageTopicName());
   }
 }

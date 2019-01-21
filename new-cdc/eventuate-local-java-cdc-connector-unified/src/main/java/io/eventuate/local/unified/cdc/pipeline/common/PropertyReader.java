@@ -1,5 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline.common;
 
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
 
@@ -12,6 +13,10 @@ import java.util.stream.Collectors;
 
 public class PropertyReader {
   private ObjectMapper objectMapper = new ObjectMapper();
+
+  {
+    objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+  }
 
   public PropertyReader() {
   }
@@ -34,12 +39,14 @@ public class PropertyReader {
     List<String> propNames = Arrays
             .stream(BeanUtils.getPropertyDescriptors(propertyClass))
             .map(FeatureDescriptor::getName)
+            .map(String::toLowerCase)
             .collect(Collectors.toList());
 
     List<String> unexpectedProperties =
             properties
                     .keySet()
                     .stream()
+                    .map(String::toLowerCase)
                     .filter(p -> !propNames.contains(p))
                     .collect(Collectors.toList());
 

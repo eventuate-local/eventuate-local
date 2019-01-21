@@ -3,6 +3,7 @@ package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
+import io.eventuate.local.java.jdbckafkastore.EventuateKafkaPropertiesConfiguration;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -23,11 +24,13 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 
 @Configuration
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
         EventuateKafkaConsumerConfigurationProperties.class})
+@Import(EventuateKafkaPropertiesConfiguration.class)
 public class CommonCdcPipelineConfiguration {
 
   @Bean
@@ -65,7 +68,7 @@ public class CommonCdcPipelineConfiguration {
                                                EventuateKafkaProducer eventuateKafkaProducer) {
 
     return (properties, dataSource, eventuateSchema, clientName) ->
-            new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
+            new DatabaseOffsetKafkaStore(properties.getOffsetStorageTopicName(),
                     clientName,
                     eventuateKafkaProducer,
                     eventuateKafkaConfigurationProperties,
@@ -85,11 +88,6 @@ public class CommonCdcPipelineConfiguration {
   @Bean
   public BinlogEntryReaderProvider dbClientProvider() {
     return new BinlogEntryReaderProvider();
-  }
-
-  @Bean
-  public EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties() {
-    return new EventuateKafkaConfigurationProperties();
   }
 
   @Bean

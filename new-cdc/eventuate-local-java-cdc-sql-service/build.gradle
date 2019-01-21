@@ -2,14 +2,15 @@ apply plugin: 'org.springframework.boot'
 apply plugin: PrivateModulePlugin
 
 dependencies {
-    compile "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-actuator:$springBootCdcVersion"
+    compile "org.springframework.boot:spring-boot-starter-web:$springBootCdcVersion"
 
     compile project(":new-cdc:eventuate-local-java-cdc-autoconfigure")
 
     compile "io.dropwizard.metrics:metrics-servlets:$dropwizardMetricsVersion"
-    compile 'io.micrometer:micrometer-registry-jmx:0.12.0.RELEASE'
-    compile 'io.micrometer:micrometer-registry-prometheus:0.12.0.RELEASE'
+    compile 'io.micrometer:micrometer-core:1.1.1'
+    compile 'io.micrometer:micrometer-registry-jmx:1.1.1'
+    compile 'io.micrometer:micrometer-registry-prometheus:1.1.1'
 
     compile ('org.postgresql:postgresql:42.1.4') {
         exclude group: "org.slf4j", module: "slf4j-simple"

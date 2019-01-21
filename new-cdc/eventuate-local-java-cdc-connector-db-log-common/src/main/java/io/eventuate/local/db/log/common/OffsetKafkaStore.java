@@ -22,11 +22,11 @@ public abstract class OffsetKafkaStore implements OffsetStore {
 
   private final static int N = 20;
 
-  public OffsetKafkaStore(String dbHistoryTopicName,
+  public OffsetKafkaStore(String offsetStorageName,
                           EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                           EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
     this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
-    this.dbHistoryTopicName = dbHistoryTopicName;
+    this.dbHistoryTopicName = offsetStorageName;
     this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
   }
 

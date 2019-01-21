@@ -6,15 +6,16 @@ import org.springframework.util.Assert;
 public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipelineReaderProperties {
   private String cdcDbUserName;
   private String cdcDbPassword;
-  private String oldDebeziumDbHistoryTopicName;
+  private String oldDebeziumDbOffsetStorageTopicName;
   private String mySqlBinLogClientName;
 
   public void validate() {
     super.validate();
     Assert.notNull(cdcDbUserName, "cdcDbUserName must not be null");
     Assert.notNull(cdcDbPassword, "cdcDbPassword must not be null");
-    Assert.hasLength(oldDebeziumDbHistoryTopicName,
-            "oldDebeziumDbHistoryTopicName must not be blank (set 'none' to not migrate debezium offset storage data)");
+    Assert.notNull(mySqlBinLogClientName, "mySqlBinLogClientName must not be null");
+    Assert.hasLength(oldDebeziumDbOffsetStorageTopicName,
+            "oldDebeziumDbOffsetStorageTopicName must not be blank (set 'none' to not migrate debezium offset storage data)");
   }
 
   public String getCdcDbUserName() {
@@ -33,12 +34,12 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
     this.cdcDbPassword = cdcDbPassword;
   }
 
-  public String getOldDebeziumDbHistoryTopicName() {
-    return "none".equalsIgnoreCase(oldDebeziumDbHistoryTopicName) ? null : oldDebeziumDbHistoryTopicName;
+  public String getOldDebeziumDbOffsetStorageTopicName() {
+    return "none".equalsIgnoreCase(oldDebeziumDbOffsetStorageTopicName) ? null : oldDebeziumDbOffsetStorageTopicName;
   }
 
-  public void setOldDebeziumDbHistoryTopicName(String oldDebeziumDbHistoryTopicName) {
-    this.oldDebeziumDbHistoryTopicName = oldDebeziumDbHistoryTopicName;
+  public void setOldDebeziumDbOffsetStorageTopicName(String oldDebeziumDbOffsetStorageTopicName) {
+    this.oldDebeziumDbOffsetStorageTopicName = oldDebeziumDbOffsetStorageTopicName;
   }
 
   public String getMySqlBinLogClientName() {

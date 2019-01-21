@@ -25,4 +25,12 @@ public class RawUnifiedCdcProperties {
   public void setPipeline(Map<String, Map<String, Object>> pipeline) {
     this.pipeline = pipeline;
   }
+
+  public boolean isReaderPropertiesDeclared() {
+    return reader != null && !reader.isEmpty();
+  }
+
+  public boolean isPipelinePropertiesDeclared() {
+    return pipeline != null && !pipeline.isEmpty();
+  }
 }

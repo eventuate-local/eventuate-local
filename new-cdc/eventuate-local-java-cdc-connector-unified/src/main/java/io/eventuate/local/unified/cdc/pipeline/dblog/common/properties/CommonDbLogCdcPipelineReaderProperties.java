@@ -3,7 +3,7 @@ package io.eventuate.local.unified.cdc.pipeline.dblog.common.properties;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 
 public abstract class CommonDbLogCdcPipelineReaderProperties extends CdcPipelineReaderProperties {
-  private String offsetStorageTopicName = "db.history.topic";
+  private String offsetStorageTopicName = "offset.storage.topic";
   private Integer binlogConnectionTimeoutInMilliseconds = 5000;
   private Integer maxAttemptsForBinlogConnection = 100;
   private Long replicationLagMeasuringIntervalInMilliseconds = 10000L;

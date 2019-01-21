@@ -63,10 +63,10 @@ public class CdcPipelineConfigurator {
   public void initialize() {
     logger.info("Starting unified cdc pipelines");
 
-    if (rawUnifiedCdcProperties.getReader() == null || rawUnifiedCdcProperties.getReader().isEmpty()) {
-      createStartSaveCdcDefaultPipelineReader(defaultCdcPipelineReaderProperties);
-    } else {
+    if (rawUnifiedCdcProperties.isReaderPropertiesDeclared()) {
       rawUnifiedCdcProperties.getReader().values().forEach(this::createCdcPipelineReader);
+    } else {
+      createStartSaveCdcDefaultPipelineReader(defaultCdcPipelineReaderProperties);
     }
 
     if (Boolean.parseBoolean(System.getProperty("dry-run-cdc-migration"))) {
@@ -86,10 +86,10 @@ public class CdcPipelineConfigurator {
 
   private void start() {
 
-    if (rawUnifiedCdcProperties.getPipeline() == null || rawUnifiedCdcProperties.getPipeline().isEmpty()) {
-      createStartSaveCdcDefaultPipeline(defaultCdcPipelineProperties);
-    } else {
+    if (rawUnifiedCdcProperties.isPipelinePropertiesDeclared()) {
       rawUnifiedCdcProperties.getPipeline().values().forEach(this::createStartSaveCdcPipeline);
+    } else {
+      createStartSaveCdcDefaultPipeline(defaultCdcPipelineProperties);
     }
 
     binlogEntryReaderProvider.start();

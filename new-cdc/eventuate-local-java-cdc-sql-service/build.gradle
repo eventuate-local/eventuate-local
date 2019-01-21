@@ -2,8 +2,8 @@ apply plugin: 'org.springframework.boot'
 apply plugin: PrivateModulePlugin
 
 dependencies {
-    compile "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    compile "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-actuator:$springBootCdcVersion"
+    compile "org.springframework.boot:spring-boot-starter-web:$springBootCdcVersion"
 
     compile project(":new-cdc:eventuate-local-java-cdc-autoconfigure")
 

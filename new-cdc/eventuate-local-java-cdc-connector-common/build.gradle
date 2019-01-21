@@ -1,10 +1,10 @@
 dependencies {
-    compile "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
-    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-actuator:$springBootCdcVersion"
+    compile "org.springframework.boot:spring-boot-starter:$springBootCdcVersion"
     compile "io.eventuate.client.java:eventuate-client-java-common-impl:$eventuateClientVersion"
     compile 'org.apache.curator:curator-recipes:2.11.0'
     compile "io.dropwizard.metrics:metrics-core:$dropwizardMetricsVersion"
-    compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootCdcVersion"
     compile 'io.micrometer:micrometer-core:1.1.1'
     compile 'io.micrometer:micrometer-registry-jmx:1.1.1'
     compile 'io.micrometer:micrometer-registry-prometheus:1.1.1'

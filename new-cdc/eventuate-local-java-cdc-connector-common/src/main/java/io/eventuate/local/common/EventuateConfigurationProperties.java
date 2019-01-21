@@ -10,7 +10,7 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.db.password:#{null}}")
   private String dbPassword;
 
-  @Value("${eventuatelocal.cdc.offset.storage.topic.name:#{\"db.history.topic\"}}")
+  @Value("${eventuatelocal.cdc.offset.storage.topic.name:#{\"offset.storage.topic\"}}")
   private String offsetStorageTopicName;
 
   @Value("${eventuatelocal.cdc.binlog.client.id:#{null}}")

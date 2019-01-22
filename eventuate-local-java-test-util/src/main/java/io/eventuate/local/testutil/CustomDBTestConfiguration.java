@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@PropertySource({"/customdb.properties"})
+@PropertySource({"classpath:/customdb.properties"})
 @EnableAutoConfiguration
 public class CustomDBTestConfiguration {
 

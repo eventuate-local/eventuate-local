@@ -3,7 +3,7 @@ package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
-import io.eventuate.local.java.jdbckafkastore.EventuateKafkaPropertiesConfiguration;
+import io.eventuate.local.java.kafka.EventuateKafkaPropertiesConfiguration;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;

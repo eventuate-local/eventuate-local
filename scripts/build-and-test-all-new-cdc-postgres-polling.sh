@@ -29,7 +29,7 @@ $DOCKER_COMPOSE up -d
 echo waiting for Postgres
 
 ./scripts/wait-for-postgres.sh
-./scripts/wait-for-services.sh $DOCKER_HOST_IP 8099
+./scripts/wait-for-services.sh $DOCKER_HOST_IP "actuator/health" 8099
 
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test
 

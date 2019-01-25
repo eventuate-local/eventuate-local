@@ -21,7 +21,7 @@ $DOCKER_COMPOSE up --build -d mysql zookeeper kafka
 
 $DOCKER_COMPOSE up --build -d cdcservice
 
-./scripts/wait-for-services.sh $DOCKER_HOST_IP 8099
+./scripts/wait-for-services.sh $DOCKER_HOST_IP "health" 8099
 
 ./gradlew :eventuate-local-java-migration:cleanTest
 
@@ -32,7 +32,7 @@ $DOCKER_COMPOSE stop cdcservice
 ./gradlew assemble
 $DOCKER_COMPOSE up --build -d newcdcservice
 
-./scripts/wait-for-services.sh $DOCKER_HOST_IP 8099
+./scripts/wait-for-services.sh $DOCKER_HOST_IP "actuator/health" 8099
 
 ./gradlew eventuate-local-java-migration:test --tests "io.eventuate.local.cdc.debezium.migration.MigrationNewCdcPhaseE2ETest"
 

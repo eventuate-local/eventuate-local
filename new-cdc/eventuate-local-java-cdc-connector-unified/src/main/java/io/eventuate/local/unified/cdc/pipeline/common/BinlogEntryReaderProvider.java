@@ -11,11 +11,11 @@ public class BinlogEntryReaderProvider {
   private Map<String, BinlogEntryReader> clients = new HashMap<>();
 
   public void addReader(String name, BinlogEntryReader reader) {
-    clients.put(name, reader);
+    clients.put(name.toLowerCase(), reader);
   }
 
   public BinlogEntryReader getReader(String name) {
-    return clients.get(name);
+    return clients.get(name.toLowerCase());
   }
 
   public BinlogEntryReader getReaderById(long id) {

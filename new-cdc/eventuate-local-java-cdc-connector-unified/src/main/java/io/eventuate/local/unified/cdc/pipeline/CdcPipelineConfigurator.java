@@ -1,6 +1,5 @@
 package io.eventuate.local.unified.cdc.pipeline;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.eventuate.local.common.BinlogEntryReader;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.mysql.binlog.MySqlBinaryLogClient;
@@ -17,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -29,6 +29,9 @@ public class CdcPipelineConfigurator {
   private PropertyReader propertyReader = new PropertyReader();
 
   private List<CdcPipeline> cdcPipelines = new ArrayList<>();
+
+  @Value("${eventuate.cdc.service.dry.run:#{false}}")
+  private boolean dryRunOption;
 
   @Autowired
   private Collection<CdcPipelineFactory> cdcPipelineFactories;
@@ -69,7 +72,7 @@ public class CdcPipelineConfigurator {
       createStartSaveCdcDefaultPipelineReader(defaultCdcPipelineReaderProperties);
     }
 
-    if (Boolean.parseBoolean(System.getProperty("dry-run-cdc-migration"))) {
+    if (dryRunOption) {
       dryRun();
     } else {
       start();
@@ -98,7 +101,7 @@ public class CdcPipelineConfigurator {
   }
 
   private void dryRun() {
-    logger.warn("Unified cdc pipelines are not started, 'dry-run-cdc-migration' option is used");
+    logger.warn("Unified cdc pipelines are not started, 'dry run' option is used");
 
     List<MySqlBinaryLogClient> clients = binlogEntryReaderProvider
             .getAllReaders()
@@ -124,7 +127,7 @@ public class CdcPipelineConfigurator {
       logger.info("There is no mysql binlog readers, migration information is unavailable.");
     }
 
-    logger.warn("'dry-run-cdc-migration' option is used, application will be stopped.");
+    logger.warn("'dry run' option is used, application will be stopped.");
     System.exit(0);
   }
 

@@ -30,7 +30,7 @@ export POSTGRES_PORT=5433
 
 $DOCKER_COMPOSE up -d
 
-./scripts/wait-for-services.sh $DOCKER_HOST_IP 8099
+./scripts/wait-for-services.sh $DOCKER_HOST_IP "actuator/health" 8099
 
 echo "testing mysql binlog"
 

@@ -25,7 +25,6 @@ public class CommonCdcDefaultPipelineReaderConfiguration {
   protected EventuateConfigurationProperties eventuateConfigurationProperties;
 
   protected void initCdcPipelineReaderProperties(CdcPipelineReaderProperties cdcPipelineReaderProperties) {
-    cdcPipelineReaderProperties.setName("default");
     cdcPipelineReaderProperties.setDataSourceUrl(dataSourceURL);
     cdcPipelineReaderProperties.setDataSourceUserName(dataSourceUserName);
     cdcPipelineReaderProperties.setDataSourcePassword(dataSourcePassword);

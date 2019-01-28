@@ -67,7 +67,7 @@ public class CdcPipelineConfigurator {
     logger.info("Starting unified cdc pipelines");
 
     if (rawUnifiedCdcProperties.isReaderPropertiesDeclared()) {
-      rawUnifiedCdcProperties.getReader().values().forEach(this::createCdcPipelineReader);
+      rawUnifiedCdcProperties.getReader().forEach(this::createCdcPipelineReader);
     } else {
       createStartSaveCdcDefaultPipelineReader(defaultCdcPipelineReaderProperties);
     }
@@ -160,7 +160,7 @@ public class CdcPipelineConfigurator {
 
     BinlogEntryReader binlogEntryReader = defaultCdcPipelineReaderFactory.create(cdcDefaultPipelineReaderProperties);
 
-    binlogEntryReaderProvider.addReader(cdcDefaultPipelineReaderProperties.getName(),
+    binlogEntryReaderProvider.addReader("default",
             binlogEntryReader);
   }
 
@@ -170,7 +170,7 @@ public class CdcPipelineConfigurator {
     return cdcPipelineFactory.create(properties);
   }
 
-  private void createCdcPipelineReader(Map<String, Object> properties) {
+  private void createCdcPipelineReader(String name, Map<String, Object> properties) {
 
     CdcPipelineReaderProperties cdcPipelineReaderProperties = propertyReader
             .convertMapToPropertyClass(properties, CdcPipelineReaderProperties.class);
@@ -185,7 +185,7 @@ public class CdcPipelineConfigurator {
             .convertMapToPropertyClass(properties, cdcPipelineReaderFactory.propertyClass());
     exactCdcPipelineReaderProperties.validate();
 
-    binlogEntryReaderProvider.addReader(cdcPipelineReaderProperties.getName(),
+    binlogEntryReaderProvider.addReader(name,
             ((CdcPipelineReaderFactory)cdcPipelineReaderFactory).create(exactCdcPipelineReaderProperties));
   }
 

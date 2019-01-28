@@ -6,9 +6,6 @@ public class CommonPipelineReaderPropertyValidationTest extends CommonPropertyVa
   protected  <PROPERTIES extends CdcPipelineReaderProperties> void testCommonRequiredProperties(Class<PROPERTIES> propertyClass,
                                                                                                 PropertyBuilder propertyBuilder) throws Exception {
 
-    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "name must not be null");
-    propertyBuilder.addString("name", "reader1");
-
     assertExceptionMessage(propertyBuilder.toString(), propertyClass, "dataSourceUrl must not be null");
 
     propertyBuilder.addString("dataSourceUrl", "jdbc:correctdb://localhost/eventuate");

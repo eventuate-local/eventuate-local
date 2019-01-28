@@ -26,8 +26,8 @@ mysql:
     - MYSQL_USER=mysqluser
     - MYSQL_PASSWORD=mysqlpw
 
-cdcservice:
-  image: eventuateio/eventuateio-local-cdc-service:latest
+oldcdcservice:
+  image: eventuateio/eventuateio-local-cdc-service:0.22.1.RELEASE
   ports:
     - "8099:8080"
   links:
@@ -44,7 +44,7 @@ cdcservice:
     EVENTUATELOCAL_CDC_DB_USER_NAME: root
     EVENTUATELOCAL_CDC_DB_PASSWORD: rootpassword
 
-newcdcservice:
+cdcservice:
   build: ./new-cdc/eventuate-local-java-cdc-sql-service
   ports:
     - "8099:8080"

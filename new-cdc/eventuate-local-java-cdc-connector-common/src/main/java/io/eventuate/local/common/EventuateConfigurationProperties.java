@@ -34,11 +34,11 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.leadership.lock.path:#{\"/eventuatelocal/cdc/leader\"}}")
   private String leadershipLockPath;
 
-  @Value("${eventuatelocal.cdc.old.debezium.db.offset.storage.topic.name:#{null}}")
-  private String oldDebeziumDbOffsetStorageTopicName;
+  @Value("${eventuatelocal.cdc.read.old.debezium.db.offset.storage.topic:#{null}}")
+  private Boolean readOldDebeziumDbOffsetStorageTopic;
 
-  @Value("${eventuatelocal.cdc.my.sql.bin.log.client.name:#{null}}")
-  private String mySqlBinLogClientName;
+  @Value("${eventuatelocal.cdc.mysql.binlog.client.name:#{null}}")
+  private String mySqlBinlogClientName;
 
   @Value("${eventuatelocal.cdc.binlog.connection.timeout.in.milliseconds:#{5000}}")
   private int binlogConnectionTimeoutInMilliseconds;
@@ -107,12 +107,12 @@ public class EventuateConfigurationProperties {
     return leadershipLockPath;
   }
 
-  public String getOldDebeziumDbOffsetStorageTopicName() {
-    return oldDebeziumDbOffsetStorageTopicName;
+  public Boolean getReadOldDebeziumDbOffsetStorageTopic() {
+    return readOldDebeziumDbOffsetStorageTopic;
   }
 
-  public String getMySqlBinLogClientName() {
-    return mySqlBinLogClientName != null ? mySqlBinLogClientName : String.valueOf(getBinlogClientId());
+  public String getMySqlBinlogClientName() {
+    return mySqlBinlogClientName != null ? mySqlBinlogClientName : String.valueOf(getBinlogClientId());
   }
 
   public int getBinlogConnectionTimeoutInMilliseconds() {

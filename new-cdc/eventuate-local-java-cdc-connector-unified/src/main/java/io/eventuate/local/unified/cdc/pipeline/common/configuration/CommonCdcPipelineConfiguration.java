@@ -79,9 +79,7 @@ public class CommonCdcPipelineConfiguration {
   public DebeziumOffsetStoreFactory mySqlBinLogOffsetStoreFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                   EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
-    return (oldDbHistoryTopicName) ->
-            new DebeziumBinlogOffsetKafkaStore(oldDbHistoryTopicName,
-                    eventuateKafkaConfigurationProperties,
+    return () -> new DebeziumBinlogOffsetKafkaStore(eventuateKafkaConfigurationProperties,
                     eventuateKafkaConsumerConfigurationProperties);
   }
 

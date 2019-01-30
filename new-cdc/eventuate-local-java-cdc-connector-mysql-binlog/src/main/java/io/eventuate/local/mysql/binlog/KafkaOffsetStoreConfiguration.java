@@ -21,7 +21,7 @@ public class KafkaOffsetStoreConfiguration {
                                  EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getOffsetStorageTopicName(),
-            eventuateConfigurationProperties.getMySqlBinLogClientName(),
+            eventuateConfigurationProperties.getMySqlBinlogClientName(),
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);

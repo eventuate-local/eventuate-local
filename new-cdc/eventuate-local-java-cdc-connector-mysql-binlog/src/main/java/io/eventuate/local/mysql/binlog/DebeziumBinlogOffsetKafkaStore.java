@@ -16,10 +16,12 @@ public class DebeziumBinlogOffsetKafkaStore extends OffsetKafkaStore {
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
-  public DebeziumBinlogOffsetKafkaStore(String offsetStorageTopicName,
-                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+  public DebeziumBinlogOffsetKafkaStore(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                         EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-    super(offsetStorageTopicName, eventuateKafkaConfigurationProperties, eventuateKafkaConsumerConfigurationProperties);
+
+    super("eventuate.local.cdc.my-sql-connector.offset.storage",
+            eventuateKafkaConfigurationProperties,
+            eventuateKafkaConsumerConfigurationProperties);
   }
 
   @Override

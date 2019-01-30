@@ -72,7 +72,7 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
     initCommonDbLogCdcPipelineReaderProperties(mySqlBinlogCdcPipelineReaderProperties);
     initCdcPipelineReaderProperties(mySqlBinlogCdcPipelineReaderProperties);
 
-    mySqlBinlogCdcPipelineReaderProperties.setMySqlBinLogClientName(eventuateConfigurationProperties.getMySqlBinLogClientName());
+    mySqlBinlogCdcPipelineReaderProperties.setMySqlBinlogClientName(eventuateConfigurationProperties.getMySqlBinlogClientName());
 
     return mySqlBinlogCdcPipelineReaderProperties;
   }
@@ -82,7 +82,7 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
 
     mySqlBinlogCdcPipelineReaderProperties.setCdcDbUserName(eventuateConfigurationProperties.getDbUserName());
     mySqlBinlogCdcPipelineReaderProperties.setCdcDbPassword(eventuateConfigurationProperties.getDbPassword());
-    mySqlBinlogCdcPipelineReaderProperties.setOldDebeziumDbOffsetStorageTopicName(eventuateConfigurationProperties.getOldDebeziumDbOffsetStorageTopicName());
+    mySqlBinlogCdcPipelineReaderProperties.setReadOldDebeziumDbOffsetStorageTopic(eventuateConfigurationProperties.getReadOldDebeziumDbOffsetStorageTopic());
 
     return mySqlBinlogCdcPipelineReaderProperties;
   }

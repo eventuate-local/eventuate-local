@@ -6,16 +6,16 @@ import org.springframework.util.Assert;
 public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipelineReaderProperties {
   private String cdcDbUserName;
   private String cdcDbPassword;
-  private String oldDebeziumDbOffsetStorageTopicName;
-  private String mySqlBinLogClientName;
+  private Boolean readOldDebeziumDbOffsetStorageTopic;
+  private String mySqlBinlogClientName;
 
   public void validate() {
     super.validate();
     Assert.notNull(cdcDbUserName, "cdcDbUserName must not be null");
     Assert.notNull(cdcDbPassword, "cdcDbPassword must not be null");
-    Assert.notNull(mySqlBinLogClientName, "mySqlBinLogClientName must not be null");
-    Assert.hasLength(oldDebeziumDbOffsetStorageTopicName,
-            "oldDebeziumDbOffsetStorageTopicName must not be blank (set 'none' to not migrate debezium offset storage data)");
+    Assert.notNull(mySqlBinlogClientName, "mySqlBinlogClientName must not be null");
+    Assert.notNull(readOldDebeziumDbOffsetStorageTopic,
+            "readOldDebeziumDbOffsetStorageTopic must not be null");
   }
 
   public String getCdcDbUserName() {
@@ -34,19 +34,19 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
     this.cdcDbPassword = cdcDbPassword;
   }
 
-  public String getOldDebeziumDbOffsetStorageTopicName() {
-    return "none".equalsIgnoreCase(oldDebeziumDbOffsetStorageTopicName) ? null : oldDebeziumDbOffsetStorageTopicName;
+  public Boolean getReadOldDebeziumDbOffsetStorageTopic() {
+    return readOldDebeziumDbOffsetStorageTopic;
   }
 
-  public void setOldDebeziumDbOffsetStorageTopicName(String oldDebeziumDbOffsetStorageTopicName) {
-    this.oldDebeziumDbOffsetStorageTopicName = oldDebeziumDbOffsetStorageTopicName;
+  public void setReadOldDebeziumDbOffsetStorageTopic(Boolean readOldDebeziumDbOffsetStorageTopic) {
+    this.readOldDebeziumDbOffsetStorageTopic = readOldDebeziumDbOffsetStorageTopic;
   }
 
-  public String getMySqlBinLogClientName() {
-    return mySqlBinLogClientName != null ? mySqlBinLogClientName : String.valueOf(getBinlogClientId());
+  public String getMySqlBinlogClientName() {
+    return mySqlBinlogClientName != null ? mySqlBinlogClientName : String.valueOf(getBinlogClientId());
   }
 
-  public void setMySqlBinLogClientName(String mySqlBinLogClientName) {
-    this.mySqlBinLogClientName = mySqlBinLogClientName;
+  public void setMySqlBinlogClientName(String mySqlBinlogClientName) {
+    this.mySqlBinlogClientName = mySqlBinlogClientName;
   }
 }

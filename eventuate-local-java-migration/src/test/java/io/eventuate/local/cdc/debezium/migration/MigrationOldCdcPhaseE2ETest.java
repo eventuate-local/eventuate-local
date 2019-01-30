@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutionException;
 public class MigrationOldCdcPhaseE2ETest extends AbstractE2EMigrationTest  {
 
   @Test
-  public void test() throws InterruptedException, ExecutionException {
+  public void send2EventsAndReceive1() throws InterruptedException, ExecutionException {
     for (int i = 0; i < 2; i++) {
       sendEvent();
     }

@@ -57,8 +57,7 @@ public class MigrationToNewCdcTest {
   }
 
   private BinlogFileOffset getDebeziumOffset() {
-    DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore = new DebeziumBinlogOffsetKafkaStore("eventuate.local.cdc." + connectorName + ".offset.storage",
-            eventuateKafkaConfigurationProperties,
+    DebeziumBinlogOffsetKafkaStore debeziumBinlogOffsetKafkaStore = new DebeziumBinlogOffsetKafkaStore(eventuateKafkaConfigurationProperties,
             EventuateKafkaConsumerConfigurationProperties.empty());
 
     return debeziumBinlogOffsetKafkaStore.getLastBinlogFileOffset().get();

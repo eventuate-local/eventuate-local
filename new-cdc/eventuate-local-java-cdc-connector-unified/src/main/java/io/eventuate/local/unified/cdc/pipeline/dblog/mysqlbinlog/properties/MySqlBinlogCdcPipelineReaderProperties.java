@@ -43,7 +43,7 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
   }
 
   public String getMySqlBinlogClientName() {
-    return mySqlBinlogClientName != null ? mySqlBinlogClientName : String.valueOf(getBinlogClientId());
+    return mySqlBinlogClientName;
   }
 
   public void setMySqlBinlogClientName(String mySqlBinlogClientName) {

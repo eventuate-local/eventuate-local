@@ -112,7 +112,7 @@ public class EventuateConfigurationProperties {
   }
 
   public String getMySqlBinlogClientName() {
-    return mySqlBinlogClientName != null ? mySqlBinlogClientName : String.valueOf(getBinlogClientId());
+    return mySqlBinlogClientName;
   }
 
   public int getBinlogConnectionTimeoutInMilliseconds() {

@@ -2,7 +2,6 @@ package io.eventuate.local.common;
 
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.java.common.broker.DataProducer;
-import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -17,24 +16,20 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
 
   protected MeterRegistry meterRegistry;
   protected PublishingStrategy<EVENT> publishingStrategy;
-  protected DataProducerFactory dataProducerFactory;
   protected DataProducer producer;
   protected Counter meterEventsPublished;
   protected Counter meterEventsDuplicates;
   protected Counter meterEventsRetries;
   protected DistributionSummary distributionSummaryEventAge;
 
-  private PublishingFilter publishingFilter;
   private volatile boolean lastMessagePublishingFailed;
 
-  public CdcDataPublisher(DataProducerFactory dataProducerFactory,
-                          PublishingFilter publishingFilter,
+  public CdcDataPublisher(DataProducer dataProducer,
                           PublishingStrategy<EVENT> publishingStrategy,
                           MeterRegistry meterRegistry) {
 
-    this.dataProducerFactory = dataProducerFactory;
+    this.producer = dataProducer;
     this.publishingStrategy = publishingStrategy;
-    this.publishingFilter = publishingFilter;
     this.meterRegistry = meterRegistry;
 
     initMetrics();
@@ -53,18 +48,6 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
     }
   }
 
-  public void start() {
-    logger.debug("Starting CdcDataPublisher");
-    producer = dataProducerFactory.create();
-    logger.debug("Starting CdcDataPublisher");
-  }
-
-  public void stop() {
-    logger.debug("Stopping data producer");
-    if (producer != null)
-      producer.close();
-  }
-
   public void handleEvent(EVENT publishedEvent) throws EventuateLocalPublishingException {
 
     Objects.requireNonNull(publishedEvent);
@@ -78,21 +61,16 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
 
     for (int i = 0; i < 5; i++) {
       try {
-        if (publishedEvent.getBinlogFileOffset().map(o -> publishingFilter.shouldBePublished(o, aggregateTopic)).orElse(true)) {
-          producer.send(
-                  aggregateTopic,
-                  publishingStrategy.partitionKeyFor(publishedEvent),
-                  json
-          ).get(10, TimeUnit.SECONDS);
+        producer.send(
+                aggregateTopic,
+                publishingStrategy.partitionKeyFor(publishedEvent),
+                json
+        ).get(10, TimeUnit.SECONDS);
 
-          lastMessagePublishingFailed = false;
+        lastMessagePublishingFailed = false;
 
-          publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> distributionSummaryEventAge.record(System.currentTimeMillis() - time));
-          meterEventsPublished.increment();
-        } else {
-          logger.debug("Duplicate event {}", publishedEvent);
-          meterEventsDuplicates.increment();
-        }
+        publishingStrategy.getCreateTime(publishedEvent).ifPresent(time -> distributionSummaryEventAge.record(System.currentTimeMillis() - time));
+        meterEventsPublished.increment();
         return;
       } catch (Exception e) {
 
@@ -108,6 +86,7 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
         }
       }
     }
+
     throw new EventuateLocalPublishingException("error publishing to " + aggregateTopic, lastException);
   }
 }

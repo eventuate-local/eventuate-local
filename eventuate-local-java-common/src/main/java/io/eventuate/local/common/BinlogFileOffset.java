@@ -79,14 +79,6 @@ public class BinlogFileOffset {
     if(this.equals(binlogFileOffset))
       return true;
 
-    Optional<Boolean> gtidResult = gtid.flatMap(gtid1 ->
-      binlogFileOffset.getGtid().flatMap(gtid2 ->
-              Optional.of(gtid1.getTransactionNumber() > gtid2.getTransactionNumber())));
-
-    if (gtidResult.isPresent()) {
-      return gtidResult.get();
-    }
-
     if(this.getBinlogFilename().equals(binlogFileOffset.getBinlogFilename())) {
       if(this.getOffset()>binlogFileOffset.getOffset()) {
         return true;

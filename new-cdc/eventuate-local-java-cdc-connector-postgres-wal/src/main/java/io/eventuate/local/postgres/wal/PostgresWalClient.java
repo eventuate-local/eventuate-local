@@ -3,6 +3,7 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
+import io.eventuate.local.common.CdcDataPublisher;
 import io.eventuate.local.common.CdcProcessingStatusService;
 import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
@@ -37,7 +38,8 @@ public class PostgresWalClient extends DbLogClient {
   private String replicationSlotName;
   private PostgresWalCdcProcessingStatusService postgresWalCdcProcessingStatusService;
 
-  public PostgresWalClient(MeterRegistry meterRegistry,
+  public PostgresWalClient(CdcDataPublisher cdcDataPublisher,
+                           MeterRegistry meterRegistry,
                            String url,
                            String user,
                            String password,
@@ -56,7 +58,8 @@ public class PostgresWalClient extends DbLogClient {
                            String additionalServiceReplicationSlotName,
                            long waitForOffsetSyncTimeoutInMilliseconds) {
 
-    super(meterRegistry,
+    super(cdcDataPublisher,
+            meterRegistry,
             user,
             password,
             url,
@@ -201,7 +204,7 @@ public class PostgresWalClient extends DbLogClient {
                   .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
                   .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
                   .forEach(e -> {
-                    handler.publish(e);
+                    handler.publish(cdcDataPublisher, e);
                     onEventReceived();
                   }));
 

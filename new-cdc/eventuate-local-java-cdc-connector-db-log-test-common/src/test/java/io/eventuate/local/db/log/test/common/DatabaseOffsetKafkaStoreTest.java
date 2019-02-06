@@ -3,7 +3,7 @@ package io.eventuate.local.db.log.test.common;
 import io.eventuate.local.common.BinlogFileOffset;
 import io.eventuate.local.common.EventuateConfigurationProperties;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
-import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.common.OffsetStore;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -69,7 +69,6 @@ public class DatabaseOffsetKafkaStoreTest extends AbstractConnectorTest {
   public void shouldGetEmptyOptionalFromEmptyTopic() {
     OffsetStore offsetStore = getDatabaseOffsetKafkaStore(UUID.randomUUID().toString(), "mySqlBinaryLogClientName");
     offsetStore.getLastBinlogFileOffset().isPresent();
-    offsetStore.stop();
   }
 
   @Test
@@ -115,7 +114,6 @@ public class DatabaseOffsetKafkaStoreTest extends AbstractConnectorTest {
 
     BinlogFileOffset savedBfo = offsetStore.getLastBinlogFileOffset().get();
     assertEquals(bfo, savedBfo);
-    offsetStore.stop();
     return savedBfo;
   }
 
@@ -124,6 +122,5 @@ public class DatabaseOffsetKafkaStoreTest extends AbstractConnectorTest {
 
     BinlogFileOffset lastRecord = offsetStore.getLastBinlogFileOffset().get();
     assertEquals(binlogFileOffset, lastRecord);
-    offsetStore.stop();
   }
 }

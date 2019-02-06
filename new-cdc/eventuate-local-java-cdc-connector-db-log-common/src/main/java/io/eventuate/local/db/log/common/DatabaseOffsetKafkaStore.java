@@ -19,10 +19,7 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
 
   private final String dbLogClientName;
 
-  private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
   private EventuateKafkaProducer eventuateKafkaProducer;
-
-  private Optional<BinlogFileOffset> recordToSave = Optional.empty();
 
   public DatabaseOffsetKafkaStore(String dbHistoryTopicName,
                                   String dbLogClientName,
@@ -34,18 +31,12 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
 
     this.dbLogClientName = dbLogClientName;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
-    scheduledExecutorService.scheduleAtFixedRate(this::scheduledBinlogFilenameAndOffsetUpdate, 5, 5, TimeUnit.SECONDS);
-  }
-
-  private synchronized void scheduledBinlogFilenameAndOffsetUpdate() {
-    this.recordToSave.ifPresent(this::store);
-    this.recordToSave = Optional.empty();
   }
 
   @Override
   public synchronized void save(BinlogFileOffset binlogFileOffset) {
-    logger.info("database offset kafka store updated offset to save to {}", binlogFileOffset);
-    this.recordToSave = Optional.of(binlogFileOffset);
+    logger.info("database offset kafka store is saving offset {}", binlogFileOffset);
+    store(binlogFileOffset);
   }
 
   @Override
@@ -54,12 +45,6 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
       return JSonMapper.fromJson(record.value(), BinlogFileOffset.class);
     }
     return null;
-  }
-
-  public synchronized void stop() {
-    if (this.recordToSave.isPresent())
-      this.store(this.recordToSave.get());
-    this.scheduledExecutorService.shutdown();
   }
 
   private synchronized void store(BinlogFileOffset binlogFileOffset) {

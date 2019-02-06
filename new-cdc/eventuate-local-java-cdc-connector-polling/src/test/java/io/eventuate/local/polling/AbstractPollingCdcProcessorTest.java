@@ -1,15 +1,14 @@
 package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
-import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.*;
 import io.eventuate.local.test.util.SourceTableNameSupplier;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
@@ -33,13 +32,14 @@ public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
     pollingDao.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            new BinlogEntryToPublishedEventConverter(),
-            new CdcDataPublisher<PublishedEvent>(null, null, null, null) {
-              @Override
-              public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
-                consumer.accept(publishedEvent);
-              }
-            });
+            new BinlogEntryToPublishedEventConverter());
+
+    pollingDao.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null, null) {
+      @Override
+      public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+        consumer.accept(publishedEvent);
+      }
+    });
   }
 
   @Override

@@ -13,6 +13,7 @@ public class ConsumerPropertiesFactory {
     consumerProperties.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     consumerProperties.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     consumerProperties.put("auto.offset.reset", "earliest");
+    consumerProperties.put("isolation.level", "read_committed");
     return consumerProperties;
   }
 }

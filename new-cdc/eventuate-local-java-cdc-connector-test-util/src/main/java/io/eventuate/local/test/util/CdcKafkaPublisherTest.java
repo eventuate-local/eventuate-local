@@ -39,7 +39,6 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
   public void init() {
     super.init();
     cdcDataPublisher = createCdcKafkaPublisher();
-    cdcDataPublisher.start();
   }
 
   @Test
@@ -52,7 +51,6 @@ public abstract class CdcKafkaPublisherTest extends AbstractCdcTest {
     consumer.subscribe(Collections.singletonList(getEventTopicName()));
 
     waitForEventInKafka(consumer, entityIdVersionAndEventIds.getEntityId(), LocalDateTime.now().plusSeconds(40));
-    cdcDataPublisher.stop();
   }
 
   public abstract void clear();

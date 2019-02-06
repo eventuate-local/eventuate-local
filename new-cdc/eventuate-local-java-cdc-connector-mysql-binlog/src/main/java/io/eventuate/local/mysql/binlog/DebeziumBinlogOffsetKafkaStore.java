@@ -52,8 +52,4 @@ public class DebeziumBinlogOffsetKafkaStore extends OffsetKafkaStore {
   @Override
   public void save(BinlogFileOffset binlogFileOffset) {
   }
-
-  @Override
-  public void stop() {
-  }
 }

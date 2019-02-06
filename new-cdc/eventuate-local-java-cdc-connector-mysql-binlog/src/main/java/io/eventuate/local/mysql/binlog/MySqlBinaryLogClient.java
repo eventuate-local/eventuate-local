@@ -11,7 +11,8 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetKafkaStore;
-import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.common.OffsetStore;
+import io.eventuate.local.java.common.broker.CdcDataPublisherTransactionTemplate;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -57,8 +58,11 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
   private Optional<Gtid> lastGTID = Optional.empty();
   private DataSource rootDataSource;
+  private CdcDataPublisherTransactionTemplate cdcDataPublisherTransactionTemplate;
 
-  public MySqlBinaryLogClient(MeterRegistry meterRegistry,
+  public MySqlBinaryLogClient(CdcDataPublisher cdcDataPublisher,
+                              CdcDataPublisherTransactionTemplate cdcDataPublisherTransactionTemplate,
+                              MeterRegistry meterRegistry,
                               String dbUserName,
                               String dbPassword,
                               String dataSourceUrl,
@@ -76,7 +80,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               int monitoringRetryAttempts,
                               boolean useGTIDsWhenPossible) {
 
-    super(meterRegistry,
+    super(cdcDataPublisher,
+            meterRegistry,
             dbUserName,
             dbPassword,
             dataSourceUrl,
@@ -97,11 +102,10 @@ public class MySqlBinaryLogClient extends DbLogClient {
     this.offsetStore = offsetStore;
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
     this.useGTIDsWhenPossible = useGTIDsWhenPossible;
+    this.cdcDataPublisherTransactionTemplate = cdcDataPublisherTransactionTemplate;
 
     rootDataSource = createRootDataSource(dataSourceUrl, dbUserName, dbPassword);
-
     mySqlCdcProcessingStatusService = new MySqlCdcProcessingStatusService(rootDataSource);
-
   }
 
 
@@ -179,7 +183,6 @@ public class MySqlBinaryLogClient extends DbLogClient {
           }
 
           dbLogMetrics.onBinlogEntryProcessed();
-
           break;
         }
         case EXT_WRITE_ROWS: {
@@ -279,16 +282,23 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
       BinlogEntry entry = extractor.extract(schemaAndTable, eventData, binlogFilename, offset, lastGTID);
 
-      if (!shouldSkipEntry(startingBinlogFileOffset, entry.getBinlogFileOffset())) {
+      if ((useGTIDsWhenPossible && isGTIDSupported()) || !shouldSkipEntry(startingBinlogFileOffset, entry.getBinlogFileOffset())) {
         binlogEntryHandlers
               .stream()
               .filter(bh -> bh.isFor(schemaAndTable))
-              .forEach(binlogEntryHandler -> binlogEntryHandler.publish(entry));
+              .forEach(binlogEntryHandler -> {
+                offset = extractOffset(event);
+                BinlogFileOffset binlogFileOffset = new BinlogFileOffset(binlogFilename, offset, lastGTID);
+
+                cdcDataPublisherTransactionTemplate.inTransaction(() -> {
+                  binlogEntryHandler.publish(cdcDataPublisher, entry);
+                  offsetStore.save(binlogFileOffset);
+                });
+              });
       }
     }
 
     onEventReceived();
-    saveOffset(event);
   }
 
   private void handleUpdateRowsEvent(Event event) {

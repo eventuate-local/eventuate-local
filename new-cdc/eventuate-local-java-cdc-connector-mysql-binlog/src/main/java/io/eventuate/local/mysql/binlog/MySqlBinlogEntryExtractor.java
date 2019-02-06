@@ -32,7 +32,7 @@ public class MySqlBinlogEntryExtractor extends AbstractMySqlBinlogExtractor {
 
       @Override
       public BinlogFileOffset getBinlogFileOffset() {
-        return new BinlogFileOffset(binlogFilename, position);
+        return new BinlogFileOffset(binlogFilename, position, gtid);
       }
     };
   }

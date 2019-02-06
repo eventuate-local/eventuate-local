@@ -18,7 +18,8 @@ public abstract class DbLogClient extends BinlogEntryReader {
   private boolean checkEntriesForDuplicates;
   protected volatile boolean connected;
 
-  public DbLogClient(MeterRegistry meterRegistry,
+  public DbLogClient(CdcDataPublisher cdcDataPublisher,
+                     MeterRegistry meterRegistry,
                      String dbUserName,
                      String dbPassword,
                      String dataSourceUrl,
@@ -30,7 +31,8 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      int monitoringRetryIntervalInMilliseconds,
                      int monitoringRetryAttempts) {
 
-    super(meterRegistry,
+    super(cdcDataPublisher,
+            meterRegistry,
             curatorFramework,
             leadershipLockPath,
             dataSourceUrl,

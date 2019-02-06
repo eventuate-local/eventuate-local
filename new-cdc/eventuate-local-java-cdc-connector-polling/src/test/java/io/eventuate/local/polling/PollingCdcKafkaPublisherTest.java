@@ -2,7 +2,6 @@ package io.eventuate.local.polling;
 
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.DuplicatePublishingDetector;
 import io.eventuate.local.common.PublishedEvent;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
@@ -25,27 +24,24 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
   @Autowired
   private PollingDao pollingDao;
 
-  @Autowired
-  private DuplicatePublishingDetector duplicatePublishingDetector;
-
   @Before
   public void init() {
     super.init();
 
     pollingDao.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            new BinlogEntryToPublishedEventConverter(),
-            cdcDataPublisher);
+            new BinlogEntryToPublishedEventConverter());
+
+
+    pollingDao.setCdcDataPublisher(cdcDataPublisher);
 
     pollingDao.start();
   }
 
   @Override
   protected CdcDataPublisher<PublishedEvent> createCdcKafkaPublisher() {
-    return new CdcDataPublisher<>(() ->
-            new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-                    EventuateKafkaProducerConfigurationProperties.empty()),
-            duplicatePublishingDetector,
+    return new CdcDataPublisher<>(new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+            EventuateKafkaProducerConfigurationProperties.empty()),
             publishingStrategy,
             meterRegistry);
   }

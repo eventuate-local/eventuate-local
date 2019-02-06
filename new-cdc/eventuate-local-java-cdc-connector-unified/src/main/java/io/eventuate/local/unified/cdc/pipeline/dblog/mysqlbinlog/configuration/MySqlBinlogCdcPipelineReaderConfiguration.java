@@ -1,9 +1,11 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.configuration;
 
+import io.eventuate.local.common.CdcDataPublisherFactory;
 import io.eventuate.local.common.MySqlBinlogCondition;
+import io.eventuate.local.java.common.broker.CdcDataPublisherTransactionTemplateFactory;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
-import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
@@ -22,42 +24,50 @@ import org.springframework.context.annotation.Configuration;
 public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDefaultPipelineReaderConfiguration {
 
   @Bean("eventuateLocalMySqlBinlogCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory mySqlBinlogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+  public CdcPipelineReaderFactory mySqlBinlogCdcPipelineReaderFactory(DataProducerFactory dataProducerFactory,
+                                                                      CdcDataPublisherFactory cdcDataPublisherFactory,
+                                                                      CdcDataPublisherTransactionTemplateFactory cdcDataPublisherTransactionTemplateFactory,
+                                                                      MeterRegistry meterRegistry,
                                                                       CuratorFramework curatorFramework,
                                                                       BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                       EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                       EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                      EventuateKafkaProducer eventuateKafkaProducer,
                                                                       OffsetStoreFactory offsetStoreFactory,
                                                                       DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
-    return new MySqlBinlogCdcPipelineReaderFactory(meterRegistry,
+    return new MySqlBinlogCdcPipelineReaderFactory(dataProducerFactory,
+            cdcDataPublisherFactory,
+            cdcDataPublisherTransactionTemplateFactory,
+            meterRegistry,
             curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer,
             offsetStoreFactory,
             debeziumOffsetStoreFactory);
   }
 
   @Conditional(MySqlBinlogCondition.class)
   @Bean("defaultCdcPipelineReaderFactory")
-  public CdcPipelineReaderFactory defaultMySqlBinlogCdcPipelineFactory(MeterRegistry meterRegistry,
+  public CdcPipelineReaderFactory defaultMySqlBinlogCdcPipelineFactory(DataProducerFactory dataProducerFactory,
+                                                                       CdcDataPublisherFactory cdcDataPublisherFactory,
+                                                                       CdcDataPublisherTransactionTemplateFactory cdcDataPublisherTransactionTemplateFactory,
+                                                                       MeterRegistry meterRegistry,
                                                                        CuratorFramework curatorFramework,
                                                                        BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                        EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                        EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                                       EventuateKafkaProducer eventuateKafkaProducer,
                                                                        OffsetStoreFactory offsetStoreFactory,
                                                                        DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
-    return new MySqlBinlogCdcPipelineReaderFactory(meterRegistry,
+    return new MySqlBinlogCdcPipelineReaderFactory(dataProducerFactory,
+            cdcDataPublisherFactory,
+            cdcDataPublisherTransactionTemplateFactory,
+            meterRegistry,
             curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer,
             offsetStoreFactory,
             debeziumOffsetStoreFactory);
   }

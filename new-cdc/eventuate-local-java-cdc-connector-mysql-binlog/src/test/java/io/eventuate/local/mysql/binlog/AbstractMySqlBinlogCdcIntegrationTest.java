@@ -7,10 +7,7 @@ import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.javaclient.spring.jdbc.SaveUpdateResult;
-import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
-import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.EventuateConfigurationProperties;
-import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.java.jdbckafkastore.EventuateLocalJdbcAccess;
 import io.eventuate.local.test.util.AbstractCdcTest;
@@ -144,12 +141,13 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            new BinlogEntryToPublishedEventConverter(),
-            new CdcDataPublisher<PublishedEvent>(null, null, null, null) {
-              @Override
-              public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
-                consumer.accept(publishedEvent);
-              }
-            });
+            new BinlogEntryToPublishedEventConverter());
+
+    mySqlBinaryLogClient.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null, null) {
+      @Override
+      public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+        consumer.accept(publishedEvent);
+      }
+    });
   }
 }

@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class BinlogEntryReader {
   protected Logger logger = LoggerFactory.getLogger(getClass());
+  protected CdcDataPublisher cdcDataPublisher;
   protected MeterRegistry meterRegistry;
   protected CuratorFramework curatorFramework;
   protected String leadershipLockPath;
@@ -31,7 +32,8 @@ public abstract class BinlogEntryReader {
   private volatile long lastEventTime = System.currentTimeMillis();
   private LeaderSelector leaderSelector;
 
-  public BinlogEntryReader(MeterRegistry meterRegistry,
+  public BinlogEntryReader(CdcDataPublisher cdcDataPublisher,
+                           MeterRegistry meterRegistry,
                            CuratorFramework curatorFramework,
                            String leadershipLockPath,
                            String dataSourceUrl,
@@ -40,6 +42,7 @@ public abstract class BinlogEntryReader {
                            int monitoringRetryIntervalInMilliseconds,
                            int monitoringRetryAttempts) {
 
+    this.cdcDataPublisher = cdcDataPublisher;
     this.meterRegistry = meterRegistry;
     this.curatorFramework = curatorFramework;
     this.leadershipLockPath = leadershipLockPath;
@@ -54,6 +57,14 @@ public abstract class BinlogEntryReader {
             monitoringRetryAttempts);
 
     commonCdcMetrics = new CommonCdcMetrics(meterRegistry, binlogClientUniqueId);
+  }
+
+  public CdcDataPublisher getCdcDataPublisher() {
+    return cdcDataPublisher;
+  }
+
+  public void setCdcDataPublisher(CdcDataPublisher cdcDataPublisher) {
+    this.cdcDataPublisher = cdcDataPublisher;
   }
 
   public abstract CdcProcessingStatusService getCdcProcessingStatusService();
@@ -72,8 +83,7 @@ public abstract class BinlogEntryReader {
 
   public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
                                                                 String sourceTableName,
-                                                                BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
-                                                                CdcDataPublisher<EVENT> dataPublisher) {
+                                                                BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter) {
     if (eventuateSchema.isEmpty()) {
       throw new IllegalArgumentException("The eventuate schema cannot be empty for the cdc processor.");
     }
@@ -81,7 +91,7 @@ public abstract class BinlogEntryReader {
     SchemaAndTable schemaAndTable = new SchemaAndTable(eventuateSchema.getEventuateDatabaseSchema(), sourceTableName);
 
     BinlogEntryHandler binlogEntryHandler =
-            new BinlogEntryHandler<>(schemaAndTable, binlogEntryToEventConverter, dataPublisher);
+            new BinlogEntryHandler<>(schemaAndTable, binlogEntryToEventConverter);
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }

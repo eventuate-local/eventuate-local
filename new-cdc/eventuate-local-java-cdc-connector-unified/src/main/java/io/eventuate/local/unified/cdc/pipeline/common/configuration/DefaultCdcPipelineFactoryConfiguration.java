@@ -9,12 +9,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class DefaultCdcPipelineFactoryConfiguration {
   @Bean("defaultCdcPipelineFactory")
-  public CdcPipelineFactory<PublishedEvent> defaultCdcPipelineFactory(BinlogEntryReaderProvider binlogEntryReaderProvider,
-                                                      CdcDataPublisher<PublishedEvent> cdcDataPublisher) {
+  public CdcPipelineFactory<PublishedEvent> defaultCdcPipelineFactory(BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
     return new CdcPipelineFactory<>("eventuate-local",
             binlogEntryReaderProvider,
-            cdcDataPublisher,
             new BinlogEntryToPublishedEventConverter());
   }
 }

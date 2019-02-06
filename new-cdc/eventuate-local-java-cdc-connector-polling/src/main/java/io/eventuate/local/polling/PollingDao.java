@@ -29,7 +29,8 @@ public class PollingDao extends BinlogEntryReader {
 
   private PollingProcessingStatusService pollingProcessingStatusService;
 
-  public PollingDao(MeterRegistry meterRegistry,
+  public PollingDao(CdcDataPublisher cdcDataPublisher,
+                    MeterRegistry meterRegistry,
                     String dataSourceUrl,
                     DataSource dataSource,
                     int maxEventsPerPolling,
@@ -42,7 +43,8 @@ public class PollingDao extends BinlogEntryReader {
                     int monitoringRetryIntervalInMilliseconds,
                     int monitoringRetryAttempts) {
 
-    super(meterRegistry,
+    super(cdcDataPublisher,
+            meterRegistry,
             curatorFramework,
             leadershipLockPath,
             dataSourceUrl,
@@ -71,8 +73,8 @@ public class PollingDao extends BinlogEntryReader {
   }
 
   @Override
-  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema, String sourceTableName, BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter, CdcDataPublisher<EVENT> dataPublisher) {
-    super.addBinlogEntryHandler(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
+  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema, String sourceTableName, BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter) {
+    super.addBinlogEntryHandler(eventuateSchema, sourceTableName, binlogEntryToEventConverter);
     pollingProcessingStatusService.addTable(sourceTableName);
   }
 
@@ -119,7 +121,7 @@ public class PollingDao extends BinlogEntryReader {
     while (sqlRowSet.next()) {
       ids.add(sqlRowSet.getObject(pk));
 
-      handler.publish(new BinlogEntry() {
+      handler.publish(cdcDataPublisher, new BinlogEntry() {
         @Override
         public Object getColumn(String name) {
           return sqlRowSet.getObject(name);

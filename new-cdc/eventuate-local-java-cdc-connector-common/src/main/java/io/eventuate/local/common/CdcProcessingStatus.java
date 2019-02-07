@@ -1,9 +1,16 @@
 package io.eventuate.local.common;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 public class CdcProcessingStatus {
   private long lastEventOffset;
   private long logsHighwaterMark;
   private boolean cdcProcessingFinished;
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
+  }
 
   public CdcProcessingStatus(long lastEventOffset, long logsHighwaterMark) {
     this(lastEventOffset, logsHighwaterMark, lastEventOffset == logsHighwaterMark);

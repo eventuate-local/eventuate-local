@@ -1,6 +1,6 @@
 prometheus:
   links:
-    - newcdcservice
+    - cdcservice
   image: prom/prometheus:v2.5.0
   container_name: prometheus
   volumes:

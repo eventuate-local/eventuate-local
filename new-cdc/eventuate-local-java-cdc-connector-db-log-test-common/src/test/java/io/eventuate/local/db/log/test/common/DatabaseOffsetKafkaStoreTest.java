@@ -72,8 +72,8 @@ public class DatabaseOffsetKafkaStoreTest extends AbstractConnectorTest {
   }
 
   @Test
-  public void shouldWorkCorrectlyWithMultipleDifferentNamedBinlogs() throws InterruptedException {
-    floodTopic(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName1");
+  public void shouldWorkCorrectlyWithMultipleDifferentNamedBinlogs() {
+    floodTopic(eventuateConfigurationProperties.getOffsetStorageTopicName(), "mySqlBinaryLogClientName1");
 
     generateAndSaveBinlogFileOffset();
   }
@@ -107,18 +107,17 @@ public class DatabaseOffsetKafkaStoreTest extends AbstractConnectorTest {
             EventuateKafkaConsumerConfigurationProperties.empty());
   }
 
-  private BinlogFileOffset generateAndSaveBinlogFileOffset() throws InterruptedException {
+  private BinlogFileOffset generateAndSaveBinlogFileOffset() {
     BinlogFileOffset bfo = generateBinlogFileOffset();
-    OffsetStore offsetStore = getDatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
+    DatabaseOffsetKafkaStore offsetStore = getDatabaseOffsetKafkaStore(eventuateConfigurationProperties.getOffsetStorageTopicName(), "mySqlBinaryLogClientName");
     offsetStore.save(bfo);
-
     BinlogFileOffset savedBfo = offsetStore.getLastBinlogFileOffset().get();
     assertEquals(bfo, savedBfo);
     return savedBfo;
   }
 
   private void assertLastRecordEquals(BinlogFileOffset binlogFileOffset) {
-    OffsetStore offsetStore = getDatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(), "mySqlBinaryLogClientName");
+    OffsetStore offsetStore = getDatabaseOffsetKafkaStore(eventuateConfigurationProperties.getOffsetStorageTopicName(), "mySqlBinaryLogClientName");
 
     BinlogFileOffset lastRecord = offsetStore.getLastBinlogFileOffset().get();
     assertEquals(binlogFileOffset, lastRecord);

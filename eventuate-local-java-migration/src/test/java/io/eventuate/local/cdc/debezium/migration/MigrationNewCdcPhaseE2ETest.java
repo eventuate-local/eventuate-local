@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 public class MigrationNewCdcPhaseE2ETest extends AbstractE2EMigrationTest {
 
   @Test
-  public void test() throws InterruptedException, ExecutionException {
+  public void readEventFromTheOldCdc() throws InterruptedException, ExecutionException {
     Handler handler = new Handler();
     subscribe(handler);
     handler.assertContainsEvent();

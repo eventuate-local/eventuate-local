@@ -14,7 +14,6 @@ import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDbLogC
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.commons.lang.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
@@ -66,9 +65,9 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
     DataSource dataSource = createDataSource(readerProperties);
 
     Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore =
-            StringUtils.isBlank(readerProperties.getOldDebeziumDbHistoryTopicName())
-                    ? Optional.empty()
-                    : Optional.of(debeziumOffsetStoreFactory.create(readerProperties.getOldDebeziumDbHistoryTopicName()));
+            readerProperties.getReadOldDebeziumDbOffsetStorageTopic()
+                    ? Optional.of(debeziumOffsetStoreFactory.create())
+                    : Optional.empty();
 
     DataProducer dataProducer = dataProducerFactory.create();
 
@@ -80,7 +79,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
             readerProperties.getDataSourceUrl(),
             createDataSource(readerProperties),
             readerProperties.getBinlogClientId(),
-            readerProperties.getMySqlBinLogClientName(),
+            readerProperties.getMySqlBinlogClientName(),
             readerProperties.getBinlogConnectionTimeoutInMilliseconds(),
             readerProperties.getMaxAttemptsForBinlogConnection(),
             curatorFramework,
@@ -88,7 +87,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
             offsetStoreFactory.create(readerProperties,
                     dataSource,
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
-                    readerProperties.getMySqlBinLogClientName(),
+                    readerProperties.getMySqlBinlogClientName(),
                     dataProducer),
             debeziumBinlogOffsetKafkaStore,
             readerProperties.getReplicationLagMeasuringIntervalInMilliseconds(),

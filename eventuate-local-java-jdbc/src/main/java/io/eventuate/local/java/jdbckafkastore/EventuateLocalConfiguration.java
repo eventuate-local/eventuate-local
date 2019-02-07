@@ -10,6 +10,7 @@ import io.eventuate.javaclient.spring.common.EventuateCommonConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.EventuateKafkaPropertiesConfiguration;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,7 @@ import javax.sql.DataSource;
  */
 @Configuration
 @EnableTransactionManagement
-@Import(EventuateCommonConfiguration.class)
+@Import({EventuateCommonConfiguration.class, EventuateKafkaPropertiesConfiguration.class})
 @EnableConfigurationProperties(EventuateKafkaConsumerConfigurationProperties.class)
 public class EventuateLocalConfiguration {
 
@@ -36,13 +37,6 @@ public class EventuateLocalConfiguration {
 
   @Autowired(required=false)
   private AsyncToSyncTimeoutOptions timeoutOptions;
-
-  // CRUD
-
-  @Bean
-  public EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties() {
-    return new EventuateKafkaConfigurationProperties();
-  }
 
   @Bean
   public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {

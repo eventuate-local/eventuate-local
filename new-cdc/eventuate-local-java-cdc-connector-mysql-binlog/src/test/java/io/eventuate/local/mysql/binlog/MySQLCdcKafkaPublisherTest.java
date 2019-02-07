@@ -12,8 +12,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = {MySqlBinlogCdcIntegrationTestConfiguration.class,
-        KafkaOffsetStoreConfiguration.class,
-        DebeziumOffsetStoreConfiguration.class})
+        KafkaOffsetStoreConfiguration.class})
 public class MySQLCdcKafkaPublisherTest extends AbstractDbLogBasedCdcKafkaPublisherTest {
   @Autowired
   private OffsetStore offsetStore;

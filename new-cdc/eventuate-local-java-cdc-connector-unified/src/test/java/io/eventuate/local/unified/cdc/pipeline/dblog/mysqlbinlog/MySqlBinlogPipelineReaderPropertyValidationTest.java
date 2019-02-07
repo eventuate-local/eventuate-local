@@ -22,18 +22,17 @@ public class MySqlBinlogPipelineReaderPropertyValidationTest extends CommonDbLog
     assertExceptionMessage(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class, "cdcDbPassword must not be null");
 
     propertyBuilder.addString("cdcDbPassword", "rootUser");
-    assertExceptionMessage(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class, "oldDebeziumDbHistoryTopicName must not be blank (set 'none' to not migrate debezium offset storage data)");
+    assertExceptionMessage(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class, "mySqlBinlogClientName must not be null");
 
-    propertyBuilder.addString("oldDebeziumDbHistoryTopicName", "none");
+    propertyBuilder.addString("mySqlBinlogClientName", "MySqlBinLog");
+    assertExceptionMessage(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class, "readOldDebeziumDbOffsetStorageTopic must not be null");
+
+    propertyBuilder.addString("readOldDebeziumDbOffsetStorageTopic", "false");
     assertNoException(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class);
 
     MySqlBinlogCdcPipelineReaderProperties mySqlBinlogCdcPipelineReaderProperties =
             objectMapper.readValue(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class);
 
     testCommonDbLogDefaultProperties(mySqlBinlogCdcPipelineReaderProperties);
-
-    propertyBuilder.addString("mySqlBinLogClientName", "1");
-
-    Assert.assertEquals("1", mySqlBinlogCdcPipelineReaderProperties.getMySqlBinLogClientName());
   }
 }

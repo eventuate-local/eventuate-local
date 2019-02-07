@@ -8,7 +8,6 @@ import org.springframework.util.Assert;
 public class CdcPipelineReaderProperties implements ValidatableProperties {
   private String type;
 
-  private String name;
   private String dataSourceUrl;
   private String dataSourceUserName;
   private String dataSourcePassword;
@@ -21,21 +20,12 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
   @Override
   public void validate() {
     Assert.notNull(type, "type must not be null");
-    Assert.notNull(name, "name must not be null");
     Assert.notNull(dataSourceUrl, "dataSourceUrl must not be null");
     Assert.notNull(dataSourceUserName, "dataSourceUserName must not be null");
     Assert.notNull(dataSourcePassword, "dataSourcePassword must not be null");
     Assert.notNull(dataSourceDriverClassName, "dataSourceDriverClassName must not be null");
     Assert.notNull(leadershipLockPath, "leadershipLockPath must not be null");
     Assert.notNull(binlogClientId, "binlogClientId must not be null");
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   public String getType() {

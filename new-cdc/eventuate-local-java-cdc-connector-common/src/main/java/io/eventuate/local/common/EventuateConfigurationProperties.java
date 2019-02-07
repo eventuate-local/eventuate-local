@@ -10,8 +10,8 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.db.password:#{null}}")
   private String dbPassword;
 
-  @Value("${eventuatelocal.cdc.db.history.topic.name:#{\"db.history.topic\"}}")
-  private String dbHistoryTopicName;
+  @Value("${eventuatelocal.cdc.offset.storage.topic.name:#{\"offset.storage.topic\"}}")
+  private String offsetStorageTopicName;
 
   @Value("${eventuatelocal.cdc.binlog.client.id:#{null}}")
   private Long binlogClientId;
@@ -34,11 +34,11 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.leadership.lock.path:#{\"/eventuatelocal/cdc/leader\"}}")
   private String leadershipLockPath;
 
-  @Value("${eventuatelocal.cdc.old.debezium.db.history.topic.name:#{null}}")
-  private String oldDebeziumDbHistoryTopicName;
+  @Value("${eventuatelocal.cdc.read.old.debezium.db.offset.storage.topic:#{null}}")
+  private Boolean readOldDebeziumDbOffsetStorageTopic;
 
-  @Value("${eventuatelocal.cdc.my.sql.bin.log.client.name:#{null}}")
-  private String mySqlBinLogClientName;
+  @Value("${eventuatelocal.cdc.mysql.binlog.client.name:#{null}}")
+  private String mySqlBinlogClientName;
 
   @Value("${eventuatelocal.cdc.binlog.connection.timeout.in.milliseconds:#{5000}}")
   private int binlogConnectionTimeoutInMilliseconds;
@@ -78,8 +78,8 @@ public class EventuateConfigurationProperties {
     return dbPassword;
   }
 
-  public String getDbHistoryTopicName() {
-    return dbHistoryTopicName;
+  public String getOffsetStorageTopicName() {
+    return offsetStorageTopicName;
   }
 
   public Long getBinlogClientId() {
@@ -110,12 +110,12 @@ public class EventuateConfigurationProperties {
     return leadershipLockPath;
   }
 
-  public String getOldDebeziumDbHistoryTopicName() {
-    return oldDebeziumDbHistoryTopicName;
+  public Boolean getReadOldDebeziumDbOffsetStorageTopic() {
+    return readOldDebeziumDbOffsetStorageTopic;
   }
 
-  public String getMySqlBinLogClientName() {
-    return mySqlBinLogClientName != null ? mySqlBinLogClientName : String.valueOf(getBinlogClientId());
+  public String getMySqlBinlogClientName() {
+    return mySqlBinlogClientName;
   }
 
   public int getBinlogConnectionTimeoutInMilliseconds() {

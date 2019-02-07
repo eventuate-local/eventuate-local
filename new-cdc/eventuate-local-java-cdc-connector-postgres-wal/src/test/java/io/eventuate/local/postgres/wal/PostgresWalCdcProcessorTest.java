@@ -1,5 +1,6 @@
 package io.eventuate.local.postgres.wal;
 
+import io.eventuate.local.common.CdcProcessingStatus;
 import io.eventuate.local.common.CdcProcessingStatusService;
 import io.eventuate.testutil.Eventually;
 import org.junit.Assert;
@@ -41,7 +42,10 @@ public class PostgresWalCdcProcessorTest extends AbstractPostgresWalCdcProcessor
     Eventually.eventually(60,
             500,
             TimeUnit.MILLISECONDS,
-            () -> Assert.assertTrue(cdcProcessingStatusService.getCurrentStatus().isCdcProcessingFinished()));
+            () -> {
+              CdcProcessingStatus currentStatus = cdcProcessingStatusService.getCurrentStatus();
+              Assert.assertTrue(currentStatus.toString(), currentStatus.isCdcProcessingFinished());
+            });
 
     stopEventProcessing();
   }

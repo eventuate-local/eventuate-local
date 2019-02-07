@@ -6,16 +6,17 @@ import org.springframework.util.Assert;
 public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipelineReaderProperties {
   private String cdcDbUserName;
   private String cdcDbPassword;
-  private String oldDebeziumDbHistoryTopicName;
-  private String mySqlBinLogClientName;
+  private Boolean readOldDebeziumDbOffsetStorageTopic;
+  private String mySqlBinlogClientName;
   private boolean useGTIDsWhenPossible = false;
 
   public void validate() {
     super.validate();
     Assert.notNull(cdcDbUserName, "cdcDbUserName must not be null");
     Assert.notNull(cdcDbPassword, "cdcDbPassword must not be null");
-    Assert.hasLength(oldDebeziumDbHistoryTopicName,
-            "oldDebeziumDbHistoryTopicName must not be blank (set 'none' to not migrate debezium offset storage data)");
+    Assert.notNull(mySqlBinlogClientName, "mySqlBinlogClientName must not be null");
+    Assert.notNull(readOldDebeziumDbOffsetStorageTopic,
+            "readOldDebeziumDbOffsetStorageTopic must not be null");
   }
 
   public String getCdcDbUserName() {
@@ -34,20 +35,20 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
     this.cdcDbPassword = cdcDbPassword;
   }
 
-  public String getOldDebeziumDbHistoryTopicName() {
-    return "none".equalsIgnoreCase(oldDebeziumDbHistoryTopicName) ? null : oldDebeziumDbHistoryTopicName;
+  public Boolean getReadOldDebeziumDbOffsetStorageTopic() {
+    return readOldDebeziumDbOffsetStorageTopic;
   }
 
-  public void setOldDebeziumDbHistoryTopicName(String oldDebeziumDbHistoryTopicName) {
-    this.oldDebeziumDbHistoryTopicName = oldDebeziumDbHistoryTopicName;
+  public void setReadOldDebeziumDbOffsetStorageTopic(Boolean readOldDebeziumDbOffsetStorageTopic) {
+    this.readOldDebeziumDbOffsetStorageTopic = readOldDebeziumDbOffsetStorageTopic;
   }
 
-  public String getMySqlBinLogClientName() {
-    return mySqlBinLogClientName != null ? mySqlBinLogClientName : String.valueOf(getBinlogClientId());
+  public String getMySqlBinlogClientName() {
+    return mySqlBinlogClientName;
   }
 
-  public void setMySqlBinLogClientName(String mySqlBinLogClientName) {
-    this.mySqlBinLogClientName = mySqlBinLogClientName;
+  public void setMySqlBinlogClientName(String mySqlBinlogClientName) {
+    this.mySqlBinlogClientName = mySqlBinlogClientName;
   }
 
   public boolean isUseGTIDsWhenPossible() {

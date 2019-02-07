@@ -4,6 +4,7 @@ import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.java.common.broker.CdcDataPublisherTransactionTemplateFactory;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
+import io.eventuate.local.java.kafka.EventuateKafkaPropertiesConfiguration;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.KafkaCdcDataPublisherTransactionTemplate;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -25,11 +26,13 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 
 @Configuration
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
         EventuateKafkaConsumerConfigurationProperties.class})
+@Import(EventuateKafkaPropertiesConfiguration.class)
 public class CommonCdcPipelineConfiguration {
 
   @Bean
@@ -60,7 +63,7 @@ public class CommonCdcPipelineConfiguration {
         throw new IllegalArgumentException(String.format("Expected %s", EventuateKafkaProducer.class));
       }
 
-      return new DatabaseOffsetKafkaStore(properties.getDbHistoryTopicName(),
+      return new DatabaseOffsetKafkaStore(properties.getOffsetStorageTopicName(),
               clientName,
               (EventuateKafkaProducer) dataProducer,
               eventuateKafkaConfigurationProperties,
@@ -103,20 +106,13 @@ public class CommonCdcPipelineConfiguration {
   public DebeziumOffsetStoreFactory mySqlBinLogOffsetStoreFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                   EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
-    return (oldDbHistoryTopicName) ->
-            new DebeziumBinlogOffsetKafkaStore(oldDbHistoryTopicName,
-                    eventuateKafkaConfigurationProperties,
+    return () -> new DebeziumBinlogOffsetKafkaStore(eventuateKafkaConfigurationProperties,
                     eventuateKafkaConsumerConfigurationProperties);
   }
 
   @Bean
   public BinlogEntryReaderProvider dbClientProvider() {
     return new BinlogEntryReaderProvider();
-  }
-
-  @Bean
-  public EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties() {
-    return new EventuateKafkaConfigurationProperties();
   }
 
   @Bean

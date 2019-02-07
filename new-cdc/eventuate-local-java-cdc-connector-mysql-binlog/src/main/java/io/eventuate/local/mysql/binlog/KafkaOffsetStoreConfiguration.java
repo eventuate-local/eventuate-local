@@ -20,8 +20,8 @@ public class KafkaOffsetStoreConfiguration {
                                  EventuateKafkaProducer eventuateKafkaProducer,
                                  EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
-    return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getDbHistoryTopicName(),
-            eventuateConfigurationProperties.getMySqlBinLogClientName(),
+    return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getOffsetStorageTopicName(),
+            eventuateConfigurationProperties.getMySqlBinlogClientName(),
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);

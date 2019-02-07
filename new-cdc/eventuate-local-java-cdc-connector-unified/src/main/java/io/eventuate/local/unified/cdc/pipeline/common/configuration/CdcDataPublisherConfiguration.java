@@ -11,8 +11,6 @@ public class CdcDataPublisherConfiguration {
   @Bean
   public CdcDataPublisherFactory<PublishedEvent> cdcDataPublisherFactory(MeterRegistry meterRegistry) {
 
-    return (dataProducer) -> new CdcDataPublisher<>(dataProducer,
-            new PublishedEventPublishingStrategy(),
-            meterRegistry);
+    return (dataProducer) -> new CdcDataPublisher<>(dataProducer, meterRegistry);
   }
 }

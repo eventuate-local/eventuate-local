@@ -2,9 +2,7 @@ package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
-import io.eventuate.local.common.CdcDataPublisher;
-import io.eventuate.local.common.PublishedEvent;
+import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.EventuateLocalPublishingException;
 import io.eventuate.local.test.util.AbstractCdcTest;
 import io.eventuate.local.test.util.SourceTableNameSupplier;
@@ -45,11 +43,12 @@ public abstract class AbstractPostgresWalCdcIntegrationTest extends AbstractCdcT
     postgresWalClient.addBinlogEntryHandler(
             eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            new BinlogEntryToPublishedEventConverter());
+            new BinlogEntryToPublishedEventConverter(),
+            new PublishedEventPublishingStrategy());
 
-    postgresWalClient.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null, null) {
+    postgresWalClient.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null) {
       @Override
-      public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+      public void handleEvent(PublishedEvent publishedEvent, PublishingStrategy<PublishedEvent> publishingStrategy) throws EventuateLocalPublishingException {
         publishedEvents.add(publishedEvent);
       }
     });

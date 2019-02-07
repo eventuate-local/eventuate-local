@@ -13,8 +13,6 @@ public abstract class AbstractDbLogBasedCdcKafkaPublisherTest extends CdcKafkaPu
 
   @Override
   protected CdcDataPublisher<PublishedEvent> createCdcKafkaPublisher() {
-    return new CdcDataPublisher<>(eventuateKafkaProducer,
-            publishingStrategy,
-            meterRegistry);
+    return new CdcDataPublisher<>(eventuateKafkaProducer, meterRegistry);
   }
 }

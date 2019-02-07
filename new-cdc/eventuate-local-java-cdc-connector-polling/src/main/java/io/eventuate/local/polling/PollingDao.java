@@ -73,8 +73,12 @@ public class PollingDao extends BinlogEntryReader {
   }
 
   @Override
-  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema, String sourceTableName, BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter) {
-    super.addBinlogEntryHandler(eventuateSchema, sourceTableName, binlogEntryToEventConverter);
+  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
+                                                                String sourceTableName,
+                                                                BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
+                                                                PublishingStrategy<EVENT> publishingStrategy) {
+
+    super.addBinlogEntryHandler(eventuateSchema, sourceTableName, binlogEntryToEventConverter, publishingStrategy);
     pollingProcessingStatusService.addTable(sourceTableName);
   }
 

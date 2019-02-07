@@ -1,7 +1,6 @@
 package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
-import io.eventuate.local.common.OffsetStore;
 import io.eventuate.local.db.log.test.common.AbstractDbLogBasedCdcKafkaPublisherTest;
 import org.junit.After;
 import org.junit.Before;
@@ -15,9 +14,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
         KafkaOffsetStoreConfiguration.class})
 public class MySQLCdcKafkaPublisherTest extends AbstractDbLogBasedCdcKafkaPublisherTest {
   @Autowired
-  private OffsetStore offsetStore;
-
-  @Autowired
   private MySqlBinaryLogClient mySqlBinaryLogClient;
 
   @Before
@@ -27,7 +23,8 @@ public class MySQLCdcKafkaPublisherTest extends AbstractDbLogBasedCdcKafkaPublis
 
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            new BinlogEntryToPublishedEventConverter());
+            new BinlogEntryToPublishedEventConverter(),
+            publishingStrategy);
 
     mySqlBinaryLogClient.setCdcDataPublisher(cdcDataPublisher);
 

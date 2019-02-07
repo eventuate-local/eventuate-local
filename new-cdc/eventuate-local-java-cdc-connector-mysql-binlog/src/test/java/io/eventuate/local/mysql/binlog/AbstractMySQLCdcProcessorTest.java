@@ -8,7 +8,6 @@ import io.eventuate.local.test.util.SourceTableNameSupplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
@@ -32,11 +31,12 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            new BinlogEntryToPublishedEventConverter());
+            new BinlogEntryToPublishedEventConverter(),
+            new PublishedEventPublishingStrategy());
 
-    mySqlBinaryLogClient.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>( null, null, null) {
+    mySqlBinaryLogClient.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null) {
       @Override
-      public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+      public void handleEvent(PublishedEvent publishedEvent, PublishingStrategy<PublishedEvent> publishingStrategy) throws EventuateLocalPublishingException {
         consumer.accept(publishedEvent);
       }
     });

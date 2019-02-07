@@ -74,13 +74,9 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
 
   @Bean
-  public CdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducer dataProducer,
-                                                                      PublishingStrategy<PublishedEvent> publishingStrategy,
-                                                                      MeterRegistry meterRegistry) {
+  public CdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducer dataProducer, MeterRegistry meterRegistry) {
 
-    return new CdcDataPublisher<>(dataProducer,
-            publishingStrategy,
-            meterRegistry);
+    return new CdcDataPublisher<>(dataProducer, meterRegistry);
   }
 
   @Bean

@@ -8,16 +8,12 @@ import io.eventuate.local.test.util.CdcProcessorTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
 
   @Autowired
   protected PollingDao pollingDao;
-
-  @Autowired
-  private PollingDataProvider pollingDataProvider;
 
   @Value("${spring.datasource.url}")
   private String dataSourceUrl;
@@ -32,11 +28,12 @@ public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
     pollingDao.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            new BinlogEntryToPublishedEventConverter());
+            new BinlogEntryToPublishedEventConverter(),
+            new PublishedEventPublishingStrategy());
 
-    pollingDao.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null, null) {
+    pollingDao.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null) {
       @Override
-      public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+      public void handleEvent(PublishedEvent publishedEvent, PublishingStrategy<PublishedEvent> publishingStrategy) throws EventuateLocalPublishingException {
         consumer.accept(publishedEvent);
       }
     });

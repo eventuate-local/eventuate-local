@@ -88,11 +88,8 @@ public class PollingIntegrationTestConfiguration {
   }
 
   @Bean
-  public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducer dataProducer, PublishingStrategy<PublishedEvent> publishingStrategy) {
-
-    return new CdcDataPublisher<>(dataProducer,
-            publishingStrategy,
-            null);
+  public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducer dataProducer) {
+    return new CdcDataPublisher<>(dataProducer, null);
   }
 
   @Bean

@@ -15,7 +15,6 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
   private Logger logger = LoggerFactory.getLogger(this.getClass());
 
   protected MeterRegistry meterRegistry;
-  protected PublishingStrategy<EVENT> publishingStrategy;
   protected DataProducer producer;
   protected Counter meterEventsPublished;
   protected Counter meterEventsDuplicates;
@@ -25,11 +24,9 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
   private volatile boolean lastMessagePublishingFailed;
 
   public CdcDataPublisher(DataProducer dataProducer,
-                          PublishingStrategy<EVENT> publishingStrategy,
                           MeterRegistry meterRegistry) {
 
     this.producer = dataProducer;
-    this.publishingStrategy = publishingStrategy;
     this.meterRegistry = meterRegistry;
 
     initMetrics();
@@ -48,7 +45,7 @@ public class CdcDataPublisher<EVENT extends BinLogEvent> {
     }
   }
 
-  public void handleEvent(EVENT publishedEvent) throws EventuateLocalPublishingException {
+  public void handleEvent(EVENT publishedEvent, PublishingStrategy<EVENT> publishingStrategy) throws EventuateLocalPublishingException {
 
     Objects.requireNonNull(publishedEvent);
 

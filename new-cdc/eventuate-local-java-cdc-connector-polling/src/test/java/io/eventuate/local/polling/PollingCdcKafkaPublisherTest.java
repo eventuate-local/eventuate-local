@@ -30,7 +30,8 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
 
     pollingDao.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            new BinlogEntryToPublishedEventConverter());
+            new BinlogEntryToPublishedEventConverter(),
+            publishingStrategy);
 
 
     pollingDao.setCdcDataPublisher(cdcDataPublisher);
@@ -42,7 +43,6 @@ public class PollingCdcKafkaPublisherTest extends CdcKafkaPublisherTest {
   protected CdcDataPublisher<PublishedEvent> createCdcKafkaPublisher() {
     return new CdcDataPublisher<>(new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
             EventuateKafkaProducerConfigurationProperties.empty()),
-            publishingStrategy,
             meterRegistry);
   }
 

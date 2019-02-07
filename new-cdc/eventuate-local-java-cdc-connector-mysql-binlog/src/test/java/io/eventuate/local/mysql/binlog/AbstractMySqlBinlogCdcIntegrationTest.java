@@ -141,11 +141,12 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
             sourceTableNameSupplier.getSourceTableName(),
-            new BinlogEntryToPublishedEventConverter());
+            new BinlogEntryToPublishedEventConverter(),
+            new PublishedEventPublishingStrategy());
 
-    mySqlBinaryLogClient.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null, null) {
+    mySqlBinaryLogClient.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null) {
       @Override
-      public void handleEvent(PublishedEvent publishedEvent) throws EventuateLocalPublishingException {
+      public void handleEvent(PublishedEvent publishedEvent, PublishingStrategy<PublishedEvent> publishingStrategy) throws EventuateLocalPublishingException {
         consumer.accept(publishedEvent);
       }
     });

@@ -1,9 +1,9 @@
 package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducer;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
@@ -46,9 +46,9 @@ public class PollingIntegrationTestConfiguration {
   }
 
   @Bean
-  public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                        EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
-    return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
             eventuateKafkaProducerConfigurationProperties);
   }
 
@@ -65,14 +65,16 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDao pollingDao(CdcDataPublisher cdcDataPublisher,
+  public PollingDao pollingDao(DataProducerFactory dataProducerFactory,
+                               CdcDataPublisherFactory cdcDataPublisherFactory,
                                @Autowired(required = false) MeterRegistry meterRegistry,
                                @Value("${spring.datasource.url}") String dataSourceURL,
                                EventuateConfigurationProperties eventuateConfigurationProperties,
                                DataSource dataSource,
                                CuratorFramework curatorFramework) {
 
-    return new PollingDao(cdcDataPublisher,
+    return new PollingDao(dataProducerFactory,
+            cdcDataPublisherFactory,
             meterRegistry,
             dataSourceURL,
             dataSource,
@@ -88,8 +90,8 @@ public class PollingIntegrationTestConfiguration {
   }
 
   @Bean
-  public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducer dataProducer) {
-    return new CdcDataPublisher<>(dataProducer, null);
+  public CdcDataPublisherFactory cdcKafkaPublisher(MeterRegistry meterRegistry) {
+    return dataProducer -> new CdcDataPublisher<>(dataProducer, meterRegistry);
   }
 
   @Bean

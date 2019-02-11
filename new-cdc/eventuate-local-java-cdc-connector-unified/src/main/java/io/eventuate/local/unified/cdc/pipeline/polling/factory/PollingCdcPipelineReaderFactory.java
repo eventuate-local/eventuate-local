@@ -30,7 +30,8 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
   @Override
   public PollingDao create(PollingPipelineReaderProperties readerProperties) {
 
-    return new PollingDao(cdcDataPublisherFactory.create(dataProducerFactory.create()),
+    return new PollingDao(dataProducerFactory,
+            cdcDataPublisherFactory,
             meterRegistry,
             readerProperties.getDataSourceUrl(),
             createDataSource(readerProperties),

@@ -31,7 +31,7 @@ public abstract class AbstractPollingCdcProcessorTest extends CdcProcessorTest {
             new BinlogEntryToPublishedEventConverter(),
             new PublishedEventPublishingStrategy());
 
-    pollingDao.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null) {
+    pollingDao.setCdcDataPublisherFactory(dataProducer -> new CdcDataPublisher<PublishedEvent>(null, null) {
       @Override
       public void handleEvent(PublishedEvent publishedEvent, PublishingStrategy<PublishedEvent> publishingStrategy) throws EventuateLocalPublishingException {
         consumer.accept(publishedEvent);

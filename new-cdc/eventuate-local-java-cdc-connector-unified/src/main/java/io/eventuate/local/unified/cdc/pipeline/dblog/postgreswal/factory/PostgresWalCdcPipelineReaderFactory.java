@@ -50,7 +50,8 @@ public class PostgresWalCdcPipelineReaderFactory
 
     DataSource dataSource = createDataSource(readerProperties);
 
-    return new PostgresWalClient(cdcDataPublisherFactory.create(dataProducerFactory.create()),
+    return new PostgresWalClient(dataProducerFactory,
+            cdcDataPublisherFactory,
             meterRegistry,
             readerProperties.getDataSourceUrl(),
             readerProperties.getDataSourceUserName(),

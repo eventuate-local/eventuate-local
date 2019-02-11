@@ -23,14 +23,13 @@ public class EventuateKafkaProducer implements DataProducer {
     producerProps = new Properties();
     producerProps.put("bootstrap.servers", bootstrapServers);
     producerProps.put("acks", "all");
-    producerProps.put("retries", 0);
+    producerProps.put("retries", 10);
     producerProps.put("batch.size", 16384);
     producerProps.put("linger.ms", 1);
     producerProps.put("buffer.memory", 33554432);
     producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
     producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
     producerProps.put("transactional.id", UUID.randomUUID().toString()); //TODO: made configurable as part of reader
-    producerProps.put("retries", 10);
     producerProps.putAll(eventuateKafkaProducerConfigurationProperties.getProperties());
     producer = new KafkaProducer<>(producerProps);
     producer.initTransactions();

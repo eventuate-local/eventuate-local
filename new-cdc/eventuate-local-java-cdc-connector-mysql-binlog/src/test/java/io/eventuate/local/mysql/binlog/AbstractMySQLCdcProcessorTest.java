@@ -24,9 +24,6 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
   @Autowired
   private SourceTableNameSupplier sourceTableNameSupplier;
 
-  @Autowired
-  private OffsetStore offsetStore;
-
   @Override
   protected void prepareBinlogEntryHandler(Consumer<PublishedEvent> consumer) {
     mySqlBinaryLogClient.addBinlogEntryHandler(eventuateSchema,
@@ -34,17 +31,12 @@ public abstract class AbstractMySQLCdcProcessorTest extends CdcProcessorTest {
             new BinlogEntryToPublishedEventConverter(),
             new PublishedEventPublishingStrategy());
 
-    mySqlBinaryLogClient.setCdcDataPublisher(new CdcDataPublisher<PublishedEvent>(null, null) {
+    mySqlBinaryLogClient.setCdcDataPublisherFactory(dataProducer -> new CdcDataPublisher<PublishedEvent>(null, null) {
       @Override
       public void handleEvent(PublishedEvent publishedEvent, PublishingStrategy<PublishedEvent> publishingStrategy) throws EventuateLocalPublishingException {
         consumer.accept(publishedEvent);
       }
     });
-  }
-
-  @Override
-  public void onEventSent(PublishedEvent publishedEvent) {
-    offsetStore.save(publishedEvent.getBinlogFileOffset().get());
   }
 
   @Override

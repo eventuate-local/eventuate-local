@@ -3,6 +3,7 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducer;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -42,7 +43,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  public PostgresWalClient postgresWalClient(CdcDataPublisher cdcDataPublisher,
+  public PostgresWalClient postgresWalClient(DataProducerFactory dataProducerFactory,
+                                             CdcDataPublisherFactory cdcDataPublisherFactory,
                                              MeterRegistry meterRegistry,
                                              @Value("${spring.datasource.url}") String dbUrl,
                                              @Value("${spring.datasource.username}") String dbUserName,
@@ -51,7 +53,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
                                              EventuateConfigurationProperties eventuateConfigurationProperties,
                                              CuratorFramework curatorFramework) {
 
-    return new PostgresWalClient(cdcDataPublisher,
+    return new PostgresWalClient(dataProducerFactory,
+            cdcDataPublisherFactory,
             meterRegistry,
             dbUrl,
             dbUserName,
@@ -74,15 +77,15 @@ public class PostgresWalCdcIntegrationTestConfiguration {
 
 
   @Bean
-  public CdcDataPublisher<PublishedEvent> dbLogBasedCdcKafkaPublisher(DataProducer dataProducer, MeterRegistry meterRegistry) {
+  public CdcDataPublisherFactory cdcDataPublisherFactory(MeterRegistry meterRegistry) {
 
-    return new CdcDataPublisher<>(dataProducer, meterRegistry);
+    return dataProducer -> new CdcDataPublisher<>(dataProducer, meterRegistry);
   }
 
   @Bean
-  public DataProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                        EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
-    return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
             eventuateKafkaProducerConfigurationProperties);
   }
 

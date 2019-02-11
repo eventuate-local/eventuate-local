@@ -13,6 +13,9 @@ import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetKafkaStore;
 import io.eventuate.local.common.OffsetStore;
 import io.eventuate.local.java.common.broker.CdcDataPublisherTransactionTemplate;
+import io.eventuate.local.java.common.broker.CdcDataPublisherTransactionTemplateFactory;
+import io.eventuate.local.java.common.broker.DataProducer;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -50,6 +53,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
   private int maxAttemptsForBinlogConnection;
   private Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore;
   private int rowsToSkip;
+  private OffsetStoreCreator offsetStoreCreator;
   private OffsetStore offsetStore;
   private boolean useGTIDsWhenPossible;
 
@@ -58,10 +62,12 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
   private Optional<Gtid> lastGTID = Optional.empty();
   private DataSource rootDataSource;
+  private CdcDataPublisherTransactionTemplateFactory cdcDataPublisherTransactionTemplateFactory;
   private CdcDataPublisherTransactionTemplate cdcDataPublisherTransactionTemplate;
 
-  public MySqlBinaryLogClient(CdcDataPublisher cdcDataPublisher,
-                              CdcDataPublisherTransactionTemplate cdcDataPublisherTransactionTemplate,
+  public MySqlBinaryLogClient(DataProducerFactory dataProducerFactory,
+                              CdcDataPublisherFactory cdcDataPublisherFactory,
+                              CdcDataPublisherTransactionTemplateFactory cdcDataPublisherTransactionTemplateFactory,
                               MeterRegistry meterRegistry,
                               String dbUserName,
                               String dbPassword,
@@ -73,14 +79,15 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               int maxAttemptsForBinlogConnection,
                               CuratorFramework curatorFramework,
                               String leadershipLockPath,
-                              OffsetStore offsetStore,
+                              OffsetStoreCreator offsetStoreCreator,
                               Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore,
                               long replicationLagMeasuringIntervalInMilliseconds,
                               int monitoringRetryIntervalInMilliseconds,
                               int monitoringRetryAttempts,
                               boolean useGTIDsWhenPossible) {
 
-    super(cdcDataPublisher,
+    super(dataProducerFactory,
+            cdcDataPublisherFactory,
             meterRegistry,
             dbUserName,
             dbPassword,
@@ -99,10 +106,10 @@ public class MySqlBinaryLogClient extends DbLogClient {
     this.name = clientName;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
-    this.offsetStore = offsetStore;
+    this.offsetStoreCreator = offsetStoreCreator;
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
     this.useGTIDsWhenPossible = useGTIDsWhenPossible;
-    this.cdcDataPublisherTransactionTemplate = cdcDataPublisherTransactionTemplate;
+    this.cdcDataPublisherTransactionTemplateFactory = cdcDataPublisherTransactionTemplateFactory;
 
     rootDataSource = createRootDataSource(dataSourceUrl, dbUserName, dbPassword);
     mySqlCdcProcessingStatusService = new MySqlCdcProcessingStatusService(rootDataSource);
@@ -123,6 +130,10 @@ public class MySqlBinaryLogClient extends DbLogClient {
             .map(MigrationInfo::new);
   }
 
+  public OffsetStore getOffsetStore() {
+    return offsetStore;
+  }
+
   @Override
   public CdcProcessingStatusService getCdcProcessingStatusService() {
     return mySqlCdcProcessingStatusService;
@@ -131,6 +142,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
   @Override
   protected void leaderStart() {
     super.leaderStart();
+    offsetStore = offsetStoreCreator.create(dataProducer);
+    cdcDataPublisherTransactionTemplate = cdcDataPublisherTransactionTemplateFactory.create(dataProducer);
 
     logger.info("mysql binlog client started");
 
@@ -239,7 +252,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
 
     if (sqlRowSet.next()) {
       boolean supported = !"OFF".equalsIgnoreCase(sqlRowSet.getString(2));
-      logger.info("GTID mode support = %s", supported);
+      logger.info("GTID mode support = {}", supported);
       return supported;
     }
 
@@ -397,6 +410,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
     }
 
     stopMetrics();
+    dataProducer.close();
 
     stopCountDownLatch.countDown();
   }

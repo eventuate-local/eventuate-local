@@ -69,10 +69,10 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
                     ? Optional.of(debeziumOffsetStoreFactory.create())
                     : Optional.empty();
 
-    DataProducer dataProducer = dataProducerFactory.create();
 
-    return new MySqlBinaryLogClient(cdcDataPublisherFactory.create(dataProducer),
-            cdcDataPublisherTransactionTemplateFactory.create(dataProducer),
+    return new MySqlBinaryLogClient(dataProducerFactory,
+            cdcDataPublisherFactory,
+            cdcDataPublisherTransactionTemplateFactory,
             meterRegistry,
             readerProperties.getCdcDbUserName(),
             readerProperties.getCdcDbPassword(),
@@ -84,7 +84,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
             readerProperties.getMaxAttemptsForBinlogConnection(),
             curatorFramework,
             readerProperties.getLeadershipLockPath(),
-            offsetStoreFactory.create(readerProperties,
+            dataProducer -> offsetStoreFactory.create(readerProperties,
                     dataSource,
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
                     readerProperties.getMySqlBinlogClientName(),

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.common.exception.ConnectionLostHandlerInterruptedException;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -29,7 +30,8 @@ public class PollingDao extends BinlogEntryReader {
 
   private PollingProcessingStatusService pollingProcessingStatusService;
 
-  public PollingDao(CdcDataPublisher cdcDataPublisher,
+  public PollingDao(DataProducerFactory dataProducerFactory,
+                    CdcDataPublisherFactory cdcDataPublisherFactory,
                     MeterRegistry meterRegistry,
                     String dataSourceUrl,
                     DataSource dataSource,
@@ -43,7 +45,8 @@ public class PollingDao extends BinlogEntryReader {
                     int monitoringRetryIntervalInMilliseconds,
                     int monitoringRetryAttempts) {
 
-    super(cdcDataPublisher,
+    super(dataProducerFactory,
+            cdcDataPublisherFactory,
             meterRegistry,
             curatorFramework,
             leadershipLockPath,

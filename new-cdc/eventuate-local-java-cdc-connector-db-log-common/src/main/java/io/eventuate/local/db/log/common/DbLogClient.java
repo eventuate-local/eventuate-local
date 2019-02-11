@@ -1,6 +1,7 @@
 package io.eventuate.local.db.log.common;
 
 import io.eventuate.local.common.*;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 
@@ -18,7 +19,8 @@ public abstract class DbLogClient extends BinlogEntryReader {
   private boolean checkEntriesForDuplicates;
   protected volatile boolean connected;
 
-  public DbLogClient(CdcDataPublisher cdcDataPublisher,
+  public DbLogClient(DataProducerFactory dataProducerFactory,
+                     CdcDataPublisherFactory cdcDataPublisherFactory,
                      MeterRegistry meterRegistry,
                      String dbUserName,
                      String dbPassword,
@@ -31,7 +33,8 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      int monitoringRetryIntervalInMilliseconds,
                      int monitoringRetryAttempts) {
 
-    super(cdcDataPublisher,
+    super(dataProducerFactory,
+            cdcDataPublisherFactory,
             meterRegistry,
             curatorFramework,
             leadershipLockPath,

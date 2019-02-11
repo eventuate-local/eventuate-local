@@ -1,6 +1,8 @@
 package io.eventuate.local.common;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.java.common.broker.DataProducer;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
@@ -15,6 +17,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class BinlogEntryReader {
   protected Logger logger = LoggerFactory.getLogger(getClass());
+  protected DataProducerFactory dataProducerFactory;
+  protected DataProducer dataProducer;
+  protected CdcDataPublisherFactory cdcDataPublisherFactory;
   protected CdcDataPublisher cdcDataPublisher;
   protected MeterRegistry meterRegistry;
   protected CuratorFramework curatorFramework;
@@ -32,7 +37,8 @@ public abstract class BinlogEntryReader {
   private volatile long lastEventTime = System.currentTimeMillis();
   private LeaderSelector leaderSelector;
 
-  public BinlogEntryReader(CdcDataPublisher cdcDataPublisher,
+  public BinlogEntryReader(DataProducerFactory dataProducerFactory,
+                           CdcDataPublisherFactory cdcDataPublisherFactory,
                            MeterRegistry meterRegistry,
                            CuratorFramework curatorFramework,
                            String leadershipLockPath,
@@ -42,7 +48,8 @@ public abstract class BinlogEntryReader {
                            int monitoringRetryIntervalInMilliseconds,
                            int monitoringRetryAttempts) {
 
-    this.cdcDataPublisher = cdcDataPublisher;
+    this.dataProducerFactory = dataProducerFactory;
+    this.cdcDataPublisherFactory = cdcDataPublisherFactory;
     this.meterRegistry = meterRegistry;
     this.curatorFramework = curatorFramework;
     this.leadershipLockPath = leadershipLockPath;
@@ -61,6 +68,10 @@ public abstract class BinlogEntryReader {
 
   public CdcDataPublisher getCdcDataPublisher() {
     return cdcDataPublisher;
+  }
+
+  public void setCdcDataPublisherFactory(CdcDataPublisherFactory cdcDataPublisherFactory) {
+    this.cdcDataPublisherFactory = cdcDataPublisherFactory;
   }
 
   public void setCdcDataPublisher(CdcDataPublisher cdcDataPublisher) {
@@ -111,6 +122,9 @@ public abstract class BinlogEntryReader {
   }
 
   protected void leaderStart() {
+    dataProducer = dataProducerFactory.create();
+    cdcDataPublisher = cdcDataPublisherFactory.create(dataProducer);
+
     commonCdcMetrics.setLeader(true);
     leader = true;
   }
@@ -127,6 +141,8 @@ public abstract class BinlogEntryReader {
     }
 
     stopMetrics();
+
+    dataProducer.close();
   }
 
   protected void stopMetrics() {

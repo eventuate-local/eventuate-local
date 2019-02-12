@@ -89,9 +89,11 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
 
   @Bean
   public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                             EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
-    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-            eventuateKafkaProducerConfigurationProperties);
+                                                 EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
+    return (transactionalId) ->
+              new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+                      eventuateKafkaProducerConfigurationProperties,
+                      transactionalId);
   }
 
   @Bean

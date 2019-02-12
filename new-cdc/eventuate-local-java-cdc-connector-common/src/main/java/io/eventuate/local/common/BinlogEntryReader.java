@@ -122,7 +122,7 @@ public abstract class BinlogEntryReader {
   }
 
   protected void leaderStart() {
-    dataProducer = dataProducerFactory.create();
+    dataProducer = dataProducerFactory.create(String.valueOf(binlogClientUniqueId));
     cdcDataPublisher = cdcDataPublisherFactory.create(dataProducer);
 
     commonCdcMetrics.setLeader(true);

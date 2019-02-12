@@ -48,8 +48,10 @@ public class PollingIntegrationTestConfiguration {
   @Bean
   public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                        EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
-    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-            eventuateKafkaProducerConfigurationProperties);
+    return (transactionalId) ->
+            new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+                    eventuateKafkaProducerConfigurationProperties,
+                    transactionalId);
   }
 
   @Bean

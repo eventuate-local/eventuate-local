@@ -28,6 +28,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import java.util.UUID;
+
 
 @Configuration
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
@@ -39,8 +41,10 @@ public class CommonCdcPipelineConfiguration {
   public DataProducerFactory eventuateKafkaProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                      EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
 
-  return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-          eventuateKafkaProducerConfigurationProperties);
+    return (transactionalId) ->
+            new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+                    eventuateKafkaProducerConfigurationProperties,
+                    transactionalId);
   }
 
   @Bean
@@ -80,7 +84,7 @@ public class CommonCdcPipelineConfiguration {
   @Bean
   public CdcDataPublisherHealthCheck cdcDataPublisherHealthCheck(DataProducerFactory dataProducerFactory,
                                                                  CdcDataPublisherFactory cdcDataPublisherFactory) {
-    return new CdcDataPublisherHealthCheck(cdcDataPublisherFactory.create(dataProducerFactory.create()));
+    return new CdcDataPublisherHealthCheck(cdcDataPublisherFactory.create(dataProducerFactory.create(UUID.randomUUID().toString())));
   }
 
   @Bean

@@ -46,7 +46,8 @@ public class DatabaseOffsetKafkaStoreTest extends AbstractConnectorTest {
     public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                          EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
       return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-              eventuateKafkaProducerConfigurationProperties);
+              eventuateKafkaProducerConfigurationProperties,
+              UUID.randomUUID().toString());
     }
   }
 

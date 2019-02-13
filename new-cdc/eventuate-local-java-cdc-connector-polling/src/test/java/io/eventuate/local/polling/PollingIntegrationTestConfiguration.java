@@ -1,10 +1,10 @@
 package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
+import io.eventuate.local.java.common.broker.DataProducer;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
-import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.test.util.SourceTableNameSupplier;
@@ -46,10 +46,12 @@ public class PollingIntegrationTestConfiguration {
   }
 
   @Bean
-  public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                        EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
-    return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-            eventuateKafkaProducerConfigurationProperties);
+    return (transactionalId) ->
+            new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+                    eventuateKafkaProducerConfigurationProperties,
+                    transactionalId);
   }
 
   @Bean
@@ -65,13 +67,17 @@ public class PollingIntegrationTestConfiguration {
 
   @Bean
   @Profile("EventuatePolling")
-  public PollingDao pollingDao(@Autowired(required = false) MeterRegistry meterRegistry,
+  public PollingDao pollingDao(DataProducerFactory dataProducerFactory,
+                               CdcDataPublisherFactory cdcDataPublisherFactory,
+                               @Autowired(required = false) MeterRegistry meterRegistry,
                                @Value("${spring.datasource.url}") String dataSourceURL,
                                EventuateConfigurationProperties eventuateConfigurationProperties,
                                DataSource dataSource,
                                CuratorFramework curatorFramework) {
 
-    return new PollingDao(meterRegistry,
+    return new PollingDao(dataProducerFactory,
+            cdcDataPublisherFactory,
+            meterRegistry,
             dataSourceURL,
             dataSource,
             eventuateConfigurationProperties.getMaxEventsPerPolling(),
@@ -86,6 +92,11 @@ public class PollingIntegrationTestConfiguration {
   }
 
   @Bean
+  public CdcDataPublisherFactory cdcKafkaPublisher(MeterRegistry meterRegistry) {
+    return dataProducer -> new CdcDataPublisher<>(dataProducer, meterRegistry);
+  }
+
+  @Bean
   public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
     RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
     CuratorFramework client = CuratorFrameworkFactory.
@@ -94,13 +105,5 @@ public class PollingIntegrationTestConfiguration {
             .build();
     client.start();
     return client;
-  }
-
-  @Bean
-  public DuplicatePublishingDetector duplicatePublishingDetector(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                                 EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-
-    return new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-            eventuateKafkaConsumerConfigurationProperties);
   }
 }

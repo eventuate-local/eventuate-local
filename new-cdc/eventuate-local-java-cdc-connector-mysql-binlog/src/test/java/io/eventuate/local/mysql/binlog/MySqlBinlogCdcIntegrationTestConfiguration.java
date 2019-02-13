@@ -2,9 +2,10 @@ package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.local.common.*;
-import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.java.common.broker.CdcDataPublisherTransactionTemplateFactory;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.KafkaCdcDataPublisherTransactionTemplate;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
@@ -21,6 +22,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
 
 import javax.sql.DataSource;
 import java.util.Optional;
@@ -48,14 +50,19 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
-  public MySqlBinaryLogClient mySqlBinaryLogClient(@Autowired MeterRegistry meterRegistry,
+  public MySqlBinaryLogClient mySqlBinaryLogClient(DataProducerFactory dataProducerFactory,
+                                                   CdcDataPublisherFactory cdcDataPublisherFactory,
+                                                   CdcDataPublisherTransactionTemplateFactory cdcDataPublisherTransactionTemplateFactory,
+                                                   @Autowired MeterRegistry meterRegistry,
                                                    @Value("${spring.datasource.url}") String dataSourceURL,
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
                                                    CuratorFramework curatorFramework,
-                                                   OffsetStore offsetStore) {
+                                                   OffsetStoreCreator offsetStoreCreator) {
 
-    return new MySqlBinaryLogClient(
+    return new MySqlBinaryLogClient(dataProducerFactory,
+            cdcDataPublisherFactory,
+            cdcDataPublisherTransactionTemplateFactory,
             meterRegistry,
             eventuateConfigurationProperties.getDbUserName(),
             eventuateConfigurationProperties.getDbPassword(),
@@ -67,41 +74,42 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
-            offsetStore,
+            offsetStoreCreator,
             Optional.empty(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getMonitoringRetryAttempts());
+            eventuateConfigurationProperties.getMonitoringRetryAttempts(),
+            eventuateConfigurationProperties.isUseGTIDsWhenPossible());
   }
 
   @Bean
-  public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                       EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
-    return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-            eventuateKafkaProducerConfigurationProperties);
+  public CdcDataPublisherFactory cdcDataPublisherFactory(MeterRegistry meterRegistry) {
+    return dataProducer -> new CdcDataPublisher<>(dataProducer, meterRegistry);
   }
 
   @Bean
   public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                  EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
-    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaProducerConfigurationProperties);
+    return (transactionalId) ->
+              new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+                      eventuateKafkaProducerConfigurationProperties,
+                      transactionalId);
+  }
+
+  @Bean
+  public CdcDataPublisherTransactionTemplateFactory kafkaCdcDataPublisherTransactionTemplateFactory() {
+    return (dataProducer) -> {
+      if (!(dataProducer instanceof EventuateKafkaProducer)) {
+        throw new IllegalArgumentException(String.format("Expected %s", EventuateKafkaProducer.class));
+      }
+
+      return new KafkaCdcDataPublisherTransactionTemplate((EventuateKafkaProducer)dataProducer);
+    };
   }
 
   @Bean
   public PublishingStrategy<PublishedEvent> publishingStrategy() {
     return new PublishedEventPublishingStrategy();
-  }
-
-  @Bean
-  public CdcDataPublisher<PublishedEvent> cdcKafkaPublisher(DataProducerFactory dataProducerFactory,
-                                                            EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                            EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                                            PublishingStrategy<PublishedEvent> publishingStrategy) {
-
-    return new CdcDataPublisher<>(dataProducerFactory,
-            new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties),
-            publishingStrategy,
-            null);
   }
 
   @Bean

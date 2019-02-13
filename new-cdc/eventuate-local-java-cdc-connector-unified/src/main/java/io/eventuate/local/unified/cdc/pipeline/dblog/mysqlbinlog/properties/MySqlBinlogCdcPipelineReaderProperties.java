@@ -8,6 +8,7 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
   private String cdcDbPassword;
   private Boolean readOldDebeziumDbOffsetStorageTopic;
   private String mySqlBinlogClientName;
+  private boolean useGTIDsWhenPossible = false;
 
   public void validate() {
     super.validate();
@@ -48,5 +49,13 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
 
   public void setMySqlBinlogClientName(String mySqlBinlogClientName) {
     this.mySqlBinlogClientName = mySqlBinlogClientName;
+  }
+
+  public boolean isUseGTIDsWhenPossible() {
+    return useGTIDsWhenPossible;
+  }
+
+  public void setUseGTIDsWhenPossible(boolean useGTIDsWhenPossible) {
+    this.useGTIDsWhenPossible = useGTIDsWhenPossible;
   }
 }

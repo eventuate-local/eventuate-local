@@ -1,8 +1,9 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
+import io.eventuate.local.common.CdcDataPublisherFactory;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
-import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDbLogCdcPipelineReaderFactory;
@@ -17,19 +18,21 @@ public class PostgresWalCdcPipelineReaderFactory
 
   public static final String TYPE = "postgres-wal";
 
-  public PostgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+  public PostgresWalCdcPipelineReaderFactory(DataProducerFactory dataProducerFactory,
+                                             CdcDataPublisherFactory cdcDataPublisherFactory,
+                                             MeterRegistry meterRegistry,
                                              CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                             EventuateKafkaProducer eventuateKafkaProducer) {
+                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
-    super(meterRegistry,
+    super(dataProducerFactory,
+            cdcDataPublisherFactory,
+            meterRegistry,
             curatorFramework,
             binlogEntryReaderProvider,
             eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer);
+            eventuateKafkaConsumerConfigurationProperties);
   }
 
   @Override
@@ -47,7 +50,9 @@ public class PostgresWalCdcPipelineReaderFactory
 
     DataSource dataSource = createDataSource(readerProperties);
 
-    return new PostgresWalClient(meterRegistry,
+    return new PostgresWalClient(dataProducerFactory,
+            cdcDataPublisherFactory,
+            meterRegistry,
             readerProperties.getDataSourceUrl(),
             readerProperties.getDataSourceUserName(),
             readerProperties.getDataSourcePassword(),

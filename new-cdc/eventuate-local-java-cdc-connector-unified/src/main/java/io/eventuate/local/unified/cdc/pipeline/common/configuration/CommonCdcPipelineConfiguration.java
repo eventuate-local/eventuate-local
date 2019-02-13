@@ -2,9 +2,11 @@ package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
+import io.eventuate.local.java.common.broker.CdcDataPublisherTransactionTemplateFactory;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaPropertiesConfiguration;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
+import io.eventuate.local.java.kafka.KafkaCdcDataPublisherTransactionTemplate;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
@@ -26,6 +28,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import java.util.UUID;
+
 
 @Configuration
 @EnableConfigurationProperties({EventuateKafkaProducerConfigurationProperties.class,
@@ -34,13 +38,53 @@ import org.springframework.context.annotation.Import;
 public class CommonCdcPipelineConfiguration {
 
   @Bean
+  public DataProducerFactory eventuateKafkaProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                                                     EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
+
+    return (transactionalId) ->
+            new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
+                    eventuateKafkaProducerConfigurationProperties,
+                    transactionalId);
+  }
+
+  @Bean
+  public CdcDataPublisherTransactionTemplateFactory kafkaCdcDataPublisherTransactionTemplateFactory() {
+    return (dataProducer) -> {
+      if (!(dataProducer instanceof EventuateKafkaProducer)) {
+        throw new IllegalArgumentException(String.format("Expected %s", EventuateKafkaProducer.class));
+      }
+
+      return new KafkaCdcDataPublisherTransactionTemplate((EventuateKafkaProducer)dataProducer);
+    };
+  }
+
+  @Bean
+  public OffsetStoreFactory offsetStoreFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
+                                               EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+
+    return (properties, dataSource, eventuateSchema, clientName, dataProducer) -> {
+      if (!(dataProducer instanceof EventuateKafkaProducer)) {
+        throw new IllegalArgumentException(String.format("Expected %s", EventuateKafkaProducer.class));
+      }
+
+      return new DatabaseOffsetKafkaStore(properties.getOffsetStorageTopicName(),
+              clientName,
+              (EventuateKafkaProducer) dataProducer,
+              eventuateKafkaConfigurationProperties,
+              eventuateKafkaConsumerConfigurationProperties);
+    };
+  }
+
+
+  @Bean
   public BinlogEntryReaderHealthCheck binlogEntryReaderHealthCheck(BinlogEntryReaderProvider binlogEntryReaderProvider) {
     return new BinlogEntryReaderHealthCheck(binlogEntryReaderProvider);
   }
 
   @Bean
-  public CdcDataPublisherHealthCheck cdcDataPublisherHealthCheck(CdcDataPublisher cdcDataPublisher) {
-    return new CdcDataPublisherHealthCheck(cdcDataPublisher);
+  public CdcDataPublisherHealthCheck cdcDataPublisherHealthCheck(DataProducerFactory dataProducerFactory,
+                                                                 CdcDataPublisherFactory cdcDataPublisherFactory) {
+    return new CdcDataPublisherHealthCheck(cdcDataPublisherFactory.create(dataProducerFactory.create(UUID.randomUUID().toString())));
   }
 
   @Bean
@@ -63,19 +107,6 @@ public class CommonCdcPipelineConfiguration {
   }
 
   @Bean
-  public OffsetStoreFactory offsetStoreFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                               EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                               EventuateKafkaProducer eventuateKafkaProducer) {
-
-    return (properties, dataSource, eventuateSchema, clientName) ->
-            new DatabaseOffsetKafkaStore(properties.getOffsetStorageTopicName(),
-                    clientName,
-                    eventuateKafkaProducer,
-                    eventuateKafkaConfigurationProperties,
-                    eventuateKafkaConsumerConfigurationProperties);
-  }
-
-  @Bean
   public DebeziumOffsetStoreFactory mySqlBinLogOffsetStoreFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                                                   EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
@@ -89,14 +120,6 @@ public class CommonCdcPipelineConfiguration {
   }
 
   @Bean
-  public DataProducerFactory dataProducerFactory(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                 EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
-
-    return () -> new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-            eventuateKafkaProducerConfigurationProperties);
-  }
-
-  @Bean
   public EventuateConfigurationProperties eventuateConfigurationProperties() {
     return new EventuateConfigurationProperties();
   }
@@ -106,25 +129,10 @@ public class CommonCdcPipelineConfiguration {
     return new EventuateLocalZookeperConfigurationProperties();
   }
 
-  @Bean
-  public EventuateKafkaProducer eventuateKafkaProducer(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                       EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
-
-    return new EventuateKafkaProducer(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-            eventuateKafkaProducerConfigurationProperties);
-  }
-
   @Bean(destroyMethod = "close")
   public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
     String connectionString = eventuateLocalZookeperConfigurationProperties.getConnectionString();
     return makeStartedCuratorClient(connectionString);
-  }
-
-  @Bean
-  public PublishingFilter createPublishingFilter(EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                                 EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-    return new DuplicatePublishingDetector(eventuateKafkaConfigurationProperties.getBootstrapServers(),
-            eventuateKafkaConsumerConfigurationProperties);
   }
 
   static CuratorFramework makeStartedCuratorClient(String connectionString) {

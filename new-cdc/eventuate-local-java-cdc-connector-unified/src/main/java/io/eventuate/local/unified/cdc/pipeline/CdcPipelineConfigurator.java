@@ -164,7 +164,7 @@ public class CdcPipelineConfigurator {
             binlogEntryReader);
   }
 
-  private CdcPipeline<?> createCdcPipeline(CdcPipelineProperties properties) {
+  private CdcPipeline createCdcPipeline(CdcPipelineProperties properties) {
 
     CdcPipelineFactory<?> cdcPipelineFactory = findCdcPipelineFactory(properties.getType());
     return cdcPipelineFactory.create(properties);

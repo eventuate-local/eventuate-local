@@ -3,15 +3,15 @@ package io.eventuate.local.common;
 public class BinlogEntryHandler<EVENT extends BinLogEvent> {
   protected SchemaAndTable schemaAndTable;
   protected BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter;
-  protected CdcDataPublisher<EVENT> cdcDataPublisher;
+  protected PublishingStrategy<EVENT> publishingStrategy;
 
   public BinlogEntryHandler(SchemaAndTable schemaAndTable,
                             BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
-                            CdcDataPublisher<EVENT> cdcDataPublisher) {
+                            PublishingStrategy<EVENT> publishingStrategy) {
 
     this.schemaAndTable = schemaAndTable;
     this.binlogEntryToEventConverter = binlogEntryToEventConverter;
-    this.cdcDataPublisher = cdcDataPublisher;
+    this.publishingStrategy = publishingStrategy;
   }
 
   public String getQualifiedTable() {
@@ -26,7 +26,7 @@ public class BinlogEntryHandler<EVENT extends BinLogEvent> {
     return this.schemaAndTable.equals(schemaAndTable);
   }
 
-  public void publish(BinlogEntry binlogEntry) {
-    cdcDataPublisher.handleEvent(binlogEntryToEventConverter.convert(binlogEntry));
+  public void publish(CdcDataPublisher cdcDataPublisher, BinlogEntry binlogEntry) {
+    cdcDataPublisher.handleEvent(binlogEntryToEventConverter.convert(binlogEntry), publishingStrategy);
   }
 }

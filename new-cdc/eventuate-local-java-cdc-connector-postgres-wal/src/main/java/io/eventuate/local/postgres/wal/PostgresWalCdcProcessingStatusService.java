@@ -38,7 +38,7 @@ public class PostgresWalCdcProcessingStatusService implements CdcProcessingStatu
     if (waitUtil.start()) {
       currentWalPosition = getCurrentWalPosition();
     } else {
-      if (currentWalPosition == endingOffsetOfLastProcessedEvent) {
+      if (currentWalPosition <= endingOffsetOfLastProcessedEvent) {
         waitUtil.stop();
       } else {
         waitUtil.tick();

@@ -2,10 +2,9 @@ package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.common.BinlogEntry;
-import io.eventuate.local.common.CdcProcessingStatusService;
-import io.eventuate.local.common.SchemaAndTable;
+import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.PGConnection;
@@ -37,7 +36,9 @@ public class PostgresWalClient extends DbLogClient {
   private String replicationSlotName;
   private PostgresWalCdcProcessingStatusService postgresWalCdcProcessingStatusService;
 
-  public PostgresWalClient(MeterRegistry meterRegistry,
+  public PostgresWalClient(DataProducerFactory dataProducerFactory,
+                           CdcDataPublisherFactory cdcDataPublisherFactory,
+                           MeterRegistry meterRegistry,
                            String url,
                            String user,
                            String password,
@@ -56,7 +57,9 @@ public class PostgresWalClient extends DbLogClient {
                            String additionalServiceReplicationSlotName,
                            long waitForOffsetSyncTimeoutInMilliseconds) {
 
-    super(meterRegistry,
+    super(dataProducerFactory,
+            cdcDataPublisherFactory,
+            meterRegistry,
             user,
             password,
             url,
@@ -201,7 +204,7 @@ public class PostgresWalClient extends DbLogClient {
                   .filter(entry -> handler.isFor(entry.getSchemaAndTable()))
                   .map(BinlogEntryWithSchemaAndTable::getBinlogEntry)
                   .forEach(e -> {
-                    handler.publish(e);
+                    handler.publish(cdcDataPublisher, e);
                     onEventReceived();
                   }));
 

@@ -1,6 +1,8 @@
 package io.eventuate.local.common;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.java.common.broker.DataProducer;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
@@ -15,6 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class BinlogEntryReader {
   protected Logger logger = LoggerFactory.getLogger(getClass());
+  protected DataProducerFactory dataProducerFactory;
+  protected DataProducer dataProducer;
+  protected CdcDataPublisherFactory cdcDataPublisherFactory;
+  protected CdcDataPublisher cdcDataPublisher;
   protected MeterRegistry meterRegistry;
   protected CuratorFramework curatorFramework;
   protected String leadershipLockPath;
@@ -31,7 +37,9 @@ public abstract class BinlogEntryReader {
   private volatile long lastEventTime = System.currentTimeMillis();
   private LeaderSelector leaderSelector;
 
-  public BinlogEntryReader(MeterRegistry meterRegistry,
+  public BinlogEntryReader(DataProducerFactory dataProducerFactory,
+                           CdcDataPublisherFactory cdcDataPublisherFactory,
+                           MeterRegistry meterRegistry,
                            CuratorFramework curatorFramework,
                            String leadershipLockPath,
                            String dataSourceUrl,
@@ -40,6 +48,8 @@ public abstract class BinlogEntryReader {
                            int monitoringRetryIntervalInMilliseconds,
                            int monitoringRetryAttempts) {
 
+    this.dataProducerFactory = dataProducerFactory;
+    this.cdcDataPublisherFactory = cdcDataPublisherFactory;
     this.meterRegistry = meterRegistry;
     this.curatorFramework = curatorFramework;
     this.leadershipLockPath = leadershipLockPath;
@@ -54,6 +64,18 @@ public abstract class BinlogEntryReader {
             monitoringRetryAttempts);
 
     commonCdcMetrics = new CommonCdcMetrics(meterRegistry, binlogClientUniqueId);
+  }
+
+  public CdcDataPublisher getCdcDataPublisher() {
+    return cdcDataPublisher;
+  }
+
+  public void setCdcDataPublisherFactory(CdcDataPublisherFactory cdcDataPublisherFactory) {
+    this.cdcDataPublisherFactory = cdcDataPublisherFactory;
+  }
+
+  public void setCdcDataPublisher(CdcDataPublisher cdcDataPublisher) {
+    this.cdcDataPublisher = cdcDataPublisher;
   }
 
   public abstract CdcProcessingStatusService getCdcProcessingStatusService();
@@ -73,7 +95,7 @@ public abstract class BinlogEntryReader {
   public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
                                                                 String sourceTableName,
                                                                 BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
-                                                                CdcDataPublisher<EVENT> dataPublisher) {
+                                                                PublishingStrategy<EVENT> publishingStrategy) {
     if (eventuateSchema.isEmpty()) {
       throw new IllegalArgumentException("The eventuate schema cannot be empty for the cdc processor.");
     }
@@ -81,7 +103,7 @@ public abstract class BinlogEntryReader {
     SchemaAndTable schemaAndTable = new SchemaAndTable(eventuateSchema.getEventuateDatabaseSchema(), sourceTableName);
 
     BinlogEntryHandler binlogEntryHandler =
-            new BinlogEntryHandler<>(schemaAndTable, binlogEntryToEventConverter, dataPublisher);
+            new BinlogEntryHandler<>(schemaAndTable, binlogEntryToEventConverter, publishingStrategy);
 
     binlogEntryHandlers.add(binlogEntryHandler);
   }
@@ -100,6 +122,9 @@ public abstract class BinlogEntryReader {
   }
 
   protected void leaderStart() {
+    dataProducer = dataProducerFactory.create(String.valueOf(binlogClientUniqueId));
+    cdcDataPublisher = cdcDataPublisherFactory.create(dataProducer);
+
     commonCdcMetrics.setLeader(true);
     leader = true;
   }
@@ -116,6 +141,8 @@ public abstract class BinlogEntryReader {
     }
 
     stopMetrics();
+
+    dataProducer.close();
   }
 
   protected void stopMetrics() {

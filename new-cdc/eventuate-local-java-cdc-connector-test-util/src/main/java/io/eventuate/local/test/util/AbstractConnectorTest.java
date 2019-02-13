@@ -42,6 +42,7 @@ public class AbstractConnectorTest {
     props.put("session.timeout.ms", "30000");
     props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+    props.put("isolation.level", "read_committed");
 
     return new KafkaConsumer<>(props);
   }

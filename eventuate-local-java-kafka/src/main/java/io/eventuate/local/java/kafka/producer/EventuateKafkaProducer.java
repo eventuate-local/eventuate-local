@@ -15,32 +15,69 @@ public class EventuateKafkaProducer implements DataProducer {
 
   private Producer<String, String> producer;
   private Properties producerProps;
+  private boolean transactionRequested = false;
 
   public EventuateKafkaProducer(String bootstrapServers,
-                                EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties) {
+                                EventuateKafkaProducerConfigurationProperties eventuateKafkaProducerConfigurationProperties,
+                                String transactionalId) {
     producerProps = new Properties();
     producerProps.put("bootstrap.servers", bootstrapServers);
     producerProps.put("acks", "all");
-    producerProps.put("retries", 0);
+    producerProps.put("retries", 10);
     producerProps.put("batch.size", 16384);
     producerProps.put("linger.ms", 1);
     producerProps.put("buffer.memory", 33554432);
     producerProps.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
     producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+    producerProps.put("transactional.id", transactionalId);
     producerProps.putAll(eventuateKafkaProducerConfigurationProperties.getProperties());
     producer = new KafkaProducer<>(producerProps);
+    producer.initTransactions();
   }
 
   @Override
   public CompletableFuture<?> send(String topic, String key, String body) {
     CompletableFuture<Object> result = new CompletableFuture<>();
-    producer.send(new ProducerRecord<>(topic, key, body), (metadata, exception) -> {
-      if (exception == null)
-        result.complete(metadata);
-      else
-        result.completeExceptionally(exception);
-    });
+
+    try {
+      if (!transactionRequested) {
+        producer.beginTransaction();
+      }
+
+      producer.send(new ProducerRecord<>(topic, key, body), (metadata, exception) -> {
+        if (exception == null)
+          result.complete(metadata);
+        else
+          result.completeExceptionally(exception);
+      });
+
+      if (!transactionRequested) {
+        producer.commitTransaction();
+      }
+    }
+    catch(Exception e) {
+      if (!transactionRequested) {
+        producer.abortTransaction();
+      }
+      throw e;
+    }
+
     return result;
+  }
+
+  public void beginTransaction() {
+    producer.beginTransaction();
+    transactionRequested = true;
+  }
+
+  public void commitTransaction() {
+    producer.commitTransaction();
+    transactionRequested = false;
+  }
+
+  public void abortTransaction() {
+    producer.abortTransaction();
+    transactionRequested = false;
   }
 
   public List<PartitionInfo> partitionsFor(String topic) {

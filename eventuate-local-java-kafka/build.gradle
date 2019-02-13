@@ -3,7 +3,7 @@ apply plugin: PrivateModulePlugin
 dependencies {
     compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
     compile 'commons-lang:commons-lang:2.6'
-    compile 'org.apache.kafka:kafka-clients:0.10.0.1'
+    compile 'org.apache.kafka:kafka-clients:2.1.0'
     compile 'org.hibernate:hibernate-validator:5.2.3.Final'
     compile project(":eventuate-local-java-common-broker")
 

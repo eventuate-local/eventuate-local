@@ -1,6 +1,9 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.common.factory;
 
 import io.eventuate.local.common.BinlogEntryReader;
+import io.eventuate.local.common.CdcDataPublisher;
+import io.eventuate.local.common.CdcDataPublisherFactory;
+import io.eventuate.local.java.common.broker.DataProducerFactory;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -15,20 +18,19 @@ public abstract class CommonDbLogCdcPipelineReaderFactory<PROPERTIES extends Cdc
 
   protected EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties;
   protected EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
-  protected EventuateKafkaProducer eventuateKafkaProducer;
 
 
-  public CommonDbLogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
+  public CommonDbLogCdcPipelineReaderFactory(DataProducerFactory dataProducerFactory,
+                                             CdcDataPublisherFactory cdcDataPublisherFactory,
+                                             MeterRegistry meterRegistry,
                                              CuratorFramework curatorFramework,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                             EventuateKafkaProducer eventuateKafkaProducer) {
+                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
-    super(meterRegistry, curatorFramework, binlogEntryReaderProvider);
+    super(dataProducerFactory, cdcDataPublisherFactory, meterRegistry, curatorFramework, binlogEntryReaderProvider);
 
     this.eventuateKafkaConfigurationProperties = eventuateKafkaConfigurationProperties;
     this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
-    this.eventuateKafkaProducer = eventuateKafkaProducer;
   }
 }

@@ -1,6 +1,7 @@
 package io.eventuate.local.db.log.common;
 
 import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.OffsetStore;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -86,6 +87,7 @@ public abstract class OffsetKafkaStore implements OffsetStore {
     props.put("session.timeout.ms", "30000");
     props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
     props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+    props.put("isolation.level", "read_committed");
 
     props.putAll(eventuateKafkaConsumerConfigurationProperties.getProperties());
 

@@ -1,7 +1,7 @@
 package io.eventuate.local.mysql.binlog;
 
 import io.eventuate.local.common.BinlogFileOffset;
-import io.eventuate.local.db.log.common.OffsetStore;
+import io.eventuate.local.common.OffsetStore;
 
 import java.util.Optional;
 
@@ -17,9 +17,5 @@ public class OffsetStoreMock implements OffsetStore {
   @Override
   public synchronized void save(BinlogFileOffset binlogFileOffset) {
     this.binlogFileOffset = Optional.ofNullable(binlogFileOffset);
-  }
-
-  @Override
-  public void stop() {
   }
 }

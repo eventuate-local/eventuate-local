@@ -3,9 +3,11 @@ package io.eventuate.local.mysql.binlog;
 import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
 import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.BinlogFileOffset;
+import io.eventuate.local.common.Gtid;
 import io.eventuate.local.common.SchemaAndTable;
 
 import javax.sql.DataSource;
+import java.util.Optional;
 
 public class MySqlBinlogEntryExtractor extends AbstractMySqlBinlogExtractor {
 
@@ -14,7 +16,12 @@ public class MySqlBinlogEntryExtractor extends AbstractMySqlBinlogExtractor {
     super(dataSource);
   }
 
-  public BinlogEntry extract(SchemaAndTable schemaAndTable, WriteRowsEventData eventData, String binlogFilename, long position) {
+  public BinlogEntry extract(SchemaAndTable schemaAndTable,
+                             WriteRowsEventData eventData,
+                             String binlogFilename,
+                             long position,
+                             Optional<Gtid> gtid) {
+
     updateColumnOrders(schemaAndTable);
 
     return new BinlogEntry() {
@@ -25,7 +32,7 @@ public class MySqlBinlogEntryExtractor extends AbstractMySqlBinlogExtractor {
 
       @Override
       public BinlogFileOffset getBinlogFileOffset() {
-        return new BinlogFileOffset(binlogFilename, position);
+        return new BinlogFileOffset(binlogFilename, position, gtid);
       }
     };
   }

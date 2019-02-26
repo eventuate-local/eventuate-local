@@ -24,7 +24,7 @@ public class EventuateKafkaConsumerConfigurationTest {
 
     Assert.assertEquals(2, eventuateKafkaConsumerConfigurationProperties.getProperties().size());
 
-    Assert.assertEquals("30000", eventuateKafkaConsumerConfigurationProperties.getProperties().get("session.timeout.ms"));
+    Assert.assertEquals("10000", eventuateKafkaConsumerConfigurationProperties.getProperties().get("session.timeout.ms"));
 
     Assert.assertEquals("org.apache.kafka.common.serialization.StringSerializer",
             eventuateKafkaConsumerConfigurationProperties.getProperties().get("key.serializer"));

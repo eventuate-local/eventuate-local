@@ -16,7 +16,6 @@ export GRADLE_OPTIONS="-P excludeCdcLibs=true"
 . ./scripts/set-env-postgres-wal.sh
 
 $DOCKER_COMPOSE down -v --remove-orphans
-$DOCKER_COMPOSE rm --force -v
 
 $DOCKER_COMPOSE build
 $DOCKER_COMPOSE up -d postgres
@@ -49,4 +48,3 @@ $DOCKER_COMPOSE start postgres zookeeper
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:cleanTest :eventuate-local-java-jdbc-tests:test
 
 $DOCKER_COMPOSE down -v --remove-orphans
-$DOCKER_COMPOSE rm --force -v

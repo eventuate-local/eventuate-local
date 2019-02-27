@@ -23,4 +23,3 @@ docker-compose -f docker-compose-postgres-wal.yml  up -d
 ./gradlew $* :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:cleanTest :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
 
 docker-compose -f docker-compose-postgres-wal.yml down -v --remove-orphans
-docker-compose -f docker-compose-postgres-wal.yml  rm --force -v

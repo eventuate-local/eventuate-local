@@ -8,4 +8,6 @@ dependencies {
     compile project(":eventuate-local-java-common-broker")
 
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testCompile "io.eventuate.util:eventuate-util-test:$eventuateUtilVersion"
+
 }

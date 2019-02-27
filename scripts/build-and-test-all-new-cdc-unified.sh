@@ -17,7 +17,7 @@ export GRADLE_OPTIONS="-P excludeCdcLibs=true"
 
 . ./scripts/set-env-mysql.sh
 
-$DOCKER_COMPOSE stop
+$DOCKER_COMPOSE down -v --remove-orphans
 $DOCKER_COMPOSE rm --force -v
 
 $DOCKER_COMPOSE build
@@ -48,5 +48,5 @@ echo "testing postgres wal"
 export SPRING_DATASOURCE_URL=jdbc:postgresql://${DOCKER_HOST_IP}:5433/eventuate
 ./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:clean :eventuate-local-java-jdbc-tests:test
 
-$DOCKER_COMPOSE stop
+$DOCKER_COMPOSE down -v --remove-orphans
 $DOCKER_COMPOSE rm --force -v

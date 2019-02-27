@@ -15,7 +15,7 @@ fi
 
 ./gradlew ${GRADLE_OPTS} testClasses
 
-docker-compose -f docker-compose-${database}.yml stop
+docker-compose -f docker-compose-${database}.yml down -v --remove-orphans
 docker-compose -f docker-compose-${database}.yml rm --force -v
 
 docker-compose -f docker-compose-${database}.yml build
@@ -25,5 +25,5 @@ docker-compose -f docker-compose-${database}.yml up -d
 
 ./gradlew $* -x :new-cdc:eventuate-local-java-cdc-connector-postgres-wal:test
 
-docker-compose -f docker-compose-${database}.yml stop
+docker-compose -f docker-compose-${database}.yml down -v --remove-orphans
 docker-compose -f docker-compose-${database}.yml rm --force -v

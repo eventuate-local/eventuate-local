@@ -24,13 +24,14 @@ public class EventuateKafkaConsumer {
 
   private static Logger logger = LoggerFactory.getLogger(EventuateKafkaConsumer.class);
   private final String subscriberId;
-  private final BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler;
+  private final EventuateKafkaConsumerMessageHandler handler;
   private final List<String> topics;
   private AtomicBoolean stopFlag = new AtomicBoolean(false);
   private Properties consumerProperties;
+  private volatile EventuateKafkaConsumerState state = EventuateKafkaConsumerState.CREATED;
 
   public EventuateKafkaConsumer(String subscriberId,
-                                BiConsumer<ConsumerRecord<String, String>, BiConsumer<Void, Throwable>> handler,
+                                EventuateKafkaConsumerMessageHandler handler,
                                 List<String> topics,
                                 String bootstrapServers,
                                 EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
@@ -90,12 +91,15 @@ public class EventuateKafkaConsumer {
             if (!records.isEmpty())
               logger.debug("Got {} {} records", subscriberId, records.count());
 
-            for (ConsumerRecord<String, String> record : records) {
-              logger.debug("processing record {} {} {}", subscriberId, record.offset(), record.value());
-              if (logger.isDebugEnabled())
-                logger.debug(String.format("EventuateKafkaAggregateSubscriptions subscriber = %s, offset = %d, key = %s, value = %s", subscriberId, record.offset(), record.key(), record.value()));
-              processor.process(record);
-            }
+            if (records.isEmpty())
+              processor.throwFailureException();
+            else
+              for (ConsumerRecord<String, String> record : records) {
+                logger.debug("processing record {} {} {}", subscriberId, record.offset(), record.value());
+                if (logger.isDebugEnabled())
+                  logger.debug(String.format("EventuateKafkaAggregateSubscriptions subscriber = %s, offset = %d, key = %s, value = %s", subscriberId, record.offset(), record.key(), record.value()));
+                processor.process(record);
+              }
             if (!records.isEmpty())
               logger.debug("Processed {} {} records", subscriberId, records.count());
 
@@ -108,15 +112,26 @@ public class EventuateKafkaConsumer {
 
           maybeCommitOffsets(consumer, processor);
 
+          state = EventuateKafkaConsumerState.STOPPED;
+
+        } catch (KafkaMessageProcessorFailedException e) {
+          // We are done
+          logger.trace("Terminating since KafkaMessageProcessorFailedException");
+          state = EventuateKafkaConsumerState.MESSAGE_HANDLING_FAILED;
         } catch (Throwable e) {
           logger.error("Got exception: ", e);
+          state = EventuateKafkaConsumerState.FAILED;
           throw new RuntimeException(e);
         }
+        logger.trace("Stopped in state {}", state);
 
       }, "Eventuate-subscriber-" + subscriberId).start();
 
+      state = EventuateKafkaConsumerState.STARTED;
+
     } catch (Exception e) {
       logger.error("Error subscribing", e);
+      state = EventuateKafkaConsumerState.FAILED_TO_START;
       throw new RuntimeException(e);
     }
   }
@@ -125,4 +140,7 @@ public class EventuateKafkaConsumer {
     stopFlag.set(true);
   }
 
+  public EventuateKafkaConsumerState getState() {
+    return state;
+  }
 }

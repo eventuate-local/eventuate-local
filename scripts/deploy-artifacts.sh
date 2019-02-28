@@ -13,9 +13,22 @@ PUSH_DISABLED=
 if ! [[  $BRANCH =~ ^[0-9]+ ]] ; then
   echo Not release $BRANCH - no PUSH
   PUSH_DISABLED=yes
+  BINTRAY_REPO_TYPE=no-pushing
+elif [[  $BRANCH =~ RELEASE$ ]] ; then
+  BINTRAY_REPO_TYPE=release
+elif [[  $BRANCH =~ M[0-9]+$ ]] ; then
+    BINTRAY_REPO_TYPE=milestone
+elif [[  $BRANCH =~ RC[0-9]+$ ]] ; then
+    BINTRAY_REPO_TYPE=rc
+else
+  echo cannot figure out bintray for this branch $BRANCH
+  exit -1
 fi
 
+echo BINTRAY_REPO_TYPE=${BINTRAY_REPO_TYPE}
+
 VERSION=$BRANCH
+
 
 # Dockerfiles look for snapshot version of JAR!
 
@@ -28,7 +41,8 @@ $PREFIX ./gradlew -P version=${VERSION} \
 
 if [ -z "$PUSH_DISABLED" ] ; then
     $PREFIX ./gradlew -P version=${VERSION} \
-      -P deployUrl=https://dl.bintray.com/eventuateio-oss/eventuate-maven-release \
+      -P bintrayRepoType=${BINTRAY_REPO_TYPE} \
+      -P deployUrl=https://dl.bintray.com/eventuateio-oss/eventuate-maven-${BINTRAY_REPO_TYPE} \
       bintrayUpload
 else
     echo $PUSH_DISABLED - not uploading to bintray $VERSION

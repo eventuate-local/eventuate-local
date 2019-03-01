@@ -134,10 +134,12 @@ public class PollingDao extends BinlogEntryReader {
       onEventReceived();
     }
 
-    String markEventsAsReadQuery = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
-            handler.getQualifiedTable(), PUBLISHED_FIELD, pk);
+    if (ids.isEmpty())
+      onActivity();
+    else {
 
-    if (!ids.isEmpty()) {
+      String markEventsAsReadQuery = String.format("UPDATE %s SET %s = 1 WHERE %s in (:ids)",
+              handler.getQualifiedTable(), PUBLISHED_FIELD, pk);
 
       DaoUtils.handleConnectionLost(maxAttemptsForPolling,
               pollingRetryIntervalInMilliseconds,

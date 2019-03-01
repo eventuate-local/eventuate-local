@@ -125,6 +125,10 @@ public abstract class BinlogEntryReader {
 
   protected void onEventReceived() {
     commonCdcMetrics.onMessageProcessed();
+    onActivity();
+  }
+
+  protected void onActivity() {
     lastEventTime = System.currentTimeMillis();
   }
 }

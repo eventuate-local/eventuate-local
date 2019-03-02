@@ -6,17 +6,15 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import java.util.List;
 
 public abstract class AbstractHealthCheck implements HealthIndicator {
-  protected Health makeHealthFromErrors(List<String> errorMessages) {
-    if (!errorMessages.isEmpty()) {
-      Health.Builder builder = Health.down();
 
-      for (int i = 1; i <= errorMessages.size(); i++) {
-        builder.withDetail("error-" + i, errorMessages.get(i - 1));
-      }
 
-      return builder.build();
-    }
-
-    return Health.up().build();
+  @Override
+  public Health health() {
+    HealthBuilder builder = new HealthBuilder();
+    determineHealth(builder);
+    return builder.build();
   }
+
+  protected abstract void determineHealth(HealthBuilder builder);
+
 }

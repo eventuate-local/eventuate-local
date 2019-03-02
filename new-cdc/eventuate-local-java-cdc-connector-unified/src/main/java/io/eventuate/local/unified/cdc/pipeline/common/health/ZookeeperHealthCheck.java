@@ -18,18 +18,16 @@ public class ZookeeperHealthCheck extends AbstractHealthCheck {
   private String zkUrl;
 
   @Override
-  public Health health() {
+  protected void determineHealth(HealthBuilder builder) {
     CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient(zkUrl, 1000, 1000, new RetryNTimes(0, 0));
-
-    List<String> errors;
 
     try {
       curatorFramework.start();
       curatorFramework.checkExists().forPath("/some/test/path");
-      errors = Collections.emptyList();
+      builder.addDetail("Connected to Zookeeper");
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      errors = Collections.singletonList("Connection to zookeeper failed");
+      builder.addError("Connection to zookeeper failed");
     } finally {
       try {
         curatorFramework.close();
@@ -37,7 +35,6 @@ public class ZookeeperHealthCheck extends AbstractHealthCheck {
         logger.error(ce.getMessage(), ce);
       }
     }
-
-    return makeHealthFromErrors(errors);
   }
+
 }

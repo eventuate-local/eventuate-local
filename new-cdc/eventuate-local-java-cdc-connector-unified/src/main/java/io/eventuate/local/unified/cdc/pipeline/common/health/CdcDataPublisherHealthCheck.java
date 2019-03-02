@@ -19,12 +19,8 @@ public class CdcDataPublisherHealthCheck extends AbstractHealthCheck {
   }
 
   @Override
-  public Health health() {
-    List<String> errors =
-            cdcDataPublisher.isLastMessagePublishingFailed() ?
-                    Collections.singletonList("Last event publishing failed") :
-                    Collections.emptyList();
-
-    return makeHealthFromErrors(errors);
+  protected void determineHealth(HealthBuilder builder) {
+    if (cdcDataPublisher.isLastMessagePublishingFailed())
+      builder.addError("Last event publishing failed");
   }
 }

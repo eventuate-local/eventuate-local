@@ -10,7 +10,10 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 PUSH_DISABLED=
 
-if ! [[  $BRANCH =~ ^[0-9]+ ]] ; then
+if [[  "$BRANCH" = "wip-unified-cdc-2" ]] ; then
+  BINTRAY_REPO_TYPE=snapshot
+  VERSION=0.30.0-SNAPSHOT
+elif ! [[  $BRANCH =~ ^[0-9]+ ]] ; then
   echo Not release $BRANCH - no PUSH
   PUSH_DISABLED=yes
   BINTRAY_REPO_TYPE=no-pushing
@@ -27,8 +30,9 @@ fi
 
 echo BINTRAY_REPO_TYPE=${BINTRAY_REPO_TYPE}
 
-VERSION=$BRANCH
-
+if [ -z "$VERSION" ] ; then
+    VERSION=$BRANCH
+fi
 
 # Dockerfiles look for snapshot version of JAR!
 

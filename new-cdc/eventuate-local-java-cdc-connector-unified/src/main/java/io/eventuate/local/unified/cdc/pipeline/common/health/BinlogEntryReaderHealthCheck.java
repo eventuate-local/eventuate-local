@@ -23,47 +23,44 @@ public class BinlogEntryReaderHealthCheck extends AbstractHealthCheck {
   }
 
   @Override
-  public Health health() {
+  protected void determineHealth(HealthBuilder builder) {
 
-    List<String> errorMessages = binlogEntryReaderProvider
+    binlogEntryReaderProvider
             .getAllReaders()
-            .stream()
-            .flatMap(binlogEntryReader -> {
-              List<String> errors = new ArrayList<>();
+            .forEach(binlogEntryReader -> {
 
               if (binlogEntryReader.isLeader()) {
-                errors.addAll(checkBinlogEntryReaderHealth(binlogEntryReader));
-
+                checkBinlogEntryReaderHealth(binlogEntryReader, builder);
                 if (binlogEntryReader instanceof DbLogClient) {
-                  errors.addAll(checkDbLogReaderHealth((DbLogClient) binlogEntryReader));
+                  checkDbLogReaderHealth((DbLogClient) binlogEntryReader, builder);
                 }
-              }
+              } else
+                builder.addDetail(String.format("%s is not the leader", binlogEntryReader.getBinlogClientUniqueId()));
+            });
 
-              return errors.stream();
-            })
-            .collect(Collectors.toList());
-
-    return makeHealthFromErrors(errorMessages);
   }
 
-  private List<String> checkDbLogReaderHealth(DbLogClient dbLogClient) {
-    if (dbLogClient.isConnected()) {
-      return Collections.emptyList();
-    } else {
-      return Collections.singletonList(String.format("Reader with id %s disconnected",
+  private void checkDbLogReaderHealth(DbLogClient dbLogClient, HealthBuilder builder) {
+    if (!dbLogClient.isConnected()) {
+      builder.addError(String.format("Reader with id %s disconnected",
               dbLogClient.getBinlogClientUniqueId()));
-    }
-  }
+    } else
+      builder.addDetail(String.format("Reader with id %s is connected",
+              dbLogClient.getBinlogClientUniqueId()));
 
-  private List<String> checkBinlogEntryReaderHealth(BinlogEntryReader binlogEntryReader) {
+}
+
+  private void checkBinlogEntryReaderHealth(BinlogEntryReader binlogEntryReader, HealthBuilder builder) {
+    long age = System.currentTimeMillis() - binlogEntryReader.getLastEventTime();
     boolean eventNotReceivedInTime =
-            System.currentTimeMillis() - binlogEntryReader.getLastEventTime() > maxEventIntervalToAssumeReaderHealthy;
+            age > maxEventIntervalToAssumeReaderHealthy;
 
     if (eventNotReceivedInTime) {
-      return Collections.singletonList(String.format("No events received recently by reader %s",
+      builder.addError(String.format("No events received recently by reader %s",
               binlogEntryReader.getBinlogClientUniqueId()));
-    }
-
-    return Collections.emptyList();
+    } else
+      builder.addDetail(String.format("Reader with id %s received message %s milliseconds ago",
+              binlogEntryReader.getBinlogClientUniqueId(),
+              age));
   }
 }

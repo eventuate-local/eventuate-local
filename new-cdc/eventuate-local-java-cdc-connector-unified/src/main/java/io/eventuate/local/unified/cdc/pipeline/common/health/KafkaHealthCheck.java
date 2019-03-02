@@ -19,9 +19,7 @@ public class KafkaHealthCheck extends AbstractHealthCheck {
   private String kafkaServers;
 
   @Override
-  public Health health() {
-
-    List<String> errors;
+  protected void determineHealth(HealthBuilder builder) {
 
     Properties consumerProperties = ConsumerPropertiesFactory.makeDefaultConsumerProperties(kafkaServers, UUID.randomUUID().toString());
     consumerProperties.put("session.timeout.ms", "500");
@@ -31,10 +29,10 @@ public class KafkaHealthCheck extends AbstractHealthCheck {
 
     try {
       consumer.partitionsFor("__consumer_offsets");
-      errors = Collections.emptyList();
+      builder.addDetail("Connected to Kafka");
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      errors = Collections.singletonList("Connection to kafka failed");
+      builder.addError("Connection to kafka failed");
     } finally {
       try {
         consumer.close();
@@ -43,6 +41,5 @@ public class KafkaHealthCheck extends AbstractHealthCheck {
       }
     }
 
-    return makeHealthFromErrors(errors);
   }
 }

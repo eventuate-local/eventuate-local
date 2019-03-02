@@ -10,10 +10,12 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 PUSH_DISABLED=
 
-if [[  "$BRANCH" = "wip-unified-cdc-2" ]] ; then
-  BINTRAY_REPO_TYPE=snapshot
-  VERSION=0.30.0-SNAPSHOT
-elif ! [[  $BRANCH =~ ^[0-9]+ ]] ; then
+#if [[  "$BRANCH" = "wip-unified-cdc-2" ]] ; then
+#  BINTRAY_REPO_TYPE=snapshot
+#  VERSION=0.30.0-SNAPSHOT
+#elif
+
+if ! [[  $BRANCH =~ ^[0-9]+ ]] ; then
   echo Not release $BRANCH - no PUSH
   PUSH_DISABLED=yes
   BINTRAY_REPO_TYPE=no-pushing

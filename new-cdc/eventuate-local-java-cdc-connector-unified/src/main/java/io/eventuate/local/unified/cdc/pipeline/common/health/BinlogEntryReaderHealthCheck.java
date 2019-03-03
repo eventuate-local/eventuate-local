@@ -41,14 +41,15 @@ public class BinlogEntryReaderHealthCheck extends AbstractHealthCheck {
   }
 
   private void checkDbLogReaderHealth(DbLogClient dbLogClient, HealthBuilder builder) {
-    if (!dbLogClient.isConnected()) {
-      builder.addError(String.format("Reader with id %s disconnected",
-              dbLogClient.getBinlogClientUniqueId()));
-    } else
+    if (dbLogClient.isConnected()) {
       builder.addDetail(String.format("Reader with id %s is connected",
               dbLogClient.getBinlogClientUniqueId()));
+    } else {
+      builder.addError(String.format("Reader with id %s disconnected",
+              dbLogClient.getBinlogClientUniqueId()));
+    }
 
-}
+  }
 
   private void checkBinlogEntryReaderHealth(BinlogEntryReader binlogEntryReader, HealthBuilder builder) {
     long age = System.currentTimeMillis() - binlogEntryReader.getLastEventTime();
@@ -56,8 +57,9 @@ public class BinlogEntryReaderHealthCheck extends AbstractHealthCheck {
             age > maxEventIntervalToAssumeReaderHealthy;
 
     if (eventNotReceivedInTime) {
-      builder.addError(String.format("No events received recently by reader %s",
-              binlogEntryReader.getBinlogClientUniqueId()));
+      builder.addError(String.format("Reader with id %s has not received message for %s milliseconds",
+              binlogEntryReader.getBinlogClientUniqueId(),
+              age));
     } else
       builder.addDetail(String.format("Reader with id %s received message %s milliseconds ago",
               binlogEntryReader.getBinlogClientUniqueId(),

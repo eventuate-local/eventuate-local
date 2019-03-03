@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
 
 public class CdcMonitoringDao {
+
   protected Logger logger = LoggerFactory.getLogger(getClass());
 
   private JdbcTemplate jdbcTemplate;
@@ -24,6 +25,7 @@ public class CdcMonitoringDao {
     this.monitoringRetryIntervalInMilliseconds = monitoringRetryIntervalInMilliseconds;
     this.monitoringRetryAttempts = monitoringRetryAttempts;
   }
+
 
   public void update(long readerId) {
 
@@ -43,4 +45,16 @@ public class CdcMonitoringDao {
             },
             () -> {});
   }
+
+  public SchemaAndTable getMonitoringSchemaAndTable() {
+    return new SchemaAndTable(eventuateSchema.getEventuateDatabaseSchema(), "cdc_monitoring");
+  }
+
+  public boolean isMonitoringTableChange(String changeSchema, String changeTable) {
+    SchemaAndTable expectedSchemaAndTable =
+            new SchemaAndTable(eventuateSchema.getEventuateDatabaseSchema(), "cdc_monitoring");
+
+    return expectedSchemaAndTable.equals(new SchemaAndTable(changeSchema, changeTable));
+  }
+
 }

@@ -156,7 +156,7 @@ public class PostgresWalClient extends DbLogClient {
 
       if (messageBuffer == null) {
         saveOffsetOfLastProcessedEvent();
-        logger.info("Got empty message, sleeping");
+        logger.debug("Got empty message, sleeping");
         try {
           TimeUnit.MILLISECONDS.sleep(walIntervalInMilliseconds);
         } catch (InterruptedException e) {
@@ -179,7 +179,7 @@ public class PostgresWalClient extends DbLogClient {
       String messageString = messageBuilder.toString();
       messageBuilder.setLength(0);
 
-      logger.info("Got message: {}", messageString);
+      logger.debug("Got message: {}", messageString);
 
       PostgresWalMessage postgresWalMessage = JSonMapper.fromJson(messageString, PostgresWalMessage.class);
 
@@ -187,7 +187,7 @@ public class PostgresWalClient extends DbLogClient {
 
       LogSequenceNumber lastReceivedLSN = stream.getLastReceiveLSN();
 
-      logger.info("received offset: {} == {}", lastReceivedLSN, lastReceivedLSN.asLong());
+      logger.debug("received offset: {} == {}", lastReceivedLSN, lastReceivedLSN.asLong());
 
       List<BinlogEntryWithSchemaAndTable> inserts = Arrays
               .stream(postgresWalMessage.getChange())
@@ -227,10 +227,9 @@ public class PostgresWalClient extends DbLogClient {
     Optional<PostgresWalChange> monitoringChange = Arrays
             .stream(postgresWalMessage.getChange())
             .filter(change -> {
-              SchemaAndTable expectedSchemaAndTable =
-                      new SchemaAndTable(new EventuateSchema().getEventuateDatabaseSchema(), "cdc_monitoring");
-
-              return expectedSchemaAndTable.equals(new SchemaAndTable(change.getSchema(), change.getTable()));
+              String changeSchema = change.getSchema();
+              String changeTable = change.getTable();
+              return cdcMonitoringDao.isMonitoringTableChange(changeSchema, changeTable);
             })
             .findAny();
 
@@ -240,6 +239,7 @@ public class PostgresWalClient extends DbLogClient {
       onEventReceived();
     });
   }
+
 
   private String extractStringFromBuffer(ByteBuffer byteBuffer) {
     int offset = byteBuffer.arrayOffset();

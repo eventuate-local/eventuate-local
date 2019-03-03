@@ -34,17 +34,17 @@ $DOCKER_COMPOSE up -d
 echo "testing mysql binlog"
 
 . ./scripts/set-env-mysql.sh
-./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:clean :eventuate-local-java-jdbc-tests:test
+./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:clean :eventuate-local-java-jdbc-tests:test -Dtest.single=JdbcAutoConfigurationIntegrationSyncTest
 
 echo "testing postgres polling"
 
 . ./scripts/set-env-postgres-polling.sh
-./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:clean :eventuate-local-java-jdbc-tests:test
+./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:clean :eventuate-local-java-jdbc-tests:test -Dtest.single=JdbcAutoConfigurationIntegrationSyncTest
 
 echo "testing postgres wal"
 
 . ./scripts/set-env-postgres-wal.sh
 export SPRING_DATASOURCE_URL=jdbc:postgresql://${DOCKER_HOST_IP}:5433/eventuate
-./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:clean :eventuate-local-java-jdbc-tests:test
+./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:clean :eventuate-local-java-jdbc-tests:test -Dtest.single=JdbcAutoConfigurationIntegrationSyncTest
 
 $DOCKER_COMPOSE down -v --remove-orphans

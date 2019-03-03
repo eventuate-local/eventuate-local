@@ -6,7 +6,6 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.google.common.collect.ImmutableSet;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetKafkaStore;
@@ -28,9 +27,6 @@ public class MySqlBinaryLogClient extends DbLogClient {
           EventType.EXT_WRITE_ROWS,
           EventType.UPDATE_ROWS,
           EventType.EXT_UPDATE_ROWS);
-
-  private static final SchemaAndTable MONITORING_SCHEMA_AND_TABLE =
-          new SchemaAndTable(new EventuateSchema().getEventuateDatabaseSchema(), "cdc_monitoring");
 
   private String name;
   private BinaryLogClient client;
@@ -138,13 +134,13 @@ public class MySqlBinaryLogClient extends DbLogClient {
         case TABLE_MAP: {
           TableMapEventData tableMapEvent = event.getData();
 
-          SchemaAndTable schemaAndTable = new SchemaAndTable(tableMapEvent.getDatabase(), tableMapEvent.getTable());
-
-          if (schemaAndTable.equals(MONITORING_SCHEMA_AND_TABLE)) {
+          if (cdcMonitoringDao.isMonitoringTableChange(tableMapEvent.getDatabase(), tableMapEvent.getTable())) {
             cdcMonitoringTableId = Optional.of(tableMapEvent.getTableId());
             tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
             break;
           }
+
+          SchemaAndTable schemaAndTable = new SchemaAndTable(tableMapEvent.getDatabase(), tableMapEvent.getTable());
 
           boolean shouldHandleTable = binlogEntryHandlers
                   .stream()
@@ -225,9 +221,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
     logger.info("mysql binlog client got event with offset {}/{}", binlogFilename, offset);
 
     if (isCdcMonitoringTableId(eventData.getTableId())) {
-      dbLogMetrics.onLagMeasurementEventReceived(timestampExtractor.extract(MONITORING_SCHEMA_AND_TABLE, eventData));
-    }
-    else if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
+      onLagMeasurementEventReceived(eventData);
+    } else if (tableMapEventByTableId.containsKey(eventData.getTableId())) {
       TableMapEventData tableMapEventData = tableMapEventByTableId.get(eventData.getTableId());
 
       SchemaAndTable schemaAndTable = new SchemaAndTable(tableMapEventData.getDatabase(), tableMapEventData.getTable());
@@ -247,6 +242,10 @@ public class MySqlBinaryLogClient extends DbLogClient {
     saveOffset(event);
   }
 
+  private void onLagMeasurementEventReceived(WriteRowsEventData eventData) {
+    dbLogMetrics.onLagMeasurementEventReceived(timestampExtractor.extract(cdcMonitoringDao.getMonitoringSchemaAndTable(), eventData));
+  }
+
   private void handleUpdateRowsEvent(Event event) {
     UpdateRowsEventData eventData = event.getData();
 
@@ -255,11 +254,15 @@ public class MySqlBinaryLogClient extends DbLogClient {
     }
 
     if (isCdcMonitoringTableId(eventData.getTableId())) {
-      dbLogMetrics.onLagMeasurementEventReceived(timestampExtractor.extract(MONITORING_SCHEMA_AND_TABLE, eventData));
+      onLagMeasurementEventReceived(eventData);
     }
 
     onEventReceived();
     saveOffset(event);
+  }
+
+  private void onLagMeasurementEventReceived(UpdateRowsEventData eventData) {
+    dbLogMetrics.onLagMeasurementEventReceived(timestampExtractor.extract(cdcMonitoringDao.getMonitoringSchemaAndTable(), eventData));
   }
 
   private long extractOffset(Event event) {

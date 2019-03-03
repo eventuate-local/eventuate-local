@@ -30,7 +30,7 @@ echo waiting for Postgres
 ./scripts/wait-for-postgres.sh
 ./scripts/wait-for-services.sh $DOCKER_HOST_IP "actuator/health" 8099
 
-./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test
+./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:test -Dtest.single=JdbcAutoConfigurationIntegrationSyncTest
 
 # Assert healthcheck good
 
@@ -44,6 +44,6 @@ $DOCKER_COMPOSE start postgres zookeeper
 
 ./scripts/wait-for-postgres.sh
 
-./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:cleanTest :eventuate-local-java-jdbc-tests:test
+./gradlew $GRADLE_OPTIONS :eventuate-local-java-jdbc-tests:cleanTest :eventuate-local-java-jdbc-tests:test -Dtest.single=JdbcAutoConfigurationIntegrationSyncTest
 
 $DOCKER_COMPOSE down -v --remove-orphans

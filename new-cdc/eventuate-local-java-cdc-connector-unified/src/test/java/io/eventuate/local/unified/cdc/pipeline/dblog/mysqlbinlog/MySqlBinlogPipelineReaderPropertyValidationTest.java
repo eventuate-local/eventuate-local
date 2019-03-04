@@ -22,9 +22,9 @@ public class MySqlBinlogPipelineReaderPropertyValidationTest extends CommonDbLog
     assertExceptionMessage(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class, "cdcDbPassword must not be null");
 
     propertyBuilder.addString("cdcDbPassword", "rootUser");
-    assertExceptionMessage(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class, "mySqlBinlogClientName must not be null");
+    assertExceptionMessage(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class, "mySqlBinlogClientUniqueId must not be null");
 
-    propertyBuilder.addString("mySqlBinlogClientName", "MySqlBinLog");
+    propertyBuilder.addString("mySqlBinlogClientUniqueId", String.valueOf(System.nanoTime()));
     assertExceptionMessage(propertyBuilder.toString(), MySqlBinlogCdcPipelineReaderProperties.class, "readOldDebeziumDbOffsetStorageTopic must not be null");
 
     propertyBuilder.addString("readOldDebeziumDbOffsetStorageTopic", "false");

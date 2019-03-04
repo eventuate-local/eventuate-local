@@ -27,18 +27,18 @@ public class CdcMonitoringDao {
   }
 
 
-  public void update(long readerId) {
+  public void update(String readerName) {
 
     DaoUtils.handleConnectionLost(
             monitoringRetryAttempts,
             monitoringRetryIntervalInMilliseconds,
             () -> {
               int rows = jdbcTemplate.update(String.format("update %s set last_time = ? where reader_id = ?",
-                      eventuateSchema.qualifyTable("cdc_monitoring")), System.currentTimeMillis(), readerId);
+                      eventuateSchema.qualifyTable("cdc_monitoring")), System.currentTimeMillis(), readerName);
 
               if (rows == 0) {
                 jdbcTemplate.update(String.format("insert into %s (reader_id, last_time) values (?, ?)",
-                        eventuateSchema.qualifyTable("cdc_monitoring")), readerId, System.currentTimeMillis());
+                        eventuateSchema.qualifyTable("cdc_monitoring")), readerName, System.currentTimeMillis());
               }
 
               return null;

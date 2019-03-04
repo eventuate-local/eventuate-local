@@ -11,7 +11,6 @@ import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDbLogC
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.commons.lang.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
@@ -67,8 +66,8 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
             readerProperties.getCdcDbPassword(),
             readerProperties.getDataSourceUrl(),
             createDataSource(readerProperties),
-            readerProperties.getBinlogClientId(),
-            readerProperties.getMySqlBinlogClientName(),
+            readerProperties.getReaderName(),
+            readerProperties.getMySqlBinlogClientUniqueId(),
             readerProperties.getBinlogConnectionTimeoutInMilliseconds(),
             readerProperties.getMaxAttemptsForBinlogConnection(),
             curatorFramework,
@@ -76,7 +75,7 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonDbLogCdcPipelineR
             offsetStoreFactory.create(readerProperties,
                     dataSource,
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
-                    readerProperties.getMySqlBinlogClientName()),
+                    readerProperties.getReaderName()),
             debeziumBinlogOffsetKafkaStore,
             readerProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             readerProperties.getMonitoringRetryIntervalInMilliseconds(),

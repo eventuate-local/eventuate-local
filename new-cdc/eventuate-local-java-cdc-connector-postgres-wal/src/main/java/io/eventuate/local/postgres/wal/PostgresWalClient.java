@@ -49,7 +49,7 @@ public class PostgresWalClient extends DbLogClient {
                            CuratorFramework curatorFramework,
                            String leadershipLockPath,
                            DataSource dataSource,
-                           long uniqueId,
+                           String readerName,
                            long replicationLagMeasuringIntervalInMilliseconds,
                            int monitoringRetryIntervalInMilliseconds,
                            int monitoringRetryAttempts,
@@ -63,7 +63,7 @@ public class PostgresWalClient extends DbLogClient {
             curatorFramework,
             leadershipLockPath,
             dataSource,
-            uniqueId,
+            readerName,
             replicationLagMeasuringIntervalInMilliseconds,
             monitoringRetryIntervalInMilliseconds,
             monitoringRetryAttempts);

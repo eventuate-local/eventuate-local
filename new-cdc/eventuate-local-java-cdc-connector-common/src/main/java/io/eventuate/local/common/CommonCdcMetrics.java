@@ -8,9 +8,9 @@ public class CommonCdcMetrics extends AbstractCdcMetrics {
   private AtomicInteger leader = new AtomicInteger(0);
 
   public CommonCdcMetrics(MeterRegistry meterRegistry,
-                          long binlogClientId) {
+                          String readerName) {
 
-    super(meterRegistry, binlogClientId);
+    super(meterRegistry, readerName);
 
     initMetrics();
   }

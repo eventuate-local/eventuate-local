@@ -2,6 +2,8 @@ package io.eventuate.local.unified.cdc.pipeline.common;
 
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 
+import java.util.UUID;
+
 public class CommonPipelineReaderPropertyValidationTest extends CommonPropertyValidationTest {
   protected  <PROPERTIES extends CdcPipelineReaderProperties> void testCommonRequiredProperties(Class<PROPERTIES> propertyClass,
                                                                                                 PropertyBuilder propertyBuilder) throws Exception {
@@ -21,8 +23,8 @@ public class CommonPipelineReaderPropertyValidationTest extends CommonPropertyVa
     assertExceptionMessage(propertyBuilder.toString(), propertyClass, "leadershipLockPath must not be null");
 
     propertyBuilder.addString("leadershipLockPath", "/eventuate/leader/test");
-    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "binlogClientId must not be null");
+    assertExceptionMessage(propertyBuilder.toString(), propertyClass, "readerName must not be null");
 
-    propertyBuilder.addString("binlogClientId", "1");
+    propertyBuilder.addString("readerName", UUID.randomUUID().toString());
   }
 }

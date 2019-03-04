@@ -9,13 +9,13 @@ import java.util.List;
 public class AbstractCdcMetrics {
   protected MeterRegistry meterRegistry;
   protected List<Tag> tags;
-  protected long binlogClientId;
+  protected String readerName;
 
   public AbstractCdcMetrics(MeterRegistry meterRegistry,
-                            long binlogClientId) {
+                            String readerName) {
 
     this.meterRegistry = meterRegistry;
-    this.binlogClientId = binlogClientId;
-    tags = ImmutableList.of(Tag.of("binlogClientId", String.valueOf(binlogClientId)));
+    this.readerName = readerName;
+    tags = ImmutableList.of(Tag.of("readerName", readerName));
   }
 }

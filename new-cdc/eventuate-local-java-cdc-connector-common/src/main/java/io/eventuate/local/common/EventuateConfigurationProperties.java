@@ -13,8 +13,8 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.offset.storage.topic.name:#{\"offset.storage.topic\"}}")
   private String offsetStorageTopicName;
 
-  @Value("${eventuatelocal.cdc.binlog.client.id:#{null}}")
-  private Long binlogClientId;
+  @Value("${eventuatelocal.cdc.reader.name:#{null}}")
+  private String readerName;
 
   @Value("${eventuatelocal.cdc.source.table.name:#{null}}")
   private String sourceTableName;
@@ -37,8 +37,8 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.read.old.debezium.db.offset.storage.topic:#{null}}")
   private Boolean readOldDebeziumDbOffsetStorageTopic;
 
-  @Value("${eventuatelocal.cdc.mysql.binlog.client.name:#{null}}")
-  private String mySqlBinlogClientName;
+  @Value("${eventuatelocal.cdc.mysql.binlog.client.unique.id:#{null}}")
+  private Long mySqlBinlogClientUniqueId;
 
   @Value("${eventuatelocal.cdc.binlog.connection.timeout.in.milliseconds:#{5000}}")
   private int binlogConnectionTimeoutInMilliseconds;
@@ -79,8 +79,8 @@ public class EventuateConfigurationProperties {
     return offsetStorageTopicName;
   }
 
-  public Long getBinlogClientId() {
-    return binlogClientId;
+  public String getReaderName() {
+    return readerName;
   }
 
   public String getSourceTableName() {
@@ -111,8 +111,8 @@ public class EventuateConfigurationProperties {
     return readOldDebeziumDbOffsetStorageTopic;
   }
 
-  public String getMySqlBinlogClientName() {
-    return mySqlBinlogClientName;
+  public Long getMySqlBinlogClientUniqueId() {
+    return mySqlBinlogClientUniqueId;
   }
 
   public int getBinlogConnectionTimeoutInMilliseconds() {

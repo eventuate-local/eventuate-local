@@ -7,13 +7,13 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
   private String cdcDbUserName;
   private String cdcDbPassword;
   private Boolean readOldDebeziumDbOffsetStorageTopic;
-  private String mySqlBinlogClientName;
+  private Long mySqlBinlogClientUniqueId;
 
   public void validate() {
     super.validate();
     Assert.notNull(cdcDbUserName, "cdcDbUserName must not be null");
     Assert.notNull(cdcDbPassword, "cdcDbPassword must not be null");
-    Assert.notNull(mySqlBinlogClientName, "mySqlBinlogClientName must not be null");
+    Assert.notNull(mySqlBinlogClientUniqueId, "mySqlBinlogClientUniqueId must not be null");
     Assert.notNull(readOldDebeziumDbOffsetStorageTopic,
             "readOldDebeziumDbOffsetStorageTopic must not be null");
   }
@@ -42,11 +42,11 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
     this.readOldDebeziumDbOffsetStorageTopic = readOldDebeziumDbOffsetStorageTopic;
   }
 
-  public String getMySqlBinlogClientName() {
-    return mySqlBinlogClientName;
+  public Long getMySqlBinlogClientUniqueId() {
+    return mySqlBinlogClientUniqueId;
   }
 
-  public void setMySqlBinlogClientName(String mySqlBinlogClientName) {
-    this.mySqlBinlogClientName = mySqlBinlogClientName;
+  public void setMySqlBinlogClientUniqueId(Long mySqlBinlogClientUniqueId) {
+    this.mySqlBinlogClientUniqueId = mySqlBinlogClientUniqueId;
   }
 }

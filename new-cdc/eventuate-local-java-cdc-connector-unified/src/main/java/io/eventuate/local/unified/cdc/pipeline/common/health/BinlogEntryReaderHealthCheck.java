@@ -4,12 +4,6 @@ import io.eventuate.local.common.BinlogEntryReader;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.health.Health;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class BinlogEntryReaderHealthCheck extends AbstractHealthCheck {
 
@@ -35,7 +29,7 @@ public class BinlogEntryReaderHealthCheck extends AbstractHealthCheck {
                   checkDbLogReaderHealth((DbLogClient) binlogEntryReader, builder);
                 }
               } else
-                builder.addDetail(String.format("%s is not the leader", binlogEntryReader.getBinlogClientUniqueId()));
+                builder.addDetail(String.format("%s is not the leader", binlogEntryReader.getReaderName()));
             });
 
   }
@@ -43,10 +37,10 @@ public class BinlogEntryReaderHealthCheck extends AbstractHealthCheck {
   private void checkDbLogReaderHealth(DbLogClient dbLogClient, HealthBuilder builder) {
     if (dbLogClient.isConnected()) {
       builder.addDetail(String.format("Reader with id %s is connected",
-              dbLogClient.getBinlogClientUniqueId()));
+              dbLogClient.getReaderName()));
     } else {
       builder.addError(String.format("Reader with id %s disconnected",
-              dbLogClient.getBinlogClientUniqueId()));
+              dbLogClient.getReaderName()));
     }
 
   }
@@ -58,11 +52,11 @@ public class BinlogEntryReaderHealthCheck extends AbstractHealthCheck {
 
     if (eventNotReceivedInTime) {
       builder.addError(String.format("Reader with id %s has not received message for %s milliseconds",
-              binlogEntryReader.getBinlogClientUniqueId(),
+              binlogEntryReader.getReaderName(),
               age));
     } else
       builder.addDetail(String.format("Reader with id %s received message %s milliseconds ago",
-              binlogEntryReader.getBinlogClientUniqueId(),
+              binlogEntryReader.getReaderName(),
               age));
   }
 }

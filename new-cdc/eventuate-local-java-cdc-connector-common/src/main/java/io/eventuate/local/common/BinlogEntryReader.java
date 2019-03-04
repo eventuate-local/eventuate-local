@@ -23,8 +23,7 @@ public abstract class BinlogEntryReader {
   protected CountDownLatch stopCountDownLatch;
   protected String dataSourceUrl;
   protected DataSource dataSource;
-  protected long binlogClientUniqueId;
-  protected CdcMonitoringDao cdcMonitoringDao;
+  protected String readerName;
   protected CommonCdcMetrics commonCdcMetrics;
 
   private volatile boolean leader;
@@ -36,7 +35,7 @@ public abstract class BinlogEntryReader {
                            String leadershipLockPath,
                            String dataSourceUrl,
                            DataSource dataSource,
-                           long binlogClientUniqueId,
+                           String readerName,
                            int monitoringRetryIntervalInMilliseconds,
                            int monitoringRetryAttempts) {
 
@@ -45,21 +44,15 @@ public abstract class BinlogEntryReader {
     this.leadershipLockPath = leadershipLockPath;
     this.dataSourceUrl = dataSourceUrl;
     this.dataSource = dataSource;
-    this.binlogClientUniqueId = binlogClientUniqueId;
+    this.readerName = readerName;
 
-
-    cdcMonitoringDao = new CdcMonitoringDao(dataSource,
-            new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
-            monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts);
-
-    commonCdcMetrics = new CommonCdcMetrics(meterRegistry, binlogClientUniqueId);
+    commonCdcMetrics = new CommonCdcMetrics(meterRegistry, readerName);
   }
 
   public abstract CdcProcessingStatusService getCdcProcessingStatusService();
 
-  public long getBinlogClientUniqueId() {
-    return binlogClientUniqueId;
+  public String getReaderName() {
+    return readerName;
   }
 
   public boolean isLeader() {

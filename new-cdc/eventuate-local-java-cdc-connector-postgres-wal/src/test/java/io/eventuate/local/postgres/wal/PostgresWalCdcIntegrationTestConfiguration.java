@@ -62,7 +62,7 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
             dataSource,
-            eventuateConfigurationProperties.getBinlogClientId(),
+            eventuateConfigurationProperties.getReaderName(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryAttempts(),

@@ -18,13 +18,13 @@ public class BinlogEntryReaderProvider {
     return clients.get(name.toLowerCase());
   }
 
-  public BinlogEntryReader getReaderById(long id) {
+  public BinlogEntryReader getReaderById(String readerName) {
     return clients
             .values()
             .stream()
-            .filter(reader -> reader.getBinlogClientUniqueId() == id)
+            .filter(reader -> reader.getReaderName().equals(readerName))
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException(String.format("reader with id %s not found", id)));
+            .orElseThrow(() -> new IllegalArgumentException(String.format("reader with name %s not found", readerName)));
   }
 
   public void start() {

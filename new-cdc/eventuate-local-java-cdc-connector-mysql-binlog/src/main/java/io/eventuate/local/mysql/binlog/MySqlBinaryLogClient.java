@@ -28,9 +28,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
           EventType.UPDATE_ROWS,
           EventType.EXT_UPDATE_ROWS);
 
-  private String name;
+  private Long uniqueId;
   private BinaryLogClient client;
-  private long binlogClientUniqueId;
   private final Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
   private String binlogFilename;
   private long offset;
@@ -50,8 +49,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               String dbPassword,
                               String dataSourceUrl,
                               DataSource dataSource,
-                              long binlogClientUniqueId,
-                              String clientName,
+                              String readerName,
+                              Long uniqueId,
                               int connectionTimeoutInMilliseconds,
                               int maxAttemptsForBinlogConnection,
                               CuratorFramework curatorFramework,
@@ -69,26 +68,20 @@ public class MySqlBinaryLogClient extends DbLogClient {
             curatorFramework,
             leadershipLockPath,
             dataSource,
-            binlogClientUniqueId,
+            readerName,
             replicationLagMeasuringIntervalInMilliseconds,
             monitoringRetryIntervalInMilliseconds,
             monitoringRetryAttempts);
 
-    this.binlogClientUniqueId = binlogClientUniqueId;
     this.extractor = new MySqlBinlogEntryExtractor(dataSource);
     this.timestampExtractor = new MySqlBinlogCdcMonitoringTimestampExtractor(dataSource);
-    this.name = clientName;
+    this.uniqueId = uniqueId;
     this.connectionTimeoutInMilliseconds = connectionTimeoutInMilliseconds;
     this.maxAttemptsForBinlogConnection = maxAttemptsForBinlogConnection;
     this.offsetStore = offsetStore;
     this.debeziumBinlogOffsetKafkaStore = debeziumBinlogOffsetKafkaStore;
 
     mySqlCdcProcessingStatusService = new MySqlCdcProcessingStatusService(dataSourceUrl, dbUserName, dbPassword);
-  }
-
-
-  public String getName() {
-    return name;
   }
 
   public Optional<MigrationInfo> getMigrationInfo() {
@@ -116,7 +109,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
     running.set(true);
 
     client = new BinaryLogClient(host, port, dbUserName, dbPassword);
-    client.setServerId(binlogClientUniqueId);
+    client.setServerId(uniqueId);
     client.setKeepAliveInterval(5 * 1000);
 
     Optional<BinlogFileOffset> binlogFileOffset = getStartingBinlogFileOffset();

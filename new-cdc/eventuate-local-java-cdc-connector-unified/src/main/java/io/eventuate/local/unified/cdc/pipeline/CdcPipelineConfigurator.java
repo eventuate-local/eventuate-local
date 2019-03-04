@@ -116,9 +116,9 @@ public class CdcPipelineConfigurator {
 
               String message = migrationInfo
                       .map(info -> String.format("MySqlBinaryLogClient '%s' received '%s' from the debezium storage, migration should be performed",
-                              client.getName(), info.getBinlogFileOffset()))
+                              client.getReaderName(), info.getBinlogFileOffset()))
                       .orElse(String.format("MySqlBinaryLogClient '%s' did not receive offset from the debezium storage, migration should not be performed",
-                              client.getName()));
+                              client.getReaderName()));
 
               logger.info(message);
             });
@@ -160,8 +160,7 @@ public class CdcPipelineConfigurator {
 
     BinlogEntryReader binlogEntryReader = defaultCdcPipelineReaderFactory.create(cdcDefaultPipelineReaderProperties);
 
-    binlogEntryReaderProvider.addReader("default",
-            binlogEntryReader);
+    binlogEntryReaderProvider.addReader(cdcDefaultPipelineReaderProperties.getReaderName(), binlogEntryReader);
   }
 
   private CdcPipeline<?> createCdcPipeline(CdcPipelineProperties properties) {
@@ -174,6 +173,7 @@ public class CdcPipelineConfigurator {
 
     CdcPipelineReaderProperties cdcPipelineReaderProperties = propertyReader
             .convertMapToPropertyClass(properties, CdcPipelineReaderProperties.class);
+    cdcPipelineReaderProperties.setReaderName(name);
     cdcPipelineReaderProperties.validate();
 
     CdcPipelineReaderFactory<? extends CdcPipelineReaderProperties, ? extends BinlogEntryReader> cdcPipelineReaderFactory =
@@ -183,6 +183,7 @@ public class CdcPipelineConfigurator {
 
     CdcPipelineReaderProperties exactCdcPipelineReaderProperties = propertyReader
             .convertMapToPropertyClass(properties, cdcPipelineReaderFactory.propertyClass());
+    exactCdcPipelineReaderProperties.setReaderName(name);
     exactCdcPipelineReaderProperties.validate();
 
     binlogEntryReaderProvider.addReader(name,

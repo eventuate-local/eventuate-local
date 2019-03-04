@@ -1,5 +1,6 @@
 package io.eventuate.local.db.log.common;
 
+import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
@@ -17,6 +18,7 @@ public abstract class DbLogClient extends BinlogEntryReader {
   protected DbLogMetrics dbLogMetrics;
   private boolean checkEntriesForDuplicates;
   protected volatile boolean connected;
+  protected CdcMonitoringDao cdcMonitoringDao;
 
   public DbLogClient(MeterRegistry meterRegistry,
                      String dbUserName,
@@ -25,7 +27,7 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      CuratorFramework curatorFramework,
                      String leadershipLockPath,
                      DataSource dataSource,
-                     long binlogClientUniqueId,
+                     String readerName,
                      long replicationLagMeasuringIntervalInMilliseconds,
                      int monitoringRetryIntervalInMilliseconds,
                      int monitoringRetryAttempts) {
@@ -35,14 +37,19 @@ public abstract class DbLogClient extends BinlogEntryReader {
             leadershipLockPath,
             dataSourceUrl,
             dataSource,
-            binlogClientUniqueId,
+            readerName,
             monitoringRetryIntervalInMilliseconds,
             monitoringRetryAttempts);
 
     dbLogMetrics = new DbLogMetrics(meterRegistry,
             cdcMonitoringDao,
-            binlogClientUniqueId,
+            readerName,
             replicationLagMeasuringIntervalInMilliseconds);
+
+    cdcMonitoringDao = new CdcMonitoringDao(dataSource,
+            new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
+            monitoringRetryIntervalInMilliseconds,
+            monitoringRetryAttempts);
 
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;

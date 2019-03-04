@@ -72,7 +72,7 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
     initCommonDbLogCdcPipelineReaderProperties(mySqlBinlogCdcPipelineReaderProperties);
     initCdcPipelineReaderProperties(mySqlBinlogCdcPipelineReaderProperties);
 
-    mySqlBinlogCdcPipelineReaderProperties.setMySqlBinlogClientName(eventuateConfigurationProperties.getMySqlBinlogClientName());
+    mySqlBinlogCdcPipelineReaderProperties.setMySqlBinlogClientUniqueId(eventuateConfigurationProperties.getMySqlBinlogClientUniqueId());
 
     return mySqlBinlogCdcPipelineReaderProperties;
   }

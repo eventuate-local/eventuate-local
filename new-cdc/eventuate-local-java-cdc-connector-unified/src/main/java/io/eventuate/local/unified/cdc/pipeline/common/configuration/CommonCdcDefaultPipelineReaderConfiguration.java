@@ -30,6 +30,6 @@ public class CommonCdcDefaultPipelineReaderConfiguration {
     cdcPipelineReaderProperties.setDataSourcePassword(dataSourcePassword);
     cdcPipelineReaderProperties.setDataSourceDriverClassName(dataSourceDriverClassName);
     cdcPipelineReaderProperties.setLeadershipLockPath(eventuateConfigurationProperties.getLeadershipLockPath());
-    cdcPipelineReaderProperties.setBinlogClientId(eventuateConfigurationProperties.getBinlogClientId());
+    cdcPipelineReaderProperties.setReaderName(eventuateConfigurationProperties.getReaderName());
   }
 }

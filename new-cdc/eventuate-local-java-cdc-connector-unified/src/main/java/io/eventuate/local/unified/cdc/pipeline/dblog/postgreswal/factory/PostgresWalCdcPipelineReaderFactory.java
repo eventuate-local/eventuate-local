@@ -59,7 +59,7 @@ public class PostgresWalCdcPipelineReaderFactory
             curatorFramework,
             readerProperties.getLeadershipLockPath(),
             dataSource,
-            readerProperties.getBinlogClientId(),
+            readerProperties.getReaderName(),
             readerProperties.getReplicationLagMeasuringIntervalInMilliseconds(),
             readerProperties.getMonitoringRetryIntervalInMilliseconds(),
             readerProperties.getMonitoringRetryAttempts(),

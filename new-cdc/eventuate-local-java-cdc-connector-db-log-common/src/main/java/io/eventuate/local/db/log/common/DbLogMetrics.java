@@ -26,14 +26,14 @@ public class DbLogMetrics extends AbstractCdcMetrics {
 
   public DbLogMetrics(MeterRegistry meterRegistry,
                       CdcMonitoringDao cdcMonitoringDao,
-                      long binlogClientId,
+                      String readerName,
                       long replicationLagMeasuringIntervalInMilliseconds) {
 
-    super(meterRegistry, binlogClientId);
+    super(meterRegistry, readerName);
 
     this.cdcMonitoringDao = cdcMonitoringDao;
     this.replicationLagMeasuringIntervalInMilliseconds = replicationLagMeasuringIntervalInMilliseconds;
-    tags = ImmutableList.of(Tag.of("binlogClientId", String.valueOf(binlogClientId)));
+    tags = ImmutableList.of(Tag.of("readerName", readerName));
 
     initMetrics();
   }
@@ -84,7 +84,7 @@ public class DbLogMetrics extends AbstractCdcMetrics {
     eventPublisherTimer.scheduleAtFixedRate(new TimerTask() {
       @Override
       public void run() {
-        cdcMonitoringDao.update(binlogClientId);
+        cdcMonitoringDao.update(readerName);
       }
     }, 0, replicationLagMeasuringIntervalInMilliseconds);
   }

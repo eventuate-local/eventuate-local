@@ -23,7 +23,7 @@ public class CdcDefaultPipelinePropertiesConfiguration {
     CdcPipelineProperties cdcPipelineProperties = new CdcPipelineProperties();
 
     cdcPipelineProperties.setType("default");
-    cdcPipelineProperties.setReader("default");
+    cdcPipelineProperties.setReader(eventuateConfigurationProperties.getReaderName());
     cdcPipelineProperties.setEventuateDatabaseSchema(eventuateDataBaseSchema);
     cdcPipelineProperties.setSourceTableName(Optional
             .ofNullable(eventuateConfigurationProperties.getSourceTableName())

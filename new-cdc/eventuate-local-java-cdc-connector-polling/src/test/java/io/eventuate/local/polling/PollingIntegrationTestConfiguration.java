@@ -1,7 +1,6 @@
 package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -80,7 +79,7 @@ public class PollingIntegrationTestConfiguration {
             eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
             curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
-            eventuateConfigurationProperties.getBinlogClientId(),
+            eventuateConfigurationProperties.getReaderName(),
             eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
             eventuateConfigurationProperties.getMonitoringRetryAttempts());
   }

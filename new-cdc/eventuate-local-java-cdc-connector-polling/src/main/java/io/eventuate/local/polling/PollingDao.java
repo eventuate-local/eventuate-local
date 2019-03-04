@@ -38,7 +38,7 @@ public class PollingDao extends BinlogEntryReader {
                     int pollingIntervalInMilliseconds,
                     CuratorFramework curatorFramework,
                     String leadershipLockPath,
-                    long uniqueId,
+                    String readerName,
                     int monitoringRetryIntervalInMilliseconds,
                     int monitoringRetryAttempts) {
 
@@ -47,7 +47,7 @@ public class PollingDao extends BinlogEntryReader {
             leadershipLockPath,
             dataSourceUrl,
             dataSource,
-            uniqueId,
+            readerName,
             monitoringRetryIntervalInMilliseconds,
             monitoringRetryAttempts);
 

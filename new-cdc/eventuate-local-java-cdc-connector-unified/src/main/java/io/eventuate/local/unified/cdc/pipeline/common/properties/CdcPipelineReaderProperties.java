@@ -13,7 +13,7 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
   private String dataSourcePassword;
   private String dataSourceDriverClassName;
   private String leadershipLockPath;
-  private Long binlogClientId;
+  private String readerName;
   private int monitoringRetryIntervalInMilliseconds = 500;
   private int monitoringRetryAttempts = 1000;
 
@@ -25,7 +25,7 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
     Assert.notNull(dataSourcePassword, "dataSourcePassword must not be null");
     Assert.notNull(dataSourceDriverClassName, "dataSourceDriverClassName must not be null");
     Assert.notNull(leadershipLockPath, "leadershipLockPath must not be null");
-    Assert.notNull(binlogClientId, "binlogClientId must not be null");
+    Assert.notNull(readerName, "readerName must not be null");
   }
 
   public String getType() {
@@ -76,12 +76,12 @@ public class CdcPipelineReaderProperties implements ValidatableProperties {
     this.dataSourceDriverClassName = dataSourceDriverClassName;
   }
 
-  public Long getBinlogClientId() {
-    return binlogClientId;
+  public String getReaderName() {
+    return readerName;
   }
 
-  public void setBinlogClientId(Long binlogClientId) {
-    this.binlogClientId = binlogClientId;
+  public void setReaderName(String readerName) {
+    this.readerName = readerName;
   }
 
 

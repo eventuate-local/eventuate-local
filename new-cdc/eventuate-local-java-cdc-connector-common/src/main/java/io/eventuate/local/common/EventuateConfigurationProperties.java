@@ -67,6 +67,9 @@ public class EventuateConfigurationProperties {
   @Value("${eventuatelocal.cdc.wait.for.offset.sync.timeout.in.milliseconds:#{60000}}")
   private long waitForOffsetSyncTimeoutInMilliseconds;
 
+  @Value("${eventuatelocal.cdc.offset.store.key:#{null}}")
+  private String offsetStoreKey;
+
   public String getDbUserName() {
     return dbUserName;
   }
@@ -169,5 +172,9 @@ public class EventuateConfigurationProperties {
 
   public long getWaitForOffsetSyncTimeoutInMilliseconds() {
     return waitForOffsetSyncTimeoutInMilliseconds;
+  }
+
+  public String getOffsetStoreKey() {
+    return offsetStoreKey;
   }
 }

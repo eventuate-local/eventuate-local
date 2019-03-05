@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
   protected Logger logger = LoggerFactory.getLogger(getClass());
 
-  private final String dbLogClientName;
+  private final String offsetStoreKey;
 
   private ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
   private EventuateKafkaProducer eventuateKafkaProducer;
@@ -25,14 +25,14 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
   private Optional<BinlogFileOffset> recordToSave = Optional.empty();
 
   public DatabaseOffsetKafkaStore(String dbHistoryTopicName,
-                                  String dbLogClientName,
+                                  String offsetStoreKey,
                                   EventuateKafkaProducer eventuateKafkaProducer,
                                   EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
                                   EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     super(dbHistoryTopicName, eventuateKafkaConfigurationProperties, eventuateKafkaConsumerConfigurationProperties);
 
-    this.dbLogClientName = dbLogClientName;
+    this.offsetStoreKey = offsetStoreKey;
     this.eventuateKafkaProducer = eventuateKafkaProducer;
     scheduledExecutorService.scheduleAtFixedRate(this::scheduledBinlogFilenameAndOffsetUpdate, 5, 5, TimeUnit.SECONDS);
   }
@@ -50,7 +50,7 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
 
   @Override
   protected BinlogFileOffset handleRecord(ConsumerRecord<String, String> record) {
-    if (record.key().equals(dbLogClientName)) {
+    if (record.key().equals(offsetStoreKey)) {
       return JSonMapper.fromJson(record.value(), BinlogFileOffset.class);
     }
     return null;
@@ -66,7 +66,7 @@ public class DatabaseOffsetKafkaStore extends OffsetKafkaStore {
     try {
       eventuateKafkaProducer.send(
               dbHistoryTopicName,
-              dbLogClientName,
+              offsetStoreKey,
               JSonMapper.toJson(
                       binlogFileOffset
               )

@@ -175,6 +175,6 @@ public class EventuateConfigurationProperties {
   }
 
   public String getOffsetStoreKey() {
-    return offsetStoreKey;
+    return offsetStoreKey == null ? readerName : offsetStoreKey;
   }
 }

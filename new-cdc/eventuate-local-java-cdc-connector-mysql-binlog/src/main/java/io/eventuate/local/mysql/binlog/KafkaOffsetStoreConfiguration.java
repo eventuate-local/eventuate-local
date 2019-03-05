@@ -21,9 +21,7 @@ public class KafkaOffsetStoreConfiguration {
                                  EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
 
     return new DatabaseOffsetKafkaStore(eventuateConfigurationProperties.getOffsetStorageTopicName(),
-            eventuateConfigurationProperties.getOffsetStoreKey() == null
-                    ? eventuateConfigurationProperties.getReaderName()
-                    : eventuateConfigurationProperties.getOffsetStoreKey(),
+            eventuateConfigurationProperties.getOffsetStoreKey(),
             eventuateKafkaProducer,
             eventuateKafkaConfigurationProperties,
             eventuateKafkaConsumerConfigurationProperties);

@@ -8,6 +8,7 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
   private String cdcDbPassword;
   private Boolean readOldDebeziumDbOffsetStorageTopic;
   private Long mySqlBinlogClientUniqueId;
+  private String offsetStoreKey;
 
   public void validate() {
     super.validate();
@@ -48,5 +49,13 @@ public class MySqlBinlogCdcPipelineReaderProperties extends CommonDbLogCdcPipeli
 
   public void setMySqlBinlogClientUniqueId(Long mySqlBinlogClientUniqueId) {
     this.mySqlBinlogClientUniqueId = mySqlBinlogClientUniqueId;
+  }
+
+  public String getOffsetStoreKey() {
+    return offsetStoreKey == null ? getReaderName() : offsetStoreKey;
+  }
+
+  public void setOffsetStoreKey(String offsetStoreKey) {
+    this.offsetStoreKey = offsetStoreKey;
   }
 }

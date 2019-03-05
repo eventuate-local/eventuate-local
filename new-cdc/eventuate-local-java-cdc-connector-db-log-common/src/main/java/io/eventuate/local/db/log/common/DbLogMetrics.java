@@ -19,10 +19,9 @@ public class DbLogMetrics extends AbstractCdcMetrics {
   private long replicationLagMeasuringIntervalInMilliseconds;
 
   private DistributionSummary lag;
-  private Number lagAge = new AtomicLong(-1);
   private AtomicInteger connected = new AtomicInteger(0);
 
-  private long lastTimeEventReceived = -1;
+  private volatile long lastTimeEventReceived = -1;
 
   public DbLogMetrics(MeterRegistry meterRegistry,
                       CdcMonitoringDao cdcMonitoringDao,
@@ -91,7 +90,7 @@ public class DbLogMetrics extends AbstractCdcMetrics {
 
   private void initMetrics() {
     if (meterRegistry != null) {
-      lagAge = new Number() {
+      Number lagAge = new Number() {
         @Override
         public int intValue() {
           return -1;

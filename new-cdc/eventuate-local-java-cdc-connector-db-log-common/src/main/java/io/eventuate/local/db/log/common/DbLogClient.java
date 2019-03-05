@@ -41,15 +41,15 @@ public abstract class DbLogClient extends BinlogEntryReader {
             monitoringRetryIntervalInMilliseconds,
             monitoringRetryAttempts);
 
-    dbLogMetrics = new DbLogMetrics(meterRegistry,
-            cdcMonitoringDao,
-            readerName,
-            replicationLagMeasuringIntervalInMilliseconds);
-
     cdcMonitoringDao = new CdcMonitoringDao(dataSource,
             new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),
             monitoringRetryIntervalInMilliseconds,
             monitoringRetryAttempts);
+
+    dbLogMetrics = new DbLogMetrics(meterRegistry,
+            cdcMonitoringDao,
+            readerName,
+            replicationLagMeasuringIntervalInMilliseconds);
 
     this.dbUserName = dbUserName;
     this.dbPassword = dbPassword;

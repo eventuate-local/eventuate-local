@@ -3,6 +3,7 @@ package io.eventuate.local.polling;
 import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -21,6 +22,9 @@ public class PollingDao<EVENT_BEAN, EVENT, ID> {
   private int maxEventsPerPolling;
   private int maxAttemptsForPolling;
   private int pollingRetryIntervalInMilliseconds;
+
+  @Value("${spring.datasource.driver-class-name}")
+  private String dataSourceDriverClassName;
 
   public PollingDao(PollingDataProvider<EVENT_BEAN, EVENT, ID> pollingDataParser,
           DataSource dataSource,
@@ -50,9 +54,15 @@ public class PollingDao<EVENT_BEAN, EVENT, ID> {
 
   public List<EVENT> findEventsToPublish() {
 
-
-    String query = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
-      pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
+    String query;
+    // Use correct SQL dialect for MSSQL
+    if ("com.microsoft.sqlserver.jdbc.SQLServerDriver".equals(dataSourceDriverClassName)) {
+      query = String.format("SELECT TOP (:limit) * FROM %s WHERE %s = 0 ORDER BY %s ASC",
+              pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
+    } else {
+      query = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
+              pollingDataParser.table(), pollingDataParser.publishedField(), pollingDataParser.idField());
+    }
 
     List<EVENT_BEAN> messageBeans = handleConnectionLost(() -> namedParameterJdbcTemplate.query(query,
       ImmutableMap.of("limit", maxEventsPerPolling), new BeanPropertyRowMapper(pollingDataParser.eventBeanClass())));

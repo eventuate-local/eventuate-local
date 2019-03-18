@@ -1,11 +1,8 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
-import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
-import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
-import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
-import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.CommonDbLogCdcPipelineReaderFactory;
+import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.framework.CuratorFramework;
@@ -13,23 +10,17 @@ import org.apache.curator.framework.CuratorFramework;
 import javax.sql.DataSource;
 
 public class PostgresWalCdcPipelineReaderFactory
-        extends CommonDbLogCdcPipelineReaderFactory<PostgresWalCdcPipelineReaderProperties, PostgresWalClient> {
+        extends CommonCdcPipelineReaderFactory<PostgresWalCdcPipelineReaderProperties, PostgresWalClient> {
 
   public static final String TYPE = "postgres-wal";
 
   public PostgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
                                              CuratorFramework curatorFramework,
-                                             BinlogEntryReaderProvider binlogEntryReaderProvider,
-                                             EventuateKafkaConfigurationProperties eventuateKafkaConfigurationProperties,
-                                             EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
-                                             EventuateKafkaProducer eventuateKafkaProducer) {
+                                             BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
     super(meterRegistry,
             curatorFramework,
-            binlogEntryReaderProvider,
-            eventuateKafkaConfigurationProperties,
-            eventuateKafkaConsumerConfigurationProperties,
-            eventuateKafkaProducer);
+            binlogEntryReaderProvider);
   }
 
   @Override

@@ -3,9 +3,8 @@ package io.eventuate.local.polling;
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.common.exception.ConnectionLostHandlerInterruptedException;
+import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
@@ -36,20 +35,16 @@ public class PollingDao extends BinlogEntryReader {
                     int maxAttemptsForPolling,
                     int pollingRetryIntervalInMilliseconds,
                     int pollingIntervalInMilliseconds,
-                    CuratorFramework curatorFramework,
-                    String leadershipLockPath,
-                    String readerName,
-                    int monitoringRetryIntervalInMilliseconds,
-                    int monitoringRetryAttempts) {
+                    String leaderLockId,
+                    LeaderSelectorFactory leaderSelectorFactory,
+                    String readerName) {
 
     super(meterRegistry,
-            curatorFramework,
-            leadershipLockPath,
+            leaderLockId,
+            leaderSelectorFactory,
             dataSourceUrl,
             dataSource,
-            readerName,
-            monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts);
+            readerName);
 
     if (maxEventsPerPolling <= 0) {
       throw new IllegalArgumentException("Max events per polling parameter should be greater than 0.");
@@ -83,19 +78,18 @@ public class PollingDao extends BinlogEntryReader {
     stopCountDownLatch = new CountDownLatch(1);
     running.set(true);
 
-    try {
-      while (running.get()) {
+    while (running.get()) {
+      try {
         binlogEntryHandlers.forEach(this::processEvents);
-
-        try {
-          Thread.sleep(pollingIntervalInMilliseconds);
-        } catch (InterruptedException e) {
-          logger.error(e.getMessage(), e);
-          running.set(false);
-        }
+      } catch (Exception e) {
+        handleProcessingFailException(e);
       }
-    } catch (ConnectionLostHandlerInterruptedException e) {
-      logger.info(e.getMessage(), e);
+
+      try {
+        Thread.sleep(pollingIntervalInMilliseconds);
+      } catch (InterruptedException e) {
+        handleProcessingFailException(e);
+      }
     }
 
     stopCountDownLatch.countDown();

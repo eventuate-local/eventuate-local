@@ -1,6 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.eventuate.local.mysql.binlog.DebeziumBinlogOffsetKafkaStore;
 import io.eventuate.local.mysql.binlog.MySqlBinaryLogClient;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
@@ -8,7 +9,6 @@ import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineR
 import io.eventuate.local.unified.cdc.pipeline.dblog.common.factory.OffsetStoreFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
 import java.util.Optional;
@@ -20,13 +20,13 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonCdcPipelineReader
   private OffsetStoreFactory offsetStoreFactory;
 
   public MySqlBinlogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                             CuratorFramework curatorFramework,
+                                             LeaderSelectorFactory leaderSelectorFactory,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider,
                                              OffsetStoreFactory offsetStoreFactory,
                                              DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
     super(meterRegistry,
-            curatorFramework,
+            leaderSelectorFactory,
             binlogEntryReaderProvider);
 
     this.debeziumOffsetStoreFactory = debeziumOffsetStoreFactory;
@@ -61,8 +61,8 @@ public class MySqlBinlogCdcPipelineReaderFactory extends CommonCdcPipelineReader
             readerProperties.getMySqlBinlogClientUniqueId(),
             readerProperties.getBinlogConnectionTimeoutInMilliseconds(),
             readerProperties.getMaxAttemptsForBinlogConnection(),
-            curatorFramework,
             readerProperties.getLeadershipLockPath(),
+            leaderSelectorFactory,
             offsetStoreFactory.create(readerProperties,
                     dataSource,
                     new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),

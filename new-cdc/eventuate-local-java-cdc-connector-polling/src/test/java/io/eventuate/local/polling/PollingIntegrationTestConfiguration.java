@@ -2,6 +2,8 @@ package io.eventuate.local.polling;
 
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.local.common.*;
+import io.eventuate.local.java.common.util.LeaderSelectorFactory;
+import io.eventuate.local.java.common.util.ZkLeaderSelector;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -68,7 +70,7 @@ public class PollingIntegrationTestConfiguration {
                                @Value("${spring.datasource.url}") String dataSourceURL,
                                EventuateConfigurationProperties eventuateConfigurationProperties,
                                DataSource dataSource,
-                               CuratorFramework curatorFramework) {
+                               LeaderSelectorFactory leaderSelectorFactory) {
 
     return new PollingDao(meterRegistry,
             dataSourceURL,
@@ -77,11 +79,9 @@ public class PollingIntegrationTestConfiguration {
             eventuateConfigurationProperties.getMaxAttemptsForPolling(),
             eventuateConfigurationProperties.getPollingRetryIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
-            curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
-            eventuateConfigurationProperties.getReaderName(),
-            eventuateConfigurationProperties.getMonitoringRetryIntervalInMilliseconds(),
-            eventuateConfigurationProperties.getMonitoringRetryAttempts());
+            leaderSelectorFactory,
+            eventuateConfigurationProperties.getReaderName());
   }
 
   @Bean
@@ -93,6 +93,12 @@ public class PollingIntegrationTestConfiguration {
             .build();
     client.start();
     return client;
+  }
+
+  @Bean
+  public LeaderSelectorFactory connectorLeaderSelectorFactory(CuratorFramework curatorFramework) {
+    return (lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback) ->
+            new ZkLeaderSelector(curatorFramework, lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback);
   }
 
   @Bean

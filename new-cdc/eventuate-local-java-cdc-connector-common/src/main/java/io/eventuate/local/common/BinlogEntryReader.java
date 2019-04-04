@@ -1,14 +1,15 @@
 package io.eventuate.local.common;
 
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.local.java.common.util.CommonLeaderSelector;
+import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,8 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class BinlogEntryReader {
   protected Logger logger = LoggerFactory.getLogger(getClass());
   protected MeterRegistry meterRegistry;
-  protected CuratorFramework curatorFramework;
-  protected String leadershipLockPath;
+  protected String leaderLockId;
+  protected LeaderSelectorFactory leaderSelectorFactory;
   protected List<BinlogEntryHandler> binlogEntryHandlers = new CopyOnWriteArrayList<>();
   protected AtomicBoolean running = new AtomicBoolean(false);
   protected CountDownLatch stopCountDownLatch;
@@ -28,20 +29,18 @@ public abstract class BinlogEntryReader {
 
   private volatile boolean leader;
   private volatile long lastEventTime = System.currentTimeMillis();
-  private LeaderSelector leaderSelector;
+  private CommonLeaderSelector leaderSelector;
 
   public BinlogEntryReader(MeterRegistry meterRegistry,
-                           CuratorFramework curatorFramework,
-                           String leadershipLockPath,
+                           String leaderLockId,
+                           LeaderSelectorFactory leaderSelectorFactory,
                            String dataSourceUrl,
                            DataSource dataSource,
-                           String readerName,
-                           int monitoringRetryIntervalInMilliseconds,
-                           int monitoringRetryAttempts) {
+                           String readerName) {
 
     this.meterRegistry = meterRegistry;
-    this.curatorFramework = curatorFramework;
-    this.leadershipLockPath = leadershipLockPath;
+    this.leaderLockId = leaderLockId;
+    this.leaderSelectorFactory = leaderSelectorFactory;
     this.dataSourceUrl = dataSourceUrl;
     this.dataSource = dataSource;
     this.readerName = readerName;
@@ -80,14 +79,11 @@ public abstract class BinlogEntryReader {
   }
 
   public void start() {
-    leaderSelector = new LeaderSelector(curatorFramework, leadershipLockPath,
-            new EventuateLeaderSelectorListener(this::leaderStart, this::leaderStop));
-
-    leaderSelector.start();
+    leaderSelector = leaderSelectorFactory.create(leaderLockId, UUID.randomUUID().toString(), this::leaderStart, this::leaderStop);
   }
 
   public void stop() {
-    leaderSelector.close();
+    leaderSelector.stop();
     leaderStop();
     binlogEntryHandlers.clear();
   }
@@ -123,5 +119,11 @@ public abstract class BinlogEntryReader {
 
   protected void onActivity() {
     lastEventTime = System.currentTimeMillis();
+  }
+
+  protected void handleProcessingFailException(Exception e) {
+    logger.error(e.getMessage(), e);
+    stopCountDownLatch.countDown();
+    throw new RuntimeException(e);
   }
 }

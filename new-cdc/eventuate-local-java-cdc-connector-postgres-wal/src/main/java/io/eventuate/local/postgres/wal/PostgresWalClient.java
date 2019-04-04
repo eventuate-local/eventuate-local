@@ -1,13 +1,12 @@
 package io.eventuate.local.postgres.wal;
 
 import io.eventuate.javaclient.commonimpl.JSonMapper;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.CdcProcessingStatusService;
+import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 import org.postgresql.PGConnection;
 import org.postgresql.PGProperty;
 import org.postgresql.replication.LogSequenceNumber;
@@ -46,8 +45,8 @@ public class PostgresWalClient extends DbLogClient {
                            int maxAttemptsForBinlogConnection,
                            int replicationStatusIntervalInMilliseconds,
                            String replicationSlotName,
-                           CuratorFramework curatorFramework,
-                           String leadershipLockPath,
+                           String leaderLockId,
+                           LeaderSelectorFactory leaderSelectorFactory,
                            DataSource dataSource,
                            String readerName,
                            long replicationLagMeasuringIntervalInMilliseconds,
@@ -60,8 +59,8 @@ public class PostgresWalClient extends DbLogClient {
             user,
             password,
             url,
-            curatorFramework,
-            leadershipLockPath,
+            leaderLockId,
+            leaderSelectorFactory,
             dataSource,
             readerName,
             replicationLagMeasuringIntervalInMilliseconds,
@@ -106,17 +105,15 @@ public class PostgresWalClient extends DbLogClient {
         onDisconnected();
         logger.error("connection to posgres wal failed");
         if (i == maxAttemptsForBinlogConnection) {
-          logger.error("connection attempts exceeded");
-          throw new RuntimeException(e);
+          handleProcessingFailException(e);
         }
         try {
           Thread.sleep(connectionTimeoutInMilliseconds);
         } catch (InterruptedException ex) {
-          logger.error(e.getMessage(), e);
-          running.set(false);
-          stopCountDownLatch.countDown();
-          throw new RuntimeException(e);
+          handleProcessingFailException(e);
         }
+      } catch (Exception e) {
+        handleProcessingFailException(e);
       }
     }
     stopCountDownLatch.countDown();
@@ -160,8 +157,7 @@ public class PostgresWalClient extends DbLogClient {
         try {
           TimeUnit.MILLISECONDS.sleep(walIntervalInMilliseconds);
         } catch (InterruptedException e) {
-          logger.error(e.getMessage(), e);
-          running.set(false);
+          handleProcessingFailException(e);
         }
         continue;
       }
@@ -212,15 +208,24 @@ public class PostgresWalClient extends DbLogClient {
       saveOffsetOfLastProcessedEvent();
     }
 
+    stopCountDownLatch.countDown();
+  }
+
+  @Override
+  protected void leaderStop() {
+    super.leaderStop();
+
     try {
       stream.close();
-      connection.close();
-    } catch (SQLException e) {
+    } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      throw new RuntimeException(e);
     }
 
-    stopCountDownLatch.countDown();
+    try {
+      connection.close();
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+    }
   }
 
   private void checkMonitoringChange(PostgresWalMessage postgresWalMessage) {

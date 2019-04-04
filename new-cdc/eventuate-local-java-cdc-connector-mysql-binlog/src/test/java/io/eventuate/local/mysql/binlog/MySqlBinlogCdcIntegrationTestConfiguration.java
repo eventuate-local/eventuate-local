@@ -4,6 +4,8 @@ import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
+import io.eventuate.local.java.common.util.LeaderSelectorFactory;
+import io.eventuate.local.java.common.util.ZkLeaderSelector;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -48,11 +50,17 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
+  public LeaderSelectorFactory connectorLeaderSelectorFactory(CuratorFramework curatorFramework) {
+    return (lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback) ->
+            new ZkLeaderSelector(curatorFramework, lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback);
+  }
+
+  @Bean
   public MySqlBinaryLogClient mySqlBinaryLogClient(@Autowired MeterRegistry meterRegistry,
                                                    @Value("${spring.datasource.url}") String dataSourceURL,
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                   CuratorFramework curatorFramework,
+                                                   LeaderSelectorFactory leaderSelectorFactory,
                                                    OffsetStore offsetStore) {
 
     return new MySqlBinaryLogClient(
@@ -65,8 +73,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getMySqlBinlogClientUniqueId(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
-            curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
+            leaderSelectorFactory,
             offsetStore,
             Optional.empty(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),

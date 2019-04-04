@@ -3,6 +3,8 @@ package io.eventuate.local.unified.cdc.pipeline.common.configuration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DatabaseOffsetKafkaStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
+import io.eventuate.local.java.common.util.LeaderSelectorFactory;
+import io.eventuate.local.java.common.util.ZkLeaderSelector;
 import io.eventuate.local.java.kafka.EventuateKafkaPropertiesConfiguration;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -118,6 +120,12 @@ public class CommonCdcPipelineConfiguration {
   public CuratorFramework curatorFramework(EventuateLocalZookeperConfigurationProperties eventuateLocalZookeperConfigurationProperties) {
     String connectionString = eventuateLocalZookeperConfigurationProperties.getConnectionString();
     return makeStartedCuratorClient(connectionString);
+  }
+
+  @Bean
+  public LeaderSelectorFactory connectorLeaderSelectorFactory(CuratorFramework curatorFramework) {
+    return (lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback) ->
+            new ZkLeaderSelector(curatorFramework, lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback);
   }
 
   @Bean

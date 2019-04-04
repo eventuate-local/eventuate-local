@@ -1,0 +1,8 @@
+dependencies {
+    compile "org.slf4j:slf4j-api:1.7.18"
+    compile 'org.apache.curator:curator-recipes:2.11.0'
+}
+
+test {
+    forkEvery 1
+}

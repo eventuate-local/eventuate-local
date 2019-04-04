@@ -3,6 +3,8 @@ package io.eventuate.local.postgres.wal;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
+import io.eventuate.local.java.common.util.LeaderSelectorFactory;
+import io.eventuate.local.java.common.util.ZkLeaderSelector;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
@@ -42,13 +44,19 @@ public class PostgresWalCdcIntegrationTestConfiguration {
   }
 
   @Bean
+  public LeaderSelectorFactory connectorLeaderSelectorFactory(CuratorFramework curatorFramework) {
+    return (lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback) ->
+            new ZkLeaderSelector(curatorFramework, lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback);
+  }
+
+  @Bean
   public PostgresWalClient postgresWalClient(MeterRegistry meterRegistry,
                                              @Value("${spring.datasource.url}") String dbUrl,
                                              @Value("${spring.datasource.username}") String dbUserName,
                                              @Value("${spring.datasource.password}") String dbPassword,
                                              DataSource dataSource,
                                              EventuateConfigurationProperties eventuateConfigurationProperties,
-                                             CuratorFramework curatorFramework) {
+                                             LeaderSelectorFactory leaderSelectorFactory) {
 
     return new PostgresWalClient(meterRegistry,
             dbUrl,
@@ -59,8 +67,8 @@ public class PostgresWalCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
             eventuateConfigurationProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             eventuateConfigurationProperties.getPostgresReplicationSlotName(),
-            curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
+            leaderSelectorFactory,
             dataSource,
             eventuateConfigurationProperties.getReaderName(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),

@@ -1,21 +1,21 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.factory;
 
+import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.eventuate.local.polling.PollingDao;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 
 public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFactory<PollingPipelineReaderProperties, PollingDao> {
 
   public static final String TYPE = "polling";
 
   public PollingCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                         CuratorFramework curatorFramework,
+                                         LeaderSelectorFactory leaderSelectorFactory,
                                          BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
-    super(meterRegistry, curatorFramework, binlogEntryReaderProvider);
+    super(meterRegistry, leaderSelectorFactory, binlogEntryReaderProvider);
   }
 
   @Override
@@ -33,11 +33,9 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
             readerProperties.getMaxAttemptsForPolling(),
             readerProperties.getPollingRetryIntervalInMilliseconds(),
             readerProperties.getPollingIntervalInMilliseconds(),
-            curatorFramework,
             readerProperties.getLeadershipLockPath(),
-            readerProperties.getReaderName(),
-            readerProperties.getMonitoringRetryIntervalInMilliseconds(),
-            readerProperties.getMonitoringRetryAttempts());
+            leaderSelectorFactory,
+            readerProperties.getReaderName());
   }
 
   @Override

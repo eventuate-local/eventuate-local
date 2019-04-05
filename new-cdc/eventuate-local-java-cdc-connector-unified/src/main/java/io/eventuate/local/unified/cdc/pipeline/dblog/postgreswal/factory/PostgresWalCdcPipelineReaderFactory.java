@@ -1,6 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
-import io.eventuate.local.java.common.util.LeaderSelectorFactory;
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;

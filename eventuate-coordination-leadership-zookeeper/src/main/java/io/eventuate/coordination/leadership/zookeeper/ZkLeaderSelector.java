@@ -1,5 +1,6 @@
-package io.eventuate.local.java.common.util;
+package io.eventuate.coordination.leadership.zookeeper;
 
+import io.eventuate.coordination.leadership.EventuateLeaderSelector;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.CancelLeadershipException;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
@@ -10,10 +11,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
-public class ZkLeaderSelector implements CommonLeaderSelector {
+public class ZkLeaderSelector implements EventuateLeaderSelector {
   private Logger logger = LoggerFactory.getLogger(getClass());
 
+  private CuratorFramework curatorFramework;
+  private String lockId;
   private String leaderId;
+  private Runnable leaderSelectedCallback;
+  private Runnable leaderRemovedCallback;
   private LeaderSelector leaderSelector;
 
   public ZkLeaderSelector(CuratorFramework curatorFramework,
@@ -29,8 +34,15 @@ public class ZkLeaderSelector implements CommonLeaderSelector {
                           String leaderId,
                           Runnable leaderSelectedCallback,
                           Runnable leaderRemovedCallback) {
+    this.curatorFramework = curatorFramework;
+    this.lockId = lockId;
     this.leaderId = leaderId;
+    this.leaderSelectedCallback = leaderSelectedCallback;
+    this.leaderRemovedCallback = leaderRemovedCallback;
+  }
 
+  @Override
+  public void start() {
     leaderSelector = new LeaderSelector(curatorFramework, lockId, new LeaderSelectorListener() {
       @Override
       public void takeLeadership(CuratorFramework client) {

@@ -1,7 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory;
 
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.eventuate.local.mysql.binlog.DebeziumBinlogOffsetKafkaStore;
 import io.eventuate.local.mysql.binlog.MySqlBinaryLogClient;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;

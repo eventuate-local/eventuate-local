@@ -1,9 +1,9 @@
 package io.eventuate.local.postgres.wal;
 
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.local.common.BinlogEntry;
 import io.eventuate.local.common.CdcProcessingStatusService;
-import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.eventuate.local.common.SchemaAndTable;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.micrometer.core.instrument.MeterRegistry;

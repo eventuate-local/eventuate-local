@@ -1,9 +1,9 @@
 package io.eventuate.local.polling;
 
 import com.google.common.collect.ImmutableMap;
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;

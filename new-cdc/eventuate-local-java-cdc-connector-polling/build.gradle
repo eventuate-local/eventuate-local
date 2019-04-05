@@ -1,5 +1,6 @@
 dependencies {
     compile project(":new-cdc:eventuate-local-java-cdc-connector-common")
+    compile project(":eventuate-coordination-leadership-zookeeper")
 
     testCompile project(":eventuate-local-java-test-util")
     testCompile project(":new-cdc:eventuate-local-java-cdc-connector-test-util")

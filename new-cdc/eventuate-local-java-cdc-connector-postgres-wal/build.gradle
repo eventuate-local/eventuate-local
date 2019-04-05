@@ -1,5 +1,6 @@
 dependencies {
     compile project(":new-cdc:eventuate-local-java-cdc-connector-db-log-common")
+    compile project(":eventuate-coordination-leadership-zookeeper")
 
     compile ('org.postgresql:postgresql:42.1.4') {
         exclude group: "org.slf4j", module: "slf4j-simple"

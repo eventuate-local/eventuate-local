@@ -6,11 +6,11 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.google.common.collect.ImmutableSet;
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
-import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 
 import javax.sql.DataSource;

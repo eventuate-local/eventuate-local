@@ -1,11 +1,11 @@
 package io.eventuate.local.mysql.binlog;
 
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
+import io.eventuate.coordination.leadership.zookeeper.ZkLeaderSelector;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.eventuate.local.java.common.broker.DataProducerFactory;
-import io.eventuate.local.java.common.util.LeaderSelectorFactory;
-import io.eventuate.local.java.common.util.ZkLeaderSelector;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;

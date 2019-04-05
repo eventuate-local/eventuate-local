@@ -1,8 +1,8 @@
 package io.eventuate.local.common;
 
+import io.eventuate.coordination.leadership.EventuateLeaderSelector;
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.local.java.common.util.CommonLeaderSelector;
-import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public abstract class BinlogEntryReader {
 
   private volatile boolean leader;
   private volatile long lastEventTime = System.currentTimeMillis();
-  private CommonLeaderSelector leaderSelector;
+  private EventuateLeaderSelector leaderSelector;
 
   public BinlogEntryReader(MeterRegistry meterRegistry,
                            String leaderLockId,
@@ -80,6 +80,7 @@ public abstract class BinlogEntryReader {
 
   public void start() {
     leaderSelector = leaderSelectorFactory.create(leaderLockId, UUID.randomUUID().toString(), this::leaderStart, this::leaderStop);
+    leaderSelector.start();
   }
 
   public void stop() {

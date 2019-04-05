@@ -1,8 +1,8 @@
 package io.eventuate.local.db.log.common;
 
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
-import io.eventuate.local.java.common.util.LeaderSelectorFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 
 import javax.sql.DataSource;

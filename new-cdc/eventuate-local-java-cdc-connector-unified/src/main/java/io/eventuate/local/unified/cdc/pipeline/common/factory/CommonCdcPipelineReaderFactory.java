@@ -1,11 +1,11 @@
 package io.eventuate.local.unified.cdc.pipeline.common.factory;
 
 import com.zaxxer.hikari.HikariDataSource;
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.local.common.BinlogEntryReader;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
 
@@ -13,15 +13,15 @@ abstract public class CommonCdcPipelineReaderFactory<PROPERTIES extends CdcPipel
         implements CdcPipelineReaderFactory<PROPERTIES, READER> {
 
   protected MeterRegistry meterRegistry;
-  protected CuratorFramework curatorFramework;
+  protected LeaderSelectorFactory leaderSelectorFactory;
   protected BinlogEntryReaderProvider binlogEntryReaderProvider;
 
 
   public CommonCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                        CuratorFramework curatorFramework,
+                                        LeaderSelectorFactory leaderSelectorFactory,
                                         BinlogEntryReaderProvider binlogEntryReaderProvider) {
     this.meterRegistry = meterRegistry;
-    this.curatorFramework = curatorFramework;
+    this.leaderSelectorFactory = leaderSelectorFactory;
     this.binlogEntryReaderProvider = binlogEntryReaderProvider;
   }
 

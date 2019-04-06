@@ -6,12 +6,12 @@ import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
 import com.google.common.collect.ImmutableSet;
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.DbLogClient;
 import io.eventuate.local.db.log.common.OffsetKafkaStore;
 import io.eventuate.local.db.log.common.OffsetStore;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -53,8 +53,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
                               Long uniqueId,
                               int connectionTimeoutInMilliseconds,
                               int maxAttemptsForBinlogConnection,
-                              CuratorFramework curatorFramework,
-                              String leadershipLockPath,
+                              String leaderLockId,
+                              LeaderSelectorFactory leaderSelectorFactory,
                               OffsetStore offsetStore,
                               Optional<DebeziumBinlogOffsetKafkaStore> debeziumBinlogOffsetKafkaStore,
                               long replicationLagMeasuringIntervalInMilliseconds,
@@ -65,8 +65,8 @@ public class MySqlBinaryLogClient extends DbLogClient {
             dbUserName,
             dbPassword,
             dataSourceUrl,
-            curatorFramework,
-            leadershipLockPath,
+            leaderLockId,
+            leaderSelectorFactory,
             dataSource,
             readerName,
             replicationLagMeasuringIntervalInMilliseconds,
@@ -183,7 +183,7 @@ public class MySqlBinaryLogClient extends DbLogClient {
     try {
       stopCountDownLatch.await();
     } catch (InterruptedException e) {
-      logger.error(e.getMessage(), e);
+      handleProcessingFailException(e);
     }
   }
 
@@ -284,16 +284,16 @@ public class MySqlBinaryLogClient extends DbLogClient {
         onDisconnected();
         logger.error("connection to mysql binlog failed");
         if (i == maxAttemptsForBinlogConnection) {
-          logger.error("connection attempts exceeded");
-          throw new RuntimeException(e);
+          handleProcessingFailException(e);
         }
         try {
           Thread.sleep(connectionTimeoutInMilliseconds);
         } catch (InterruptedException ex) {
-          running.set(false);
-          stopCountDownLatch.countDown();
-          return;
+          handleProcessingFailException(ex);
         }
+      }
+      catch (Exception e) {
+        handleProcessingFailException(e);
       }
     }
   }

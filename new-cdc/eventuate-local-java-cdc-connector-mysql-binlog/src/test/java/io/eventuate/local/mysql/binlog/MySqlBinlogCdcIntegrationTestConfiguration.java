@@ -1,5 +1,7 @@
 package io.eventuate.local.mysql.binlog;
 
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
+import io.eventuate.coordination.leadership.zookeeper.ZkLeaderSelector;
 import io.eventuate.javaclient.driver.EventuateDriverConfiguration;
 import io.eventuate.local.common.*;
 import io.eventuate.local.db.log.common.OffsetStore;
@@ -48,11 +50,17 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
   }
 
   @Bean
+  public LeaderSelectorFactory connectorLeaderSelectorFactory(CuratorFramework curatorFramework) {
+    return (lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback) ->
+            new ZkLeaderSelector(curatorFramework, lockId, leaderId, leaderSelectedCallback, leaderRemovedCallback);
+  }
+
+  @Bean
   public MySqlBinaryLogClient mySqlBinaryLogClient(@Autowired MeterRegistry meterRegistry,
                                                    @Value("${spring.datasource.url}") String dataSourceURL,
                                                    DataSource dataSource,
                                                    EventuateConfigurationProperties eventuateConfigurationProperties,
-                                                   CuratorFramework curatorFramework,
+                                                   LeaderSelectorFactory leaderSelectorFactory,
                                                    OffsetStore offsetStore) {
 
     return new MySqlBinaryLogClient(
@@ -65,8 +73,8 @@ public class MySqlBinlogCdcIntegrationTestConfiguration {
             eventuateConfigurationProperties.getMySqlBinlogClientUniqueId(),
             eventuateConfigurationProperties.getBinlogConnectionTimeoutInMilliseconds(),
             eventuateConfigurationProperties.getMaxAttemptsForBinlogConnection(),
-            curatorFramework,
             eventuateConfigurationProperties.getLeadershipLockPath(),
+            leaderSelectorFactory,
             offsetStore,
             Optional.empty(),
             eventuateConfigurationProperties.getReplicationLagMeasuringIntervalInMilliseconds(),

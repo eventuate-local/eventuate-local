@@ -1,9 +1,9 @@
 package io.eventuate.local.db.log.common;
 
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
 import java.util.Optional;
@@ -24,8 +24,8 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      String dbUserName,
                      String dbPassword,
                      String dataSourceUrl,
-                     CuratorFramework curatorFramework,
-                     String leadershipLockPath,
+                     String leaderLockId,
+                     LeaderSelectorFactory leaderSelectorFactory,
                      DataSource dataSource,
                      String readerName,
                      long replicationLagMeasuringIntervalInMilliseconds,
@@ -33,13 +33,11 @@ public abstract class DbLogClient extends BinlogEntryReader {
                      int monitoringRetryAttempts) {
 
     super(meterRegistry,
-            curatorFramework,
-            leadershipLockPath,
+            leaderLockId,
+            leaderSelectorFactory,
             dataSourceUrl,
             dataSource,
-            readerName,
-            monitoringRetryIntervalInMilliseconds,
-            monitoringRetryAttempts);
+            readerName);
 
     cdcMonitoringDao = new CdcMonitoringDao(dataSource,
             new EventuateSchema(EventuateSchema.DEFAULT_SCHEMA),

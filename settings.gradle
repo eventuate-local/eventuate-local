@@ -5,6 +5,8 @@ include 'eventuate-local-java-jdbc-autoconfigure'
 include 'eventuate-local-java-jdbc-tests-common'
 include 'eventuate-local-java-jdbc-tests'
 include 'eventuate-local-java-common-broker'
+include 'eventuate-coordination-leadership'
+include 'eventuate-coordination-leadership-zookeeper'
 include 'eventuate-local-java-kafka'
 include 'eventuate-local-java-migration'
 

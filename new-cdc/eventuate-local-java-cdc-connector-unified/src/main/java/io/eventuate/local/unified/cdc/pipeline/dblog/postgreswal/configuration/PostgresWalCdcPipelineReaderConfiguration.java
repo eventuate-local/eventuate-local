@@ -1,5 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.configuration;
 
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.common.properties.CdcPipelineReaderProperties;
@@ -7,7 +8,6 @@ import io.eventuate.local.unified.cdc.pipeline.dblog.common.configuration.Common
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory.PostgresWalCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -17,22 +17,22 @@ public class PostgresWalCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
 
   @Bean("eventuateLocalPostgresWalCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory postgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                                                      CuratorFramework curatorFramework,
+                                                                      LeaderSelectorFactory leaderSelectorFactory,
                                                                       BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
     return new PostgresWalCdcPipelineReaderFactory(meterRegistry,
-            curatorFramework,
+            leaderSelectorFactory,
             binlogEntryReaderProvider);
   }
 
   @Profile("PostgresWal")
   @Bean("defaultCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory defaultPostgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                                                             CuratorFramework curatorFramework,
+                                                                             LeaderSelectorFactory leaderSelectorFactory,
                                                                              BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
     return new PostgresWalCdcPipelineReaderFactory(meterRegistry,
-            curatorFramework,
+            leaderSelectorFactory,
             binlogEntryReaderProvider);
   }
 

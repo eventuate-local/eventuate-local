@@ -1,11 +1,11 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.factory;
 
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.local.postgres.wal.PostgresWalClient;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.postgreswal.properties.PostgresWalCdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 
 import javax.sql.DataSource;
 
@@ -15,11 +15,11 @@ public class PostgresWalCdcPipelineReaderFactory
   public static final String TYPE = "postgres-wal";
 
   public PostgresWalCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                             CuratorFramework curatorFramework,
+                                             LeaderSelectorFactory leaderSelectorFactory,
                                              BinlogEntryReaderProvider binlogEntryReaderProvider) {
 
     super(meterRegistry,
-            curatorFramework,
+            leaderSelectorFactory,
             binlogEntryReaderProvider);
   }
 
@@ -47,8 +47,8 @@ public class PostgresWalCdcPipelineReaderFactory
             readerProperties.getMaxAttemptsForBinlogConnection(),
             readerProperties.getPostgresReplicationStatusIntervalInMilliseconds(),
             readerProperties.getPostgresReplicationSlotName(),
-            curatorFramework,
             readerProperties.getLeadershipLockPath(),
+            leaderSelectorFactory,
             dataSource,
             readerProperties.getReaderName(),
             readerProperties.getReplicationLagMeasuringIntervalInMilliseconds(),

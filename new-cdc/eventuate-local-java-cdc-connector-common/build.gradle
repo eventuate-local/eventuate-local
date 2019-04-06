@@ -10,6 +10,7 @@ dependencies {
     compile 'io.micrometer:micrometer-registry-prometheus:1.1.1'
     compile project(":eventuate-local-java-jdbc")
     compile project(":eventuate-local-java-common")
+    compile project(":eventuate-coordination-leadership")
 
     testCompile "junit:junit:4.11"
 }

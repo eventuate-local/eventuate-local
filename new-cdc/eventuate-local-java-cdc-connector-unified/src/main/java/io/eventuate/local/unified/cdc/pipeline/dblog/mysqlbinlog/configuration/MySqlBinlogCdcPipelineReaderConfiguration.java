@@ -1,5 +1,6 @@
 package io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.configuration;
 
+import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.local.common.MySqlBinlogCondition;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CdcPipelineReaderFactory;
@@ -10,7 +11,6 @@ import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.Debeziu
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.factory.MySqlBinlogCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.dblog.mysqlbinlog.properties.MySqlBinlogCdcPipelineReaderProperties;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.curator.framework.CuratorFramework;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -20,13 +20,13 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
 
   @Bean("eventuateLocalMySqlBinlogCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory mySqlBinlogCdcPipelineReaderFactory(MeterRegistry meterRegistry,
-                                                                      CuratorFramework curatorFramework,
+                                                                      LeaderSelectorFactory leaderSelectorFactory,
                                                                       BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                       OffsetStoreFactory offsetStoreFactory,
                                                                       DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
     return new MySqlBinlogCdcPipelineReaderFactory(meterRegistry,
-            curatorFramework,
+            leaderSelectorFactory,
             binlogEntryReaderProvider,
             offsetStoreFactory,
             debeziumOffsetStoreFactory);
@@ -35,13 +35,13 @@ public class MySqlBinlogCdcPipelineReaderConfiguration extends CommonDbLogCdcDef
   @Conditional(MySqlBinlogCondition.class)
   @Bean("defaultCdcPipelineReaderFactory")
   public CdcPipelineReaderFactory defaultMySqlBinlogCdcPipelineFactory(MeterRegistry meterRegistry,
-                                                                       CuratorFramework curatorFramework,
+                                                                       LeaderSelectorFactory leaderSelectorFactory,
                                                                        BinlogEntryReaderProvider binlogEntryReaderProvider,
                                                                        OffsetStoreFactory offsetStoreFactory,
                                                                        DebeziumOffsetStoreFactory debeziumOffsetStoreFactory) {
 
     return new MySqlBinlogCdcPipelineReaderFactory(meterRegistry,
-            curatorFramework,
+            leaderSelectorFactory,
             binlogEntryReaderProvider,
             offsetStoreFactory,
             debeziumOffsetStoreFactory);

@@ -2,6 +2,7 @@ package io.eventuate.local.polling;
 
 import io.eventuate.local.common.CdcProcessingStatus;
 import io.eventuate.local.common.CdcProcessingStatusService;
+import io.eventuate.sql.dialect.EventuateSqlDialect;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -12,10 +13,12 @@ public class PollingProcessingStatusService implements CdcProcessingStatusServic
   private JdbcTemplate jdbcTemplate;
   private String publishedField;
   private Set<String> tables = new HashSet<>();
+  private EventuateSqlDialect eventuateSqlDialect;
 
-  public PollingProcessingStatusService(DataSource dataSource, String publishedField) {
+  public PollingProcessingStatusService(DataSource dataSource, String publishedField, EventuateSqlDialect eventuateSqlDialect) {
     jdbcTemplate = new JdbcTemplate(dataSource);
     this.publishedField = publishedField;
+    this.eventuateSqlDialect = eventuateSqlDialect;
   }
 
   public void addTable(String table) {
@@ -36,7 +39,7 @@ public class PollingProcessingStatusService implements CdcProcessingStatusServic
     return tables
             .stream()
             .allMatch(table ->
-                    jdbcTemplate.queryForObject(String.format("select count(*) from %s where %s = 0 limit 1",
-                            table, publishedField), Long.class) == 0);
+                    jdbcTemplate.queryForObject(eventuateSqlDialect.addLimitToSql(String.format("select count(*) from %s where %s = 0",
+                            table, publishedField), "1"), Long.class) == 0);
   }
 }

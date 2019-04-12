@@ -12,6 +12,8 @@ import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.java.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.local.java.kafka.EventuateKafkaPropertiesConfiguration;
 import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.sql.dialect.SqlDialectConfiguration;
+import io.eventuate.sql.dialect.SqlDialectSelector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

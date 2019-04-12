@@ -127,7 +127,8 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   }
 
   private SaveUpdateResult insertEventIntoOtherSchema(String otherSchemaName) {
-    EventuateLocalJdbcAccess eventuateLocalJdbcAccess = new EventuateLocalJdbcAccess(jdbcTemplate, new EventuateSchema(otherSchemaName));
+    EventuateLocalJdbcAccess eventuateLocalJdbcAccess = new EventuateLocalJdbcAccess(jdbcTemplate,
+            new EventuateSchema(otherSchemaName));
 
     return eventuateLocalJdbcAccess.save(Account.class.getName(), Collections.singletonList(new EventTypeAndData("Other-" + AccountCreatedEvent.class.getTypeName(), generateAccountCreatedEvent(), Optional.empty())), Optional.empty());
   }

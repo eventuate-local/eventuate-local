@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
 import io.eventuate.local.common.*;
+import io.eventuate.sql.dialect.EventuateSqlDialect;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -25,6 +26,7 @@ public class PollingDao extends BinlogEntryReader {
   private int pollingRetryIntervalInMilliseconds;
   private int pollingIntervalInMilliseconds;
   private Map<SchemaAndTable, String> pkFields = new HashMap<>();
+  private EventuateSqlDialect eventuateSqlDialect;
 
   private PollingProcessingStatusService pollingProcessingStatusService;
 
@@ -37,7 +39,8 @@ public class PollingDao extends BinlogEntryReader {
                     int pollingIntervalInMilliseconds,
                     String leaderLockId,
                     LeaderSelectorFactory leaderSelectorFactory,
-                    String readerName) {
+                    String readerName,
+                    EventuateSqlDialect eventuateSqlDialect) {
 
     super(meterRegistry,
             leaderLockId,
@@ -56,8 +59,9 @@ public class PollingDao extends BinlogEntryReader {
     this.maxEventsPerPolling = maxEventsPerPolling;
     this.maxAttemptsForPolling = maxAttemptsForPolling;
     this.pollingRetryIntervalInMilliseconds = pollingRetryIntervalInMilliseconds;
+    this.eventuateSqlDialect = eventuateSqlDialect;
 
-    pollingProcessingStatusService = new PollingProcessingStatusService(dataSource, PUBLISHED_FIELD);
+    pollingProcessingStatusService = new PollingProcessingStatusService(dataSource, PUBLISHED_FIELD, eventuateSqlDialect);
   }
 
   @Override
@@ -66,9 +70,10 @@ public class PollingDao extends BinlogEntryReader {
   }
 
   @Override
-  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema, String sourceTableName, BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter, CdcDataPublisher<EVENT> dataPublisher) {
-    super.addBinlogEntryHandler(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
-    pollingProcessingStatusService.addTable(sourceTableName);
+  public <EVENT extends BinLogEvent> BinlogEntryHandler addBinlogEntryHandler(EventuateSchema eventuateSchema, String sourceTableName, BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter, CdcDataPublisher<EVENT> dataPublisher) {
+    BinlogEntryHandler binlogEntryHandler = super.addBinlogEntryHandler(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
+    pollingProcessingStatusService.addTable(binlogEntryHandler.getQualifiedTable());
+    return binlogEntryHandler;
   }
 
   @Override
@@ -99,8 +104,8 @@ public class PollingDao extends BinlogEntryReader {
 
     String pk = getPrimaryKey(handler);
 
-    String findEventsQuery = String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC LIMIT :limit",
-            handler.getQualifiedTable(), PUBLISHED_FIELD, pk);
+    String findEventsQuery = eventuateSqlDialect.addLimitToSql(String.format("SELECT * FROM %s WHERE %s = 0 ORDER BY %s ASC",
+            handler.getQualifiedTable(), PUBLISHED_FIELD, pk), ":limit");
 
     SqlRowSet sqlRowSet = DaoUtils.handleConnectionLost(maxAttemptsForPolling,
             pollingRetryIntervalInMilliseconds,

@@ -5,17 +5,23 @@ import io.eventuate.local.polling.PollingDao;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineReaderProperties;
+import io.eventuate.sql.dialect.SqlDialectSelector;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFactory<PollingPipelineReaderProperties, PollingDao> {
 
   public static final String TYPE = "polling";
 
+  private SqlDialectSelector sqlDialectSelector;
+
   public PollingCdcPipelineReaderFactory(MeterRegistry meterRegistry,
                                          LeaderSelectorFactory leaderSelectorFactory,
-                                         BinlogEntryReaderProvider binlogEntryReaderProvider) {
+                                         BinlogEntryReaderProvider binlogEntryReaderProvider,
+                                         SqlDialectSelector sqlDialectSelector) {
 
     super(meterRegistry, leaderSelectorFactory, binlogEntryReaderProvider);
+
+    this.sqlDialectSelector = sqlDialectSelector;
   }
 
   @Override
@@ -35,7 +41,8 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
             readerProperties.getPollingIntervalInMilliseconds(),
             readerProperties.getLeadershipLockPath(),
             leaderSelectorFactory,
-            readerProperties.getReaderName());
+            readerProperties.getReaderName(),
+            sqlDialectSelector.getDialect(readerProperties.getDataSourceDriverClassName()));
   }
 
   @Override

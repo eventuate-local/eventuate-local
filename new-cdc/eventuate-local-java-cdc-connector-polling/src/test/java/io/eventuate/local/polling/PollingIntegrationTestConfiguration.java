@@ -9,6 +9,8 @@ import io.eventuate.local.java.kafka.consumer.EventuateKafkaConsumerConfiguratio
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducer;
 import io.eventuate.local.java.kafka.producer.EventuateKafkaProducerConfigurationProperties;
 import io.eventuate.local.test.util.SourceTableNameSupplier;
+import io.eventuate.sql.dialect.SqlDialectConfiguration;
+import io.eventuate.sql.dialect.SqlDialectSelector;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -27,7 +29,7 @@ import javax.sql.DataSource;
 
 @Configuration
 @EnableAutoConfiguration
-@Import(EventuateDriverConfiguration.class)
+@Import({EventuateDriverConfiguration.class, SqlDialectConfiguration.class})
 @EnableConfigurationProperties(EventuateKafkaProducerConfigurationProperties.class)
 public class PollingIntegrationTestConfiguration {
 
@@ -70,7 +72,8 @@ public class PollingIntegrationTestConfiguration {
                                @Value("${spring.datasource.url}") String dataSourceURL,
                                EventuateConfigurationProperties eventuateConfigurationProperties,
                                DataSource dataSource,
-                               LeaderSelectorFactory leaderSelectorFactory) {
+                               LeaderSelectorFactory leaderSelectorFactory,
+                               SqlDialectSelector sqlDialectSelector) {
 
     return new PollingDao(meterRegistry,
             dataSourceURL,
@@ -81,7 +84,8 @@ public class PollingIntegrationTestConfiguration {
             eventuateConfigurationProperties.getPollingIntervalInMilliseconds(),
             eventuateConfigurationProperties.getLeadershipLockPath(),
             leaderSelectorFactory,
-            eventuateConfigurationProperties.getReaderName());
+            eventuateConfigurationProperties.getReaderName(),
+            sqlDialectSelector.getDialect());
   }
 
   @Bean

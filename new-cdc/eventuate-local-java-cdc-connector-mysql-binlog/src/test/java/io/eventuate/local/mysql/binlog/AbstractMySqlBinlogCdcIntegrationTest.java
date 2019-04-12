@@ -6,6 +6,7 @@ import io.eventuate.example.banking.domain.AccountCreatedEvent;
 import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.javaclient.spring.jdbc.EventuateSqlDialect;
 import io.eventuate.javaclient.spring.jdbc.SaveUpdateResult;
 import io.eventuate.local.common.BinlogEntryToPublishedEventConverter;
 import io.eventuate.local.common.CdcDataPublisher;
@@ -127,7 +128,8 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
   }
 
   private SaveUpdateResult insertEventIntoOtherSchema(String otherSchemaName) {
-    EventuateLocalJdbcAccess eventuateLocalJdbcAccess = new EventuateLocalJdbcAccess(jdbcTemplate, new EventuateSchema(otherSchemaName));
+    EventuateLocalJdbcAccess eventuateLocalJdbcAccess = new EventuateLocalJdbcAccess(jdbcTemplate,
+            new EventuateSchema(otherSchemaName), eventuateSqlDialect());
 
     return eventuateLocalJdbcAccess.save(Account.class.getName(), Collections.singletonList(new EventTypeAndData("Other-" + AccountCreatedEvent.class.getTypeName(), generateAccountCreatedEvent(), Optional.empty())), Optional.empty());
   }
@@ -152,4 +154,6 @@ public abstract class AbstractMySqlBinlogCdcIntegrationTest extends AbstractCdcT
               }
             });
   }
+
+  protected abstract EventuateSqlDialect eventuateSqlDialect();
 }

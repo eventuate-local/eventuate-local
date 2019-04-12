@@ -1,6 +1,7 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.factory;
 
 import io.eventuate.coordination.leadership.LeaderSelectorFactory;
+import io.eventuate.javaclient.spring.jdbc.EventuateSqlDialect;
 import io.eventuate.local.polling.PollingDao;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
@@ -11,11 +12,16 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
 
   public static final String TYPE = "polling";
 
+  private EventuateSqlDialect eventuateSqlDialect;
+
   public PollingCdcPipelineReaderFactory(MeterRegistry meterRegistry,
                                          LeaderSelectorFactory leaderSelectorFactory,
-                                         BinlogEntryReaderProvider binlogEntryReaderProvider) {
+                                         BinlogEntryReaderProvider binlogEntryReaderProvider,
+                                         EventuateSqlDialect eventuateSqlDialect) {
 
     super(meterRegistry, leaderSelectorFactory, binlogEntryReaderProvider);
+
+    this.eventuateSqlDialect = eventuateSqlDialect;
   }
 
   @Override
@@ -35,7 +41,8 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
             readerProperties.getPollingIntervalInMilliseconds(),
             readerProperties.getLeadershipLockPath(),
             leaderSelectorFactory,
-            readerProperties.getReaderName());
+            readerProperties.getReaderName(),
+            eventuateSqlDialect);
   }
 
   @Override

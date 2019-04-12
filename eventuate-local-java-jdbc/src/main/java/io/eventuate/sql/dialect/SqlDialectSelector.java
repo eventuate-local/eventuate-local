@@ -1,29 +1,15 @@
 package io.eventuate.sql.dialect;
 
-import io.eventuate.javaclient.spring.jdbc.EventuateSqlDialect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.OrderComparator;
 
-import javax.annotation.PostConstruct;
 import java.util.Collection;
 
 public class SqlDialectSelector {
   @Autowired
   private Collection<EventuateSqlDialect> sqlDialects;
 
-  private String driver;
-  private EventuateSqlDialect sqlDialect;
-
-  public SqlDialectSelector(String driver) {
-    this.driver = driver;
-  }
-
-  @PostConstruct
-  private void init() {
-    sqlDialect = selectDialect(sqlDialects);
-  }
-
-  EventuateSqlDialect selectDialect(Collection<EventuateSqlDialect> sqlDialects) {
+  EventuateSqlDialect selectDialect(Collection<EventuateSqlDialect> sqlDialects, String driver) {
     return sqlDialects
             .stream()
             .filter(dialect -> dialect.supports(driver))
@@ -35,7 +21,7 @@ public class SqlDialectSelector {
                             "EVENTUATE_CURRENT_TIME_IN_MILLISECONDS_SQL")));
   }
 
-  public EventuateSqlDialect getDialect() {
-    return sqlDialect;
+  public EventuateSqlDialect getDialect(String driver) {
+    return selectDialect(sqlDialects, driver);
   }
 }

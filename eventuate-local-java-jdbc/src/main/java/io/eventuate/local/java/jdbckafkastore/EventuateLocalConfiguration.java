@@ -30,7 +30,7 @@ import javax.sql.DataSource;
  */
 @Configuration
 @EnableTransactionManagement
-@Import({EventuateCommonConfiguration.class, EventuateKafkaPropertiesConfiguration.class, SqlDialectConfiguration.class})
+@Import({EventuateCommonConfiguration.class, EventuateKafkaPropertiesConfiguration.class})
 @EnableConfigurationProperties(EventuateKafkaConsumerConfigurationProperties.class)
 public class EventuateLocalConfiguration {
 
@@ -40,9 +40,6 @@ public class EventuateLocalConfiguration {
   @Autowired(required=false)
   private AsyncToSyncTimeoutOptions timeoutOptions;
 
-  @Autowired
-  private SqlDialectSelector sqlDialectSelector;
-
   @Bean
   public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
     return new EventuateSchema(eventuateDatabaseSchema);
@@ -51,7 +48,7 @@ public class EventuateLocalConfiguration {
   @Bean
   public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema, DataSource db) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema, sqlDialectSelector.getDialect());
+    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema);
   }
 
   @Bean

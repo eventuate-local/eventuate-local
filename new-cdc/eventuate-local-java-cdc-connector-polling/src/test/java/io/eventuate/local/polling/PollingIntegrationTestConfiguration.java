@@ -70,6 +70,7 @@ public class PollingIntegrationTestConfiguration {
   @Profile("EventuatePolling")
   public PollingDao pollingDao(@Autowired(required = false) MeterRegistry meterRegistry,
                                @Value("${spring.datasource.url}") String dataSourceURL,
+                               @Value("${spring.datasource.driver-class-name}") String driver,
                                EventuateConfigurationProperties eventuateConfigurationProperties,
                                DataSource dataSource,
                                LeaderSelectorFactory leaderSelectorFactory,
@@ -85,7 +86,7 @@ public class PollingIntegrationTestConfiguration {
             eventuateConfigurationProperties.getLeadershipLockPath(),
             leaderSelectorFactory,
             eventuateConfigurationProperties.getReaderName(),
-            sqlDialectSelector.getDialect());
+            sqlDialectSelector.getDialect(driver));
   }
 
   @Bean

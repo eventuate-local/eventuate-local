@@ -25,7 +25,7 @@ public class PollingCdcPipelineReaderConfiguration extends CommonCdcDefaultPipel
     return new PollingCdcPipelineReaderFactory(meterRegistry,
             leaderSelectorFactory,
             binlogEntryReaderProvider,
-            sqlDialectSelector.getDialect());
+            sqlDialectSelector);
   }
 
   @Profile("EventuatePolling")
@@ -38,7 +38,7 @@ public class PollingCdcPipelineReaderConfiguration extends CommonCdcDefaultPipel
     return new PollingCdcPipelineReaderFactory(meterRegistry,
             leaderSelectorFactory,
             binlogEntryReaderProvider,
-            sqlDialectSelector.getDialect());
+            sqlDialectSelector);
   }
 
   @Profile("EventuatePolling")

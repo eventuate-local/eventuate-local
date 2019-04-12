@@ -1,27 +1,27 @@
 package io.eventuate.local.unified.cdc.pipeline.polling.factory;
 
 import io.eventuate.coordination.leadership.LeaderSelectorFactory;
-import io.eventuate.javaclient.spring.jdbc.EventuateSqlDialect;
 import io.eventuate.local.polling.PollingDao;
 import io.eventuate.local.unified.cdc.pipeline.common.BinlogEntryReaderProvider;
 import io.eventuate.local.unified.cdc.pipeline.common.factory.CommonCdcPipelineReaderFactory;
 import io.eventuate.local.unified.cdc.pipeline.polling.properties.PollingPipelineReaderProperties;
+import io.eventuate.sql.dialect.SqlDialectSelector;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFactory<PollingPipelineReaderProperties, PollingDao> {
 
   public static final String TYPE = "polling";
 
-  private EventuateSqlDialect eventuateSqlDialect;
+  private SqlDialectSelector sqlDialectSelector;
 
   public PollingCdcPipelineReaderFactory(MeterRegistry meterRegistry,
                                          LeaderSelectorFactory leaderSelectorFactory,
                                          BinlogEntryReaderProvider binlogEntryReaderProvider,
-                                         EventuateSqlDialect eventuateSqlDialect) {
+                                         SqlDialectSelector sqlDialectSelector) {
 
     super(meterRegistry, leaderSelectorFactory, binlogEntryReaderProvider);
 
-    this.eventuateSqlDialect = eventuateSqlDialect;
+    this.sqlDialectSelector = sqlDialectSelector;
   }
 
   @Override
@@ -42,7 +42,7 @@ public class PollingCdcPipelineReaderFactory extends CommonCdcPipelineReaderFact
             readerProperties.getLeadershipLockPath(),
             leaderSelectorFactory,
             readerProperties.getReaderName(),
-            eventuateSqlDialect);
+            sqlDialectSelector.getDialect(readerProperties.getDataSourceDriverClassName()));
   }
 
   @Override

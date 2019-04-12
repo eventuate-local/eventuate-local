@@ -3,8 +3,8 @@ package io.eventuate.local.polling;
 import com.google.common.collect.ImmutableMap;
 import io.eventuate.coordination.leadership.LeaderSelectorFactory;
 import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
-import io.eventuate.javaclient.spring.jdbc.EventuateSqlDialect;
 import io.eventuate.local.common.*;
+import io.eventuate.sql.dialect.EventuateSqlDialect;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -70,9 +70,10 @@ public class PollingDao extends BinlogEntryReader {
   }
 
   @Override
-  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema, String sourceTableName, BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter, CdcDataPublisher<EVENT> dataPublisher) {
-    super.addBinlogEntryHandler(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
-    pollingProcessingStatusService.addTable(sourceTableName);
+  public <EVENT extends BinLogEvent> BinlogEntryHandler addBinlogEntryHandler(EventuateSchema eventuateSchema, String sourceTableName, BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter, CdcDataPublisher<EVENT> dataPublisher) {
+    BinlogEntryHandler binlogEntryHandler = super.addBinlogEntryHandler(eventuateSchema, sourceTableName, binlogEntryToEventConverter, dataPublisher);
+    pollingProcessingStatusService.addTable(binlogEntryHandler.getQualifiedTable());
+    return binlogEntryHandler;
   }
 
   @Override

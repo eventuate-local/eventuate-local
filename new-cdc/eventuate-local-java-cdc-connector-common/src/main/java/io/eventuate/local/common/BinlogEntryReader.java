@@ -62,7 +62,7 @@ public abstract class BinlogEntryReader {
     return lastEventTime;
   }
 
-  public <EVENT extends BinLogEvent> void addBinlogEntryHandler(EventuateSchema eventuateSchema,
+  public <EVENT extends BinLogEvent> BinlogEntryHandler addBinlogEntryHandler(EventuateSchema eventuateSchema,
                                                                 String sourceTableName,
                                                                 BinlogEntryToEventConverter<EVENT> binlogEntryToEventConverter,
                                                                 CdcDataPublisher<EVENT> dataPublisher) {
@@ -76,6 +76,8 @@ public abstract class BinlogEntryReader {
             new BinlogEntryHandler<>(schemaAndTable, binlogEntryToEventConverter, dataPublisher);
 
     binlogEntryHandlers.add(binlogEntryHandler);
+
+    return binlogEntryHandler;
   }
 
   public void start() {

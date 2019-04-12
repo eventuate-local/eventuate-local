@@ -1,1 +1,1 @@
-/opt/mssql/bin/sqlservr & /usr/src/app/import-data.sh & sleep 1000000000
+/opt/mssql/bin/sqlservr & /usr/src/app/import-data.sh & sleep infinity

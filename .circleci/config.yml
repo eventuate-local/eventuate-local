@@ -148,7 +148,7 @@ jobs:
       - checkout
       - restore_cache:
           key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-mssql-polling.sh
+      - run: TERM=dumb ./scripts/build-and-test-mssql-polling.sh
       - run:
           name: Save test results
           command: |

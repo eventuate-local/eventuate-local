@@ -5,4 +5,4 @@ EXPOSE 9092
 VOLUME /usr/local/kafka-config
 ADD ./config/server.properties /usr/local/kafka-config/server.properties
 ADD run-kafka.sh /usr/local/kafka_2.12-1.1.0/run-kafka.sh
-CMD ./run-kafka.sh
+ENTRYPOINT ["/bin/bash", "-c", "./run-kafka.sh"]

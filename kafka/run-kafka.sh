@@ -15,4 +15,4 @@ sed -i "s/ADVERTISED_HOST_NAME/${ADVERTISED_HOST_NAME?}/" $EFFECTIVE_KAFKA_CONFI
 
 sed -i "s/ZOOKEEPER_SERVERS/${ZOOKEEPER_SERVERS?}/" $EFFECTIVE_KAFKA_CONFIG_DIR/server.properties
 
-bin/kafka-server-start.sh $EFFECTIVE_KAFKA_CONFIG_DIR/server.properties
+exec bin/kafka-server-start.sh $EFFECTIVE_KAFKA_CONFIG_DIR/server.properties

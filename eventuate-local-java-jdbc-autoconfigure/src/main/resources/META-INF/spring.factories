@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration
+io.eventuate.common.jdbckafkastore.EventuateLocalConfiguration

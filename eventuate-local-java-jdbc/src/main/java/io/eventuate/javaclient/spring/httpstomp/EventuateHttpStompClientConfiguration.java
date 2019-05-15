@@ -1,6 +1,6 @@
 package io.eventuate.javaclient.spring.httpstomp;
 
-import io.eventuate.local.java.jdbckafkastore.EventuateLocalConfiguration;
+import io.eventuate.common.jdbckafkastore.EventuateLocalConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 

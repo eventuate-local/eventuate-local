@@ -1,7 +1,0 @@
-dependencies {
-    compile project(":eventuate-coordination-leadership")
-}
-
-test {
-    forkEvery 1
-}

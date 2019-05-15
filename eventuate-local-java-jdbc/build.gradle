@@ -3,7 +3,7 @@ apply plugin: PrivateModulePlugin
 
 dependencies {
 
-    compile project(":eventuate-local-java-common")
+    compile "io.eventuate.common:eventuate-common:$eventuateCommonVersion"
 
     compile "io.eventuate.client.java:eventuate-client-java-common-impl:$eventuateClientVersion"
     compile "io.eventuate.client.java:eventuate-client-java-jdbc-common:$eventuateClientVersion"

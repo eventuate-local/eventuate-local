@@ -1,5 +1,6 @@
 package io.eventuate.common.jdbckafkastore;
 
+import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.javaclient.commonimpl.SerializedEventDeserializer;
@@ -8,7 +9,7 @@ import io.eventuate.javaclient.commonimpl.adapters.AsyncToSyncTimeoutOptions;
 import io.eventuate.javaclient.commonimpl.adapters.SyncToAsyncAggregateCrudAdapter;
 import io.eventuate.javaclient.spring.common.EventuateCommonConfiguration;
 import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
-import io.eventuate.javaclient.spring.jdbc.EventuateSchema;
+import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.kafka.EventuateKafkaConfigurationProperties;
 import io.eventuate.common.kafka.EventuateKafkaPropertiesConfiguration;
 import io.eventuate.common.kafka.consumer.EventuateKafkaConsumerConfigurationProperties;
@@ -44,9 +45,20 @@ public class EventuateLocalConfiguration {
   }
 
   @Bean
-  public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema, DataSource db) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(db);
-    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateSchema);
+  public JdbcTemplate jdbcTemplate(DataSource db) {
+    return new JdbcTemplate(db);
+  }
+
+  @Bean
+  public EventuateCommonJdbcOperations eventuateCommonJdbcOperations(JdbcTemplate jdbcTemplate) {
+    return new EventuateCommonJdbcOperations(jdbcTemplate);
+  }
+
+  @Bean
+  public EventuateJdbcAccess eventuateJdbcAccess(EventuateSchema eventuateSchema,
+                                                 EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
+                                                 JdbcTemplate jdbcTemplate) {
+    return new EventuateLocalJdbcAccess(jdbcTemplate, eventuateCommonJdbcOperations, eventuateSchema);
   }
 
   @Bean

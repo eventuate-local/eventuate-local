@@ -10,7 +10,7 @@ public class MsSqlDialect implements EventuateSqlDialect, Ordered {
 
   @Override
   public String getCurrentTimeInMillisecondsExpression() {
-    return "(select datediff(s, '1970-01-01', getdate()))*cast(1000 as bigint)";
+    return "(SELECT DATEDIFF_BIG(ms, '1970-01-01', GETUTCDATE()))";
   }
 
   @Override

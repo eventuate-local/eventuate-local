@@ -9,6 +9,6 @@ import org.springframework.test.context.junit4.SpringRunner;
         properties= {"spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver"})
 public class MsSqlDialectTest extends AbstractDialectTest {
   public MsSqlDialectTest() {
-    super(MsSqlDialect.class, "(select datediff(s, '1970-01-01', getdate()))*cast(1000 as bigint)");
+    super(MsSqlDialect.class, "(SELECT DATEDIFF_BIG(ms, '1970-01-01', GETUTCDATE()))");
   }
 }

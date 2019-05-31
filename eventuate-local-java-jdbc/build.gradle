@@ -4,6 +4,8 @@ apply plugin: PrivateModulePlugin
 dependencies {
 
     compile "io.eventuate.common:eventuate-common-eventuate-local:$eventuateCommonVersion"
+    compile "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
+    compile "io.eventuate.common:eventuate-common-id-generator:$eventuateCommonVersion"
 
     compile "io.eventuate.client.java:eventuate-client-java-common-impl:$eventuateClientVersion"
     compile "io.eventuate.client.java:eventuate-client-java-jdbc-common:$eventuateClientVersion"

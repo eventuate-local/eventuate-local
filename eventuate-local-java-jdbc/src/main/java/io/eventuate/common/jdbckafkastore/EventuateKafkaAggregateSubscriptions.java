@@ -1,11 +1,11 @@
 package io.eventuate.common.jdbckafkastore;
 
 
-import io.eventuate.Int128;
 import io.eventuate.SubscriberOptions;
 import io.eventuate.common.eventuate.local.PublishedEvent;
+import io.eventuate.common.id.generator.Int128;
+import io.eventuate.common.json.mapper.JSonMapper;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
-import io.eventuate.javaclient.commonimpl.JSonMapper;
 import io.eventuate.javaclient.commonimpl.SerializedEvent;
 import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumer;
 import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumerConfigurationProperties;

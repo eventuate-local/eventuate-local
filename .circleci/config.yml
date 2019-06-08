@@ -6,12 +6,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
+          keys:
+            - eventuate-local-java-{{ checksum "gradle.properties" }}
+            - eventuate-local-java-
       - run: TERM=dumb ./gradlew testClasses
       - save_cache:
           paths:
             - ~/.gradle
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
+          key: eventuate-local-java-{{ checksum "gradle.properties" }}
       - run: TERM=dumb ./scripts/build-and-test-all.sh
       - run:
           name: Publish artifacts

@@ -3,11 +3,6 @@ apply plugin: PrivateModulePlugin
 dependencies {
 
     testCompile project(":eventuate-local-java-jdbc-tests-common")
-
-    if (!project.hasProperty("excludeCdcLibs") ||  !excludeCdcLibs.toBoolean()) {
-        testCompile project(":new-cdc:eventuate-local-java-cdc-autoconfigure")
-    }
-
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootCdcVersion"
 }
 

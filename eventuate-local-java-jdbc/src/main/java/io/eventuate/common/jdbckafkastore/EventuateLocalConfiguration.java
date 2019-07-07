@@ -1,6 +1,7 @@
 package io.eventuate.common.jdbckafkastore;
 
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
+import io.eventuate.common.jdbc.EventuateSchemaConfiguration;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.javaclient.commonimpl.SerializedEventDeserializer;
@@ -29,7 +30,7 @@ import javax.sql.DataSource;
  */
 @Configuration
 @EnableTransactionManagement
-@Import({EventuateCommonConfiguration.class, EventuateKafkaPropertiesConfiguration.class})
+@Import({EventuateCommonConfiguration.class, EventuateKafkaPropertiesConfiguration.class, EventuateSchemaConfiguration.class})
 @EnableConfigurationProperties(EventuateKafkaConsumerConfigurationProperties.class)
 public class EventuateLocalConfiguration {
 
@@ -38,11 +39,6 @@ public class EventuateLocalConfiguration {
 
   @Autowired(required=false)
   private AsyncToSyncTimeoutOptions timeoutOptions;
-
-  @Bean
-  public EventuateSchema eventuateSchema(@Value("${eventuate.database.schema:#{null}}") String eventuateDatabaseSchema) {
-    return new EventuateSchema(eventuateDatabaseSchema);
-  }
 
   @Bean
   public JdbcTemplate jdbcTemplate(DataSource db) {

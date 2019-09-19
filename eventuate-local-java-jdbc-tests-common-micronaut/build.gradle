@@ -1,0 +1,40 @@
+plugins {
+    id "io.spring.dependency-management"
+}
+
+apply plugin: PrivateModulePlugin
+
+repositories {
+    mavenCentral()
+    maven { url "https://jcenter.bintray.com" }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'io.micronaut:micronaut-bom:1.2.0'
+    }
+}
+
+dependencies {
+    compile project(":eventuate-local-java-jdbc-micronaut")
+    compile "io.eventuate.client.java:eventuate-client-java-tests-common-micronaut:$eventuateClientVersion"
+    compile project(":eventuate-local-java-jdbc-tests-common")
+
+    compile "io.micronaut:micronaut-spring"
+    annotationProcessor "io.micronaut:micronaut-inject-java"
+    annotationProcessor "io.micronaut:micronaut-validation"
+    annotationProcessor "io.micronaut.configuration:micronaut-openapi"
+    compile "io.micronaut:micronaut-inject"
+    compile "io.micronaut:micronaut-validation"
+    compile "io.micronaut:micronaut-runtime"
+    compile  'org.springframework:spring-jdbc'
+    compile 'io.micronaut.configuration:micronaut-jdbc-hikari'
+    annotationProcessor "io.micronaut:micronaut-inject-java"
+    compile "org.junit.jupiter:junit-jupiter-api"
+    compile "io.micronaut.test:micronaut-test-junit5"
+    runtime "org.junit.jupiter:junit-jupiter-engine"
+}
+
+test {
+    useJUnitPlatform()
+}

@@ -83,7 +83,6 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
       } else {
         callback.accept(null, null);
       }
-      return null;
     }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties);
 
     addConsumer(consumer);

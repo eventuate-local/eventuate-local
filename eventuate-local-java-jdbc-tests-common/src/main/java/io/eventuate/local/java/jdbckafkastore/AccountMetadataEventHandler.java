@@ -1,16 +1,15 @@
 package io.eventuate.local.java.jdbckafkastore;
 
-
 import io.eventuate.EventHandlerContext;
 import io.eventuate.EventHandlerMethod;
 import io.eventuate.EventSubscriber;
+import io.eventuate.Subscriber;
 import io.eventuate.example.banking.domain.AccountCreatedEvent;
 import io.eventuate.example.banking.domain.AccountDebitedEvent;
 import io.eventuate.testutil.AbstractTestEventHandler;
 
 @EventSubscriber(id="accountMetadataEventHandler")
-public class AccountMetadataEventHandler extends AbstractTestEventHandler {
-
+public class AccountMetadataEventHandler extends AbstractTestEventHandler implements Subscriber {
 
   @EventHandlerMethod
   public void accountCreated(EventHandlerContext<AccountCreatedEvent> ctx) {
@@ -21,6 +20,5 @@ public class AccountMetadataEventHandler extends AbstractTestEventHandler {
   public void accountDebited(EventHandlerContext<AccountDebitedEvent> ctx) {
     add(ctx);
   }
-
 }
 

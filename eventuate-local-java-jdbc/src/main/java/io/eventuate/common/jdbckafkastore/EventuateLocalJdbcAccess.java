@@ -3,22 +3,27 @@ package io.eventuate.common.jdbckafkastore;
 import io.eventuate.EventContext;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateSchema;
+import io.eventuate.common.jdbckafkastore.SnapshotTriggeringEvents;
 import io.eventuate.javaclient.spring.jdbc.*;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 import java.util.Optional;
 
 public class EventuateLocalJdbcAccess extends EventuateJdbcAccessImpl {
 
-  public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate, EventuateCommonJdbcOperations eventuateCommonJdbcOperations) {
-    super(jdbcTemplate, eventuateCommonJdbcOperations);
+  public EventuateLocalJdbcAccess(TransactionTemplate transactionTemplate,
+                                  JdbcTemplate jdbcTemplate,
+                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations) {
+    super(transactionTemplate, jdbcTemplate, eventuateCommonJdbcOperations);
   }
 
-  public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate,
+  public EventuateLocalJdbcAccess(TransactionTemplate transactionTemplate,
+                                  JdbcTemplate jdbcTemplate,
                                   EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
                                   EventuateSchema eventuateSchema) {
-    super(jdbcTemplate, eventuateCommonJdbcOperations, eventuateSchema);
+    super(transactionTemplate, jdbcTemplate, eventuateCommonJdbcOperations, eventuateSchema);
   }
 
   @Override

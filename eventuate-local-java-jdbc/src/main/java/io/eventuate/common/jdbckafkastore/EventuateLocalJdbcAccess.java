@@ -3,8 +3,9 @@ package io.eventuate.common.jdbckafkastore;
 import io.eventuate.EventContext;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateSchema;
-import io.eventuate.common.jdbckafkastore.SnapshotTriggeringEvents;
-import io.eventuate.javaclient.spring.jdbc.*;
+import io.eventuate.javaclient.jdbc.EventAndTrigger;
+import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
+import io.eventuate.javaclient.jdbc.LoadedSnapshot;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 

@@ -4,8 +4,8 @@ import io.eventuate.Aggregate;
 import io.eventuate.EntityIdAndType;
 import io.eventuate.common.id.Int128;
 import io.eventuate.javaclient.commonimpl.*;
-import io.eventuate.javaclient.spring.jdbc.AbstractJdbcAggregateCrud;
-import io.eventuate.javaclient.spring.jdbc.EventuateJdbcAccess;
+import io.eventuate.javaclient.jdbc.AbstractJdbcAggregateCrud;
+import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;

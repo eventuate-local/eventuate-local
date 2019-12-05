@@ -11,6 +11,7 @@ import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumer;
 import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.messaging.kafka.common.AggregateTopicMapping;
 import io.eventuate.messaging.kafka.common.EventuateKafkaConfigurationProperties;
+import io.eventuate.messaging.kafka.common.EventuateKafkaMultiMessageConverter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.toList;
@@ -35,6 +38,7 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
 
   private EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration;
   private EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
+  private EventuateKafkaMultiMessageConverter eventuateKafkaMultiMessageConverter = new EventuateKafkaMultiMessageConverter();
 
   public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
                                               EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
@@ -75,14 +79,42 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
             .collect(toList());
 
     EventuateKafkaConsumer consumer = new EventuateKafkaConsumer(subscriberId, (record, callback) -> {
-      SerializedEvent se = toSerializedEvent(record);
-      if (aggregatesAndEvents.get(se.getEntityType()).contains(se.getEventType())) {
-        handler.apply(se).whenComplete((result, t) -> {
-          callback.accept(null, t);
+      List<SerializedEvent> serializedEvents = toSerializedEvents(record);
+
+      List<CompletableFuture<?>> futures = new ArrayList<>();
+
+      serializedEvents.forEach(se -> {
+          if (aggregatesAndEvents.get(se.getEntityType()).contains(se.getEventType())) {
+            futures.add(handler.apply(se));
+          }
+      });
+
+      AtomicInteger counter = new AtomicInteger();
+
+      futures.forEach(f -> {
+        f.whenComplete((o, throwable) -> {
+          if (counter.incrementAndGet() == futures.size()) {
+
+            for (Future<?> future : futures) {
+              try {
+                // no wait, future is ready
+                future.get();
+              } catch (Throwable t) {
+                //finishing with first exception if any
+                callback.accept(null, t);
+                return;
+              }
+            }
+
+            callback.accept(null, null);
+          }
         });
-      } else {
+      });
+
+      if (futures.isEmpty()) {
         callback.accept(null, null);
       }
+
       return null;
     }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties);
 
@@ -93,18 +125,24 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
 
   }
 
-  private SerializedEvent toSerializedEvent(ConsumerRecord<String, String> record) {
-    PublishedEvent pe = JSonMapper.fromJson(record.value(), PublishedEvent.class);
-    return new SerializedEvent(
-            Int128.fromString(pe.getId()),
-            pe.getEntityId(),
-            pe.getEntityType(),
-            pe.getEventData(),
-            pe.getEventType(),
-            record.partition(),
-            record.offset(),
-            EtopEventContext.make(pe.getId(), record.topic(), record.partition(), record.offset()),
-            pe.getMetadata());
+  private List<SerializedEvent> toSerializedEvents(ConsumerRecord<String, byte[]> record) {
+    return eventuateKafkaMultiMessageConverter
+            .convertBytesToValues(record.value())
+            .stream()
+            .map(value -> JSonMapper.fromJson(value, PublishedEvent.class))
+            .map(pe ->
+              new SerializedEvent(
+                      Int128.fromString(pe.getId()),
+                      pe.getEntityId(),
+                      pe.getEntityType(),
+                      pe.getEventData(),
+                      pe.getEventType(),
+                      record.partition(),
+                      record.offset(),
+                      EtopEventContext.make(pe.getId(), record.topic(), record.partition(), record.offset()),
+                      pe.getMetadata())
+            )
+            .collect(toList());
   }
 
 

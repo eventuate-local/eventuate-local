@@ -1,6 +1,8 @@
 package io.eventuate.micronaut.common.jdbckafkastore;
 
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
+import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
+import io.eventuate.common.jdbc.EventuateTransactionTemplate;
 import io.eventuate.common.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
 import io.eventuate.common.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.common.jdbckafkastore.EventuateLocalJdbcAccess;
@@ -28,11 +30,11 @@ import javax.sql.DataSource;
 public class EventuateLocalFactory {
 
   @Singleton
-  public EventuateJdbcAccess eventuateJdbcAccess(TransactionTemplate transactionTemplate,
-                                                 EventuateSchema eventuateSchema,
+  public EventuateJdbcAccess eventuateJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
+                                                 EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
-                                                 JdbcTemplate jdbcTemplate) {
-    return new EventuateLocalJdbcAccess(transactionTemplate, jdbcTemplate, eventuateCommonJdbcOperations, eventuateSchema);
+                                                 EventuateSchema eventuateSchema) {
+    return new EventuateLocalJdbcAccess(eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSchema);
   }
 
   @Singleton

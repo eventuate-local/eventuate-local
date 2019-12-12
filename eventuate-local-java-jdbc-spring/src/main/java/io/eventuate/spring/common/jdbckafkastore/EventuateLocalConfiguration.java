@@ -1,6 +1,9 @@
 package io.eventuate.spring.common.jdbckafkastore;
 
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
+import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
+import io.eventuate.common.jdbc.EventuateTransactionTemplate;
+import io.eventuate.common.jdbc.spring.EventuateCommonJdbcOperationsConfiguration;
 import io.eventuate.common.jdbc.spring.EventuateSchemaConfiguration;
 import io.eventuate.common.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
 import io.eventuate.common.jdbckafkastore.EventuateLocalAggregateCrud;
@@ -18,6 +21,7 @@ import io.eventuate.messaging.kafka.basic.consumer.spring.EventuateKafkaConsumer
 import io.eventuate.messaging.kafka.common.EventuateKafkaConfigurationProperties;
 import io.eventuate.messaging.kafka.common.spring.EventuateKafkaPropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -33,7 +37,12 @@ import javax.sql.DataSource;
  */
 @Configuration
 @EnableTransactionManagement
-@Import({EventuateCommonConfiguration.class, EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class, EventuateKafkaPropertiesConfiguration.class, EventuateSchemaConfiguration.class})
+@Import({EventuateCommonConfiguration.class,
+        EventuateCommonJdbcOperationsConfiguration.class,
+        EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class,
+        EventuateKafkaPropertiesConfiguration.class,
+        EventuateSchemaConfiguration.class,
+        EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class})
 public class EventuateLocalConfiguration {
 
   @Bean
@@ -41,17 +50,13 @@ public class EventuateLocalConfiguration {
     return new JdbcTemplate(db);
   }
 
-  @Bean
-  public EventuateCommonJdbcOperations eventuateCommonJdbcOperations(JdbcTemplate jdbcTemplate) {
-    return new EventuateCommonJdbcOperations(jdbcTemplate);
-  }
 
   @Bean
-  public EventuateJdbcAccess eventuateJdbcAccess(TransactionTemplate transactionTemplate,
-                                                 EventuateSchema eventuateSchema,
+  public EventuateJdbcAccess eventuateJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
+                                                 EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
-                                                 JdbcTemplate jdbcTemplate) {
-    return new EventuateLocalJdbcAccess(transactionTemplate, jdbcTemplate, eventuateCommonJdbcOperations, eventuateSchema);
+                                                 EventuateSchema eventuateSchema) {
+    return new EventuateLocalJdbcAccess(eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSchema);
   }
 
   @Bean

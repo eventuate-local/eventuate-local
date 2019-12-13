@@ -4,7 +4,6 @@ import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
 import io.eventuate.common.jdbc.spring.EventuateCommonJdbcOperationsConfiguration;
-import io.eventuate.common.jdbc.spring.EventuateSchemaConfiguration;
 import io.eventuate.common.jdbckafkastore.EventuateKafkaAggregateSubscriptions;
 import io.eventuate.common.jdbckafkastore.EventuateLocalAggregateCrud;
 import io.eventuate.common.jdbckafkastore.EventuateLocalJdbcAccess;
@@ -21,16 +20,12 @@ import io.eventuate.messaging.kafka.basic.consumer.spring.EventuateKafkaConsumer
 import io.eventuate.messaging.kafka.common.EventuateKafkaConfigurationProperties;
 import io.eventuate.messaging.kafka.common.spring.EventuateKafkaPropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import javax.sql.DataSource;
 
 /**
  * Defines the Spring beans for the JDBC-based aggregate store
@@ -41,15 +36,8 @@ import javax.sql.DataSource;
         EventuateCommonJdbcOperationsConfiguration.class,
         EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class,
         EventuateKafkaPropertiesConfiguration.class,
-        EventuateSchemaConfiguration.class,
         EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class})
 public class EventuateLocalConfiguration {
-
-  @Bean
-  public JdbcTemplate jdbcTemplate(DataSource db) {
-    return new JdbcTemplate(db);
-  }
-
 
   @Bean
   public EventuateJdbcAccess eventuateJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,

@@ -17,6 +17,7 @@ dependencyManagement {
 
 dependencies {
     testCompile project(":eventuate-local-java-jdbc-tests-common-micronaut")
+    testCompile "io.eventuate.common:eventuate-common-jdbc-micronaut-spring:$eventuateCommonVersion"
 
     compile "io.micronaut:micronaut-spring"
     annotationProcessor "io.micronaut:micronaut-inject-java"

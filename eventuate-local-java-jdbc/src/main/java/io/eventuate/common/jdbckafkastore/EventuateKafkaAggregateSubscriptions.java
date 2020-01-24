@@ -11,18 +11,18 @@ import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumer;
 import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumerConfigurationProperties;
 import io.eventuate.messaging.kafka.common.AggregateTopicMapping;
 import io.eventuate.messaging.kafka.common.EventuateKafkaConfigurationProperties;
+import io.eventuate.messaging.kafka.common.EventuateKafkaMultiMessageConverter;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
@@ -35,6 +35,7 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
 
   private EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration;
   private EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
+  private EventuateKafkaMultiMessageConverter eventuateKafkaMultiMessageConverter = new EventuateKafkaMultiMessageConverter();
 
   public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
                                               EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
@@ -75,14 +76,18 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
             .collect(toList());
 
     EventuateKafkaConsumer consumer = new EventuateKafkaConsumer(subscriberId, (record, callback) -> {
-      SerializedEvent se = toSerializedEvent(record);
-      if (aggregatesAndEvents.get(se.getEntityType()).contains(se.getEventType())) {
-        handler.apply(se).whenComplete((result, t) -> {
-          callback.accept(null, t);
-        });
-      } else {
-        callback.accept(null, null);
+      List<SerializedEvent> serializedEvents = toSerializedEvents(record);
+
+      for (SerializedEvent se : serializedEvents) {
+        if (aggregatesAndEvents.get(se.getEntityType()).contains(se.getEventType())) {
+          handler.apply(se).whenComplete((result, t) -> {
+            callback.accept(null, t);
+          });
+        } else {
+          callback.accept(null, null);
+        }
       }
+
       return null;
     }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties);
 
@@ -93,8 +98,15 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
 
   }
 
-  private SerializedEvent toSerializedEvent(ConsumerRecord<String, String> record) {
-    PublishedEvent pe = JSonMapper.fromJson(record.value(), PublishedEvent.class);
+  private List<SerializedEvent> toSerializedEvents(ConsumerRecord<String, byte[]> record) {
+    return eventuateKafkaMultiMessageConverter.convertBytesToValues(record.value())
+            .stream()
+            .map(value -> jsonToSerializedEvent(value, record))
+            .collect(Collectors.toList());
+  }
+
+  private SerializedEvent jsonToSerializedEvent(String value, ConsumerRecord<String, byte[]> record) {
+    PublishedEvent pe = JSonMapper.fromJson(value, PublishedEvent.class);
     return new SerializedEvent(
             Int128.fromString(pe.getId()),
             pe.getEntityId(),
@@ -106,6 +118,5 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
             EtopEventContext.make(pe.getId(), record.topic(), record.partition(), record.offset()),
             pe.getMetadata());
   }
-
 
 }

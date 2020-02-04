@@ -1,0 +1,11 @@
+apply plugin: PrivateModulePlugin
+
+dependencies {
+
+    testCompile project(":eventuate-local-java-jdbc-tests-common-spring")
+    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootCdcVersion"
+}
+
+test {
+    forkEvery 1
+}

@@ -2,23 +2,29 @@ package io.eventuate.common.jdbckafkastore;
 
 import io.eventuate.EventContext;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
+import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
 import io.eventuate.common.jdbc.EventuateSchema;
-import io.eventuate.javaclient.spring.jdbc.*;
-import org.springframework.jdbc.core.JdbcTemplate;
+import io.eventuate.common.jdbc.EventuateTransactionTemplate;
+import io.eventuate.javaclient.jdbc.EventAndTrigger;
+import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
+import io.eventuate.javaclient.jdbc.LoadedSnapshot;
 
 import java.util.List;
 import java.util.Optional;
 
 public class EventuateLocalJdbcAccess extends EventuateJdbcAccessImpl {
 
-  public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate, EventuateCommonJdbcOperations eventuateCommonJdbcOperations) {
-    super(jdbcTemplate, eventuateCommonJdbcOperations);
+  public EventuateLocalJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
+                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
+                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations) {
+    super(eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations);
   }
 
-  public EventuateLocalJdbcAccess(JdbcTemplate jdbcTemplate,
+  public EventuateLocalJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
+                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                   EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
                                   EventuateSchema eventuateSchema) {
-    super(jdbcTemplate, eventuateCommonJdbcOperations, eventuateSchema);
+    super(eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSchema);
   }
 
   @Override

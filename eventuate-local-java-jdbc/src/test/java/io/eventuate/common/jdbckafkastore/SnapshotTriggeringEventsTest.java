@@ -3,8 +3,8 @@ package io.eventuate.common.jdbckafkastore;
 import io.eventuate.DuplicateTriggeringEventException;
 import io.eventuate.EventContext;
 import io.eventuate.common.json.mapper.JSonMapper;
-import io.eventuate.javaclient.spring.jdbc.EventAndTrigger;
-import io.eventuate.javaclient.spring.jdbc.LoadedSnapshot;
+import io.eventuate.javaclient.jdbc.EventAndTrigger;
+import io.eventuate.javaclient.jdbc.LoadedSnapshot;
 import org.junit.Test;
 
 import java.util.Collections;

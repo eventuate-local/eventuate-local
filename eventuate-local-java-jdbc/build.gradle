@@ -6,20 +6,12 @@ dependencies {
     compile "io.eventuate.common:eventuate-common-eventuate-local:$eventuateCommonVersion"
     compile "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
     compile "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
-    compile "io.eventuate.common:eventuate-common-jdbc:$eventuateCommonVersion"
-
-    compile "io.eventuate.client.java:eventuate-client-java-common-impl:$eventuateClientVersion"
+    compile "io.eventuate.common:eventuate-common-jdbc-spring:$eventuateCommonVersion"
     compile "io.eventuate.client.java:eventuate-client-java-jdbc-common:$eventuateClientVersion"
-    compile "io.eventuate.client.java:eventuate-client-java-spring-common:$eventuateClientVersion"
     compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-basic-consumer:$eventuateMessagingKafkaVersion"
-    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
-    compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
     compile 'mysql:mysql-connector-java:5.1.39'
     compile ('org.postgresql:postgresql:42.1.4') {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
     compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.2.1.jre8'
-
-    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
-
 }

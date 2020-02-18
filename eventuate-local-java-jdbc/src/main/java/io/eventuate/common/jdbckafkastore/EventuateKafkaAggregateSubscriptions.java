@@ -70,10 +70,14 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
                                         SubscriberOptions subscriberOptions,
                                         Function<SerializedEvent, CompletableFuture<?>> handler) {
 
+    logger.info("Subscribing: subscriberId = {}, aggregatesAndEvents = {}, options = {}", subscriberId, aggregatesAndEvents, subscriberOptions);
+
     List<String> topics = aggregatesAndEvents.keySet()
             .stream()
             .map(AggregateTopicMapping::aggregateTypeToTopic)
             .collect(toList());
+
+    logger.info("Creating consumer: subscriberId = {}, aggregatesAndEvents = {}, options = {}", subscriberId, aggregatesAndEvents, subscriberOptions);
 
     EventuateKafkaConsumer consumer = new EventuateKafkaConsumer(subscriberId, (record, callback) -> {
       List<SerializedEvent> serializedEvents = toSerializedEvents(record);
@@ -92,10 +96,14 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
     }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties);
 
     addConsumer(consumer);
+
+    logger.info("Starting consumer: subscriberId = {}, aggregatesAndEvents = {}, options = {}", subscriberId, aggregatesAndEvents, subscriberOptions);
+
     consumer.start();
 
-    return CompletableFuture.completedFuture(null);
+    logger.info("Subscribed: subscriberId = {}, aggregatesAndEvents = {}, options = {}", subscriberId, aggregatesAndEvents, subscriberOptions);
 
+    return CompletableFuture.completedFuture(null);
   }
 
   private List<SerializedEvent> toSerializedEvents(ConsumerRecord<String, byte[]> record) {

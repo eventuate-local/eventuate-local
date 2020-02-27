@@ -1,6 +1,6 @@
 package io.eventuate.local.java.micronaut.jdbc.jdbckafkastore;
 
-import io.eventuate.javaclient.tests.common.micronaut.AbstractMicronautAccountIntegrationReactiveTest;
+import io.eventuate.javaclient.micronaut.tests.common.AbstractMicronautAccountIntegrationReactiveTest;
 import io.micronaut.test.annotation.MicronautTest;
 
 @MicronautTest(transactional = false)

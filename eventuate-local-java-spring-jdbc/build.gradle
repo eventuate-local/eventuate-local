@@ -1,0 +1,12 @@
+// apply plugin: PublicModulePlugin
+apply plugin: PrivateModulePlugin
+
+dependencies {
+    compile project (":eventuate-local-java-jdbc")
+    compile "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
+    compile "io.eventuate.client.java:eventuate-client-java-spring-common:$eventuateClientVersion"
+    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
+    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-basic-consumer:$eventuateMessagingKafkaVersion"
+    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-common:$eventuateMessagingKafkaVersion"
+}

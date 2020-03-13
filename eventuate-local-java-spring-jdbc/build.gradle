@@ -1,5 +1,4 @@
-// apply plugin: PublicModulePlugin
-apply plugin: PrivateModulePlugin
+apply plugin: PublicModulePlugin
 
 dependencies {
     compile project (":eventuate-local-java-jdbc")

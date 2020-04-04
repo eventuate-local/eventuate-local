@@ -1,0 +1,15 @@
+apply plugin: PublicModulePlugin
+
+dependencies {
+    compile "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
+
+    compile project(":eventuate-client-java-jdbc")
+    compile project(":eventuate-client-java-jdbc-common-tests")
+    compile project(":eventuate-client-java-spring-common")
+    compile project(":eventuate-client-java-spring")
+
+    compile "io.eventuate.common:eventuate-common-spring-in-memory-database:$eventuateCommonVersion"
+
+    testCompile project(":eventuate-client-java-test-util")
+    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+}

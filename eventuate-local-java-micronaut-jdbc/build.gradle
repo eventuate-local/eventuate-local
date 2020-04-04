@@ -16,7 +16,7 @@ dependencyManagement {
 dependencies {
     compile project (":eventuate-local-java-jdbc")
     compile "io.eventuate.common:eventuate-common-micronaut-jdbc:$eventuateCommonVersion"
-    compile "io.eventuate.client.java:eventuate-client-java-micronaut-common:$eventuateClientVersion"
+    compile project(":eventuate-client-java-micronaut-common")
     compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-micronaut-basic-consumer:$eventuateMessagingKafkaVersion"
     compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-micronaut-common:$eventuateMessagingKafkaVersion"
 

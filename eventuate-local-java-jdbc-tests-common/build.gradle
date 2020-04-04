@@ -2,7 +2,7 @@ apply plugin: PrivateModulePlugin
 
 dependencies {
 
-    compile "io.eventuate.client.java:eventuate-client-java-tests-common:$eventuateClientVersion"
+    compile project(":eventuate-client-java-tests-common")
     compile "junit:junit:4.11"
 }
 

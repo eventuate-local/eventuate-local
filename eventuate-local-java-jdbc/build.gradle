@@ -7,7 +7,7 @@ dependencies {
     compile "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
     compile "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
     compile "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
-    compile "io.eventuate.client.java:eventuate-client-java-jdbc-common:$eventuateClientVersion"
+    compile project(":eventuate-client-java-jdbc-common")
     compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-basic-consumer:$eventuateMessagingKafkaVersion"
     compile 'mysql:mysql-connector-java:5.1.39'
     compile ('org.postgresql:postgresql:42.1.4') {

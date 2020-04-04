@@ -1,0 +1,7 @@
+apply plugin: PrivateModulePlugin
+
+dependencies {
+    compile project(":eventuate-client-java-tests-example")
+    compile project(":eventuate-client-java-spring")
+    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
+}

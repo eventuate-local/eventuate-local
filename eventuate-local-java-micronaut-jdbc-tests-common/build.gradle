@@ -14,7 +14,7 @@ dependencyManagement {
 
 dependencies {
     compile project(":eventuate-local-java-micronaut-jdbc")
-    compile "io.eventuate.client.java:eventuate-client-java-tests-common-micronaut:$eventuateClientVersion"
+    compile project(":eventuate-client-java-tests-common-micronaut")
     compile project(":eventuate-local-java-jdbc-tests-common")
 
     compile "io.micronaut:micronaut-spring"

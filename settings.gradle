@@ -33,6 +33,7 @@ include 'eventuate-client-java-tests-example-micronaut'
 include 'eventuate-client-java-tests-example-spring'
 include 'eventuate-client-java-micronaut'
 include 'eventuate-client-java-micronaut-common'
+include 'eventuate-client-java-micronaut-jdbc'
 
 
 rootProject.name = 'eventuate-local-java'

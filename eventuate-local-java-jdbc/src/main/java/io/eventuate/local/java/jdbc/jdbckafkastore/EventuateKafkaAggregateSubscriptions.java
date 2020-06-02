@@ -9,6 +9,7 @@ import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.javaclient.commonimpl.SerializedEvent;
 import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumer;
 import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.messaging.kafka.basic.consumer.KafkaConsumerFactory;
 import io.eventuate.messaging.kafka.common.AggregateTopicMapping;
 import io.eventuate.messaging.kafka.common.EventuateKafkaConfigurationProperties;
 import io.eventuate.messaging.kafka.common.EventuateKafkaMultiMessageConverter;
@@ -35,12 +36,15 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
   private EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration;
   private EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties;
   private EventuateKafkaMultiMessageConverter eventuateKafkaMultiMessageConverter = new EventuateKafkaMultiMessageConverter();
+  private KafkaConsumerFactory kafkaConsumerFactory;
 
   public EventuateKafkaAggregateSubscriptions(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
-                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
+                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
+                                              KafkaConsumerFactory kafkaConsumerFactory) {
 
     this.eventuateLocalAggregateStoreConfiguration = eventuateLocalAggregateStoreConfiguration;
     this.eventuateKafkaConsumerConfigurationProperties = eventuateKafkaConsumerConfigurationProperties;
+    this.kafkaConsumerFactory = kafkaConsumerFactory;
   }
 
   private final List<EventuateKafkaConsumer> consumers = new ArrayList<>();
@@ -92,7 +96,7 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
       }
 
       return null;
-    }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties);
+    }, topics, eventuateLocalAggregateStoreConfiguration.getBootstrapServers(), eventuateKafkaConsumerConfigurationProperties, kafkaConsumerFactory);
 
     addConsumer(consumer);
 

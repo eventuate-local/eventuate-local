@@ -14,6 +14,7 @@ import io.eventuate.javaclient.commonimpl.adapters.SyncToAsyncAggregateCrudAdapt
 import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
 import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.messaging.kafka.basic.consumer.KafkaConsumerFactory;
 import io.eventuate.messaging.kafka.common.EventuateKafkaConfigurationProperties;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Requires;
@@ -52,8 +53,11 @@ public class EventuateLocalFactory {
 
   @Singleton
   public EventuateKafkaAggregateSubscriptions aggregateEvents(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
-                                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-    return new EventuateKafkaAggregateSubscriptions(eventuateLocalAggregateStoreConfiguration, eventuateKafkaConsumerConfigurationProperties);
+                                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
+                                                              KafkaConsumerFactory kafkaConsumerFactory) {
+    return new EventuateKafkaAggregateSubscriptions(eventuateLocalAggregateStoreConfiguration,
+            eventuateKafkaConsumerConfigurationProperties,
+            kafkaConsumerFactory);
   }
 
 

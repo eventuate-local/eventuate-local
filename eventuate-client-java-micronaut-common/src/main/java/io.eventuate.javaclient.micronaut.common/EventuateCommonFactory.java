@@ -10,24 +10,40 @@ import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.javaclient.commonimpl.EventuateAggregateStoreImpl;
 import io.eventuate.javaclient.commonimpl.SerializedEventDeserializer;
+import io.eventuate.javaclient.commonimpl.schema.DefaultEventuateEventSchemaManager;
+import io.eventuate.javaclient.commonimpl.schema.ConfigurableEventSchema;
+import io.eventuate.javaclient.commonimpl.schema.EventSchemaConfigurer;
+import io.eventuate.javaclient.commonimpl.schema.EventuateEventSchemaManager;
 import io.micronaut.context.annotation.Factory;
 
 import javax.annotation.Nullable;
 import javax.inject.Singleton;
+import java.util.Arrays;
 
 @Factory
 public class EventuateCommonFactory {
+
+  @Singleton
+  public EventuateEventSchemaManager eventSchemaMetadataManager(EventSchemaConfigurer[] metadataManagerConfigurers) {
+    DefaultEventuateEventSchemaManager eventSchemaManager = new DefaultEventuateEventSchemaManager();
+    ConfigurableEventSchema configuration = new ConfigurableEventSchema(eventSchemaManager);
+    Arrays.stream(metadataManagerConfigurers).forEach(c -> c.configure(configuration));
+    return eventSchemaManager;
+  }
 
   @Singleton
   public EventuateAggregateStore aggregateEventStore(MissingApplyEventMethodStrategy[] missingApplyEventMethodStrategies,
                                                      @Nullable SerializedEventDeserializer serializedEventDeserializer,
                                                      AggregateCrud restClient,
                                                      AggregateEvents stompClient,
-                                                     SnapshotManager snapshotManager) {
+                                                     SnapshotManager snapshotManager,
+                                                     EventuateEventSchemaManager eventuateEventSchemaManager) {
     EventuateAggregateStoreImpl eventuateAggregateStore = new EventuateAggregateStoreImpl(restClient,
             stompClient,
             snapshotManager,
-            new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies));
+            new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies),
+            eventuateEventSchemaManager
+    );
 
     if (serializedEventDeserializer != null)
       eventuateAggregateStore.setSerializedEventDeserializer(serializedEventDeserializer);

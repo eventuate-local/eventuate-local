@@ -3,13 +3,18 @@ package io.eventuate.javaclient.spring.jdbc;
 import io.eventuate.common.common.spring.jdbc.EventuateSpringJdbcStatementExecutor;
 import io.eventuate.common.common.spring.jdbc.EventuateSpringTransactionTemplate;
 import io.eventuate.common.jdbc.*;
+import io.eventuate.common.jdbc.sqldialect.SqlDialectSelector;
+import io.eventuate.common.spring.jdbc.sqldialect.SqlDialectConfiguration;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
 import io.eventuate.javaclient.jdbc.common.tests.CommonEventuateJdbcAccessImplTest;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -19,6 +24,8 @@ import javax.sql.DataSource;
 
 public abstract class EventuateJdbcAccessImplTest extends CommonEventuateJdbcAccessImplTest {
 
+  @Configuration
+  @Import(SqlDialectConfiguration.class)
   public static class Config {
     @Bean
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -34,8 +41,11 @@ public abstract class EventuateJdbcAccessImplTest extends CommonEventuateJdbcAcc
 
     @Bean
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-    public EventuateCommonJdbcOperations eventuateCommonJdbcOperations(EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor) {
-      return new EventuateCommonJdbcOperations(eventuateJdbcStatementExecutor);
+    public EventuateCommonJdbcOperations eventuateCommonJdbcOperations(EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
+                                                                       SqlDialectSelector sqlDialectSelector,
+                                                                       @Value("${spring.datasource.driver-class-name}") String driver) {
+
+      return new EventuateCommonJdbcOperations(eventuateJdbcStatementExecutor, sqlDialectSelector.getDialect(driver));
     }
 
     @Bean

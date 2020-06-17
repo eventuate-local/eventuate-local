@@ -3,6 +3,7 @@ package io.eventuate.javaclient.micronaut.jdbc;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
+import io.eventuate.common.jdbc.sqldialect.SqlDialectSelector;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.javaclient.commonimpl.adapters.SyncToAsyncAggregateCrudAdapter;
@@ -14,6 +15,7 @@ import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
 import io.eventuate.javaclient.jdbc.JdkTimerBasedEventuateClientScheduler;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
+import io.micronaut.context.annotation.Value;
 import io.micronaut.runtime.context.scope.Refreshable;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
@@ -25,8 +27,10 @@ import javax.sql.DataSource;
 public class EmbeddedTestAggregateStoreFactory {
 
   @Primary
-  public EventuateCommonJdbcOperations eventuateCommonJdbcOperations(EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor) {
-    return new EventuateCommonJdbcOperations(eventuateJdbcStatementExecutor);
+  public EventuateCommonJdbcOperations eventuateCommonJdbcOperations(EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
+                                                                     SqlDialectSelector sqlDialectSelector,
+                                                                     @Value("${datasources.default.driver-class-name}") String driver) {
+    return new EventuateCommonJdbcOperations(eventuateJdbcStatementExecutor, sqlDialectSelector.getDialect(driver));
   }
 
   @Singleton

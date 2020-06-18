@@ -6,23 +6,20 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.sql.DataSource;
 import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {EmbeddedTestAggregateStoreConfiguration.class, EmptyEventuateJdbcAccessImplTest.Config.class})
+@SpringApplicationConfiguration(classes = EmptyEventuateJdbcAccessImplTest.Config.class)
 @IntegrationTest
 public class EmptyEventuateJdbcAccessImplTest extends EventuateJdbcAccessImplTest {
 
+  @Configuration
+  @Import(CommonEventuateJdbcAccessImplTestConfiguration.class)
   public static class Config {
-    @Bean
-    public JdbcTemplate jdbcTemplate(DataSource dataSource) {
-      return new JdbcTemplate(dataSource);
-    }
-
     @Bean
     public EventuateSchema eventuateSchema() {
       return new EventuateSchema(EventuateSchema.EMPTY_SCHEMA);

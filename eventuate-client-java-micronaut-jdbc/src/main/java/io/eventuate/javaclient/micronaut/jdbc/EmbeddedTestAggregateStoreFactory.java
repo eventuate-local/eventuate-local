@@ -16,20 +16,12 @@ import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
 import io.eventuate.javaclient.jdbc.JdkTimerBasedEventuateClientScheduler;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.inject.Singleton;
-import javax.sql.DataSource;
 import java.util.Collections;
 
 @Factory
 public class EmbeddedTestAggregateStoreFactory {
-
-  @Singleton
-  public PlatformTransactionManager platformTransactionManager(DataSource dataSource) {
-    return new DataSourceTransactionManager(dataSource);
-  }
 
   @Singleton
   public EventuateDatabaseScriptSupplier eventuateCommonInMemoryScriptSupplierForEventuateLocal() {

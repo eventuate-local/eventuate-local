@@ -18,6 +18,8 @@ dependencies {
     compile project(":eventuate-client-java-micronaut")
     compile project(":eventuate-client-java-jdbc-common-tests")
 
+    compile "io.eventuate.common:eventuate-common-micronaut-in-memory-database:$eventuateCommonVersion"
+
     compile "io.eventuate.common:eventuate-common-micronaut-spring-jdbc:$eventuateCommonVersion"
 
     compile "io.micronaut:micronaut-spring"
@@ -28,7 +30,6 @@ dependencies {
     compile "io.micronaut:micronaut-validation"
     compile "io.micronaut:micronaut-runtime"
     compile  'org.springframework:spring-jdbc'
-    compile 'io.micronaut.configuration:micronaut-jdbc-hikari'
     testAnnotationProcessor "io.micronaut:micronaut-inject-java"
     testCompile "org.junit.jupiter:junit-jupiter-api"
     testCompile "io.micronaut.test:micronaut-test-junit5"

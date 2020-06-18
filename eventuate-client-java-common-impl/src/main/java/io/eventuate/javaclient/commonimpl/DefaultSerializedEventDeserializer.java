@@ -33,7 +33,7 @@ public class DefaultSerializedEventDeserializer implements SerializedEventDeseri
       eventType = EndOfCurrentEventsReachedEvent.class.getName();
     }
     try {
-      return (Class<Event>) Class.forName(eventType);
+      return (Class<Event>) Class.forName(eventType, true, Thread.currentThread().getContextClassLoader());
     } catch (ClassNotFoundException e) {
       logger.error("Event class not found", e);
       throw new RuntimeException(e);

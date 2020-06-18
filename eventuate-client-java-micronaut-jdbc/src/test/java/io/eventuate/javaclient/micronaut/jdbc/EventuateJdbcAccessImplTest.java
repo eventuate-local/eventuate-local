@@ -1,10 +1,9 @@
 package io.eventuate.javaclient.micronaut.jdbc;
 
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
+import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.jdbc.common.tests.CommonEventuateJdbcAccessImplTest;
-import io.micronaut.context.ApplicationContext;
-import io.micronaut.runtime.context.scope.refresh.RefreshEvent;
 import io.micronaut.test.annotation.MicronautTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,13 +14,18 @@ import javax.inject.Inject;
 public class EventuateJdbcAccessImplTest extends CommonEventuateJdbcAccessImplTest {
 
   @Inject
-  private ApplicationContext applicationContext;
-
-  @Inject
   private EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor;
 
   @Inject
   private EventuateJdbcAccess eventuateJdbcAccess;
+
+  @Inject
+  private EventuateSchema eventuateSchema;
+
+  @Override
+  protected EventuateSchema getEventuateSchema() {
+    return eventuateSchema;
+  }
 
   @Override
   protected String readAllEventsSql() {
@@ -40,7 +44,7 @@ public class EventuateJdbcAccessImplTest extends CommonEventuateJdbcAccessImplTe
 
   @BeforeEach
   public void init() {
-    applicationContext.publishEvent(new RefreshEvent());
+    clear();
   }
 
   @Test

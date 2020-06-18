@@ -15,10 +15,13 @@ import io.eventuate.javaclient.commonimpl.adapters.SyncToAsyncAggregateCrudAdapt
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.common.EventuateCommonConfiguration;
 import io.eventuate.common.jdbc.EventuateSchema;
+import io.eventuate.messaging.kafka.basic.consumer.DefaultKafkaConsumerFactory;
 import io.eventuate.messaging.kafka.basic.consumer.EventuateKafkaConsumerConfigurationProperties;
+import io.eventuate.messaging.kafka.basic.consumer.KafkaConsumerFactory;
 import io.eventuate.messaging.kafka.spring.basic.consumer.EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration;
 import io.eventuate.messaging.kafka.common.EventuateKafkaConfigurationProperties;
 import io.eventuate.messaging.kafka.spring.common.EventuateKafkaPropertiesConfiguration;
+import io.eventuate.messaging.kafka.spring.consumer.KafkaConsumerFactoryConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,7 +39,8 @@ import org.springframework.transaction.support.TransactionTemplate;
         EventuateCommonJdbcOperationsConfiguration.class,
         EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class,
         EventuateKafkaPropertiesConfiguration.class,
-        EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class})
+        EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class,
+        KafkaConsumerFactoryConfiguration.class})
 public class EventuateLocalConfiguration {
 
   @Bean
@@ -63,8 +67,9 @@ public class EventuateLocalConfiguration {
 
   @Bean
   public EventuateKafkaAggregateSubscriptions aggregateEvents(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
-                                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties) {
-    return new EventuateKafkaAggregateSubscriptions(eventuateLocalAggregateStoreConfiguration, eventuateKafkaConsumerConfigurationProperties);
+                                                              EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
+                                                              KafkaConsumerFactory kafkaConsumerFactory) {
+    return new EventuateKafkaAggregateSubscriptions(eventuateLocalAggregateStoreConfiguration, eventuateKafkaConsumerConfigurationProperties, kafkaConsumerFactory);
   }
 
 

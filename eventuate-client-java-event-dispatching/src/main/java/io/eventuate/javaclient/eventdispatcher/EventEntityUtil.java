@@ -8,7 +8,7 @@ public class EventEntityUtil {
   public static Class<?> toEntityType(Class<Event> eventType) {
     String entityName = toEntityTypeName(eventType);
     try {
-      return Class.forName(entityName);
+      return Class.forName(entityName, true, Thread.currentThread().getContextClassLoader());
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }

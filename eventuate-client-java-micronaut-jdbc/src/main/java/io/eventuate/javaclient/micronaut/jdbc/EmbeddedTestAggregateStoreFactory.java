@@ -1,7 +1,9 @@
 package io.eventuate.javaclient.micronaut.jdbc;
 
+import io.eventuate.common.inmemorydatabase.EventuateDatabaseScriptSupplier;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
+import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
@@ -14,38 +16,43 @@ import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
 import io.eventuate.javaclient.jdbc.JdkTimerBasedEventuateClientScheduler;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
-import io.micronaut.runtime.context.scope.Refreshable;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.inject.Singleton;
 import javax.sql.DataSource;
+import java.util.Collections;
 
 @Factory
 public class EmbeddedTestAggregateStoreFactory {
 
-  @Primary
-  public EventuateCommonJdbcOperations eventuateCommonJdbcOperations(EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor) {
-    return new EventuateCommonJdbcOperations(eventuateJdbcStatementExecutor);
+  @Singleton
+  public PlatformTransactionManager platformTransactionManager(DataSource dataSource) {
+    return new DataSourceTransactionManager(dataSource);
+  }
+
+  @Singleton
+  public EventuateDatabaseScriptSupplier eventuateCommonInMemoryScriptSupplierForEventuateLocal() {
+    return () -> Collections.singletonList("eventuate-embedded-schema.sql");
   }
 
   @Singleton
   @Primary
-  public EventuateJdbcAccess eventuateJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate, EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor, EventuateCommonJdbcOperations eventuateCommonJdbcOperations) {
-    return new EventuateJdbcAccessImpl(eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations);
+  public EventuateJdbcAccess eventuateJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
+                                                 EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
+                                                 EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
+                                                 EventuateSchema eventuateSchema) {
+
+    return new EventuateJdbcAccessImpl(eventuateTransactionTemplate,
+            eventuateJdbcStatementExecutor,
+            eventuateCommonJdbcOperations,
+            eventuateSchema);
   }
 
   @Singleton
   @Primary
   public EventuateEmbeddedTestAggregateStore eventuateEmbeddedTestAggregateStore(EventuateJdbcAccess eventuateJdbcAccess) {
     return new EventuateEmbeddedTestAggregateStore(eventuateJdbcAccess);
-  }
-
-  @Singleton
-  @Refreshable
-  public DataSource dataSource() {
-    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    return builder.setType(EmbeddedDatabaseType.H2).addScript("eventuate-embedded-schema.sql").build();
   }
 
   @Singleton

@@ -46,7 +46,7 @@ public class AggregateCrudMapping {
   public static Snapshot toSnapshot(SerializedSnapshot serializedSnapshot) {
     Class<?> clasz;
     try {
-      clasz = AggregateCrudMapping.class.getClassLoader().loadClass(serializedSnapshot.getSnapshotType());
+      clasz = Thread.currentThread().getContextClassLoader().loadClass(serializedSnapshot.getSnapshotType());
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
@@ -59,7 +59,8 @@ public class AggregateCrudMapping {
 
   public static Event toEvent(EventIdTypeAndData eventIdTypeAndData) {
     try {
-      return JSonMapper.fromJson(eventIdTypeAndData.getEventData(), (Class<Event>) Class.forName(eventIdTypeAndData.getEventType()));
+      return JSonMapper.fromJson(eventIdTypeAndData.getEventData(), (Class<Event>) Class.forName(eventIdTypeAndData.getEventType(),
+              true, Thread.currentThread().getContextClassLoader()));
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     }

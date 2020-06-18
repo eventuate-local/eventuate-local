@@ -2,6 +2,7 @@ package io.eventuate.javaclient.jdbc.common.tests;
 
 import io.eventuate.EntityIdAndType;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
+import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.javaclient.commonimpl.AggregateCrudUpdateOptions;
 import io.eventuate.javaclient.commonimpl.EventTypeAndData;
 import io.eventuate.javaclient.commonimpl.LoadedEvents;
@@ -27,6 +28,12 @@ public abstract class CommonEventuateJdbcAccessImplTest {
   protected abstract String readAllEventsSql();
   protected abstract String readAllEntitiesSql();
   protected abstract String readAllSnapshots();
+  protected abstract EventuateSchema getEventuateSchema();
+
+  protected void clear() {
+    getEventuateJdbcStatementExecutor().update(String.format("delete from %s", getEventuateSchema().qualifyTable("events")));
+    getEventuateJdbcStatementExecutor().update(String.format("delete from %s", getEventuateSchema().qualifyTable("entities")));
+  }
 
   public void testSave() {
     EventTypeAndData eventTypeAndData = new EventTypeAndData(testEventType, testEventData, Optional.empty());

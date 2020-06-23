@@ -3,8 +3,7 @@ package io.eventuate.javaclient.commonimpl;
 import io.eventuate.*;
 import io.eventuate.common.id.Int128;
 import io.eventuate.common.json.mapper.JSonMapper;
-import io.eventuate.javaclient.commonimpl.schemametadata.EmptyEventSchemaMetadataManager;
-import io.eventuate.javaclient.commonimpl.schemametadata.EventSchemaMetadataManager;
+import io.eventuate.javaclient.commonimpl.schema.EventuateEventSchemaManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,20 +19,21 @@ import static io.eventuate.javaclient.commonimpl.EventuateActivity.activityLogge
 
 public class EventuateAggregateStoreImpl implements EventuateAggregateStore {
 
-  private static final String SCHEMA_VERSION = "eventuate_schema_version";
 
   private AggregateCrud aggregateCrud;
   private AggregateEvents aggregateEvents;
   private SnapshotManager snapshotManager;
   private SerializedEventDeserializer serializedEventDeserializer = new DefaultSerializedEventDeserializer();
   private MissingApplyEventMethodStrategy missingApplyEventMethodStrategy;
-  private EventSchemaMetadataManager eventSchemaMetadataManager = new EmptyEventSchemaMetadataManager();
+  private EventuateEventSchemaManager eventuateEventSchemaManager;
 
-  public EventuateAggregateStoreImpl(AggregateCrud aggregateCrud, AggregateEvents aggregateEvents, SnapshotManager snapshotManager, MissingApplyEventMethodStrategy missingApplyEventMethodStrategy) {
+  public EventuateAggregateStoreImpl(AggregateCrud aggregateCrud, AggregateEvents aggregateEvents, SnapshotManager snapshotManager, MissingApplyEventMethodStrategy missingApplyEventMethodStrategy,
+                                     EventuateEventSchemaManager eventuateEventSchemaManager) {
     this.aggregateCrud = aggregateCrud;
     this.aggregateEvents = aggregateEvents;
     this.snapshotManager = snapshotManager;
     this.missingApplyEventMethodStrategy = missingApplyEventMethodStrategy;
+    this.eventuateEventSchemaManager = eventuateEventSchemaManager;
   }
 
   public void setSerializedEventDeserializer(SerializedEventDeserializer serializedEventDeserializer) {
@@ -67,13 +67,12 @@ public class EventuateAggregateStoreImpl implements EventuateAggregateStore {
   }
 
   private Optional<Map<String, String>> withSchemaMetadata(Class clasz, Optional<Map<String, String>> eventMetadata) {
-    Optional<String> possibleVersion = eventSchemaMetadataManager.currentVersion(clasz);
-    if (possibleVersion.isPresent()) {
-      Map<String, String> updatedHeaders = eventMetadata.map(HashMap::new).orElse(new HashMap<>());
-      updatedHeaders.put(SCHEMA_VERSION, possibleVersion.get());
-      return Optional.of(updatedHeaders);
-    } else
+    Map<String, String> schemaMetadata = eventuateEventSchemaManager.currentSchemaMetadata(clasz.getName());
+    if (schemaMetadata.isEmpty())
       return eventMetadata;
+    Map<String, String> result = eventMetadata.orElseGet(HashMap::new);
+    schemaMetadata.forEach(result::putIfAbsent);
+    return Optional.of(result);
   }
 
 
@@ -108,7 +107,7 @@ public class EventuateAggregateStoreImpl implements EventuateAggregateStore {
       tappedOutcome = outcome;
 
     return tappedOutcome.thenApply(le -> {
-      List<EventWithMetadata> eventsWithIds = eventSchemaMetadataManager.upcastEvents(clasz, le.getEvents()).stream().map(AggregateCrudMapping::toEventWithMetadata).collect(Collectors.toList());
+      List<EventWithMetadata> eventsWithIds = eventuateEventSchemaManager.upcastEvents(clasz.getName(), le.getEvents()).stream().map(AggregateCrudMapping::toEventWithMetadata).collect(Collectors.toList());
       List<Event> events = eventsWithIds.stream().map(EventWithMetadata::getEvent).collect(Collectors.toList());
       return new EntityWithMetadata<T>(
               new EntityIdAndVersion(entityId, le.getEvents().isEmpty() ? le.getSnapshot().get().getEntityVersion() : le.getEvents().get(le.getEvents().size() - 1).getId()),
@@ -135,7 +134,7 @@ public class EventuateAggregateStoreImpl implements EventuateAggregateStore {
 
   @Override
   public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> update(Class<T> clasz, EntityIdAndVersion entityIdAndVersion, List<Event> events, Optional<UpdateOptions> updateOptions) {
-    Optional<String> serializedMetadata = updateOptions.flatMap(UpdateOptions::getEventMetadata).map(JSonMapper::toJson);
+    Optional<String> serializedMetadata = updateOptions.flatMap(so -> withSchemaMetadata(clasz, so.getEventMetadata())).map(JSonMapper::toJson);
     List<EventTypeAndData> serializedEvents = events.stream().map(event -> toEventTypeAndData(event, serializedMetadata)).collect(Collectors.toList());
 
     CompletableFuture<EntityIdVersionAndEventIds> outcome = aggregateCrud.update(new EntityIdAndType(entityIdAndVersion.getEntityId(), clasz.getName()),
@@ -158,7 +157,7 @@ public class EventuateAggregateStoreImpl implements EventuateAggregateStore {
     if (activityLogger.isDebugEnabled())
       activityLogger.debug("Subscribing {} {}", subscriberId, aggregatesAndEvents);
     CompletableFuture<?> outcome = aggregateEvents.subscribe(subscriberId, aggregatesAndEvents, subscriberOptions,
-            se -> serializedEventDeserializer.toDispatchedEvent(se).map(handler::apply).orElse(CompletableFuture.completedFuture(null)));
+            se -> serializedEventDeserializer.toDispatchedEvent(eventuateEventSchemaManager.upcastEvent(se)).map(handler::apply).orElse(CompletableFuture.completedFuture(null)));
     if (activityLogger.isDebugEnabled())
       return CompletableFutureUtil.tap(outcome, (result, throwable) -> {
         if (throwable == null)

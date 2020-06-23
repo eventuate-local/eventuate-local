@@ -14,6 +14,15 @@ public class ConfigurableEventSchema {
     return new AggregateSchemaBuilder(this, aggregateType);
   }
 
+  /**
+   * @param aggregateType - the fully qualified class name
+   * @param externalAggregateType - the external name, e.g. Kafka topic - TODO implement <=> Mapping
+   * @return a builder
+   */
+  public AggregateSchemaBuilder forAggregate(String aggregateType, String externalAggregateType) {
+    return new AggregateSchemaBuilder(this, aggregateType);
+  }
+
   protected AggregateSchemaBuilder finishForAggregateAndStartNew(String aggregateType, List<AggregateSchemaVersion> versions, String nextAggregateType) {
     finishForAggregate(aggregateType, versions);
     return new AggregateSchemaBuilder(this, nextAggregateType);

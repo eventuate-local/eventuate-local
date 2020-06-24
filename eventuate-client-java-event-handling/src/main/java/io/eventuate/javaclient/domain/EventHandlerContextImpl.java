@@ -9,10 +9,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 class EventHandlerContextImpl implements EventHandlerContext<Event> {
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
   private final DispatchedEvent<Event> de;
 
-  public EventHandlerContextImpl(EventuateAggregateStore aggregateStore, DispatchedEvent<Event> de) {
+  public EventHandlerContextImpl(EventuateAggregateStoreCrud aggregateStore, DispatchedEvent<Event> de) {
     this.aggregateStore = aggregateStore;
     this.de = de;
   }

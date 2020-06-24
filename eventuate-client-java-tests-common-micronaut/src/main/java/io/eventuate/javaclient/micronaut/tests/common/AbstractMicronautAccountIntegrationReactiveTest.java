@@ -11,7 +11,7 @@ import static io.eventuate.testutil.AsyncUtil.await;
 public class AbstractMicronautAccountIntegrationReactiveTest extends AbstractMicronautAccountIntegrationTest {
 
   @Inject
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
 
   @Override
   protected <T extends Aggregate<T>> EntityIdAndVersion save(Class<T> classz, List<Event> events, Optional<SaveOptions> saveOptions) {

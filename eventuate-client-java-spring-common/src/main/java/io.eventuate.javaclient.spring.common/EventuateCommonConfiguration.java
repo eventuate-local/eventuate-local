@@ -1,17 +1,12 @@
 package io.eventuate.javaclient.spring.common;
 
-import io.eventuate.CompositeMissingApplyEventMethodStrategy;
-import io.eventuate.EventuateAggregateStore;
-import io.eventuate.MissingApplyEventMethodStrategy;
-import io.eventuate.SnapshotManager;
-import io.eventuate.SnapshotManagerImpl;
-import io.eventuate.SnapshotStrategy;
+import io.eventuate.*;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.javaclient.commonimpl.EventuateAggregateStoreImpl;
 import io.eventuate.javaclient.commonimpl.SerializedEventDeserializer;
-import io.eventuate.javaclient.commonimpl.schema.DefaultEventuateEventSchemaManager;
 import io.eventuate.javaclient.commonimpl.schema.ConfigurableEventSchema;
+import io.eventuate.javaclient.commonimpl.schema.DefaultEventuateEventSchemaManager;
 import io.eventuate.javaclient.commonimpl.schema.EventSchemaConfigurer;
 import io.eventuate.javaclient.commonimpl.schema.EventuateEventSchemaManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +53,7 @@ public class EventuateCommonConfiguration {
 
   @Bean
   public io.eventuate.sync.EventuateAggregateStore syncAggregateEventStore(io.eventuate.javaclient.commonimpl.sync.AggregateCrud aggregateCrud,
-                                                                           io.eventuate.javaclient.commonimpl.sync.AggregateEvents aggregateEvents, SnapshotManager snapshotManager) {
+                                                               io.eventuate.javaclient.commonimpl.sync.AggregateEvents aggregateEvents, SnapshotManager snapshotManager) {
     io.eventuate.javaclient.commonimpl.sync.EventuateAggregateStoreImpl eventuateAggregateStore =
             new io.eventuate.javaclient.commonimpl.sync.EventuateAggregateStoreImpl(aggregateCrud, aggregateEvents, snapshotManager, new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies));
 

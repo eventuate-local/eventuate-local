@@ -4,8 +4,8 @@ import io.eventuate.Aggregate;
 import io.eventuate.EntityIdAndVersion;
 import io.eventuate.EntityWithMetadata;
 import io.eventuate.Event;
-import io.eventuate.sync.EventuateAggregateStore;
 import io.eventuate.SaveOptions;
+import io.eventuate.sync.EventuateAggregateStoreCrud;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.Optional;
 public class AbstractSpringAccountIntegrationSyncTest extends AbstractSpringAccountIntegrationTest {
 
   @Autowired
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
 
   @Override
   protected <T extends Aggregate<T>> EntityIdAndVersion save(Class<T> classz, List<Event> events, Optional<SaveOptions> saveOptions) {

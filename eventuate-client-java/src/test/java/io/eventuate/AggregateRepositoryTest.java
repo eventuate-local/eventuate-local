@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 public class AggregateRepositoryTest {
 
   private AggregateRepository<Account, AccountCommand> repository;
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
 
   private final static BigDecimal INITIAL_BALANCE = new BigDecimal(1234);
   private final static BigDecimal DEBIT_AMOUNT = new BigDecimal(10);

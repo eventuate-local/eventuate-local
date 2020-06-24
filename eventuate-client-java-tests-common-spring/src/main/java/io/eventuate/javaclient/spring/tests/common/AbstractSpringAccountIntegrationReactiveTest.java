@@ -1,11 +1,6 @@
 package io.eventuate.javaclient.spring.tests.common;
 
-import io.eventuate.Aggregate;
-import io.eventuate.EntityIdAndVersion;
-import io.eventuate.EntityWithMetadata;
-import io.eventuate.Event;
-import io.eventuate.EventuateAggregateStore;
-import io.eventuate.SaveOptions;
+import io.eventuate.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -16,7 +11,7 @@ import static io.eventuate.testutil.AsyncUtil.await;
 public class AbstractSpringAccountIntegrationReactiveTest extends AbstractSpringAccountIntegrationTest {
 
   @Autowired
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
 
   @Override
   protected <T extends Aggregate<T>> EntityIdAndVersion save(Class<T> classz, List<Event> events, Optional<SaveOptions> saveOptions) {

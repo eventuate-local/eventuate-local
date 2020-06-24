@@ -4,7 +4,7 @@ import io.eventuate.example.banking.domain.Account;
 import io.eventuate.example.banking.domain.AccountCommand;
 import io.eventuate.example.banking.domain.AccountSnapshotStrategy;
 import io.eventuate.sync.AggregateRepository;
-import io.eventuate.sync.EventuateAggregateStore;
+import io.eventuate.sync.EventuateAggregateStoreCrud;
 import io.micronaut.context.annotation.Factory;
 
 import javax.inject.Singleton;
@@ -20,7 +20,7 @@ public class JdbcSnapshotsIntegrationTestFactory {
   }
 
   @Singleton
-  public AggregateRepository<Account, AccountCommand> accountRepositorySync(EventuateAggregateStore aggregateStore) {
+  public AggregateRepository<Account, AccountCommand> accountRepositorySync(EventuateAggregateStoreCrud aggregateStore) {
     return new AggregateRepository<>(Account.class, aggregateStore);
   }
 }

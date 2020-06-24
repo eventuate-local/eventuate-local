@@ -1,17 +1,12 @@
 package io.eventuate.javaclient.micronaut.common;
 
-import io.eventuate.CompositeMissingApplyEventMethodStrategy;
-import io.eventuate.EventuateAggregateStore;
-import io.eventuate.MissingApplyEventMethodStrategy;
-import io.eventuate.SnapshotManager;
-import io.eventuate.SnapshotManagerImpl;
-import io.eventuate.SnapshotStrategy;
+import io.eventuate.*;
 import io.eventuate.javaclient.commonimpl.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.AggregateEvents;
 import io.eventuate.javaclient.commonimpl.EventuateAggregateStoreImpl;
 import io.eventuate.javaclient.commonimpl.SerializedEventDeserializer;
-import io.eventuate.javaclient.commonimpl.schema.DefaultEventuateEventSchemaManager;
 import io.eventuate.javaclient.commonimpl.schema.ConfigurableEventSchema;
+import io.eventuate.javaclient.commonimpl.schema.DefaultEventuateEventSchemaManager;
 import io.eventuate.javaclient.commonimpl.schema.EventSchemaConfigurer;
 import io.eventuate.javaclient.commonimpl.schema.EventuateEventSchemaManager;
 import io.micronaut.context.annotation.Factory;
@@ -33,11 +28,11 @@ public class EventuateCommonFactory {
 
   @Singleton
   public EventuateAggregateStore aggregateEventStore(MissingApplyEventMethodStrategy[] missingApplyEventMethodStrategies,
-                                                     @Nullable SerializedEventDeserializer serializedEventDeserializer,
-                                                     AggregateCrud restClient,
-                                                     AggregateEvents stompClient,
-                                                     SnapshotManager snapshotManager,
-                                                     EventuateEventSchemaManager eventuateEventSchemaManager) {
+                                                         @Nullable SerializedEventDeserializer serializedEventDeserializer,
+                                                         AggregateCrud restClient,
+                                                         AggregateEvents stompClient,
+                                                         SnapshotManager snapshotManager,
+                                                         EventuateEventSchemaManager eventuateEventSchemaManager) {
     EventuateAggregateStoreImpl eventuateAggregateStore = new EventuateAggregateStoreImpl(restClient,
             stompClient,
             snapshotManager,
@@ -53,10 +48,10 @@ public class EventuateCommonFactory {
 
   @Singleton
   public io.eventuate.sync.EventuateAggregateStore syncAggregateEventStore(MissingApplyEventMethodStrategy[] missingApplyEventMethodStrategies,
-                                                                           @Nullable SerializedEventDeserializer serializedEventDeserializer,
-                                                                           io.eventuate.javaclient.commonimpl.sync.AggregateCrud restClient,
-                                                                           io.eventuate.javaclient.commonimpl.sync.AggregateEvents stompClient,
-                                                                           SnapshotManager snapshotManager) {
+                                                               @Nullable SerializedEventDeserializer serializedEventDeserializer,
+                                                               io.eventuate.javaclient.commonimpl.sync.AggregateCrud restClient,
+                                                               io.eventuate.javaclient.commonimpl.sync.AggregateEvents stompClient,
+                                                               SnapshotManager snapshotManager) {
     io.eventuate.javaclient.commonimpl.sync.EventuateAggregateStoreImpl eventuateAggregateStore =
             new io.eventuate.javaclient.commonimpl.sync.EventuateAggregateStoreImpl(restClient,
                     stompClient,

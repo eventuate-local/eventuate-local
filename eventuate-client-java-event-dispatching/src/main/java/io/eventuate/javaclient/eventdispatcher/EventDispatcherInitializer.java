@@ -34,13 +34,13 @@ public class EventDispatcherInitializer {
   protected Logger logger = LoggerFactory.getLogger(getClass());
 
   private EventHandlerProcessor[] processors;
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreEvents aggregateStore;
   private Executor executorService;
   private SubscriptionsRegistry subscriptionsRegistry;
 
   private Set<String> subscriberIds = new HashSet<>();
 
-  public EventDispatcherInitializer(EventHandlerProcessor[] processors, EventuateAggregateStore aggregateStore, Executor executorService, SubscriptionsRegistry subscriptionsRegistry) {
+  public EventDispatcherInitializer(EventHandlerProcessor[] processors, EventuateAggregateStoreEvents aggregateStore, Executor executorService, SubscriptionsRegistry subscriptionsRegistry) {
     this.processors = processors;
     this.aggregateStore = aggregateStore;
     this.executorService = executorService;

@@ -37,7 +37,7 @@ public class AggregateRepository<T extends CommandProcessingAggregate<T, CT>, CT
 
   private static Logger logger = LoggerFactory.getLogger(AggregateRepository.class);
 
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
 
 
   /**
@@ -46,7 +46,7 @@ public class AggregateRepository<T extends CommandProcessingAggregate<T, CT>, CT
    * @param clasz          the class of the aggregate
    * @param aggregateStore the aggregate store
    */
-  public AggregateRepository(Class<T> clasz, EventuateAggregateStore aggregateStore) {
+  public AggregateRepository(Class<T> clasz, EventuateAggregateStoreCrud aggregateStore) {
     super(clasz);
     this.aggregateStore = aggregateStore;
   }

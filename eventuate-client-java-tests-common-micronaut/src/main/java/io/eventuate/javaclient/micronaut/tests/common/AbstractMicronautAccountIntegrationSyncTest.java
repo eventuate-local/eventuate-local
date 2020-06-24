@@ -1,7 +1,7 @@
 package io.eventuate.javaclient.micronaut.tests.common;
 
 import io.eventuate.*;
-import io.eventuate.sync.EventuateAggregateStore;
+import io.eventuate.sync.EventuateAggregateStoreCrud;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.Optional;
 public class AbstractMicronautAccountIntegrationSyncTest extends AbstractMicronautAccountIntegrationTest {
 
   @Inject
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
 
   @Override
   protected <T extends Aggregate<T>> EntityIdAndVersion save(Class<T> classz, List<Event> events, Optional<SaveOptions> saveOptions) {

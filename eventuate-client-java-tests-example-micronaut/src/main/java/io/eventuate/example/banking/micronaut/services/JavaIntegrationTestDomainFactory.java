@@ -1,7 +1,7 @@
 package io.eventuate.example.banking.micronaut.services;
 
 import io.eventuate.AggregateRepository;
-import io.eventuate.EventuateAggregateStore;
+import io.eventuate.EventuateAggregateStoreCrud;
 import io.eventuate.example.banking.domain.Account;
 import io.eventuate.example.banking.domain.AccountCommand;
 import io.eventuate.example.banking.services.AccountCommandSideEventHandler;
@@ -37,7 +37,7 @@ public class JavaIntegrationTestDomainFactory {
   }
 
   @Singleton
-  public AggregateRepository<Account, AccountCommand> accountRepository(EventuateAggregateStore aggregateStore) {
+  public AggregateRepository<Account, AccountCommand> accountRepository(EventuateAggregateStoreCrud aggregateStore) {
     return new AggregateRepository<>(Account.class, aggregateStore);
   }
 

@@ -1,6 +1,7 @@
 package io.eventuate.javaclient.spring;
 
-import io.eventuate.EventuateAggregateStore;
+import io.eventuate.EventuateAggregateStoreCrud;
+import io.eventuate.EventuateAggregateStoreEvents;
 import io.eventuate.SubscriptionsRegistry;
 import io.eventuate.javaclient.domain.EventHandlerProcessor;
 import io.eventuate.javaclient.domain.EventHandlerProcessorDispatchedEventReturningCompletableFuture;
@@ -25,7 +26,7 @@ public class EventuateJavaClientDomainConfiguration {
   }
 
   @Bean
-  public EventDispatcherInitializer eventDispatcherInitializer(EventHandlerProcessor[] processors, EventuateAggregateStore aggregateStore, SubscriptionsRegistry subscriptionsRegistry) {
+  public EventDispatcherInitializer eventDispatcherInitializer(EventHandlerProcessor[] processors, EventuateAggregateStoreEvents aggregateStore, SubscriptionsRegistry subscriptionsRegistry) {
     return new EventDispatcherInitializer(processors, aggregateStore, Executors.newCachedThreadPool(), subscriptionsRegistry);
   }
 
@@ -35,7 +36,7 @@ public class EventuateJavaClientDomainConfiguration {
   }
 
   @Bean
-  public EventHandlerProcessor eventHandlerProcessorEventHandlerContextReturningVoid(EventuateAggregateStore aggregateStore) {
+  public EventHandlerProcessor eventHandlerProcessorEventHandlerContextReturningVoid(EventuateAggregateStoreCrud aggregateStore) {
     return new EventHandlerProcessorEventHandlerContextReturningVoid(aggregateStore);
   }
 
@@ -49,7 +50,7 @@ public class EventuateJavaClientDomainConfiguration {
     return new EventHandlerProcessorDispatchedEventReturningCompletableFuture();
   }
   @Bean
-  public EventHandlerProcessor eventHandlerProcessorEventHandlerContextReturningCompletableFuture(EventuateAggregateStore aggregateStore) {
+  public EventHandlerProcessor eventHandlerProcessorEventHandlerContextReturningCompletableFuture(EventuateAggregateStoreCrud aggregateStore) {
     return new EventHandlerProcessorEventHandlerContextReturningCompletableFuture(aggregateStore);
   }
 

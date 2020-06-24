@@ -7,9 +7,9 @@ import java.util.concurrent.CompletableFuture;
 
 public class EventHandlerProcessorEventHandlerContextReturningCompletableFuture extends EventHandlerMethodProcessor {
 
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
 
-  public EventHandlerProcessorEventHandlerContextReturningCompletableFuture(EventuateAggregateStore aggregateStore) {
+  public EventHandlerProcessorEventHandlerContextReturningCompletableFuture(EventuateAggregateStoreCrud aggregateStore) {
     this.aggregateStore = aggregateStore;
   }
 

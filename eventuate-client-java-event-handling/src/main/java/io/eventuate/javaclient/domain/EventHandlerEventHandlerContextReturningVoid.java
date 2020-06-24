@@ -2,18 +2,18 @@ package io.eventuate.javaclient.domain;
 
 import io.eventuate.DispatchedEvent;
 import io.eventuate.Event;
-import io.eventuate.EventuateAggregateStore;
+import io.eventuate.EventuateAggregateStoreCrud;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
 
 class EventHandlerEventHandlerContextReturningVoid implements EventHandler {
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
   private final Method method;
   private final Object eventHandler;
 
-  public EventHandlerEventHandlerContextReturningVoid(EventuateAggregateStore aggregateStore, Method method, Object eventHandler) {
+  public EventHandlerEventHandlerContextReturningVoid(EventuateAggregateStoreCrud aggregateStore, Method method, Object eventHandler) {
     this.aggregateStore = aggregateStore;
     this.method = method;
     this.eventHandler = eventHandler;

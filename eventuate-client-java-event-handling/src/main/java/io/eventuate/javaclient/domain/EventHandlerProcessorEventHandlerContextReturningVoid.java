@@ -1,15 +1,15 @@
 package io.eventuate.javaclient.domain;
 
 import io.eventuate.EventHandlerContext;
-import io.eventuate.EventuateAggregateStore;
+import io.eventuate.EventuateAggregateStoreCrud;
 
 import java.lang.reflect.Method;
 
 public class EventHandlerProcessorEventHandlerContextReturningVoid extends EventHandlerMethodProcessor {
 
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
 
-  public EventHandlerProcessorEventHandlerContextReturningVoid(EventuateAggregateStore aggregateStore) {
+  public EventHandlerProcessorEventHandlerContextReturningVoid(EventuateAggregateStoreCrud aggregateStore) {
     this.aggregateStore = aggregateStore;
   }
 

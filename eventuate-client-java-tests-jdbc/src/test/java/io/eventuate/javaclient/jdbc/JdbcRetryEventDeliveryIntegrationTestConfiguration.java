@@ -6,7 +6,7 @@ import io.eventuate.javaclient.eventhandling.exceptionhandling.EventDeliveryExce
 import io.eventuate.javaclient.eventhandling.exceptionhandling.EventuateClientScheduler;
 import io.eventuate.javaclient.eventhandling.exceptionhandling.RetryEventDeliveryExceptionHandler;
 import io.eventuate.sync.AggregateRepository;
-import io.eventuate.sync.EventuateAggregateStore;
+import io.eventuate.sync.EventuateAggregateStoreCrud;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -18,7 +18,7 @@ import java.time.Duration;
 public class JdbcRetryEventDeliveryIntegrationTestConfiguration {
 
   @Bean
-  public AggregateRepository<Account, AccountCommand> syncAccountRepository(EventuateAggregateStore aggregateStore) {
+  public AggregateRepository<Account, AccountCommand> syncAccountRepository(EventuateAggregateStoreCrud aggregateStore) {
     return new AggregateRepository<>(Account.class, aggregateStore);
   }
 

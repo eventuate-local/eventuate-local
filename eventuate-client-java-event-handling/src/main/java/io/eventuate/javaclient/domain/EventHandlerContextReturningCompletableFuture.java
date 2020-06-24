@@ -1,9 +1,6 @@
 package io.eventuate.javaclient.domain;
 
-import io.eventuate.CompletableFutureUtil;
-import io.eventuate.DispatchedEvent;
-import io.eventuate.Event;
-import io.eventuate.EventuateAggregateStore;
+import io.eventuate.*;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.lang.reflect.Method;
@@ -12,9 +9,9 @@ import java.util.concurrent.CompletableFuture;
 class EventHandlerContextReturningCompletableFuture implements EventHandler {
   private final Method method;
   private final Object eventHandler;
-  private EventuateAggregateStore aggregateStore;
+  private EventuateAggregateStoreCrud aggregateStore;
 
-  public EventHandlerContextReturningCompletableFuture(EventuateAggregateStore aggregateStore, Method method, Object eventHandler) {
+  public EventHandlerContextReturningCompletableFuture(EventuateAggregateStoreCrud aggregateStore, Method method, Object eventHandler) {
     this.aggregateStore = aggregateStore;
     this.method = method;
     this.eventHandler = eventHandler;

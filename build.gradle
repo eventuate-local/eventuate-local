@@ -71,7 +71,7 @@ allprojects {
                 mavenDeployer {
                     configuration = configurations.deployerJars
                     repository(url: deployUrl) {
-                      authentication(userName: System.getenv('S3_REPO_AWS_ACCESS_KEY'), password: System.getenv('S3_REPO_AWS_SECRET_ACCESS_KEY'))
+                        authentication(userName: System.getenv('S3_REPO_AWS_ACCESS_KEY'), password: System.getenv('S3_REPO_AWS_SECRET_ACCESS_KEY'))
                     }
                     pom.project {
                         licenses {
@@ -89,9 +89,9 @@ allprojects {
 }
 
 task aggregatedTestReport(type: TestReport) {
-  destinationDir = file("$buildDir/reports/allTests")
-  // Include the results from the 'test' task in all subprojects
-  reportOn subprojects*.test
+    destinationDir = file("$buildDir/reports/allTests")
+    // Include the results from the 'test' task in all subprojects
+    reportOn subprojects*.test
 }
 
 gradle.projectsEvaluated {

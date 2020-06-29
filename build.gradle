@@ -59,24 +59,27 @@ allprojects {
         deployerJars
     }
 
-    dependencies {
-        deployerJars 'org.springframework.build:aws-maven:5.0.0.RELEASE'
-    }
+    if (!project.name.endsWith("-bom")) {
+
+        dependencies {
+            deployerJars 'org.springframework.build:aws-maven:5.0.0.RELEASE'
+        }
 
 
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                configuration = configurations.deployerJars
-                repository(url: deployUrl) {
-                  authentication(userName: System.getenv('S3_REPO_AWS_ACCESS_KEY'), password: System.getenv('S3_REPO_AWS_SECRET_ACCESS_KEY'))
-                }
-                pom.project {
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
+        uploadArchives {
+            repositories {
+                mavenDeployer {
+                    configuration = configurations.deployerJars
+                    repository(url: deployUrl) {
+                        authentication(userName: System.getenv('S3_REPO_AWS_ACCESS_KEY'), password: System.getenv('S3_REPO_AWS_SECRET_ACCESS_KEY'))
+                    }
+                    pom.project {
+                        licenses {
+                            license {
+                                name 'The Apache Software License, Version 2.0'
+                                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                                distribution 'repo'
+                            }
                         }
                     }
                 }
@@ -86,9 +89,9 @@ allprojects {
 }
 
 task aggregatedTestReport(type: TestReport) {
-  destinationDir = file("$buildDir/reports/allTests")
-  // Include the results from the 'test' task in all subprojects
-  reportOn subprojects*.test
+    destinationDir = file("$buildDir/reports/allTests")
+    // Include the results from the 'test' task in all subprojects
+    reportOn subprojects*.test
 }
 
 gradle.projectsEvaluated {

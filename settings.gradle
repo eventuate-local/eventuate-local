@@ -1,4 +1,4 @@
-include 'eventuate-local-java-spring-jdbc-autoconfigure'
+include 'eventuate-local-java-spring-jdbc-starter'
 include 'eventuate-local-java-jdbc'
 include 'eventuate-local-java-spring-jdbc'
 include 'eventuate-local-java-micronaut-jdbc'

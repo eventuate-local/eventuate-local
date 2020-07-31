@@ -4,10 +4,6 @@ plugins {
 
 apply plugin: PublicModulePlugin
 
-
-
-
-
 dependencyManagement {
     imports {
         mavenBom 'io.micronaut:micronaut-bom:1.2.0'
@@ -15,9 +11,8 @@ dependencyManagement {
 }
 
 dependencies {
-    compile project(":eventuate-client-java")
-    compile project(":eventuate-client-java-event-handling")
-    compile project(":eventuate-client-java-event-dispatching")
+    compile project(":eventuate-client-java-micronaut-events")
+    compile project(":eventuate-client-java-micronaut-crud")
 
     annotationProcessor "io.micronaut:micronaut-inject-java"
     annotationProcessor "io.micronaut:micronaut-validation"

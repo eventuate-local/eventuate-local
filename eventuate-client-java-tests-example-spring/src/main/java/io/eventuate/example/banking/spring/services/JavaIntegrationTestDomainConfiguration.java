@@ -9,7 +9,7 @@ import io.eventuate.example.banking.services.AccountQuerySideEventHandler;
 import io.eventuate.example.banking.services.AccountService;
 import io.eventuate.example.banking.services.MoneyTransferCommandSideEventHandler;
 import io.eventuate.example.banking.services.counting.InvocationCounter;
-import io.eventuate.javaclient.commonimpl.schema.EventSchemaConfigurer;
+import io.eventuate.javaclient.commonimpl.common.schema.EventSchemaConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

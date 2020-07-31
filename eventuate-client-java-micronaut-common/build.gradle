@@ -13,8 +13,9 @@ dependencyManagement {
 }
 
 dependencies {
-    compile project(":eventuate-client-java")
-    compile project(":eventuate-client-java-event-handling")
+    compile project(":eventuate-client-java-common-impl")
+    compile project(":eventuate-client-java-micronaut-common-crud")
+    compile project(":eventuate-client-java-micronaut-common-events")
 
     annotationProcessor "io.micronaut:micronaut-inject-java"
     annotationProcessor "io.micronaut:micronaut-validation"

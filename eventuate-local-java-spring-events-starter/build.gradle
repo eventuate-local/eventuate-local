@@ -1,0 +1,4 @@
+dependencies {
+    compile project (":eventuate-client-java-spring-common-events")
+    compile project (":eventuate-local-java-spring-events")
+}

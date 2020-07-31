@@ -3,7 +3,11 @@ package io.eventuate.javaclient.jdbc;
 import io.eventuate.Aggregate;
 import io.eventuate.EntityIdAndType;
 import io.eventuate.common.id.Int128;
-import io.eventuate.javaclient.commonimpl.*;
+import io.eventuate.javaclient.commonimpl.common.EventTypeAndData;
+import io.eventuate.javaclient.commonimpl.crud.AggregateCrudFindOptions;
+import io.eventuate.javaclient.commonimpl.crud.AggregateCrudSaveOptions;
+import io.eventuate.javaclient.commonimpl.crud.AggregateCrudUpdateOptions;
+import io.eventuate.javaclient.commonimpl.crud.LoadedEvents;
 
 import java.util.List;
 import java.util.Optional;

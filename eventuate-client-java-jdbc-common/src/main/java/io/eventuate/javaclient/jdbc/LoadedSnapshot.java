@@ -1,6 +1,6 @@
 package io.eventuate.javaclient.jdbc;
 
-import io.eventuate.javaclient.commonimpl.SerializedSnapshotWithVersion;
+import io.eventuate.javaclient.commonimpl.crud.SerializedSnapshotWithVersion;
 
 public class LoadedSnapshot  {
   private final SerializedSnapshotWithVersion serializedSnapshot;

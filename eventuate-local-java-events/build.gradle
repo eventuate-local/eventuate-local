@@ -1,0 +1,11 @@
+// apply plugin: PublicModulePlugin
+apply plugin: PrivateModulePlugin
+
+dependencies {
+    compile 'javax.annotation:javax.annotation-api:1.3.2'
+
+    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-basic-consumer:$eventuateMessagingKafkaVersion"
+
+    compile project(":eventuate-local-java-common")
+    compile project(":eventuate-client-java-common-impl-events")
+}

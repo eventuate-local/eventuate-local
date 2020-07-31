@@ -1,8 +1,9 @@
 apply plugin: PublicModulePlugin
 
 dependencies {
-    compile project(":eventuate-client-java")
-    compile project(":eventuate-client-java-event-handling")
-    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    compile project(":eventuate-client-java-common-impl")
+
+    compile project(":eventuate-client-java-spring-common-events")
+    compile project(":eventuate-client-java-spring-common-crud")
 }
 

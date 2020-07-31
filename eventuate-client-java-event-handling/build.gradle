@@ -2,7 +2,7 @@ apply plugin: PrivateModulePlugin
 
 dependencies {
     compile project(":eventuate-client-java")
-    compile project(":eventuate-client-java-common-impl")
+    compile project(":eventuate-client-java-common-impl-common")
 
     compile "org.slf4j:slf4j-api:1.7.18"
 

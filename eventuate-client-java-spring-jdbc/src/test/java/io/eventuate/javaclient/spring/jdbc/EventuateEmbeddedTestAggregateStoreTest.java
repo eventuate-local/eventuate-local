@@ -2,9 +2,11 @@ package io.eventuate.javaclient.spring.jdbc;
 
 import io.eventuate.*;
 import io.eventuate.common.id.Int128;
-import io.eventuate.javaclient.commonimpl.*;
-import io.eventuate.javaclient.commonimpl.sync.AggregateCrud;
-import io.eventuate.javaclient.commonimpl.sync.AggregateEvents;
+import io.eventuate.javaclient.commonimpl.common.EventTypeAndData;
+import io.eventuate.javaclient.commonimpl.common.SerializedEvent;
+import io.eventuate.javaclient.commonimpl.crud.*;
+import io.eventuate.javaclient.commonimpl.crud.sync.AggregateCrud;
+import io.eventuate.javaclient.commonimpl.events.sync.AggregateEvents;
 import io.eventuate.javaclient.spring.EventuateJavaClientDomainConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -1,7 +1,7 @@
 package io.eventuate.javaclient.jdbc;
 
-import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
 
+import io.eventuate.javaclient.commonimpl.crud.EntityIdVersionAndEventIds;
 
 public class SaveUpdateResult  {
   private final EntityIdVersionAndEventIds entityIdVersionAndEventIds;

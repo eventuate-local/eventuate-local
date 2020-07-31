@@ -1,8 +1,9 @@
 package io.eventuate.javaclient.jdbc;
 
 import io.eventuate.*;
-import io.eventuate.javaclient.commonimpl.*;
-import io.eventuate.javaclient.commonimpl.sync.AggregateEvents;
+import io.eventuate.javaclient.commonimpl.common.EventIdTypeAndData;
+import io.eventuate.javaclient.commonimpl.common.SerializedEvent;
+import io.eventuate.javaclient.commonimpl.events.sync.AggregateEvents;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

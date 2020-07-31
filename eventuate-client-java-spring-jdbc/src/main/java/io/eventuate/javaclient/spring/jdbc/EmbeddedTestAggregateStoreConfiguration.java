@@ -7,14 +7,14 @@ import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
 import io.eventuate.common.spring.inmemorydatabase.EventuateCommonInMemoryDatabaseConfiguration;
 import io.eventuate.common.spring.jdbc.EventuateCommonJdbcOperationsConfiguration;
-import io.eventuate.javaclient.commonimpl.AggregateCrud;
-import io.eventuate.javaclient.commonimpl.AggregateEvents;
-import io.eventuate.javaclient.commonimpl.adapters.SyncToAsyncAggregateCrudAdapter;
-import io.eventuate.javaclient.commonimpl.adapters.SyncToAsyncAggregateEventsAdapter;
-import io.eventuate.javaclient.eventhandling.exceptionhandling.EventuateClientScheduler;
-import io.eventuate.javaclient.jdbc.EventuateEmbeddedTestAggregateStore;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
+import io.eventuate.javaclient.commonimpl.crud.AggregateCrud;
+import io.eventuate.javaclient.commonimpl.crud.adapters.SyncToAsyncAggregateCrudAdapter;
+import io.eventuate.javaclient.commonimpl.events.AggregateEvents;
+import io.eventuate.javaclient.commonimpl.events.adapters.SyncToAsyncAggregateEventsAdapter;
+import io.eventuate.javaclient.eventhandling.exceptionhandling.EventuateClientScheduler;
+import io.eventuate.javaclient.jdbc.EventuateEmbeddedTestAggregateStore;
 import io.eventuate.javaclient.jdbc.JdkTimerBasedEventuateClientScheduler;
 import io.eventuate.javaclient.spring.common.EventuateCommonConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +26,9 @@ import java.util.Collections;
 
 @Configuration
 @EnableTransactionManagement
-@Import({EventuateCommonConfiguration.class, EventuateCommonInMemoryDatabaseConfiguration.class, EventuateCommonJdbcOperationsConfiguration.class})
+@Import({EventuateCommonConfiguration.class,
+        EventuateCommonInMemoryDatabaseConfiguration.class,
+        EventuateCommonJdbcOperationsConfiguration.class})
 public class EmbeddedTestAggregateStoreConfiguration {
 
   @Bean
@@ -53,12 +55,12 @@ public class EmbeddedTestAggregateStoreConfiguration {
   }
 
   @Bean
-  public AggregateCrud aggregateCrud(io.eventuate.javaclient.commonimpl.sync.AggregateCrud aggregateCrud) {
+  public AggregateCrud aggregateCrud(io.eventuate.javaclient.commonimpl.crud.sync.AggregateCrud aggregateCrud) {
     return new SyncToAsyncAggregateCrudAdapter(aggregateCrud);
   }
 
   @Bean
-  public AggregateEvents aggregateEvents(io.eventuate.javaclient.commonimpl.sync.AggregateEvents aggregateEvents) {
+  public AggregateEvents aggregateEvents(io.eventuate.javaclient.commonimpl.events.sync.AggregateEvents aggregateEvents) {
     return new SyncToAsyncAggregateEventsAdapter(aggregateEvents);
   }
 

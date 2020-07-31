@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static io.eventuate.javaclient.commonimpl.EventuateActivity.activityLogger;
+import static io.eventuate.javaclient.commonimpl.common.EventuateActivity.activityLogger;
 
 public class EventDispatcher {
 

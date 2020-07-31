@@ -1,15 +1,9 @@
 apply plugin: PublicModulePlugin
 
 dependencies {
-    compile project (":eventuate-local-java-jdbc")
+    compile project (":eventuate-client-java-spring")
+    compile project (":eventuate-client-java-spring-common")
 
-    compile "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
-    compile project(":eventuate-client-java-spring-common")
-    compile project(":eventuate-client-java-spring-jdbc")
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-basic-consumer:$eventuateMessagingKafkaVersion"
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-consumer:$eventuateMessagingKafkaVersion"
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-common:$eventuateMessagingKafkaVersion"
-
-    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
-    compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
+    compile project (":eventuate-local-java-spring-events")
+    compile project (":eventuate-local-java-spring-jdbc-crud")
 }

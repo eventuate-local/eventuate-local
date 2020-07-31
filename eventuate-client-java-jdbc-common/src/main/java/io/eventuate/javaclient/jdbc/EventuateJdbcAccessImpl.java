@@ -11,15 +11,9 @@ import io.eventuate.common.id.IdGenerator;
 import io.eventuate.common.id.IdGeneratorImpl;
 import io.eventuate.common.id.Int128;
 import io.eventuate.common.jdbc.*;
-import io.eventuate.javaclient.commonimpl.AggregateCrudFindOptions;
-import io.eventuate.javaclient.commonimpl.AggregateCrudSaveOptions;
-import io.eventuate.javaclient.commonimpl.AggregateCrudUpdateOptions;
-import io.eventuate.javaclient.commonimpl.EntityIdVersionAndEventIds;
-import io.eventuate.javaclient.commonimpl.EventIdTypeAndData;
-import io.eventuate.javaclient.commonimpl.EventTypeAndData;
-import io.eventuate.javaclient.commonimpl.LoadedEvents;
-import io.eventuate.javaclient.commonimpl.SerializedSnapshot;
-import io.eventuate.javaclient.commonimpl.SerializedSnapshotWithVersion;
+import io.eventuate.javaclient.commonimpl.common.EventIdTypeAndData;
+import io.eventuate.javaclient.commonimpl.common.EventTypeAndData;
+import io.eventuate.javaclient.commonimpl.crud.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

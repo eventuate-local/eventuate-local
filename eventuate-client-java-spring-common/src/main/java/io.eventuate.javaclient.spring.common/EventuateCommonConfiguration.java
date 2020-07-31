@@ -1,78 +1,32 @@
 package io.eventuate.javaclient.spring.common;
 
-import io.eventuate.*;
-import io.eventuate.javaclient.commonimpl.AggregateCrud;
-import io.eventuate.javaclient.commonimpl.AggregateEvents;
+import io.eventuate.EventuateAggregateStore;
+import io.eventuate.EventuateAggregateStoreCrud;
+import io.eventuate.EventuateAggregateStoreEvents;
 import io.eventuate.javaclient.commonimpl.EventuateAggregateStoreImpl;
-import io.eventuate.javaclient.commonimpl.SerializedEventDeserializer;
-import io.eventuate.javaclient.commonimpl.schema.ConfigurableEventSchema;
-import io.eventuate.javaclient.commonimpl.schema.DefaultEventuateEventSchemaManager;
-import io.eventuate.javaclient.commonimpl.schema.EventSchemaConfigurer;
-import io.eventuate.javaclient.commonimpl.schema.EventuateEventSchemaManager;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.eventuate.javaclient.spring.common.crud.EventuateCommonCrudConfiguration;
+import io.eventuate.javaclient.spring.common.events.EventuateCommonEventsConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Arrays;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
+@Import({EventuateCommonCrudConfiguration.class, EventuateCommonEventsConfiguration.class})
 public class EventuateCommonConfiguration {
-
-  @Autowired(required=false)
-  private SerializedEventDeserializer serializedEventDeserializer;
-
-  @Autowired(required=false)
-  private MissingApplyEventMethodStrategy[] missingApplyEventMethodStrategies = new MissingApplyEventMethodStrategy[0];
-
-
-  @Autowired(required=false)
-  private SnapshotStrategy[] snapshotStrategies = new SnapshotStrategy[0];
-
-  @Autowired(required=false)
-  private EventSchemaConfigurer[] metadataManagerConfigurers = new EventSchemaConfigurer[0];
-
   @Bean
-  public EventuateEventSchemaManager eventSchemaMetadataManager() {
-    DefaultEventuateEventSchemaManager eventSchemaManager = new DefaultEventuateEventSchemaManager();
-    ConfigurableEventSchema configuration = new ConfigurableEventSchema(eventSchemaManager);
-    Arrays.stream(metadataManagerConfigurers).forEach(c -> c.configure(configuration));
-    return eventSchemaManager;
+  @Primary
+  public EventuateAggregateStore aggregateEventStore(EventuateAggregateStoreCrud eventuateAggregateStoreCrud,
+                                                     EventuateAggregateStoreEvents eventuateAggregateStoreEvents) {
+
+    return new EventuateAggregateStoreImpl(eventuateAggregateStoreCrud, eventuateAggregateStoreEvents);
   }
 
   @Bean
-  public EventuateAggregateStore aggregateEventStore(AggregateCrud aggregateCrud, AggregateEvents aggregateEvents, SnapshotManager snapshotManager, EventuateEventSchemaManager eventuateEventSchemaManager) {
-    EventuateAggregateStoreImpl eventuateAggregateStore = new EventuateAggregateStoreImpl(aggregateCrud, aggregateEvents, snapshotManager,
-            new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies), eventuateEventSchemaManager);
+  @Primary
+  public io.eventuate.sync.EventuateAggregateStore syncAggregateEventStore(io.eventuate.sync.EventuateAggregateStoreCrud eventuateAggregateStoreCrud,
+                                                                           io.eventuate.sync.EventuateAggregateStoreEvents eventuateAggregateStoreEvents) {
 
-    if (serializedEventDeserializer != null)
-      eventuateAggregateStore.setSerializedEventDeserializer(serializedEventDeserializer);
-
-    return eventuateAggregateStore;
-  }
-
-
-  @Bean
-  public io.eventuate.sync.EventuateAggregateStore syncAggregateEventStore(io.eventuate.javaclient.commonimpl.sync.AggregateCrud aggregateCrud,
-                                                               io.eventuate.javaclient.commonimpl.sync.AggregateEvents aggregateEvents, SnapshotManager snapshotManager) {
-    io.eventuate.javaclient.commonimpl.sync.EventuateAggregateStoreImpl eventuateAggregateStore =
-            new io.eventuate.javaclient.commonimpl.sync.EventuateAggregateStoreImpl(aggregateCrud, aggregateEvents, snapshotManager, new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies));
-
-    if (serializedEventDeserializer != null)
-      eventuateAggregateStore.setSerializedEventDeserializer(serializedEventDeserializer);
-
-    return eventuateAggregateStore;
-  }
-
-  @Bean
-  public SnapshotManager snapshotManager() {
-    SnapshotManagerImpl snapshotManager = new SnapshotManagerImpl();
-    for (SnapshotStrategy ss : snapshotStrategies)
-      snapshotManager.addStrategy(ss);
-    return snapshotManager;
-  }
-
-  @Bean
-  public AggregateRepositoryBeanPostProcessor aggregateRepositoryBeanPostProcessor() {
-    return new AggregateRepositoryBeanPostProcessor(new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies));
+    return new io.eventuate.javaclient.commonimpl.sync.EventuateAggregateStoreImpl(eventuateAggregateStoreCrud, eventuateAggregateStoreEvents);
   }
 }

@@ -1,6 +1,6 @@
 package io.eventuate.javaclient.jdbc;
 
-import io.eventuate.javaclient.commonimpl.EventIdTypeAndData;
+import io.eventuate.javaclient.commonimpl.common.EventIdTypeAndData;
 
 import java.util.List;
 

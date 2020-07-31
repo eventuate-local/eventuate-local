@@ -1,6 +1,6 @@
 package io.eventuate.javaclient.eventhandling.exceptionhandling;
 
-import io.eventuate.javaclient.commonimpl.EventuateActivity;
+import io.eventuate.javaclient.commonimpl.common.EventuateActivity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

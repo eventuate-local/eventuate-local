@@ -1,17 +1,22 @@
 buildscript {
     repositories {
         mavenCentral()
-
+        maven { url "https://dl.bintray.com/eventuateio-oss/eventuate-maven-release" }
+        maven { url "https://snapshots.repositories.eventuate.io/repository" }
+        maven { url "file:///Users/cer/.m2/testdeploy" }
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootPluginVersion")
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath "io.eventuate.plugins.gradle:eventuate-plugins-gradle-publish:$eventuatePluginsGradleVersion"
     }
 }
 
 plugins {
     id "com.github.hierynomus.license" version "0.12.1"
 }
+
+apply plugin: "io.eventuate.plugins.gradle.publish.EventuatePublish"
 
 allprojects {
     group = "io.eventuate.local.java"
@@ -25,25 +30,8 @@ projects {
 }
 
 allprojects {
-    apply plugin: 'java'
-    apply plugin: 'maven'
-    apply plugin: 'com.jfrog.bintray'
-
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
-
-    bintray {
-        publish = true
-        user = System.getenv('BINTRAY_USER')
-        key = System.getenv('BINTRAY_KEY')
-        configurations = ['archives']
-        pkg {
-            repo = "eventuate-maven-$bintrayRepoType"
-            name = 'eventuate-local'
-            licenses = ['Apache-2.0']
-            vcsUrl = 'https://github.com/eventuate-local/eventuate-local'
-        }
-    }
 
     repositories {
         mavenCentral()
@@ -55,36 +43,6 @@ allprojects {
         testCompile "junit:junit:4.12"
     }
 
-    configurations {
-        deployerJars
-    }
-
-    dependencies {
-        deployerJars 'org.springframework.build:aws-maven:5.0.0.RELEASE'
-    }
-
-    if (!project.name.endsWith("-bom")) {
-
-        uploadArchives {
-            repositories {
-                mavenDeployer {
-                    configuration = configurations.deployerJars
-                    repository(url: deployUrl) {
-                        authentication(userName: System.getenv('S3_REPO_AWS_ACCESS_KEY'), password: System.getenv('S3_REPO_AWS_SECRET_ACCESS_KEY'))
-                    }
-                    pom.project {
-                        licenses {
-                            license {
-                                name 'The Apache Software License, Version 2.0'
-                                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                                distribution 'repo'
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 task aggregatedTestReport(type: TestReport) {

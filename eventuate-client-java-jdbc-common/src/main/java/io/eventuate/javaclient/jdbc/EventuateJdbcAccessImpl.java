@@ -175,6 +175,14 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
     return eventuateTransactionTemplate.executeInTransaction(() -> updateWithoutTransaction(entityIdAndType, entityVersion, events, updateOptions));
   }
 
+  @Override
+  public SaveUpdateResult updateWithoutReading(EntityIdAndType entityIdAndType,
+                                 List<EventTypeAndData> events,
+                                 Optional<AggregateCrudUpdateWithoutReadingOptions> updateOptions) {
+
+    return eventuateTransactionTemplate.executeInTransaction(() -> updateWithoutReadingWithoutTransaction(entityIdAndType, events, updateOptions));
+  }
+
   public SaveUpdateResult updateWithoutTransaction(EntityIdAndType entityIdAndType,
                                  Int128 entityVersion,
                                  List<EventTypeAndData> events,
@@ -190,6 +198,8 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
     String entityId = entityIdAndType.getEntityId();
 
     Int128 updatedEntityVersion = last(eventsWithIds).getId();
+
+    Optional<String> eventToken = updateOptions.flatMap(AggregateCrudUpdateOptions::getTriggeringEvent).map(EventContext::getEventToken);
 
     int count = eventuateJdbcStatementExecutor.update(String.format("UPDATE %s SET entity_version = ? WHERE entity_type = ? and entity_id = ? and entity_version = ?", entityTable),
             updatedEntityVersion.asString(),
@@ -249,16 +259,7 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
     });
 
 
-    for (EventIdTypeAndData event : eventsWithIds) {
-      eventuateCommonJdbcOperations.insertIntoEventsTable(event.getId().asString(),
-              entityId,
-              event.getEventData(),
-              event.getEventType(),
-              entityType,
-              updateOptions.flatMap(AggregateCrudUpdateOptions::getTriggeringEvent).map(EventContext::getEventToken),
-              event.getMetadata(),
-              eventuateSchema);
-    }
+    insertEvents(eventsWithIds, entityId, entityType, eventToken);
 
 
     return new SaveUpdateResult(new EntityIdVersionAndEventIds(entityId,
@@ -266,6 +267,34 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
             eventsWithIds.stream().map(EventIdTypeAndData::getId).collect(Collectors.toList())),
             new PublishableEvents(aggregateType, entityId, eventsWithIds));
 
+  }
+
+  public SaveUpdateResult updateWithoutReadingWithoutTransaction(EntityIdAndType entityIdAndType,
+                                                   List<EventTypeAndData> events,
+                                                   Optional<AggregateCrudUpdateWithoutReadingOptions> updateOptions) {
+    List<EventIdTypeAndData> eventsWithIds = events.stream().map(this::toEventWithId).collect(Collectors.toList());
+
+    String entityType = entityIdAndType.getEntityType();
+    String aggregateType = entityIdAndType.getEntityType();
+
+    String entityId = entityIdAndType.getEntityId();
+
+    Int128 updatedEntityVersion = last(eventsWithIds).getId();
+
+    Optional<String> eventToken = updateOptions.flatMap(AggregateCrudUpdateWithoutReadingOptions::getTriggeringEvent).map(EventContext::getEventToken);
+
+    eventuateJdbcStatementExecutor.update(String.format("UPDATE %s SET entity_version = ? WHERE entity_type = ? and entity_id = ?", entityTable),
+            updatedEntityVersion.asString(),
+            entityType,
+            entityId
+    );
+
+    insertEvents(eventsWithIds, entityId, entityType, eventToken);
+
+    return new SaveUpdateResult(new EntityIdVersionAndEventIds(entityId,
+            updatedEntityVersion,
+            eventsWithIds.stream().map(EventIdTypeAndData::getId).collect(Collectors.toList())),
+            new PublishableEvents(aggregateType, entityId, eventsWithIds));
   }
 
   protected void checkSnapshotForDuplicateEvent(LoadedSnapshot ss, EventContext te) {
@@ -277,6 +306,17 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
     return null;
   }
 
-
+  private void insertEvents(List<EventIdTypeAndData> eventsWithIds, String entityId, String entityType, Optional<String> eventToken) {
+    for (EventIdTypeAndData event : eventsWithIds) {
+      eventuateCommonJdbcOperations.insertIntoEventsTable(event.getId().asString(),
+              entityId,
+              event.getEventData(),
+              event.getEventType(),
+              entityType,
+              eventToken,
+              event.getMetadata(),
+              eventuateSchema);
+    }
+  }
 
 }

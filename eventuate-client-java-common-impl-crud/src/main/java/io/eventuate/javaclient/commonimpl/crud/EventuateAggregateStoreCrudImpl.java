@@ -144,6 +144,35 @@ public class EventuateAggregateStoreCrudImpl implements EventuateAggregateStoreC
   }
 
   @Override
+  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> updateWithoutReading(Class<T> clasz, String entityId, List<Event> events) {
+    return updateWithoutReading(clasz, entityId, events, Optional.empty());
+  }
+
+  @Override
+  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, UpdateWithoutReadingOptions updateOptions) {
+    return updateWithoutReading(clasz, entityId, events, Optional.ofNullable(updateOptions));
+  }
+
+  @Override
+  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateWithoutReadingOptions> updateOptions) {
+    Optional<String> serializedMetadata = updateOptions.flatMap(so -> withSchemaMetadata(clasz, so.getEventMetadata())).map(JSonMapper::toJson);
+    List<EventTypeAndData> serializedEvents = events.stream().map(event -> toEventTypeAndData(event, serializedMetadata)).collect(Collectors.toList());
+
+    CompletableFuture<EntityIdVersionAndEventIds> outcome = aggregateCrud.updateWithoutReading(new EntityIdAndType(entityId, clasz.getName()),
+            serializedEvents,
+            AggregateCrudMapping.toAggregateCrudUpdateWithoutReadingOptions(updateOptions));
+    if (activityLogger.isDebugEnabled())
+      return CompletableFutureUtil.tap(outcome, (result, throwable) -> {
+        if (throwable == null)
+          activityLogger.debug("Updated entity without reading: {} {} {}", clasz.getName(), result.getEntityId(), AggregateCrudMapping.toSerializedEventsWithIds(serializedEvents, result.getEventIds()));
+        else
+          activityLogger.error(String.format("Update entity without reading failed: %s %s", clasz.getName()), throwable);
+      }).thenApply(EntityIdVersionAndEventIds::toEntityIdAndVersion);
+    else
+      return outcome.thenApply(EntityIdVersionAndEventIds::toEntityIdAndVersion);
+  }
+
+  @Override
   public Optional<Snapshot> possiblySnapshot(Aggregate aggregate, Optional<Int128> snapshotVersion, List<EventWithMetadata> oldEvents, List<Event> newEvents) {
     return snapshotManager.possiblySnapshot(aggregate, snapshotVersion, oldEvents, newEvents);
   }

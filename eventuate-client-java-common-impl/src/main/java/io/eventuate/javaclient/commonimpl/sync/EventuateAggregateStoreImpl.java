@@ -71,6 +71,21 @@ public class EventuateAggregateStoreImpl implements EventuateAggregateStore {
   }
 
   @Override
+  public <T extends Aggregate<T>> EntityIdAndVersion updateWithoutReading(Class<T> clasz, String entityId, List<Event> events) {
+    return eventuateAggregateStoreCrud.updateWithoutReading(clasz, entityId, events);
+  }
+
+  @Override
+  public <T extends Aggregate<T>> EntityIdAndVersion updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, UpdateWithoutReadingOptions updateOptions) {
+    return eventuateAggregateStoreCrud.updateWithoutReading(clasz, entityId, events, updateOptions);
+  }
+
+  @Override
+  public <T extends Aggregate<T>> EntityIdAndVersion updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateWithoutReadingOptions> updateOptions) {
+    return eventuateAggregateStoreCrud.updateWithoutReading(clasz, entityId, events, updateOptions);
+  }
+
+  @Override
   public Optional<Snapshot> possiblySnapshot(Aggregate aggregate, Optional<Int128> snapshotVersion, List<EventWithMetadata> oldEvents, List<Event> newEvents) {
     return eventuateAggregateStoreCrud.possiblySnapshot(aggregate, snapshotVersion, oldEvents, newEvents);
   }

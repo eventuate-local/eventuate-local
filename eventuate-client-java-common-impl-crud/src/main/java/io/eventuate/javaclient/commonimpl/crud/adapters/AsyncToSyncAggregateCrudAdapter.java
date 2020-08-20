@@ -60,6 +60,19 @@ public class AsyncToSyncAggregateCrudAdapter implements io.eventuate.javaclient.
     }
   }
 
+  @Override
+  public EntityIdVersionAndEventIds updateWithoutReading(EntityIdAndType entityIdAndType, List<EventTypeAndData> events, Optional<AggregateCrudUpdateWithoutReadingOptions> updateOptions) {
+    try {
+      return target.updateWithoutReading(entityIdAndType, events, updateOptions).get(timeoutOptions.getTimeout(), timeoutOptions.getTimeUnit());
+    } catch (Throwable e) {
+      Throwable unwrapped = CompletableFutureUtil.unwrap(e);
+      if (unwrapped instanceof RuntimeException)
+        throw (RuntimeException)unwrapped;
+      else
+        throw new RuntimeException(unwrapped);
+    }
+  }
+
   public void setTimeoutOptions(AsyncToSyncTimeoutOptions timeoutOptions) {
     this.timeoutOptions = timeoutOptions;
   }

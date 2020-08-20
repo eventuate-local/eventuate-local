@@ -4,12 +4,8 @@ import io.eventuate.Aggregate;
 import io.eventuate.CompletableFutureUtil;
 import io.eventuate.EntityIdAndType;
 import io.eventuate.common.id.Int128;
-import io.eventuate.javaclient.commonimpl.crud.AggregateCrudFindOptions;
-import io.eventuate.javaclient.commonimpl.crud.AggregateCrudSaveOptions;
-import io.eventuate.javaclient.commonimpl.crud.AggregateCrudUpdateOptions;
-import io.eventuate.javaclient.commonimpl.crud.EntityIdVersionAndEventIds;
+import io.eventuate.javaclient.commonimpl.crud.*;
 import io.eventuate.javaclient.commonimpl.common.EventTypeAndData;
-import io.eventuate.javaclient.commonimpl.crud.LoadedEvents;
 import io.eventuate.javaclient.commonimpl.crud.sync.AggregateCrud;
 
 import java.util.List;
@@ -46,6 +42,15 @@ public class SyncToAsyncAggregateCrudAdapter implements io.eventuate.javaclient.
   public CompletableFuture<EntityIdVersionAndEventIds> update(EntityIdAndType entityIdAndType, Int128 entityVersion, List<EventTypeAndData> events, Optional<AggregateCrudUpdateOptions> updateOptions) {
     try {
       return CompletableFuture.completedFuture(target.update(entityIdAndType, entityVersion, events, updateOptions));
+    } catch (Exception e) {
+      return CompletableFutureUtil.failedFuture(e);
+    }
+  }
+
+  @Override
+  public CompletableFuture<EntityIdVersionAndEventIds> updateWithoutReading(EntityIdAndType entityIdAndType, List<EventTypeAndData> events, Optional<AggregateCrudUpdateWithoutReadingOptions> updateOptions) {
+    try {
+      return CompletableFuture.completedFuture(target.updateWithoutReading(entityIdAndType, events, updateOptions));
     } catch (Exception e) {
       return CompletableFutureUtil.failedFuture(e);
     }

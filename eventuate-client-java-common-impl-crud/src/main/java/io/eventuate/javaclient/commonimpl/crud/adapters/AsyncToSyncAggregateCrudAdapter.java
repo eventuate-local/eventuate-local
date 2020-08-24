@@ -61,9 +61,9 @@ public class AsyncToSyncAggregateCrudAdapter implements io.eventuate.javaclient.
   }
 
   @Override
-  public EntityIdVersionAndEventIds updateWithoutReading(EntityIdAndType entityIdAndType, List<EventTypeAndData> events, Optional<AggregateCrudUpdateWithoutReadingOptions> updateOptions) {
+  public EntityIdVersionAndEventIds update(EntityIdAndType entityIdAndType, List<EventTypeAndData> events, Optional<AggregateCrudUpdateOptions> updateOptions) {
     try {
-      return target.updateWithoutReading(entityIdAndType, events, updateOptions).get(timeoutOptions.getTimeout(), timeoutOptions.getTimeUnit());
+      return target.update(entityIdAndType, events, updateOptions).get(timeoutOptions.getTimeout(), timeoutOptions.getTimeUnit());
     } catch (Throwable e) {
       Throwable unwrapped = CompletableFutureUtil.unwrap(e);
       if (unwrapped instanceof RuntimeException)

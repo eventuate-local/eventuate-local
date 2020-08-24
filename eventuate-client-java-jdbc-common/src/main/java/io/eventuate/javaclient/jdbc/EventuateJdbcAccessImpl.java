@@ -176,11 +176,11 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
   }
 
   @Override
-  public SaveUpdateResult updateWithoutReading(EntityIdAndType entityIdAndType,
+  public SaveUpdateResult update(EntityIdAndType entityIdAndType,
                                  List<EventTypeAndData> events,
-                                 Optional<AggregateCrudUpdateWithoutReadingOptions> updateOptions) {
+                                 Optional<AggregateCrudUpdateOptions> updateOptions) {
 
-    return eventuateTransactionTemplate.executeInTransaction(() -> updateWithoutReadingWithoutTransaction(entityIdAndType, events, updateOptions));
+    return eventuateTransactionTemplate.executeInTransaction(() -> updateWithoutTransaction(entityIdAndType, events, updateOptions));
   }
 
   public SaveUpdateResult updateWithoutTransaction(EntityIdAndType entityIdAndType,
@@ -269,9 +269,9 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
 
   }
 
-  public SaveUpdateResult updateWithoutReadingWithoutTransaction(EntityIdAndType entityIdAndType,
+  public SaveUpdateResult updateWithoutTransaction(EntityIdAndType entityIdAndType,
                                                    List<EventTypeAndData> events,
-                                                   Optional<AggregateCrudUpdateWithoutReadingOptions> updateOptions) {
+                                                   Optional<AggregateCrudUpdateOptions> updateOptions) {
     List<EventIdTypeAndData> eventsWithIds = events.stream().map(this::toEventWithId).collect(Collectors.toList());
 
     String entityType = entityIdAndType.getEntityType();
@@ -281,7 +281,7 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
 
     Int128 updatedEntityVersion = last(eventsWithIds).getId();
 
-    Optional<String> eventToken = updateOptions.flatMap(AggregateCrudUpdateWithoutReadingOptions::getTriggeringEvent).map(EventContext::getEventToken);
+    Optional<String> eventToken = updateOptions.flatMap(AggregateCrudUpdateOptions::getTriggeringEvent).map(EventContext::getEventToken);
 
     eventuateJdbcStatementExecutor.update(String.format("UPDATE %s SET entity_version = ? WHERE entity_type = ? and entity_id = ?", entityTable),
             updatedEntityVersion.asString(),

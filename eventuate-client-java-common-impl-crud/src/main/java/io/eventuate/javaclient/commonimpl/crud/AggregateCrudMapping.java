@@ -27,10 +27,6 @@ public class AggregateCrudMapping {
             uo.getSnapshot().map(AggregateCrudMapping::toSerializedSnapshot)));
   }
 
-  public static Optional<AggregateCrudUpdateWithoutReadingOptions> toAggregateCrudUpdateWithoutReadingOptions(Optional<UpdateWithoutReadingOptions> updateOptions) {
-    return updateOptions.map(uo -> new AggregateCrudUpdateWithoutReadingOptions(uo.getTriggeringEvent()));
-  }
-
   public static List<EventIdTypeAndData> toSerializedEventsWithIds(List<EventTypeAndData> serializedEvents, List<Int128> eventIds) {
     return IntStream.range(0, serializedEvents.size()).boxed().map(idx ->
             new EventIdTypeAndData(eventIds.get(idx),

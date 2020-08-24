@@ -15,5 +15,5 @@ public interface AggregateCrud {
 
   CompletableFuture<EntityIdVersionAndEventIds> update(EntityIdAndType entityIdAndType, Int128 entityVersion, List<EventTypeAndData> events, Optional<AggregateCrudUpdateOptions> updateOptions);
 
-  CompletableFuture<EntityIdVersionAndEventIds> updateWithoutReading(EntityIdAndType entityIdAndType, List<EventTypeAndData> events, Optional<AggregateCrudUpdateWithoutReadingOptions> updateOptions);
+  CompletableFuture<EntityIdVersionAndEventIds> update(EntityIdAndType entityIdAndType, List<EventTypeAndData> events, Optional<AggregateCrudUpdateOptions> updateOptions);
 }

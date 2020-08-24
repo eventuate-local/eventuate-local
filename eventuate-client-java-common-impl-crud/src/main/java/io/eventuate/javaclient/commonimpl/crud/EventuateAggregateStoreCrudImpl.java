@@ -144,23 +144,23 @@ public class EventuateAggregateStoreCrudImpl implements EventuateAggregateStoreC
   }
 
   @Override
-  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> updateWithoutReading(Class<T> clasz, String entityId, List<Event> events) {
-    return updateWithoutReading(clasz, entityId, events, Optional.empty());
+  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> update(Class<T> clasz, String entityId, List<Event> events) {
+    return update(clasz, entityId, events, Optional.empty());
   }
 
   @Override
-  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, UpdateWithoutReadingOptions updateOptions) {
-    return updateWithoutReading(clasz, entityId, events, Optional.ofNullable(updateOptions));
+  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> update(Class<T> clasz, String entityId, List<Event> events, UpdateOptions updateOptions) {
+    return update(clasz, entityId, events, Optional.ofNullable(updateOptions));
   }
 
   @Override
-  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateWithoutReadingOptions> updateOptions) {
+  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> update(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateOptions> updateOptions) {
     Optional<String> serializedMetadata = updateOptions.flatMap(so -> withSchemaMetadata(clasz, so.getEventMetadata())).map(JSonMapper::toJson);
     List<EventTypeAndData> serializedEvents = events.stream().map(event -> toEventTypeAndData(event, serializedMetadata)).collect(Collectors.toList());
 
-    CompletableFuture<EntityIdVersionAndEventIds> outcome = aggregateCrud.updateWithoutReading(new EntityIdAndType(entityId, clasz.getName()),
+    CompletableFuture<EntityIdVersionAndEventIds> outcome = aggregateCrud.update(new EntityIdAndType(entityId, clasz.getName()),
             serializedEvents,
-            AggregateCrudMapping.toAggregateCrudUpdateWithoutReadingOptions(updateOptions));
+            AggregateCrudMapping.toAggregateCrudUpdateOptions(updateOptions));
     if (activityLogger.isDebugEnabled())
       return CompletableFutureUtil.tap(outcome, (result, throwable) -> {
         if (throwable == null)

@@ -119,23 +119,23 @@ public class EventuateAggregateStoreCrudImpl implements EventuateAggregateStoreC
   }
 
   @Override
-  public <T extends Aggregate<T>> EntityIdAndVersion updateWithoutReading(Class<T> clasz, String entityId, List<Event> events) {
-    return updateWithoutReading(clasz, entityId, events, Optional.empty());
+  public <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, String entityId, List<Event> events) {
+    return update(clasz, entityId, events, Optional.empty());
   }
 
   @Override
-  public <T extends Aggregate<T>> EntityIdAndVersion updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, UpdateWithoutReadingOptions updateOptions) {
-    return updateWithoutReading(clasz, entityId, events, Optional.ofNullable(updateOptions));
+  public <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, String entityId, List<Event> events, UpdateOptions updateOptions) {
+    return update(clasz, entityId, events, Optional.ofNullable(updateOptions));
   }
 
   @Override
-  public <T extends Aggregate<T>> EntityIdAndVersion updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateWithoutReadingOptions> updateOptions) {
+  public <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateOptions> updateOptions) {
     try {
-      Optional<String> serializedEventMetadata = updateOptions.flatMap(UpdateWithoutReadingOptions::getEventMetadata).map(JSonMapper::toJson);
+      Optional<String> serializedEventMetadata = updateOptions.flatMap(UpdateOptions::getEventMetadata).map(JSonMapper::toJson);
       List<EventTypeAndData> serializedEvents = events.stream().map(event -> toEventTypeAndData(event, serializedEventMetadata)).collect(Collectors.toList());
-      EntityIdVersionAndEventIds result = aggregateCrud.updateWithoutReading(new EntityIdAndType(entityId, clasz.getName()),
+      EntityIdVersionAndEventIds result = aggregateCrud.update(new EntityIdAndType(entityId, clasz.getName()),
               serializedEvents,
-              toAggregateCrudUpdateWithoutReadingOptions(updateOptions));
+              toAggregateCrudUpdateOptions(updateOptions));
       if (activityLogger.isDebugEnabled())
         activityLogger.debug("Updated entity without reading: {} {} {}", clasz.getName(), result.getEntityId(), toSerializedEventsWithIds(serializedEvents, result.getEventIds()));
 

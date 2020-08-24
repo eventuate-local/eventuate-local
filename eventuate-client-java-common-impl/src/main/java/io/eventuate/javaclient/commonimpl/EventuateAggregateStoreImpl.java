@@ -66,18 +66,18 @@ public class EventuateAggregateStoreImpl implements EventuateAggregateStore {
   }
 
   @Override
-  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> updateWithoutReading(Class<T> clasz, String entityId, List<Event> events) {
-    return eventuateAggregateStoreCrud.updateWithoutReading(clasz, entityId, events, Optional.empty());
+  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> update(Class<T> clasz, String entityId, List<Event> events) {
+    return eventuateAggregateStoreCrud.update(clasz, entityId, events, Optional.empty());
   }
 
   @Override
-  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, UpdateWithoutReadingOptions updateOptions) {
-    return eventuateAggregateStoreCrud.updateWithoutReading(clasz, entityId, events, Optional.of(updateOptions));
+  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> update(Class<T> clasz, String entityId, List<Event> events, UpdateOptions updateOptions) {
+    return eventuateAggregateStoreCrud.update(clasz, entityId, events, Optional.of(updateOptions));
   }
 
   @Override
-  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> updateWithoutReading(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateWithoutReadingOptions> updateOptions) {
-    return eventuateAggregateStoreCrud.updateWithoutReading(clasz, entityId, events, updateOptions);
+  public <T extends Aggregate<T>> CompletableFuture<EntityIdAndVersion> update(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateOptions> updateOptions) {
+    return eventuateAggregateStoreCrud.update(clasz, entityId, events, updateOptions);
   }
 
   @Override

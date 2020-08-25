@@ -7,6 +7,7 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootPluginVersion")
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5'
         classpath "io.eventuate.plugins.gradle:eventuate-plugins-gradle-publish:$eventuatePluginsGradleVersion"
+        classpath "com.avast.gradle:gradle-docker-compose-plugin:$dockerComposePluginVersion"
     }
 }
 
@@ -14,6 +15,7 @@ plugins {
     id "com.github.hierynomus.license" version "0.12.1"
 }
 
+apply plugin: 'docker-compose'
 apply plugin: "io.eventuate.plugins.gradle.publish.EventuatePublish"
 
 allprojects {
@@ -69,4 +71,17 @@ gradle.projectsEvaluated {
         archives project.aggregateJavaDocsJar
     }
 
+}
+
+dockerCompose {
+    environment.put "EVENTUATE_COMMON_VERSION", eventuateCommonImageVersion
+    environment.put "EVENTUATE_CDC_VERSION", eventuateCdcImageVersion
+
+    removeOrphans = true
+
+    mysql {
+        projectName = null
+        useComposeFiles = ["docker-compose.yml"]
+        removeContainers = project.ext.removeContainers
+    }
 }

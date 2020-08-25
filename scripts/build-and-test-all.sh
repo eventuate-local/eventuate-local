@@ -2,20 +2,15 @@
 
 set -e
 
-. ./scripts/set-env-mysql.sh
+export EVENTUATE_EVENT_TRACKER_ITERATIONS=160
+
+docker="./gradlew mysqlCompose"
 
 ./gradlew $* testClasses
 
-docker-compose down -v --remove-orphans
-
-docker-compose up --build -d mysql zookeeper kafka
-
-./scripts/wait-for-mysql.sh
-
-docker-compose up --build -d
-
-./scripts/wait-for-services.sh $DOCKER_HOST_IP "actuator/health" 8099
+${docker}Down
+${docker}Up
 
 ./gradlew build
 
-docker-compose down -v --remove-orphans
+${docker}Down

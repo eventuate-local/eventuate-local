@@ -71,6 +71,21 @@ public class EventuateAggregateStoreImpl implements EventuateAggregateStore {
   }
 
   @Override
+  public <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, String entityId, List<Event> events) {
+    return eventuateAggregateStoreCrud.update(clasz, entityId, events);
+  }
+
+  @Override
+  public <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, String entityId, List<Event> events, UpdateOptions updateOptions) {
+    return eventuateAggregateStoreCrud.update(clasz, entityId, events, updateOptions);
+  }
+
+  @Override
+  public <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateOptions> updateOptions) {
+    return eventuateAggregateStoreCrud.update(clasz, entityId, events, updateOptions);
+  }
+
+  @Override
   public Optional<Snapshot> possiblySnapshot(Aggregate aggregate, Optional<Int128> snapshotVersion, List<EventWithMetadata> oldEvents, List<Event> newEvents) {
     return eventuateAggregateStoreCrud.possiblySnapshot(aggregate, snapshotVersion, oldEvents, newEvents);
   }

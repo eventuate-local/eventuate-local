@@ -1,12 +1,7 @@
 package io.eventuate.javaclient.commonimpl.crud;
 
-import io.eventuate.Event;
-import io.eventuate.EventWithMetadata;
-import io.eventuate.FindOptions;
+import io.eventuate.*;
 import io.eventuate.common.id.Int128;
-import io.eventuate.SaveOptions;
-import io.eventuate.Snapshot;
-import io.eventuate.UpdateOptions;
 import io.eventuate.common.json.mapper.JSonMapper;
 import io.eventuate.javaclient.commonimpl.common.EventIdTypeAndData;
 import io.eventuate.javaclient.commonimpl.common.EventTypeAndData;
@@ -31,7 +26,6 @@ public class AggregateCrudMapping {
     return updateOptions.map(uo -> new AggregateCrudUpdateOptions(uo.getTriggeringEvent(),
             uo.getSnapshot().map(AggregateCrudMapping::toSerializedSnapshot)));
   }
-
 
   public static List<EventIdTypeAndData> toSerializedEventsWithIds(List<EventTypeAndData> serializedEvents, List<Int128> eventIds) {
     return IntStream.range(0, serializedEvents.size()).boxed().map(idx ->

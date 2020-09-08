@@ -25,6 +25,12 @@ public interface EventuateAggregateStoreCrud {
 
   <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, EntityIdAndVersion entityIdAndVersion, List<Event> events, Optional<UpdateOptions> updateOptions);
 
+  <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, String entityId, List<Event> events);
+
+  <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, String entityId, List<Event> events, UpdateOptions updateOptions);
+
+  <T extends Aggregate<T>> EntityIdAndVersion update(Class<T> clasz, String entityId, List<Event> events, Optional<UpdateOptions> updateOptions);
+
   /**
    * Possibly generate a snapshot
    *

@@ -39,4 +39,11 @@ public abstract class AbstractJdbcAggregateCrud implements AggregateCrud {
     publish(result.getPublishableEvents());
     return result.getEntityIdVersionAndEventIds();
   }
+
+  @Override
+  public EntityIdVersionAndEventIds update(EntityIdAndType entityIdAndType, List<EventTypeAndData> events, Optional<AggregateCrudUpdateOptions> updateOptions) {
+    SaveUpdateResult result = eventuateJdbcAccess.update(entityIdAndType, events, updateOptions);
+    publish(result.getPublishableEvents());
+    return result.getEntityIdVersionAndEventIds();
+  }
 }

@@ -13,6 +13,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import(EventuateJavaClientDomainEventsConfiguration.class)
+@Import(EventuateJavaClientDomainConfiguration.class)
 public @interface EnableEventHandlers {
 }

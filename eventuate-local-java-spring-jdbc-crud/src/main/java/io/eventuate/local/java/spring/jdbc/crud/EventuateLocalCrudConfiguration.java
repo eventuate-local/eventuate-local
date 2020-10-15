@@ -1,8 +1,10 @@
 package io.eventuate.local.java.spring.jdbc.crud;
 
+import io.eventuate.common.id.IdGenerator;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
+import io.eventuate.common.spring.id.IdGeneratorConfiguration;
 import io.eventuate.common.spring.jdbc.EventuateCommonJdbcOperationsConfiguration;
 import io.eventuate.javaclient.commonimpl.crud.AggregateCrud;
 import io.eventuate.javaclient.commonimpl.crud.adapters.SyncToAsyncAggregateCrudAdapter;
@@ -20,15 +22,17 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Configuration
 @EnableTransactionManagement
-@Import({EventuateCommonCrudConfiguration.class, EventuateCommonJdbcOperationsConfiguration.class})
+@Import({EventuateCommonCrudConfiguration.class, EventuateCommonJdbcOperationsConfiguration.class, IdGeneratorConfiguration.class})
 public class EventuateLocalCrudConfiguration {
 
   @Bean
-  public EventuateJdbcAccess eventuateJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
+  public EventuateJdbcAccess eventuateJdbcAccess(IdGenerator idGenerator,
+                                                 EventuateTransactionTemplate eventuateTransactionTemplate,
                                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
                                                  EventuateSchema eventuateSchema) {
-    return new EventuateLocalJdbcAccess(eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSchema);
+    return new EventuateLocalJdbcAccess(idGenerator,
+            eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSchema);
   }
 
   @Bean

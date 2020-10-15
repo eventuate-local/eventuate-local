@@ -1,10 +1,13 @@
 package io.eventuate.javaclient.spring.jdbc;
 
+import io.eventuate.common.id.IdGenerator;
 import io.eventuate.common.inmemorydatabase.EventuateDatabaseScriptSupplier;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
 import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
+import io.eventuate.common.spring.id.ApplicationIdGeneratorCondition;
+import io.eventuate.common.spring.id.IdGeneratorConfiguration;
 import io.eventuate.common.spring.inmemorydatabase.EventuateCommonInMemoryDatabaseConfiguration;
 import io.eventuate.common.spring.jdbc.EventuateCommonJdbcOperationsConfiguration;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
@@ -17,7 +20,9 @@ import io.eventuate.javaclient.eventhandling.exceptionhandling.EventuateClientSc
 import io.eventuate.javaclient.jdbc.EventuateEmbeddedTestAggregateStore;
 import io.eventuate.javaclient.jdbc.JdkTimerBasedEventuateClientScheduler;
 import io.eventuate.javaclient.spring.common.EventuateCommonConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -28,22 +33,31 @@ import java.util.Collections;
 @EnableTransactionManagement
 @Import({EventuateCommonConfiguration.class,
         EventuateCommonInMemoryDatabaseConfiguration.class,
-        EventuateCommonJdbcOperationsConfiguration.class})
+        EventuateCommonJdbcOperationsConfiguration.class,
+        IdGeneratorConfiguration.class})
 public class EmbeddedTestAggregateStoreConfiguration {
 
   @Bean
+  @Conditional(ApplicationIdGeneratorCondition.class)
   public EventuateDatabaseScriptSupplier eventuateCommonInMemoryScriptSupplierForEventuateLocal() {
     return () -> Collections.singletonList("eventuate-embedded-schema.sql");
   }
 
+  @Bean
+  @ConditionalOnProperty(name = "eventuate.outbox.id")
+  public EventuateDatabaseScriptSupplier eventuateCommonInMemoryScriptSupplierForEventuateLocalDbId() {
+    return () -> Collections.singletonList("eventuate-embedded-schema-db-id.sql");
+  }
 
   @Bean
-  public EventuateJdbcAccess eventuateJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
+  public EventuateJdbcAccess eventuateJdbcAccess(IdGenerator idGenerator,
+                                                 EventuateTransactionTemplate eventuateTransactionTemplate,
                                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
                                                  EventuateSchema eventuateSchema) {
 
-    return new EventuateJdbcAccessImpl(eventuateTransactionTemplate,
+    return new EventuateJdbcAccessImpl(idGenerator,
+            eventuateTransactionTemplate,
             eventuateJdbcStatementExecutor,
             eventuateCommonJdbcOperations,
             eventuateSchema);

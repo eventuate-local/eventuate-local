@@ -11,6 +11,15 @@ docker="./gradlew mysqlCompose"
 ${docker}Down
 ${docker}Up
 
-./gradlew build
+./gradlew cleanTest build
+
+${docker}Down
+
+export USE_DB_ID=true
+export EVENTUATE_OUTBOX_ID=1
+
+${docker}Up
+
+./gradlew cleanTest build
 
 ${docker}Down

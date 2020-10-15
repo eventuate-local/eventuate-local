@@ -2,6 +2,7 @@ apply plugin: PublicModulePlugin
 
 dependencies {
     compile "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
+    compile "io.eventuate.common:eventuate-common-spring-id:$eventuateCommonVersion"
 
     compile project(":eventuate-client-java-jdbc")
     compile project(":eventuate-client-java-jdbc-common-tests")

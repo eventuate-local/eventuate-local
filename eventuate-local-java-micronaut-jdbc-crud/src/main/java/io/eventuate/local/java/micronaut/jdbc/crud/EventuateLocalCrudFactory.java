@@ -1,5 +1,6 @@
 package io.eventuate.local.java.micronaut.jdbc.crud;
 
+import io.eventuate.common.id.IdGenerator;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
@@ -22,11 +23,12 @@ import javax.sql.DataSource;
 public class EventuateLocalCrudFactory {
 
   @Singleton
-  public EventuateJdbcAccess eventuateJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
+  public EventuateJdbcAccess eventuateJdbcAccess(IdGenerator idGenerator,
+                                                 EventuateTransactionTemplate eventuateTransactionTemplate,
                                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
                                                  EventuateSchema eventuateSchema) {
-    return new EventuateLocalJdbcAccess(eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSchema);
+    return new EventuateLocalJdbcAccess(idGenerator, eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSchema);
   }
 
   @Singleton

@@ -8,6 +8,7 @@ dependencies {
     compile project(":eventuate-client-java-spring-common-crud")
 
     compile "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
+    compile "io.eventuate.common:eventuate-common-spring-id:$eventuateCommonVersion"
 
     compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
     compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"

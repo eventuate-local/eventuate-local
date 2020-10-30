@@ -18,6 +18,7 @@ dependencies {
     compile project (":eventuate-local-java-crud")
 
     compile "io.eventuate.common:eventuate-common-micronaut-jdbc:$eventuateCommonVersion"
+    compile "io.eventuate.common:eventuate-common-micronaut-id:$eventuateCommonVersion"
     compile project(":eventuate-client-java-micronaut-common-crud")
 
     annotationProcessor "io.micronaut:micronaut-inject-java"

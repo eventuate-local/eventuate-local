@@ -11,7 +11,7 @@ dependencies {
     compile ('org.postgresql:postgresql:42.1.4') {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
-    compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.2.1.jre8'
+    compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '9.1.1.jre8-preview'
 
     testCompile "junit:junit:4.12"
 }

@@ -1,5 +1,5 @@
 // apply plugin: PublicModulePlugin
-apply plugin: PrivateModulePlugin
+
 
 dependencies {
     compile project(":eventuate-local-java-common")
@@ -12,4 +12,6 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
     compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.2.1.jre8'
+
+    testCompile "junit:junit:4.12"
 }

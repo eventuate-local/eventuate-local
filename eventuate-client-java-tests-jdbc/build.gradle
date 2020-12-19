@@ -1,4 +1,4 @@
-apply plugin: PrivateModulePlugin
+
 
 dependencies {
     testCompile project(":eventuate-client-java-tests-common-spring")

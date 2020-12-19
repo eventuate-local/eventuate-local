@@ -5,22 +5,16 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootPluginVersion")
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5'
-        classpath "io.eventuate.plugins.gradle:eventuate-plugins-gradle-publish:$eventuatePluginsGradleVersion"
         classpath "com.avast.gradle:gradle-docker-compose-plugin:$dockerComposePluginVersion"
     }
 }
 
 plugins {
+    id "java"
     id "com.github.hierynomus.license" version "0.12.1"
 }
 
 apply plugin: 'docker-compose'
-apply plugin: "io.eventuate.plugins.gradle.publish.EventuatePublish"
-
-allprojects {
-    group = "io.eventuate.local.java"
-}
 
 projects {
 
@@ -29,26 +23,20 @@ projects {
     }
 }
 
-allprojects {
+subprojects {
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
+    apply plugin: 'java'
+}
 
+allprojects {
+    group = "io.eventuate.local.java"
     repositories {
         mavenCentral()
         jcenter()
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
     }
 
-    dependencies {
-        testCompile "junit:junit:4.12"
-    }
-
-}
-
-task aggregatedTestReport(type: TestReport) {
-    destinationDir = file("$buildDir/reports/allTests")
-    // Include the results from the 'test' task in all subprojects
-    reportOn subprojects*.test
 }
 
 gradle.projectsEvaluated {

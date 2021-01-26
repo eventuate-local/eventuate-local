@@ -41,7 +41,7 @@ public class EventuateCommonCrudConfiguration {
                                                                  EventuateEventSchemaManager eventuateEventSchemaManager) {
     EventuateAggregateStoreCrud eventuateAggregateStoreCrud = new EventuateAggregateStoreCrudImpl(aggregateCrud,
             snapshotManager,
-            new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies),
+            new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies).toMissingApplyEventMethodStrategy(),
             eventuateEventSchemaManager
     );
 
@@ -55,7 +55,7 @@ public class EventuateCommonCrudConfiguration {
     io.eventuate.sync.EventuateAggregateStoreCrud eventuateAggregateStoreCrud =
             new io.eventuate.javaclient.commonimpl.crud.sync.EventuateAggregateStoreCrudImpl(aggregateCrud,
                     snapshotManager,
-                    new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies));
+                    new CompositeMissingApplyEventMethodStrategy(missingApplyEventMethodStrategies).toMissingApplyEventMethodStrategy());
 
     return eventuateAggregateStoreCrud;
   }

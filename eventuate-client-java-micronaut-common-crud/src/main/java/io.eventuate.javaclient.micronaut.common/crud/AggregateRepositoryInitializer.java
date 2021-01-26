@@ -23,11 +23,11 @@ public class AggregateRepositoryInitializer {
   @PostConstruct
   public void setMissingStrategies() {
     for (AggregateRepository aggregateRepository : aggregateRepositories) {
-      aggregateRepository.setMissingApplyEventMethodStrategy(strategies);
+      aggregateRepository.setMissingApplyEventMethodStrategy(strategies.toMissingApplyEventMethodStrategy());
     }
 
     for (io.eventuate.sync.AggregateRepository aggregateRepository : syncAggregateRepositories) {
-      aggregateRepository.setMissingApplyEventMethodStrategy(strategies);
+      aggregateRepository.setMissingApplyEventMethodStrategy(strategies.toMissingApplyEventMethodStrategy());
 
     }
   }

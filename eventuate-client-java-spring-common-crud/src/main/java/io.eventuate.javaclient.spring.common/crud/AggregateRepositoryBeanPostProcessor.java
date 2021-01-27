@@ -21,9 +21,9 @@ public class AggregateRepositoryBeanPostProcessor implements BeanPostProcessor {
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
     if (bean instanceof AggregateRepository) {
-      ((AggregateRepository)bean).setMissingApplyEventMethodStrategy(strategies);
+      ((AggregateRepository)bean).setMissingApplyEventMethodStrategy(strategies.toMissingApplyEventMethodStrategy());
     } else if (bean instanceof io.eventuate.sync.AggregateRepository) {
-      ((io.eventuate.sync.AggregateRepository)bean).setMissingApplyEventMethodStrategy(strategies);
+      ((io.eventuate.sync.AggregateRepository)bean).setMissingApplyEventMethodStrategy(strategies.toMissingApplyEventMethodStrategy());
     }
     return bean;
   }

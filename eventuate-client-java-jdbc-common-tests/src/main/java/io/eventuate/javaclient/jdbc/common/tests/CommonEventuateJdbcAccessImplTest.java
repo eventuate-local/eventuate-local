@@ -31,8 +31,13 @@ public abstract class CommonEventuateJdbcAccessImplTest {
   protected abstract EventuateSchema getEventuateSchema();
 
   protected void clear() {
-    getEventuateJdbcStatementExecutor().update(String.format("delete from %s", getEventuateSchema().qualifyTable("events")));
-    getEventuateJdbcStatementExecutor().update(String.format("delete from %s", getEventuateSchema().qualifyTable("entities")));
+    truncateTable("events");
+    truncateTable("entities");
+    truncateTable("snapshots");
+  }
+
+  private void truncateTable(String table) {
+    getEventuateJdbcStatementExecutor().update(String.format("TRUNCATE TABLE %s", getEventuateSchema().qualifyTable(table)));
   }
 
   public void testSave() {

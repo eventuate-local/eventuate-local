@@ -40,3 +40,7 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+test {
+    forkEvery 1
+}

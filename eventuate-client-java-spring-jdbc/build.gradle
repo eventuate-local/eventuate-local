@@ -14,3 +14,7 @@ dependencies {
     testCompile project(":eventuate-client-java-test-util")
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }
+
+test {
+    forkEvery 1
+}

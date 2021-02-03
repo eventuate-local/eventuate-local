@@ -33,6 +33,7 @@ public abstract class CommonEventuateJdbcAccessImplTest {
   protected void clear() {
     getEventuateJdbcStatementExecutor().update(String.format("delete from %s", getEventuateSchema().qualifyTable("events")));
     getEventuateJdbcStatementExecutor().update(String.format("delete from %s", getEventuateSchema().qualifyTable("entities")));
+    getEventuateJdbcStatementExecutor().update(String.format("delete from %s", getEventuateSchema().qualifyTable("snapshots")));
   }
 
   public void testSave() {

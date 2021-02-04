@@ -43,13 +43,13 @@ workflows:
     jobs:
       - build-and-test/build-and-test:
           name: build-and-test-mysql
-          script: ./scrips/build-and-test-all-mysql.sh
+          script: ./scripts/build-and-test-all-mysql.sh
       - build-and-test/build-and-test:
           name: build-and-test-mssql
-          script: ./scrips/build-and-test-all-mssql.sh
+          script: ./scripts/build-and-test-all-mssql.sh
       - build-and-test/build-and-test:
           name: build-and-test-postgres
-          script: ./scrips/build-and-test-all-postgres.sh
+          script: ./scripts/build-and-test-all-postgres.sh
       - build-and-test/build-and-test:
           name: deploy-artifacts
           requires:

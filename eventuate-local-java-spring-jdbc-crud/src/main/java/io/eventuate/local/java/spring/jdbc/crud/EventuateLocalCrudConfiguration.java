@@ -4,6 +4,7 @@ import io.eventuate.common.id.IdGenerator;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
+import io.eventuate.common.jdbc.sqldialect.SqlDialectSelector;
 import io.eventuate.common.spring.id.IdGeneratorConfiguration;
 import io.eventuate.common.spring.jdbc.EventuateCommonJdbcOperationsConfiguration;
 import io.eventuate.javaclient.commonimpl.crud.AggregateCrud;
@@ -13,6 +14,7 @@ import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.spring.common.crud.EventuateCommonCrudConfiguration;
 import io.eventuate.local.java.crud.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.crud.EventuateLocalJdbcAccess;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -30,9 +32,15 @@ public class EventuateLocalCrudConfiguration {
                                                  EventuateTransactionTemplate eventuateTransactionTemplate,
                                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
-                                                 EventuateSchema eventuateSchema) {
+                                                 EventuateSchema eventuateSchema,
+                                                 SqlDialectSelector sqlDialectSelector,
+                                                 @Value("${spring.datasource.driver-class-name}") String driver) {
     return new EventuateLocalJdbcAccess(idGenerator,
-            eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSchema);
+            eventuateTransactionTemplate,
+            eventuateJdbcStatementExecutor,
+            eventuateCommonJdbcOperations,
+            sqlDialectSelector.getDialect(driver),
+            eventuateSchema);
   }
 
   @Bean

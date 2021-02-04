@@ -4,7 +4,7 @@ set -e
 
 export EVENTUATE_EVENT_TRACKER_ITERATIONS=160
 
-docker="./gradlew mysqlCompose"
+docker="./gradlew ${database}Compose"
 
 ./gradlew $* testClasses
 

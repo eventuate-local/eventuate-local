@@ -11,6 +11,7 @@ import io.eventuate.common.id.ApplicationIdGenerator;
 import io.eventuate.common.id.IdGenerator;
 import io.eventuate.common.id.Int128;
 import io.eventuate.common.jdbc.*;
+import io.eventuate.common.jdbc.sqldialect.EventuateSqlDialect;
 import io.eventuate.javaclient.commonimpl.common.EventIdTypeAndData;
 import io.eventuate.javaclient.commonimpl.common.EventTypeAndData;
 import io.eventuate.javaclient.commonimpl.crud.*;
@@ -35,26 +36,30 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
   private String snapshotTable;
 
   private EventuateCommonJdbcOperations eventuateCommonJdbcOperations;
+  private EventuateSqlDialect eventuateSqlDialect;
   private EventuateSchema eventuateSchema;
 
   public EventuateJdbcAccessImpl(IdGenerator idGenerator,
                                  EventuateTransactionTemplate eventuateTransactionTemplate,
                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
-                                 EventuateCommonJdbcOperations eventuateCommonJdbcOperations) {
+                                 EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
+                                 EventuateSqlDialect eventuateSqlDialect) {
 
-    this(idGenerator, eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, new EventuateSchema());
+    this(idGenerator, eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSqlDialect, new EventuateSchema());
   }
 
   public EventuateJdbcAccessImpl(IdGenerator idGenerator,
                                  EventuateTransactionTemplate eventuateTransactionTemplate,
                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
+                                 EventuateSqlDialect eventuateSqlDialect,
                                  EventuateSchema eventuateSchema) {
 
     this.idGenerator = idGenerator;
     this.eventuateTransactionTemplate = eventuateTransactionTemplate;
     this.eventuateJdbcStatementExecutor = eventuateJdbcStatementExecutor;
     this.eventuateCommonJdbcOperations = eventuateCommonJdbcOperations;
+    this.eventuateSqlDialect = eventuateSqlDialect;
     this.eventuateSchema = eventuateSchema;
 
     entityTable = eventuateSchema.qualifyTable("entities");
@@ -135,10 +140,13 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
   private <T extends Aggregate<T>> LoadedEvents findWithoutTransaction(String aggregateType,
                                                                        String entityId,
                                                                        Optional<AggregateCrudFindOptions> findOptions) {
+    String query = String.format("select snapshot_type, snapshot_json, entity_version, triggering_Events from %s where entity_type = ? and entity_id = ? order by entity_version desc", snapshotTable);
+
+    query = eventuateSqlDialect.addLimitToSql(query, "1");
+
     Optional<LoadedSnapshot> snapshot =
             eventuateJdbcStatementExecutor
-                    .query(
-                            String.format("select snapshot_type, snapshot_json, entity_version, triggering_Events from %s where entity_type = ? and entity_id = ? order by entity_version desc LIMIT 1", snapshotTable),
+                    .query(query,
                             (rs, rownum) ->
                                     new LoadedSnapshot(
                                             new SerializedSnapshotWithVersion(
@@ -229,10 +237,14 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
 
     updateOptions.flatMap(AggregateCrudUpdateOptions::getSnapshot).ifPresent(ss -> {
 
+      String query = String.format("select snapshot_type, snapshot_json, entity_version, triggering_Events from %s where entity_type = ? and entity_id = ? order by entity_version desc", snapshotTable);
+
+      query = eventuateSqlDialect.addLimitToSql(query, "1");
+
       Optional<LoadedSnapshot> previousSnapshot =
               eventuateJdbcStatementExecutor
                       .query(
-                              String.format("select snapshot_type, snapshot_json, entity_version, triggering_Events from %s where entity_type = ? and entity_id = ? order by entity_version desc LIMIT 1", snapshotTable),
+                              query,
                               (rs, rownum) ->
                                       new LoadedSnapshot(
                                               new SerializedSnapshotWithVersion(

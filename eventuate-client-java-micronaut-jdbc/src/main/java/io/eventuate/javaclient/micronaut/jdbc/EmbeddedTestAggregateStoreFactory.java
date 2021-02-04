@@ -6,6 +6,7 @@ import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
 import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
+import io.eventuate.common.jdbc.sqldialect.SqlDialectSelector;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
 import io.eventuate.javaclient.commonimpl.crud.AggregateCrud;
@@ -18,6 +19,7 @@ import io.eventuate.javaclient.jdbc.JdkTimerBasedEventuateClientScheduler;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
+import io.micronaut.context.annotation.Value;
 
 import javax.inject.Singleton;
 import java.util.Collections;
@@ -43,12 +45,15 @@ public class EmbeddedTestAggregateStoreFactory {
                                                  EventuateTransactionTemplate eventuateTransactionTemplate,
                                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
-                                                 EventuateSchema eventuateSchema) {
+                                                 EventuateSchema eventuateSchema,
+                                                 SqlDialectSelector sqlDialectSelector,
+                                                 @Value("${datasources.default.driver-class-name}") String driver) {
 
     return new EventuateJdbcAccessImpl(idGenerator,
             eventuateTransactionTemplate,
             eventuateJdbcStatementExecutor,
             eventuateCommonJdbcOperations,
+            sqlDialectSelector.getDialect(driver),
             eventuateSchema);
   }
 

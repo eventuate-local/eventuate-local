@@ -81,7 +81,19 @@ dockerCompose {
 
     mysql {
         projectName = null
-        useComposeFiles = ["docker-compose.yml"]
+        useComposeFiles = ["docker-compose-mysql.yml"]
+        removeContainers = project.ext.removeContainers
+    }
+
+    mssql {
+        projectName = null
+        useComposeFiles = ["docker-compose-mssql.yml"]
+        removeContainers = project.ext.removeContainers
+    }
+
+    postgres {
+        projectName = null
+        useComposeFiles = ["docker-compose-postgres.yml"]
         removeContainers = project.ext.removeContainers
     }
 }

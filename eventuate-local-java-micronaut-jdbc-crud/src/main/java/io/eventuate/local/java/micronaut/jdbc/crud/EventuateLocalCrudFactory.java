@@ -12,6 +12,7 @@ import io.eventuate.javaclient.commonimpl.crud.adapters.SyncToAsyncAggregateCrud
 import io.eventuate.local.java.crud.EventuateLocalAggregateCrud;
 import io.eventuate.local.java.crud.EventuateLocalJdbcAccess;
 import io.micronaut.context.annotation.Factory;
+import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -20,6 +21,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.inject.Singleton;
 import javax.sql.DataSource;
+import java.util.function.Supplier;
 
 @Factory
 public class EventuateLocalCrudFactory {
@@ -41,7 +43,7 @@ public class EventuateLocalCrudFactory {
   }
 
   @Singleton
-  public EventuateLocalAggregateCrud eventuateLocalAggregateCrud(TransactionTemplate transactionTemplate,
+  public EventuateLocalAggregateCrud eventuateLocalAggregateCrud(EventuateTransactionTemplate transactionTemplate,
                                                                  EventuateJdbcAccess eventuateJdbcAccess) {
     return new EventuateLocalAggregateCrud(transactionTemplate, eventuateJdbcAccess);
   }
@@ -49,6 +51,17 @@ public class EventuateLocalCrudFactory {
   @Singleton
   public AggregateCrud asyncAggregateCrud(io.eventuate.javaclient.commonimpl.crud.sync.AggregateCrud aggregateCrud) {
     return new SyncToAsyncAggregateCrudAdapter(aggregateCrud);
+  }
+
+  @Singleton
+  @Primary
+  public EventuateTransactionTemplate eventuateTransactionTemplate(TransactionTemplate transactionTemplate) {
+    return new EventuateTransactionTemplate() {
+      @Override
+      public <T> T executeInTransaction(Supplier<T> supplier) {
+        return transactionTemplate.execute(status -> supplier.get());
+      }
+    };
   }
 
   @Singleton

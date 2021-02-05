@@ -44,7 +44,7 @@ public class EventuateLocalCrudConfiguration {
   }
 
   @Bean
-  public EventuateLocalAggregateCrud eventuateLocalAggregateCrud(TransactionTemplate transactionTemplate,
+  public EventuateLocalAggregateCrud eventuateLocalAggregateCrud(EventuateTransactionTemplate transactionTemplate,
                                                                  EventuateJdbcAccess eventuateJdbcAccess) {
     return new EventuateLocalAggregateCrud(transactionTemplate, eventuateJdbcAccess);
   }

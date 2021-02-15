@@ -18,12 +18,17 @@ public class EmbeddedSchemaModifier {
   public List<String> getModifiedSqlLines(Function<String, List<String>> sqlLoader) {
     List<String> lines = sqlLoader.apply(embeddedSchema);
 
-    if (!eventuateSchema.isEmpty()) {
-      for (int i = 0; i < 2; i++) lines.set(i, lines.get(i).replace("eventuate", eventuateSchema.getEventuateDatabaseSchema()));
-    } else {
-      lines = lines.subList(2, lines.size());
+    for (int i = 0; i < lines.size(); i++){
+      replaceLine(lines, i, "eventuate\\.", eventuateSchema.isEmpty() ? "" : eventuateSchema.getEventuateDatabaseSchema() + ".");
+      if (!eventuateSchema.isEmpty()) {
+        replaceLine(lines, i, "eventuate", eventuateSchema.getEventuateDatabaseSchema());
+      }
     }
 
     return lines;
+  }
+
+  private void replaceLine(List<String> lines, int line, String target, String replacement) {
+    lines.set(line, lines.get(line).replaceAll(target, replacement));
   }
 }

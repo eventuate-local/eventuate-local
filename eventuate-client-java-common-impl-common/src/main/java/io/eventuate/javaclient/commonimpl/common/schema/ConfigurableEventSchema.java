@@ -16,7 +16,7 @@ public class ConfigurableEventSchema {
 
   /**
    * @param aggregateType - the fully qualified class name
-   * @param externalAggregateType - the external name, e.g. Kafka topic - TODO implement <=> Mapping
+   * @param externalAggregateType - the external name, e.g. Kafka topic - TODO implement Mapping
    * @return a builder
    */
   public AggregateSchemaBuilder forAggregate(String aggregateType, String externalAggregateType) {

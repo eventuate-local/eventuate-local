@@ -31,8 +31,13 @@ public abstract class CommonEventuateJdbcAccessImplTest {
   protected abstract EventuateSchema getEventuateSchema();
 
   protected void clear() {
-    getEventuateJdbcStatementExecutor().update(String.format("delete from %s", getEventuateSchema().qualifyTable("events")));
-    getEventuateJdbcStatementExecutor().update(String.format("delete from %s", getEventuateSchema().qualifyTable("entities")));
+    truncateTable("events");
+    truncateTable("entities");
+    truncateTable("snapshots");
+  }
+
+  private void truncateTable(String table) {
+    getEventuateJdbcStatementExecutor().update(String.format("TRUNCATE TABLE %s", getEventuateSchema().qualifyTable(table)));
   }
 
   public void testSave() {
@@ -82,13 +87,25 @@ public abstract class CommonEventuateJdbcAccessImplTest {
     Assert.assertTrue(loadedEvents.getSnapshot().isPresent());
   }
 
-  protected List<String> loadSqlScriptAsListOfLines(String script) throws IOException {
-    try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/eventuate-embedded-schema.sql")))) {
+  protected List<String> loadSqlScriptAsListOfLines(String script)  {
+    script = wrapClasspathResource(script);
+
+    try(BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(script)))) {
       return bufferedReader.lines().collect(Collectors.toList());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
   protected void executeSql(List<String> sqlList) {
     getEventuateJdbcStatementExecutor().update(sqlList.stream().collect(Collectors.joining("\n")));
+  }
+
+  private String wrapClasspathResource(String file) {
+    if (file.startsWith("/")) {
+      return file;
+    }
+
+    return "/" + file;
   }
 }

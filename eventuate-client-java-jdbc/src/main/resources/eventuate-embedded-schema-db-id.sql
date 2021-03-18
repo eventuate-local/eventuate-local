@@ -5,7 +5,8 @@ DROP table IF EXISTS eventuate.entities;
 DROP table IF EXISTS eventuate.snapshots;
 
 create table eventuate.events (
-  event_id VARCHAR PRIMARY KEY,
+  id BIGINT PRIMARY KEY auto_increment,
+  event_id VARCHAR,
   event_type VARCHAR,
   event_data VARCHAR,
   entity_type VARCHAR,

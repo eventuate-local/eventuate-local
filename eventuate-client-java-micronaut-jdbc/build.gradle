@@ -19,7 +19,7 @@ dependencies {
     compile project(":eventuate-client-java-jdbc-common-tests")
 
     compile "io.eventuate.common:eventuate-common-micronaut-in-memory-database:$eventuateCommonVersion"
-
+    compile "io.eventuate.common:eventuate-common-micronaut-id:$eventuateCommonVersion"
     compile "io.eventuate.common:eventuate-common-micronaut-spring-jdbc:$eventuateCommonVersion"
 
     compile "io.micronaut:micronaut-spring"

@@ -1,10 +1,12 @@
 package io.eventuate.local.java.crud;
 
 import io.eventuate.EventContext;
+import io.eventuate.common.id.IdGenerator;
 import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
 import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
 import io.eventuate.common.jdbc.EventuateSchema;
 import io.eventuate.common.jdbc.EventuateTransactionTemplate;
+import io.eventuate.common.jdbc.sqldialect.EventuateSqlDialect;
 import io.eventuate.javaclient.jdbc.EventAndTrigger;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
 import io.eventuate.javaclient.jdbc.LoadedSnapshot;
@@ -14,17 +16,21 @@ import java.util.Optional;
 
 public class EventuateLocalJdbcAccess extends EventuateJdbcAccessImpl {
 
-  public EventuateLocalJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
-                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
-                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations) {
-    super(eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations);
-  }
-
-  public EventuateLocalJdbcAccess(EventuateTransactionTemplate eventuateTransactionTemplate,
+  public EventuateLocalJdbcAccess(IdGenerator idGenerator,
+                                  EventuateTransactionTemplate eventuateTransactionTemplate,
                                   EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
                                   EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
+                                  EventuateSqlDialect eventuateSqlDialect) {
+    super(idGenerator, eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSqlDialect);
+  }
+
+  public EventuateLocalJdbcAccess(IdGenerator idGenerator,
+                                  EventuateTransactionTemplate eventuateTransactionTemplate,
+                                  EventuateJdbcStatementExecutor eventuateJdbcStatementExecutor,
+                                  EventuateCommonJdbcOperations eventuateCommonJdbcOperations,
+                                  EventuateSqlDialect eventuateSqlDialect,
                                   EventuateSchema eventuateSchema) {
-    super(eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSchema);
+    super(idGenerator, eventuateTransactionTemplate, eventuateJdbcStatementExecutor, eventuateCommonJdbcOperations, eventuateSqlDialect, eventuateSchema);
   }
 
   @Override

@@ -3,11 +3,11 @@ package io.eventuate.local.java.crud;
 import io.eventuate.Aggregate;
 import io.eventuate.EntityIdAndType;
 import io.eventuate.common.id.Int128;
+import io.eventuate.common.jdbc.EventuateTransactionTemplate;
 import io.eventuate.javaclient.commonimpl.common.EventTypeAndData;
 import io.eventuate.javaclient.commonimpl.crud.*;
 import io.eventuate.javaclient.jdbc.AbstractJdbcAggregateCrud;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,9 +17,9 @@ import java.util.Optional;
  */
 public class EventuateLocalAggregateCrud extends AbstractJdbcAggregateCrud {
 
-  private TransactionTemplate transactionTemplate;
+  private EventuateTransactionTemplate transactionTemplate;
 
-  public EventuateLocalAggregateCrud(TransactionTemplate transactionTemplate,
+  public EventuateLocalAggregateCrud(EventuateTransactionTemplate transactionTemplate,
                                      EventuateJdbcAccess eventuateJdbcAccess) {
     super(eventuateJdbcAccess);
     this.transactionTemplate = transactionTemplate;
@@ -27,16 +27,16 @@ public class EventuateLocalAggregateCrud extends AbstractJdbcAggregateCrud {
 
   @Override
   public EntityIdVersionAndEventIds save(String aggregateType, List<EventTypeAndData> events, Optional<AggregateCrudSaveOptions> options) {
-    return transactionTemplate.execute(status ->  super.save(aggregateType, events, options));
+    return transactionTemplate.executeInTransaction(() ->  super.save(aggregateType, events, options));
   }
 
   @Override
   public <T extends Aggregate<T>> LoadedEvents find(String aggregateType, String entityId, Optional<AggregateCrudFindOptions> findOptions) {
-    return transactionTemplate.execute(status ->  super.find(aggregateType, entityId, findOptions));
+    return transactionTemplate.executeInTransaction(() ->  super.find(aggregateType, entityId, findOptions));
   }
 
   @Override
   public EntityIdVersionAndEventIds update(EntityIdAndType entityIdAndType, Int128 entityVersion, List<EventTypeAndData> events, Optional<AggregateCrudUpdateOptions> updateOptions) {
-    return transactionTemplate.execute(status ->  super.update(entityIdAndType, entityVersion, events, updateOptions));
+    return transactionTemplate.executeInTransaction(() ->  super.update(entityIdAndType, entityVersion, events, updateOptions));
   }
 }

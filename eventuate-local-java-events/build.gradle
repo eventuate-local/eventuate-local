@@ -1,5 +1,3 @@
-// apply plugin: PublicModulePlugin
-apply plugin: PrivateModulePlugin
 
 dependencies {
     compile 'javax.annotation:javax.annotation-api:1.3.2'

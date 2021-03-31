@@ -38,16 +38,17 @@ allprojects {
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
     }
 
-    dependencies {
-        testCompile "junit:junit:4.12"
-    }
+    if (!project.name.endsWith("-bom"))
+      dependencies {
+          testCompile "junit:junit:4.12"
+      }
 
 }
 
 task aggregatedTestReport(type: TestReport) {
     destinationDir = file("$buildDir/reports/allTests")
     // Include the results from the 'test' task in all subprojects
-    reportOn subprojects*.test
+    reportOn subprojects.findAll{!it.name.endsWith("-bom")}*.test
 }
 
 gradle.projectsEvaluated {

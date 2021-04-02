@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 
-@MicronautTest(transactional = false)
+@MicronautTest
 public class EventuateJdbcAccessImplTest extends CommonEventuateJdbcAccessImplTest {
 
   @Inject

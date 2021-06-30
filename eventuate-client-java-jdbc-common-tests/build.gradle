@@ -1,0 +1,5 @@
+
+dependencies {
+    compile project(":eventuate-client-java-jdbc")
+    compile "junit:junit:4.12"
+}

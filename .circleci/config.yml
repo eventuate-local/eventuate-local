@@ -1,56 +1,20 @@
 version: 2.1
 orbs:
-  build-and-test:
-    jobs:
-      build-and-test:
-        parameters:
-          script:
-            description: the script to execute
-            type: string
-        machine: true
-        working_directory: ~/eventuate-local-java
-        steps:
-          - checkout
-          - restore_cache:
-              keys:
-                - eventuate-local-java-{{ checksum "gradle.properties" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
-                - eventuate-local-java-
-          - run:
-              command: |
-                ./.circleci/upgrade-docker-compose.sh
-          - run:
-              command: |
-                . ./.circleci/setenv-circle-ci.sh
-                ./gradlew testClasses aggregateJavaDocs
-          - save_cache:
-              paths:
-                - ~/.gradle
-              key: eventuate-local-java-{{ checksum "gradle.properties" }}-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
-          - run: <<parameters.script>>
-          - run:
-              name: Save test results
-              command: ./.circleci/save-containers-and-tests.sh
-              when: always
-          - store_test_results:
-              path: ~/junit
-          - store_artifacts:
-              path: ~/junit
-          - store_artifacts:
-              path: ~/container-logs
+  eventuate-gradle-build-and-test: "eventuate_io/eventuate-gradle-build-and-test@0.1.0"
 workflows:
-  version: 2.1
+  version: 2
   build-test-and-deploy:
     jobs:
-      - build-and-test/build-and-test:
+      - eventuate-gradle-build-and-test/build-and-test:
           name: build-and-test-mysql
           script: ./scripts/build-and-test-all-mysql.sh
-      - build-and-test/build-and-test:
+      - eventuate-gradle-build-and-test/build-and-test:
           name: build-and-test-mssql
           script: ./scripts/build-and-test-all-mssql.sh
-      - build-and-test/build-and-test:
+      - eventuate-gradle-build-and-test/build-and-test:
           name: build-and-test-postgres
           script: ./scripts/build-and-test-all-postgres.sh
-      - build-and-test/build-and-test:
+      - eventuate-gradle-build-and-test/build-and-test:
           name: deploy-artifacts
           context:
             - publish

@@ -7,28 +7,20 @@ import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.util.List;
-
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = CustomEventuateJdbcAccessImplTest.Config.class)
-@IntegrationTest
+@SpringBootTest(classes = CustomEventuateJdbcAccessImplTest.Config.class, properties = "eventuate.database.schema=custom")
 public class CustomEventuateJdbcAccessImplTest extends EventuateJdbcAccessImplTest {
 
   @Configuration
   @Import(CommonEventuateJdbcAccessImplTestConfiguration.class)
   public static class Config {
-    @Bean
-    public EventuateSchema eventuateSchema() {
-      return new EventuateSchema("custom");
-    }
 
     @Bean
     @Conditional(ApplicationIdGeneratorCondition.class)

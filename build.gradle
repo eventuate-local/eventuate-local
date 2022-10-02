@@ -7,7 +7,7 @@ buildscript {
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootPluginVersion")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
         classpath "io.eventuate.plugins.gradle:eventuate-plugins-gradle-publish:$eventuatePluginsGradleVersion"
         classpath "com.avast.gradle:gradle-docker-compose-plugin:$dockerComposePluginVersion"
     }
@@ -37,13 +37,14 @@ allprojects {
 
     repositories {
         mavenCentral()
-        jcenter()
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
     }
 
     if (!project.name.endsWith("-bom"))
       dependencies {
           testCompile "junit:junit:4.12"
+          testCompile "org.mockito:mockito-core:$mockitoVersion"
+
       }
 
 }

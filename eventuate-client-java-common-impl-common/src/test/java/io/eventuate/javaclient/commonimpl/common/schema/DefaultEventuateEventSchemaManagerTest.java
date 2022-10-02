@@ -14,7 +14,7 @@ import java.util.Optional;
 import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class DefaultEventuateEventSchemaManagerTest {

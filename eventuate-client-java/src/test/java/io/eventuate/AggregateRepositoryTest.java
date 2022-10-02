@@ -1,13 +1,7 @@
 package io.eventuate;
 
 import io.eventuate.common.id.Int128;
-import io.eventuate.example.banking.domain.Account;
-import io.eventuate.example.banking.domain.AccountCommand;
-import io.eventuate.example.banking.domain.AccountCreatedEvent;
-import io.eventuate.example.banking.domain.AccountDebitedEvent;
-import io.eventuate.example.banking.domain.CreateAccountCommand;
-import io.eventuate.example.banking.domain.DebitAccountCommand;
-import io.eventuate.example.banking.domain.NoopAccountCommand;
+import io.eventuate.example.banking.domain.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,12 +15,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 public class AggregateRepositoryTest {
 

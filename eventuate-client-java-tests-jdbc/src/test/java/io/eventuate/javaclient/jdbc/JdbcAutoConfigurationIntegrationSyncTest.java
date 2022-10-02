@@ -4,8 +4,7 @@ import io.eventuate.example.banking.services.counting.InvocationCounter;
 import io.eventuate.javaclient.spring.tests.common.AbstractSpringAccountIntegrationSyncTest;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.concurrent.ExecutionException;
@@ -13,8 +12,7 @@ import java.util.concurrent.ExecutionException;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = JdbcAutoConfigurationIntegrationTestConfiguration.class)
-@IntegrationTest
+@SpringBootTest(classes = JdbcAutoConfigurationIntegrationTestConfiguration.class)
 public class JdbcAutoConfigurationIntegrationSyncTest extends AbstractSpringAccountIntegrationSyncTest {
 
   @Autowired

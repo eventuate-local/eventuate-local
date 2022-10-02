@@ -1,7 +1,5 @@
 = Eventuate Local
 
-image::https://api.bintray.com/packages/eventuateio-oss/eventuate-maven-release/eventuate-local/images/download.svg[link="https://bintray.com/eventuateio-oss/eventuate-maven-release/eventuate-local/_latestVersion"]
-
 [cols="a,a"]
 |===
 | Spring/Micronaut

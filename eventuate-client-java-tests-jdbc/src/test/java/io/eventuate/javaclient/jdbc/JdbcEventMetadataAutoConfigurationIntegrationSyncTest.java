@@ -1,17 +1,19 @@
 package io.eventuate.javaclient.jdbc;
 
-import io.eventuate.*;
-import io.eventuate.example.banking.domain.DebitAccountCommand;
-import io.eventuate.sync.AggregateRepository;
+import io.eventuate.EntityWithIdAndVersion;
+import io.eventuate.EntityWithMetadata;
+import io.eventuate.SaveOptions;
+import io.eventuate.UpdateOptions;
 import io.eventuate.example.banking.domain.Account;
 import io.eventuate.example.banking.domain.AccountCommand;
 import io.eventuate.example.banking.domain.CreateAccountCommand;
+import io.eventuate.example.banking.domain.DebitAccountCommand;
+import io.eventuate.sync.AggregateRepository;
 import io.eventuate.testutil.ReceivedEvent;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.math.BigDecimal;
@@ -22,8 +24,7 @@ import java.util.Optional;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = JdbcEventMetadataAutoConfigurationIntegrationSyncTestConfiguration.class)
-@IntegrationTest
+@SpringBootTest(classes = JdbcEventMetadataAutoConfigurationIntegrationSyncTestConfiguration.class)
 public class JdbcEventMetadataAutoConfigurationIntegrationSyncTest {
 
 

@@ -1,27 +1,19 @@
 package io.eventuate.javaclient.spring.jdbc;
 
-import io.eventuate.common.jdbc.EventuateSchema;
 import org.junit.Before;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = DefaultEventuateJdbcAccessImplTest.Config.class)
-@IntegrationTest
+@SpringBootTest(classes = DefaultEventuateJdbcAccessImplTest.Config.class, properties = "eventuate.database.schema=")
 public class DefaultEventuateJdbcAccessImplTest extends EventuateJdbcAccessImplTest {
 
   @Configuration
   @Import(CommonEventuateJdbcAccessImplTestConfiguration.class)
   public static class Config {
-    @Bean
-    public EventuateSchema eventuateSchema() {
-      return new EventuateSchema();
-    }
   }
 
   @Before

@@ -1,6 +1,9 @@
 package io.eventuate.javaclient.domain;
 
-import io.eventuate.*;
+import io.eventuate.CompletableFutureUtil;
+import io.eventuate.DispatchedEvent;
+import io.eventuate.Event;
+import io.eventuate.EventContext;
 import io.eventuate.common.id.Int128;
 import io.eventuate.javaclient.eventhandling.exceptionhandling.EventDeliveryExceptionHandlerManager;
 import io.eventuate.javaclient.eventhandling.exceptionhandling.EventDeliveryExceptionHandlerWithState;
@@ -19,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class EventDispatcherTest {
@@ -62,7 +65,7 @@ public class EventDispatcherTest {
     eventDispatcher.dispatch(de).get(1, TimeUnit.SECONDS);
 
     verify(eventHandler).dispatch(de);
-    verifyZeroInteractions(exceptionHandlerManager);
+    verifyNoMoreInteractions(exceptionHandlerManager);
   }
 
 

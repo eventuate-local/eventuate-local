@@ -7,7 +7,7 @@ import org.mockito.ArgumentCaptor;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class MockEventHandlerContextInternal<T extends CommandProcessingAggregate<T, CT>, CT extends Command, E extends Event> {

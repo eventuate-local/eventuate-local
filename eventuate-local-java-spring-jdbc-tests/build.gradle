@@ -2,7 +2,7 @@
 dependencies {
 
     testCompile project(":eventuate-local-java-spring-jdbc-tests-common")
-    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootCdcVersion"
+    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }
 
 test {

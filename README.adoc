@@ -1,6 +1,15 @@
 = Eventuate Local
 
 image::https://api.bintray.com/packages/eventuateio-oss/eventuate-maven-release/eventuate-local/images/download.svg[link="https://bintray.com/eventuateio-oss/eventuate-maven-release/eventuate-local/_latestVersion"]
+
+[cols="a,a"]
+|===
+| Spring/Micronaut
+| image::https://img.shields.io/maven-central/v/io.eventuate.local.java/eventuate-local-bom[link="https://search.maven.org/artifact/io.eventuate.local.java/eventuate-local-bom"]
+| Quarkus
+| image::https://img.shields.io/maven-central/v/io.eventuate.local.java/eventuate-local-quarkus-bom[link="https://search.maven.org/artifact/io.eventuate.local.java/eventuate-local-quarkus-bom"]
+|===
+
 image::http://eventuate.io/i/logo.gif[]
 
 == Simplifying the development of transactional microservices

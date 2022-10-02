@@ -75,7 +75,7 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
   private SaveUpdateResult saveWithoutTransaction(String aggregateType, List<EventTypeAndData> events, Optional<AggregateCrudSaveOptions> saveOptions) {
     String entityId = saveOptions
             .flatMap(AggregateCrudSaveOptions::getEntityId)
-            .orElse(applicationIdGenerator.genId(null).asString());
+            .orElse(applicationIdGenerator.genIdAsString());
 
     List<EventIdTypeAndData> eventsWithIds = new ArrayList<>();
 
@@ -118,7 +118,7 @@ public class EventuateJdbcAccessImpl implements EventuateJdbcAccess {
     String eventId;
 
     if (idGenerator.databaseIdRequired()) {
-      eventId = idGenerator.genId(rs.getLong("id")).asString();
+      eventId = idGenerator.genIdAsString(rs.getLong("id"), null);
     } else {
       eventId = rs.getString("event_id");
     }

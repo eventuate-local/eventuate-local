@@ -7,8 +7,6 @@ dependencies {
     compile "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
     compile "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
 
-    compile "com.fasterxml.jackson.core:jackson-databind:2.8.8"
-    compile "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.8"
 
 
 }

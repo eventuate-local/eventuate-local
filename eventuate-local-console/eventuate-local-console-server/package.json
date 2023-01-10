@@ -22,7 +22,7 @@
     "bluebird": "^3.4.6",
     "body-parser": "~1.15.2",
     "cookie-parser": "~1.4.3",
-    "debug": "~2.2.0",
+    "debug": "~3.1.0",
     "eventuate-local-nodejs-client": "file:../eventuate-local-nodejs-client",
     "express": "~4.14.0",
     "flux-standard-action": "^1.0.0",

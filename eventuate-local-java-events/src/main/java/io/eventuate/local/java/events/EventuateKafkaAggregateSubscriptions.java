@@ -1,6 +1,5 @@
 package io.eventuate.local.java.events;
 
-
 import io.eventuate.SubscriberOptions;
 import io.eventuate.common.eventuate.local.PublishedEvent;
 import io.eventuate.common.id.Int128;
@@ -18,7 +17,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.PreDestroy;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +48,6 @@ public class EventuateKafkaAggregateSubscriptions implements AggregateEvents {
 
   private final List<EventuateKafkaConsumer> consumers = new ArrayList<>();
 
-  @PreDestroy
   public void cleanUp() {
     synchronized (consumers) {
       consumers.stream().forEach(EventuateKafkaConsumer::stop);

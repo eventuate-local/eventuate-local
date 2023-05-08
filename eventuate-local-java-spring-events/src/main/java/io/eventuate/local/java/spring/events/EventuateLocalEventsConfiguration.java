@@ -22,7 +22,8 @@ import org.springframework.context.annotation.Import;
         EventuateKafkaConsumerSpringConfigurationPropertiesConfiguration.class,
         KafkaConsumerFactoryConfiguration.class})
 public class EventuateLocalEventsConfiguration {
-  @Bean
+
+  @Bean(destroyMethod = "cleanUp")
   public EventuateKafkaAggregateSubscriptions aggregateEvents(EventuateKafkaConfigurationProperties eventuateLocalAggregateStoreConfiguration,
                                                               EventuateKafkaConsumerConfigurationProperties eventuateKafkaConsumerConfigurationProperties,
                                                               KafkaConsumerFactory kafkaConsumerFactory) {

@@ -7,7 +7,6 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
 @Context
 public class EventHandlerRegistrar {

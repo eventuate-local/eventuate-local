@@ -3,6 +3,5 @@ dependencies {
     compile project(":eventuate-client-java-tests-example")
     compile project(":eventuate-client-java-test-util")
 
-    compile "io.reactivex:rxjava:$rxJavaVersion"
     compile "junit:junit:4.11"
 }

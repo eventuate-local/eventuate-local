@@ -1,13 +1,13 @@
 package io.eventuate.javaclient.micronaut.common.events;
 
 import io.eventuate.EventuateAggregateStoreEvents;
+import io.eventuate.javaclient.commonimpl.common.schema.EventuateEventSchemaManager;
 import io.eventuate.javaclient.commonimpl.events.AggregateEvents;
 import io.eventuate.javaclient.commonimpl.events.EventuateAggregateStoreEventsImpl;
 import io.eventuate.javaclient.commonimpl.events.SerializedEventDeserializer;
-import io.eventuate.javaclient.commonimpl.common.schema.EventuateEventSchemaManager;
 import io.micronaut.context.annotation.Factory;
+import io.micronaut.core.annotation.Nullable;
 
-import javax.annotation.Nullable;
 import javax.inject.Singleton;
 
 @Factory
@@ -28,7 +28,7 @@ public class EventuateCommonEventsFactory {
 
   @Singleton
   public io.eventuate.sync.EventuateAggregateStoreEvents syncEventuateAggregateStoreEvents(io.eventuate.javaclient.commonimpl.events.sync.AggregateEvents aggregateEvents,
-                                                                                 @Nullable SerializedEventDeserializer serializedEventDeserializer) {
+                                                                                           @Nullable SerializedEventDeserializer serializedEventDeserializer) {
     io.eventuate.javaclient.commonimpl.events.sync.EventuateAggregateStoreEventsImpl eventuateAggregateStoreEvents =
             new io.eventuate.javaclient.commonimpl.events.sync.EventuateAggregateStoreEventsImpl(aggregateEvents);
 

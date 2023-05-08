@@ -7,7 +7,6 @@ buildscript {
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
         classpath "io.eventuate.plugins.gradle:eventuate-plugins-gradle-publish:$eventuatePluginsGradleVersion"
         classpath "com.avast.gradle:gradle-docker-compose-plugin:$dockerComposePluginVersion"
     }
@@ -32,8 +31,6 @@ projects {
 }
 
 allprojects {
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
 
     repositories {
         mavenCentral()
@@ -47,6 +44,14 @@ allprojects {
 
       }
 
+}
+
+subprojects { project ->
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(project.ext.get("springBootVersion").startsWith("3") ? 17 : 8))
+        }
+    }
 }
 
 task aggregatedTestReport(type: TestReport) {

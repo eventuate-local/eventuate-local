@@ -9,6 +9,9 @@ workflows:
           name: build-and-test-mysql
           script: ./scripts/build-and-test-all-mysql.sh
       - eventuate-gradle-build-and-test/build-and-test:
+          name: build-and-test-mysql-spring-boot-3
+          script: ./scripts/build-and-test-all-mysql-spring-boot-3.sh
+      - eventuate-gradle-build-and-test/build-and-test:
           name: build-and-test-mssql
           script: ./scripts/build-and-test-all-mssql.sh
       - eventuate-gradle-build-and-test/build-and-test:
@@ -20,6 +23,7 @@ workflows:
             - publish
           requires:
             - build-and-test-mysql
+            - build-and-test-mysql-spring-boot-3
             - build-and-test-mssql
             - build-and-test-postgres
           script: ./scripts/deploy-artifacts.sh

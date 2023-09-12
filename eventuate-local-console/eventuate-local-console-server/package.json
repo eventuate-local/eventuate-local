@@ -24,7 +24,7 @@
     "cookie-parser": "~1.4.3",
     "debug": "~2.2.0",
     "eventuate-local-nodejs-client": "file:../eventuate-local-nodejs-client",
-    "express": "~4.14.0",
+    "express": "~4.17.3",
     "flux-standard-action": "^1.0.0",
     "invariant": "^2.2.2",
     "jade": "^1.11.0",

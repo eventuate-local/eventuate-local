@@ -34,7 +34,7 @@
     "promise-mysql": "^2.0.0",
     "serve-favicon": "~2.3.0",
     "simple-git": "^1.65.0",
-    "sockjs": "^0.3.18"
+    "sockjs": "^0.3.20"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",

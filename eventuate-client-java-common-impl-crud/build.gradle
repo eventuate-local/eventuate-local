@@ -1,0 +1,5 @@
+
+dependencies {
+    compile project(":eventuate-client-java-common-impl-common")
+
+}

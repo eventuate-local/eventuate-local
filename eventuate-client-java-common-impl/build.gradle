@@ -1,0 +1,12 @@
+
+dependencies {
+    compile project(":eventuate-client-java")
+    compile project(":eventuate-client-java-common-impl-crud")
+    compile project(":eventuate-client-java-common-impl-events")
+
+    compile "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
+    compile "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
+
+
+
+}

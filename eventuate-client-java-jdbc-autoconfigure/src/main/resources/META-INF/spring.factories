@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+io.eventuate.javaclient.spring.jdbc.EmbeddedTestAggregateStoreConfiguration

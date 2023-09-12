@@ -1,7 +1,0 @@
-apply plugin: PrivateModulePlugin
-
-dependencies {
-    compile project(":eventuate-local-java-jdbc")
-
-    compile "io.eventuate.client.java:eventuate-client-java-spring-autoconfigure:$eventuateClientVersion"
-}

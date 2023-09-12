@@ -1,0 +1,4 @@
+datasources:
+  default:
+    driverClassName: org.h2.Driver
+

@@ -1,0 +1,10 @@
+
+dependencies {
+
+    compile project(":eventuate-client-java-tests-common")
+    compile "junit:junit:4.11"
+}
+
+test {
+    forkEvery 1
+}

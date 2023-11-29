@@ -90,7 +90,7 @@ For convenience, you might want to add the contents of this file to your project
 
 === Set some environment variables
 
-In order for your Sprint Boot application to use Eventuate Local you need to set the following application properties:
+In order for your Spring Boot application to use Eventuate Local you need to set the following application properties:
 
 ----
 spring.datasource.url=jdbc:mysql://${DOCKER_HOST_IP}/eventuate

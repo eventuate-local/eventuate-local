@@ -1,5 +1,5 @@
 
 dependencies {
-    compile project(":eventuate-client-java-spring-jdbc")
-    compile project(":eventuate-client-java-spring-autoconfigure")
+    api project(":eventuate-client-java-spring-jdbc")
+    api project(":eventuate-client-java-spring-autoconfigure")
 }

@@ -1,8 +1,8 @@
 
 dependencies {
-    compile project (":eventuate-client-java-spring")
-    compile project (":eventuate-client-java-spring-common")
+    api project (":eventuate-client-java-spring")
+    api project (":eventuate-client-java-spring-common")
 
-    compile project (":eventuate-local-java-spring-events")
-    compile project (":eventuate-local-java-spring-jdbc-crud")
+    api project (":eventuate-local-java-spring-events")
+    api project (":eventuate-local-java-spring-jdbc-crud")
 }

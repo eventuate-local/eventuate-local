@@ -1,5 +1,5 @@
 
 dependencies {
-    compile project(":eventuate-client-java-common-impl-common")
+    api project(":eventuate-client-java-common-impl-common")
 
 }

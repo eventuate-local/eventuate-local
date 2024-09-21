@@ -1,14 +1,14 @@
 
 dependencies {
-    compile project (":eventuate-local-java-crud")
-    compile project (":eventuate-local-java-common")
+    api project (":eventuate-local-java-crud")
+    api project (":eventuate-local-java-common")
 
-    compile project(":eventuate-client-java-spring-crud")
-    compile project(":eventuate-client-java-spring-common-crud")
+    api project(":eventuate-client-java-spring-crud")
+    api project(":eventuate-client-java-spring-common-crud")
 
-    compile "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
-    compile "io.eventuate.common:eventuate-common-spring-id:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-spring-id:$eventuateCommonVersion"
 
-    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
-    compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
+    api "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    api "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
 }

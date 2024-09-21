@@ -1,5 +1,5 @@
 
 dependencies {
-    compile project(":eventuate-client-java-tests-common")
-    compile project(":eventuate-client-java-tests-example-spring")
+    api project(":eventuate-client-java-tests-common")
+    api project(":eventuate-client-java-tests-example-spring")
 }

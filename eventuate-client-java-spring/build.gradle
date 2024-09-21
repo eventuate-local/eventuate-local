@@ -1,5 +1,5 @@
 
 dependencies {
-    compile project(":eventuate-client-java-spring-crud")
-    compile project(":eventuate-client-java-spring-events")
+    api project(":eventuate-client-java-spring-crud")
+    api project(":eventuate-client-java-spring-events")
 }

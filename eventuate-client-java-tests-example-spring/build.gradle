@@ -1,6 +1,6 @@
 
 dependencies {
-    compile project(":eventuate-client-java-tests-example")
-    compile project(":eventuate-client-java-spring")
-    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    api project(":eventuate-client-java-tests-example")
+    api project(":eventuate-client-java-spring")
+    api "org.springframework.boot:spring-boot-starter:$springBootVersion"
 }

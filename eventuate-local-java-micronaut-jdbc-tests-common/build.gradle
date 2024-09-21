@@ -12,21 +12,21 @@ dependencyManagement {
 }
 
 dependencies {
-    compile project(":eventuate-local-java-micronaut-jdbc")
-    compile project(":eventuate-client-java-tests-common-micronaut")
-    compile project(":eventuate-local-java-jdbc-tests-common")
+    api project(":eventuate-local-java-micronaut-jdbc")
+    api project(":eventuate-client-java-tests-common-micronaut")
+    api project(":eventuate-local-java-jdbc-tests-common")
 
     annotationProcessor "io.micronaut:micronaut-inject-java"
     annotationProcessor "io.micronaut:micronaut-validation"
     annotationProcessor "io.micronaut.configuration:micronaut-openapi"
-    compile "io.micronaut:micronaut-inject"
-    compile "io.micronaut:micronaut-validation"
-    compile "io.micronaut:micronaut-runtime"
-    compile 'io.micronaut.sql:micronaut-jdbc-hikari'
+    api "io.micronaut:micronaut-inject"
+    api "io.micronaut:micronaut-validation"
+    api "io.micronaut:micronaut-runtime"
+    api 'io.micronaut.sql:micronaut-jdbc-hikari'
     annotationProcessor "io.micronaut:micronaut-inject-java"
-    compile "org.junit.jupiter:junit-jupiter-api"
-    compile "io.micronaut.test:micronaut-test-junit5"
-    runtime "org.junit.jupiter:junit-jupiter-engine"
+    api "org.junit.jupiter:junit-jupiter-api"
+    api "io.micronaut.test:micronaut-test-junit5"
+    runtimeOnly "org.junit.jupiter:junit-jupiter-engine"
 }
 
 test {

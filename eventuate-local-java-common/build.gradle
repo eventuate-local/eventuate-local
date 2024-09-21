@@ -1,9 +1,9 @@
 
 dependencies {
 
-    compile "io.eventuate.common:eventuate-common-eventuate-local:$eventuateCommonVersion"
-    compile "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
-    compile "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-eventuate-local:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
 
-    compile project(":eventuate-client-java")
+    api project(":eventuate-client-java")
 }

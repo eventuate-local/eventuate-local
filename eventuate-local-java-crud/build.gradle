@@ -1,12 +1,12 @@
 
 dependencies {
-    compile project(":eventuate-local-java-common")
-    compile project(":eventuate-client-java-common-impl-crud")
-    compile project(":eventuate-client-java-jdbc-common")
+    api project(":eventuate-local-java-common")
+    api project(":eventuate-client-java-common-impl-crud")
+    api project(":eventuate-client-java-jdbc-common")
 
-    compile 'mysql:mysql-connector-java:8.0.21'
-    compile ('org.postgresql:postgresql:42.1.4') {
+    api 'mysql:mysql-connector-java:8.0.21'
+    api ('org.postgresql:postgresql:42.1.4') {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
-    compile group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.2.1.jre8'
+    api group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.2.1.jre8'
 }

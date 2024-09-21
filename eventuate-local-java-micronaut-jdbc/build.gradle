@@ -11,14 +11,14 @@ dependencyManagement {
 }
 
 dependencies {
-    compile project (":eventuate-client-java-micronaut-common")
-    compile project (":eventuate-local-java-micronaut-jdbc-crud")
-    compile project (":eventuate-local-java-micronaut-events")
+    api project (":eventuate-client-java-micronaut-common")
+    api project (":eventuate-local-java-micronaut-jdbc-crud")
+    api project (":eventuate-local-java-micronaut-events")
 
     annotationProcessor "io.micronaut:micronaut-inject-java"
     annotationProcessor "io.micronaut:micronaut-validation"
     annotationProcessor "io.micronaut.configuration:micronaut-openapi"
-    compile "io.micronaut:micronaut-inject"
-    compile "io.micronaut:micronaut-validation"
-    compile "io.micronaut:micronaut-runtime"
+    api "io.micronaut:micronaut-inject"
+    api "io.micronaut:micronaut-validation"
+    api "io.micronaut:micronaut-runtime"
 }

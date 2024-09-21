@@ -1,7 +1,7 @@
 
 dependencies {
-    compile project(":eventuate-client-java-tests-example")
-    compile project(":eventuate-client-java-test-util")
+    api project(":eventuate-client-java-tests-example")
+    api project(":eventuate-client-java-test-util")
 
-    compile "junit:junit:4.11"
+    api "junit:junit:4.11"
 }

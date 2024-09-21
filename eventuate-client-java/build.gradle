@@ -1,12 +1,12 @@
 
 dependencies {
-    compile "commons-lang:commons-lang:2.6"
-    compile "org.slf4j:slf4j-api:1.7.18"
+    api "commons-lang:commons-lang:2.6"
+    api "org.slf4j:slf4j-api:1.7.18"
 
-    compile "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
 
-    testCompile project(":eventuate-client-java-tests-example-domain")
-    testCompile 'org.mockito:mockito-all:1.10.19'
+    testImplementation project(":eventuate-client-java-tests-example-domain")
+    testImplementation 'org.mockito:mockito-all:1.10.19'
 
 }
 

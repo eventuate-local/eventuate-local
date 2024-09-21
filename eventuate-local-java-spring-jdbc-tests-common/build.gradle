@@ -1,10 +1,10 @@
 
 dependencies {
-    compile project(":eventuate-client-java-tests-common-spring")
-    compile 'com.zaxxer:HikariCP:3.2.0'
-    compile project(":eventuate-local-java-spring-jdbc-starter")
-    compile project(":eventuate-local-java-jdbc-tests-common")
-    compile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    api project(":eventuate-client-java-tests-common-spring")
+    api 'com.zaxxer:HikariCP:3.2.0'
+    api project(":eventuate-local-java-spring-jdbc-starter")
+    api project(":eventuate-local-java-jdbc-tests-common")
+    api "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }
 
 test {

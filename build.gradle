@@ -13,7 +13,6 @@ buildscript {
 }
 
 plugins {
-    id "com.github.hierynomus.license" version "0.12.1"
 }
 
 apply plugin: 'docker-compose'
@@ -25,9 +24,6 @@ allprojects {
 
 projects {
 
-    license {
-        header rootProject.file('src/license/HEADER')
-    }
 }
 
 allprojects {
@@ -39,8 +35,8 @@ allprojects {
 
     if (!project.name.endsWith("-bom"))
       dependencies {
-          testCompile "junit:junit:4.12"
-          testCompile "org.mockito:mockito-core:$mockitoVersion"
+          testImplementation "junit:junit:4.12"
+          testImplementation "org.mockito:mockito-core:$mockitoVersion"
 
       }
 
@@ -89,18 +85,18 @@ dockerCompose {
     mysql {
         projectName = null
         useComposeFiles = ["docker-compose-mysql.yml"]
-        removeContainers = project.ext.removeContainers
+        removeContainers = Boolean.valueOf(project.ext.removeContainers)
     }
 
     mssql {
         projectName = null
         useComposeFiles = ["docker-compose-mssql.yml"]
-        removeContainers = project.ext.removeContainers
+        removeContainers = Boolean.valueOf(project.ext.removeContainers)
     }
 
     postgres {
         projectName = null
         useComposeFiles = ["docker-compose-postgres.yml"]
-        removeContainers = project.ext.removeContainers
+        removeContainers = Boolean.valueOf(project.ext.removeContainers)
     }
 }

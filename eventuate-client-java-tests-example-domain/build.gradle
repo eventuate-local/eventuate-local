@@ -1,4 +1,4 @@
 
 dependencies {
-    compile project(":eventuate-client-java")
+    api project(":eventuate-client-java")
 }

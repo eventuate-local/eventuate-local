@@ -1,9 +1,9 @@
 
 dependencies {
-    testCompile project(":eventuate-client-java-tests-common-spring")
-    testCompile project(":eventuate-client-java-jdbc-autoconfigure")
-    testCompile "junit:junit:4.11"
-    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation project(":eventuate-client-java-tests-common-spring")
+    testImplementation project(":eventuate-client-java-jdbc-autoconfigure")
+    testImplementation "junit:junit:4.11"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
 }
 

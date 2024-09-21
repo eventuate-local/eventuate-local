@@ -1,14 +1,14 @@
 
 dependencies {
-    compile project (":eventuate-local-java-events")
-    compile project (":eventuate-local-java-common")
+    api project (":eventuate-local-java-events")
+    api project (":eventuate-local-java-common")
 
-    compile project(":eventuate-client-java-spring-events")
-    compile project(":eventuate-client-java-spring-common-events")
+    api project(":eventuate-client-java-spring-events")
+    api project(":eventuate-client-java-spring-common-events")
 
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-basic-consumer:$eventuateMessagingKafkaVersion"
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-consumer:$eventuateMessagingKafkaVersion"
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-common:$eventuateMessagingKafkaVersion"
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-basic-consumer:$eventuateMessagingKafkaVersion"
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-consumer:$eventuateMessagingKafkaVersion"
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-common:$eventuateMessagingKafkaVersion"
 
-    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    api "org.springframework.boot:spring-boot-starter:$springBootVersion"
 }

@@ -1,8 +1,8 @@
 
 dependencies {
 
-    testCompile project(":eventuate-local-java-spring-jdbc-tests-common")
-    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation project(":eventuate-local-java-spring-jdbc-tests-common")
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 }
 
 test {

@@ -1,10 +1,10 @@
 
 dependencies {
-    compile project(":eventuate-client-java")
+    api project(":eventuate-client-java")
 
-    compile "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
-    compile "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
 
 
-    testCompile "org.mockito:mockito-core:$mockitoVersion"
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
 }

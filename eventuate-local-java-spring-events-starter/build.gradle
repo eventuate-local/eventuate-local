@@ -1,4 +1,4 @@
 dependencies {
-    compile project (":eventuate-client-java-spring-common-events")
-    compile project (":eventuate-local-java-spring-events")
+    api project (":eventuate-client-java-spring-common-events")
+    api project (":eventuate-local-java-spring-events")
 }

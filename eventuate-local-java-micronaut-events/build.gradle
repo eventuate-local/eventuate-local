@@ -13,19 +13,19 @@ dependencyManagement {
 }
 
 dependencies {
-    compile project (":eventuate-local-java-common")
-    compile project (":eventuate-local-java-events")
+    api project (":eventuate-local-java-common")
+    api project (":eventuate-local-java-events")
 
 
-    compile project(":eventuate-client-java-micronaut-common-events")
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-micronaut-basic-consumer:$eventuateMessagingKafkaVersion"
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-micronaut-consumer:$eventuateMessagingKafkaVersion"
-    compile "io.eventuate.messaging.kafka:eventuate-messaging-kafka-micronaut-common:$eventuateMessagingKafkaVersion"
+    api project(":eventuate-client-java-micronaut-common-events")
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-micronaut-basic-consumer:$eventuateMessagingKafkaVersion"
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-micronaut-consumer:$eventuateMessagingKafkaVersion"
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-micronaut-common:$eventuateMessagingKafkaVersion"
 
     annotationProcessor "io.micronaut:micronaut-inject-java"
     annotationProcessor "io.micronaut:micronaut-validation"
     annotationProcessor "io.micronaut.configuration:micronaut-openapi"
-    compile "io.micronaut:micronaut-inject"
-    compile "io.micronaut:micronaut-validation"
-    compile "io.micronaut:micronaut-runtime"
+    api "io.micronaut:micronaut-inject"
+    api "io.micronaut:micronaut-validation"
+    api "io.micronaut:micronaut-runtime"
 }

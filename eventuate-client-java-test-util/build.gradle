@@ -1,8 +1,8 @@
 
 dependencies {
-    compile project(":eventuate-client-java")
+    api project(":eventuate-client-java")
 
-    compile 'junit:junit:4.11'
-    compile "org.mockito:mockito-core:$mockitoVersion"
+    api 'junit:junit:4.11'
+    api "org.mockito:mockito-core:$mockitoVersion"
 
 }

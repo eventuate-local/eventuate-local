@@ -1,6 +1,6 @@
 
 dependencies {
-    compile "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
-    compile "io.eventuate.common:eventuate-common-jdbc:$eventuateCommonVersion"
-    compile project(":eventuate-client-java-common-impl-crud")
+    api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-jdbc:$eventuateCommonVersion"
+    api project(":eventuate-client-java-common-impl-crud")
 }

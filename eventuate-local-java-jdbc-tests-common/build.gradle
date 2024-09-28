@@ -1,0 +1,10 @@
+
+dependencies {
+
+    api project(":eventuate-client-java-tests-common")
+    api "junit:junit:4.11"
+}
+
+test {
+    forkEvery 1
+}

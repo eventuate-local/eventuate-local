@@ -1,0 +1,34 @@
+plugins {
+    id "io.spring.dependency-management" version "1.0.6.RELEASE"
+}
+
+
+
+
+dependencyManagement {
+    imports {
+        mavenBom "io.micronaut:micronaut-bom:$micronautVersion"
+    }
+}
+
+dependencies {
+    api project(":eventuate-local-java-micronaut-jdbc")
+    api project(":eventuate-client-java-tests-common-micronaut")
+    api project(":eventuate-local-java-jdbc-tests-common")
+
+    annotationProcessor "io.micronaut:micronaut-inject-java"
+    annotationProcessor "io.micronaut:micronaut-validation"
+    annotationProcessor "io.micronaut.configuration:micronaut-openapi"
+    api "io.micronaut:micronaut-inject"
+    api "io.micronaut:micronaut-validation"
+    api "io.micronaut:micronaut-runtime"
+    api 'io.micronaut.sql:micronaut-jdbc-hikari'
+    annotationProcessor "io.micronaut:micronaut-inject-java"
+    api "org.junit.jupiter:junit-jupiter-api"
+    api "io.micronaut.test:micronaut-test-junit5"
+    runtimeOnly "org.junit.jupiter:junit-jupiter-engine"
+}
+
+test {
+    useJUnitPlatform()
+}

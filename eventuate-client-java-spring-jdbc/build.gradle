@@ -1,0 +1,15 @@
+
+dependencies {
+    api "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-spring-id:$eventuateCommonVersion"
+
+    api project(":eventuate-client-java-jdbc")
+    api project(":eventuate-client-java-jdbc-common-tests")
+    api project(":eventuate-client-java-spring-common")
+    api project(":eventuate-client-java-spring")
+
+    api "io.eventuate.common:eventuate-common-spring-in-memory-database:$eventuateCommonVersion"
+
+    testImplementation project(":eventuate-client-java-test-util")
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+}

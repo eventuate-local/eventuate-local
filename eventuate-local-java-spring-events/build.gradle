@@ -1,0 +1,14 @@
+
+dependencies {
+    api project (":eventuate-local-java-events")
+    api project (":eventuate-local-java-common")
+
+    api project(":eventuate-client-java-spring-events")
+    api project(":eventuate-client-java-spring-common-events")
+
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-basic-consumer:$eventuateMessagingKafkaVersion"
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-consumer:$eventuateMessagingKafkaVersion"
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-spring-common:$eventuateMessagingKafkaVersion"
+
+    api "org.springframework.boot:spring-boot-starter:$springBootVersion"
+}

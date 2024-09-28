@@ -10,6 +10,7 @@
 .scala_dependencies
 .settings
 .springBeans
+.java-version
 bin
 build
 build*.log
@@ -32,3 +33,4 @@ local_developer_config
 
 eventuate-local-console/eventuate-local-console-server/test/res
 eventuate-local-console/eventuate-local-console-server/reports
+eventuate-local-bom

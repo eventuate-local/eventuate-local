@@ -1,0 +1,24 @@
+plugins {
+    id "io.spring.dependency-management" version "1.0.6.RELEASE"
+}
+
+
+
+
+dependencyManagement {
+    imports {
+        mavenBom "io.micronaut:micronaut-bom:$micronautVersion"
+    }
+}
+
+dependencies {
+    api project(":eventuate-client-java-tests-example")
+    api project(":eventuate-client-java-micronaut")
+
+    annotationProcessor "io.micronaut:micronaut-inject-java"
+    annotationProcessor "io.micronaut:micronaut-validation"
+    annotationProcessor "io.micronaut.configuration:micronaut-openapi"
+    api "io.micronaut:micronaut-inject"
+    api "io.micronaut:micronaut-validation"
+    api "io.micronaut:micronaut-runtime"
+}

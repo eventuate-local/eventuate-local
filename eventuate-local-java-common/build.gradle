@@ -1,5 +1,9 @@
-apply plugin: PrivateModulePlugin
 
 dependencies {
-    compile project(":eventuate-local-java-kafka")
+
+    api "io.eventuate.common:eventuate-common-eventuate-local:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
+
+    api project(":eventuate-client-java")
 }

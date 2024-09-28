@@ -1,0 +1,8 @@
+
+dependencies {
+    api project (":eventuate-client-java-spring")
+    api project (":eventuate-client-java-spring-common")
+
+    api project (":eventuate-local-java-spring-events")
+    api project (":eventuate-local-java-spring-jdbc-crud")
+}

@@ -1,0 +1,4 @@
+dependencies {
+    api project (":eventuate-client-java-spring-common-events")
+    api project (":eventuate-local-java-spring-events")
+}

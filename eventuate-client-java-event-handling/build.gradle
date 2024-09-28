@@ -1,0 +1,12 @@
+
+dependencies {
+    api project(":eventuate-client-java")
+    api project(":eventuate-client-java-common-impl-common")
+
+    api "org.slf4j:slf4j-api:1.7.18"
+
+    testImplementation "junit:junit:4.11"
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
+
+
+}

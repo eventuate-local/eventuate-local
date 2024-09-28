@@ -1,0 +1,9 @@
+
+dependencies {
+    api project(":eventuate-client-java-tests-example-domain")
+    api project(":eventuate-client-java-event-dispatching")
+    api project(":eventuate-client-java-test-util")
+    api 'org.aspectj:aspectjrt:1.8.9'
+    api 'org.aspectj:aspectjweaver:1.8.9'
+
+}

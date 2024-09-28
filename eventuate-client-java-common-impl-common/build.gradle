@@ -1,0 +1,10 @@
+
+dependencies {
+    api project(":eventuate-client-java")
+
+    api "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
+
+
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
+}

@@ -1,16 +1,22 @@
 buildscript {
     repositories {
         mavenCentral()
+        maven {
+          url "https://plugins.gradle.org/m2/"
+        }
+        eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath "io.eventuate.plugins.gradle:eventuate-plugins-gradle-publish:$eventuatePluginsGradleVersion"
+        classpath "com.avast.gradle:gradle-docker-compose-plugin:$dockerComposePluginVersion"
     }
 }
 
 plugins {
-    id "com.github.hierynomus.license" version "0.12.1"
 }
+
+apply plugin: 'docker-compose'
+apply plugin: "io.eventuate.plugins.gradle.publish.EventuatePublish"
 
 allprojects {
     group = "io.eventuate.local.java"
@@ -18,71 +24,79 @@ allprojects {
 
 projects {
 
-    license {
-        header rootProject.file('src/license/HEADER')
-    }
 }
 
-subprojects {
-    apply plugin: 'java'
-    apply plugin: 'maven'
-    apply plugin: 'com.jfrog.bintray'
-
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-
-    bintray {
-        user = System.getenv('BINTRAY_USER')
-        key = System.getenv('BINTRAY_KEY')
-        configurations = ['archives']
-        pkg {
-            repo = 'eventuate-maven-release'
-            name = 'eventuate-local'
-            licenses = ['Apache-2.0']
-            vcsUrl = 'https://github.com/eventuate-local/eventuate-local'
-        }
-    }
+allprojects {
 
     repositories {
         mavenCentral()
-        jcenter()
         eventuateMavenRepoUrl.split(',').each { repoUrl -> maven { url repoUrl } }
     }
 
-    dependencies {
-        testCompile "junit:junit:4.12"
-    }
+    if (!project.name.endsWith("-bom"))
+      dependencies {
+          testImplementation "junit:junit:4.12"
+          testImplementation "org.mockito:mockito-core:$mockitoVersion"
 
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                repository(url: deployUrl)
-                pom.project {
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
-                        }
-                    }
-                }
-            }
+      }
+
+}
+
+subprojects { project ->
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(project.ext.get("springBootVersion").startsWith("3") ? 17 : 8))
         }
     }
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = "2.11"
+task aggregatedTestReport(type: TestReport) {
+    destinationDir = file("$buildDir/reports/allTests")
+    // Include the results from the 'test' task in all subprojects
+    reportOn subprojects.findAll{!it.name.endsWith("-bom")}*.test
 }
 
 gradle.projectsEvaluated {
     task aggregateJavaDocs(type: Javadoc) {
-        description = 'Aggregates Javadoc API documentation of all subprojects.'
+        description = 'Aggregated Javadoc API documentation of all subprojects.'
         group = JavaBasePlugin.DOCUMENTATION_GROUP
-        dependsOn subprojects.findAll { subproject -> subproject.plugins.hasPlugin(PublicModulePlugin) }.javadoc
 
-        source subprojects.findAll { subproject -> subproject.plugins.hasPlugin(PublicModulePlugin) }.javadoc.source
         destinationDir file("$buildDir/docs/javadoc")
-        classpath = files(subprojects.findAll { subproject -> subproject.plugins.hasPlugin(PublicModulePlugin) }.javadoc.classpath)
+    }
+
+    task("aggregateJavaDocsJar", type: org.gradle.api.tasks.bundling.Jar, dependsOn: project.aggregateJavaDocs) {
+        classifier = 'javadoc'
+        from 'build/docs/javadoc'
+    }
+
+    artifacts {
+        archives project.aggregateJavaDocsJar
+    }
+
+}
+
+dockerCompose {
+    environment.put "EVENTUATE_COMMON_VERSION", eventuateCommonImageVersion
+    environment.put "EVENTUATE_MESSAGING_KAFKA_IMAGE_VERSION", eventuateMessagingKafkaImageVersion
+    environment.put "EVENTUATE_CDC_VERSION", eventuateCdcImageVersion
+
+    removeOrphans = true
+
+    mysql {
+        projectName = null
+        useComposeFiles = ["docker-compose-mysql.yml"]
+        removeContainers = Boolean.valueOf(project.ext.removeContainers)
+    }
+
+    mssql {
+        projectName = null
+        useComposeFiles = ["docker-compose-mssql.yml"]
+        removeContainers = Boolean.valueOf(project.ext.removeContainers)
+    }
+
+    postgres {
+        projectName = null
+        useComposeFiles = ["docker-compose-postgres.yml"]
+        removeContainers = Boolean.valueOf(project.ext.removeContainers)
     }
 }

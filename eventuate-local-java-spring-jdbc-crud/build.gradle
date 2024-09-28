@@ -1,0 +1,14 @@
+
+dependencies {
+    api project (":eventuate-local-java-crud")
+    api project (":eventuate-local-java-common")
+
+    api project(":eventuate-client-java-spring-crud")
+    api project(":eventuate-client-java-spring-common-crud")
+
+    api "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
+    api "io.eventuate.common:eventuate-common-spring-id:$eventuateCommonVersion"
+
+    api "org.springframework.boot:spring-boot-starter:$springBootVersion"
+    api "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
+}

@@ -1,0 +1,10 @@
+
+dependencies {
+
+    testImplementation project(":eventuate-local-java-spring-jdbc-tests-common")
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+}
+
+test {
+    forkEvery 1
+}

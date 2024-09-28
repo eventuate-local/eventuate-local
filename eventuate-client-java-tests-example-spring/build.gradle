@@ -1,0 +1,6 @@
+
+dependencies {
+    api project(":eventuate-client-java-tests-example")
+    api project(":eventuate-client-java-spring")
+    api "org.springframework.boot:spring-boot-starter:$springBootVersion"
+}

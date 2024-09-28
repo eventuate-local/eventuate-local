@@ -1,33 +1,29 @@
-version: 2
-jobs:
-  build:
-    machine: true
-    working_directory: ~/eventuate-local-java
-    steps:
-      - checkout
-      - restore_cache:
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./gradlew testClasses
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: eventuate-local-java-{{ checksum "build.gradle" }}
-      - run: TERM=dumb ./scripts/build-and-test-all.sh
-      - run: TERM=dumb ./scripts/build-and-test-all-cdc.sh
-      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc.sh
-      - run: TERM=dumb ./scripts/build-and-test-all-new-cdc-postgres.sh
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/junit/ \;
-          when: always
-      - store_test_results:
-          path: ~/junit
-      - store_artifacts:
-          path: ~/junit
-      - run:
-          name: Publish artifacts
-          command: |
-            TERM=dumb ./scripts/deploy-artifacts.sh
-          when: on_success
+version: 2.1
+orbs:
+  eventuate-gradle-build-and-test: "eventuate_io/eventuate-gradle-build-and-test@0.2.9"
+workflows:
+  version: 2
+  build-test-and-deploy:
+    jobs:
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: build-and-test-mysql
+          script: ./scripts/build-and-test-all-mysql.sh
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: build-and-test-mysql-spring-boot-3
+          script: ./scripts/build-and-test-all-mysql-spring-boot-3.sh
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: build-and-test-mssql
+          script: ./scripts/build-and-test-all-mssql.sh
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: build-and-test-postgres
+          script: ./scripts/build-and-test-all-postgres.sh
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: deploy-artifacts
+          context:
+            - publish
+          requires:
+            - build-and-test-mysql
+            - build-and-test-mysql-spring-boot-3
+            - build-and-test-mssql
+            - build-and-test-postgres
+          script: ./scripts/deploy-artifacts.sh

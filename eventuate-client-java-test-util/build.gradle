@@ -1,0 +1,8 @@
+
+dependencies {
+    api project(":eventuate-client-java")
+
+    api 'junit:junit:4.11'
+    api "org.mockito:mockito-core:$mockitoVersion"
+
+}

@@ -1,0 +1,5 @@
+
+dependencies {
+    api project(":eventuate-client-java-spring-crud")
+    api project(":eventuate-client-java-spring-events")
+}

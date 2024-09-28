@@ -1,0 +1,12 @@
+
+dependencies {
+    api 'javax.annotation:javax.annotation-api:1.3.2'
+
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-basic-consumer:$eventuateMessagingKafkaVersion"
+    // Extra
+    api "org.apache.kafka:kafka-clients:$kafkaClientVersion"
+    api "io.eventuate.messaging.kafka:eventuate-messaging-kafka-common:$eventuateMessagingKafkaVersion"
+
+    api project(":eventuate-local-java-common")
+    api project(":eventuate-client-java-common-impl-events")
+}

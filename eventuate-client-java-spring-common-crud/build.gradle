@@ -1,0 +1,6 @@
+
+dependencies {
+    api project(":eventuate-client-java-common-impl-crud")
+    api project(":eventuate-client-java-spring-common-common")
+}
+

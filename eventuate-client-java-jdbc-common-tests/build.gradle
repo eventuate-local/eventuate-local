@@ -1,0 +1,5 @@
+
+dependencies {
+    api project(":eventuate-client-java-jdbc")
+    api "junit:junit:4.12"
+}

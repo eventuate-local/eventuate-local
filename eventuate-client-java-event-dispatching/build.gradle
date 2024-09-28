@@ -1,0 +1,6 @@
+
+dependencies {
+    api project(":eventuate-client-java")
+    api project(":eventuate-client-java-event-handling")
+    api "org.springframework.boot:spring-boot-starter:$springBootVersion"
+}

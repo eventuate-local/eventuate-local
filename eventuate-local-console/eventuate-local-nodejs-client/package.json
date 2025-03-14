@@ -22,7 +22,7 @@
   "dependencies": {
     "is-port-reachable": "^2.0.0",
     "kafka-node": "^1.0.7",
-    "log4js": "^1.0.1"
+    "log4js": "^6.4.0"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",

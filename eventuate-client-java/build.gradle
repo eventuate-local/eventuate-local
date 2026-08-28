@@ -1,14 +1,14 @@
 
 dependencies {
-    api "org.apache.commons:commons-lang3:3.18.0"
-    api "org.slf4j:slf4j-api:1.7.18"
+    api "org.apache.commons:commons-lang3:$commonsLang3Version"
+    api "org.slf4j:slf4j-api:$slf4jVersion"
 
-    implementation "org.junit.jupiter:junit-jupiter:5.13.4"
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
 
     api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
 
     testImplementation project(":eventuate-client-java-tests-example-domain")
-    testImplementation 'org.mockito:mockito-core:4.11.0'
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
 
 }
 tasks.withType(Test).configureEach {

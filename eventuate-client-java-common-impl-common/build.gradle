@@ -6,7 +6,7 @@ dependencies {
     api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
 
 
-    implementation "org.junit.jupiter:junit-jupiter:5.13.4"
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
 
 
     testImplementation "org.mockito:mockito-core:$mockitoVersion"

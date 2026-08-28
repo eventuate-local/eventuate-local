@@ -11,7 +11,7 @@ dependencies {
     api "io.eventuate.common:eventuate-common-spring-in-memory-database:$eventuateCommonVersion"
 
     testImplementation project(":eventuate-client-java-test-util")
-    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation "org.springframework.boot:spring-boot-starter-jdbc-test:$springBootVersion"
 }
 tasks.withType(Test).configureEach {
     useJUnitPlatform()

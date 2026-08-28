@@ -2,7 +2,7 @@
 dependencies {
     testImplementation project(":eventuate-client-java-tests-common-spring")
     testImplementation project(":eventuate-client-java-jdbc-autoconfigure")
-    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation "org.springframework.boot:spring-boot-starter-jdbc-test:$springBootVersion"
 
 }
 

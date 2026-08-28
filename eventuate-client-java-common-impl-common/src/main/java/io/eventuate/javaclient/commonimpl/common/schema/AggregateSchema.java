@@ -1,7 +1,6 @@
 package io.eventuate.javaclient.commonimpl.common.schema;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import io.eventuate.common.json.mapper.JSonMapper;
 import io.eventuate.javaclient.commonimpl.common.EventIdTypeAndData;
 
@@ -43,23 +42,12 @@ public class AggregateSchema {
     if (newEventTypeAndUpcasters.isEmpty())
       return event;
 
-    JsonNode json;
-    try {
-      json = JSonMapper.objectMapper.readTree(event.getEventData());
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+    JsonNode json = JSonMapper.objectMapper.readTree(event.getEventData());
 
     for (EventUpcaster upcaster : newEventTypeAndUpcasters.getUpcasters())
       json = upcaster.upcast(json);
 
-
-    String newJson;
-    try {
-      newJson = JSonMapper.objectMapper.writeValueAsString(json);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+    String newJson = JSonMapper.objectMapper.writeValueAsString(json);
 
     return new EventIdTypeAndData(event.getId(), newEventTypeAndUpcasters.getEventType().orElse(originalEventType), newJson, withNewVersion(event.getMetadata(), currentVersion()));
 

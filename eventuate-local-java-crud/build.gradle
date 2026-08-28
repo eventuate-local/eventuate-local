@@ -4,12 +4,12 @@ dependencies {
     api project(":eventuate-client-java-common-impl-crud")
     api project(":eventuate-client-java-jdbc-common")
 
-    api 'com.mysql:mysql-connector-j:8.0.33'
-    api ('org.postgresql:postgresql:42.1.4') {
+    api "com.mysql:mysql-connector-j:$mysqlConnectorVersion"
+    api ("org.postgresql:postgresql:$postgresqlVersion") {
         exclude group: "org.slf4j", module: "slf4j-simple"
     }
-    implementation "org.junit.jupiter:junit-jupiter:5.13.4"
-    api group: 'com.microsoft.sqlserver', name: 'mssql-jdbc', version: '7.2.1.jre8'
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+    api "com.microsoft.sqlserver:mssql-jdbc:$mssqlJdbcVersion"
 }
 tasks.withType(Test).configureEach {
     useJUnitPlatform()

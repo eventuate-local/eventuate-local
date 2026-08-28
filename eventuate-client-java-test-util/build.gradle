@@ -3,7 +3,7 @@ dependencies {
     api project(":eventuate-client-java")
     api "org.mockito:mockito-core:$mockitoVersion"
 
-    implementation "org.junit.jupiter:junit-jupiter:5.13.4"
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
 
 }
 tasks.withType(Test).configureEach {

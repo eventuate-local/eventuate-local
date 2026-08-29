@@ -40,6 +40,12 @@ services:
       - mssql
       - kafka
       - zookeeper
+    depends_on:
+      # The mssql container serves connections while it is still running its schema scripts.
+      # The CDC caches the events table's primary key column on its first poll, so it must not
+      # start until 4.setup-db-id.sql has replaced the event_id primary key with the id column.
+      mssql:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:sqlserver://mssql:1433;databaseName=eventuate;encrypt=false
       SPRING_DATASOURCE_USERNAME: sa

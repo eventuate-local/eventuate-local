@@ -28,7 +28,7 @@
     "flux-standard-action": "^1.0.0",
     "invariant": "^2.2.2",
     "jade": "^1.11.0",
-    "log4js": "^1.0.1",
+    "log4js": "^6.4.0",
     "morgan": "~1.7.0",
     "node-env-file": "^0.1.8",
     "promise-mysql": "^2.0.0",

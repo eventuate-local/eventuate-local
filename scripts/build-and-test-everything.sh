@@ -2,7 +2,11 @@
 
 set -o pipefail
 
-SCRIPTS="./scripts/build-and-test-all.sh ./scripts/build-and-test-all-cdc.sh ./scripts/build-and-test-all-new-cdc.sh ./scripts/build-and-test-all-new-cdc-postgres.sh"
+SCRIPTS="
+./scripts/build-and-test-all-mysql.sh
+./scripts/build-and-test-all-mssql.sh
+./scripts/build-and-test-all-postgres.sh
+"
 
 date > build-and-test-everything.log
 

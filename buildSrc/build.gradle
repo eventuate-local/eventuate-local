@@ -1,0 +1,4 @@
+test.enabled=false
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

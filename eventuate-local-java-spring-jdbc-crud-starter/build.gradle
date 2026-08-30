@@ -1,0 +1,7 @@
+dependencies {
+    api project (":eventuate-client-java-spring-common-crud")
+    api project (":eventuate-local-java-spring-jdbc-crud")
+}
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

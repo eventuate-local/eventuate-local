@@ -1,0 +1,16 @@
+
+dependencies {
+    api project(":eventuate-local-java-common")
+    api project(":eventuate-client-java-common-impl-crud")
+    api project(":eventuate-client-java-jdbc-common")
+
+    api "com.mysql:mysql-connector-j:$mysqlConnectorVersion"
+    api ("org.postgresql:postgresql:$postgresqlVersion") {
+        exclude group: "org.slf4j", module: "slf4j-simple"
+    }
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+    api "com.microsoft.sqlserver:mssql-jdbc:$mssqlJdbcVersion"
+}
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

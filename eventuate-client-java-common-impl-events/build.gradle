@@ -1,0 +1,7 @@
+
+dependencies {
+    api project(":eventuate-client-java-common-impl-common")
+}
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

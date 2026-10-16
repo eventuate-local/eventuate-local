@@ -1,0 +1,9 @@
+
+dependencies {
+    api project(":eventuate-client-java-jdbc")
+
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+}
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

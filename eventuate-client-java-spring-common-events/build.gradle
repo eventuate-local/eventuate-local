@@ -1,0 +1,9 @@
+
+dependencies {
+    api project(":eventuate-client-java-spring-common-common")
+    api project(":eventuate-client-java-common-impl-events")
+}
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+

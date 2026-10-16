@@ -1,6 +1,0 @@
-apply plugin: PrivateModulePlugin
-
-dependencies {
-    compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
-    compile "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
-}

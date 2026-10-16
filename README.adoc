@@ -1,6 +1,13 @@
 = Eventuate Local
 
-image::https://api.bintray.com/packages/eventuateio-oss/eventuate-maven-release/eventuate-local/images/download.svg[link="https://bintray.com/eventuateio-oss/eventuate-maven-release/eventuate-local/_latestVersion"]
+[cols="a,a"]
+|===
+| Spring/Micronaut
+| image::https://img.shields.io/maven-central/v/io.eventuate.local.java/eventuate-local-bom[link="https://search.maven.org/artifact/io.eventuate.local.java/eventuate-local-bom"]
+| Quarkus
+| image::https://img.shields.io/maven-central/v/io.eventuate.local.java/eventuate-local-quarkus-bom[link="https://search.maven.org/artifact/io.eventuate.local.java/eventuate-local-quarkus-bom"]
+|===
+
 image::http://eventuate.io/i/logo.gif[]
 
 == Simplifying the development of transactional microservices
@@ -28,6 +35,19 @@ Eventuate Local has a change data capture (CDC) component that
 2. publishes each event inserted into the `EVENTS` table to Kafka topic for the event's aggregate.
 
 The CDC component runs either embedded within each application or as a service `cdcservice`.
+
+== Got questions?
+
+Don't hesitate to create an issue or see
+
+* https://groups.google.com/d/forum/eventuate-users[Mailing list]
+* https://eventuate-users.slack.com[Slack]. https://eventuateusersslack.herokuapp.com/[Get invite]
+* http://eventuate.io/contact.html[Contact us].
+
+== Need support?
+
+Take a look at the http://eventuate.io/support.html[available paid support] options.
+
 
 = Setting up Eventuate Local
 
@@ -89,7 +109,7 @@ A convenient way to do that is to set the corresponding OS environment variables
 export SPRING_DATASOURCE_URL=jdbc:mysql://${DOCKER_HOST_IP}/eventuate
 export SPRING_DATASOURCE_USERNAME=mysqluser
 export SPRING_DATASOURCE_PASSWORD=mysqlpw
-export SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.jdbc.Driver
+export SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
 export EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS=$DOCKER_HOST_IP:9092
 export EVENTUATELOCAL_CDC_DB_USER_NAME=root
 export EVENTUATELOCAL_CDC_DB_PASSWORD=rootpassword
@@ -130,7 +150,7 @@ mycontainer:
     SPRING_DATASOURCE_URL: jdbc:mysql://mysql/eventuate
     SPRING_DATASOURCE_USERNAME: mysqluser
     SPRING_DATASOURCE_PASSWORD: mysqlpw
-    SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver
+    SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
     EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
     EVENTUATELOCAL_CDC_DB_USER_NAME: root

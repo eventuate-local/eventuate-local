@@ -1,0 +1,12 @@
+
+dependencies {
+
+    api project(":eventuate-client-java-tests-common")
+
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+}
+
+test {
+    forkEvery 1
+    useJUnitPlatform()
+}

@@ -1,5 +1,12 @@
-apply plugin: PrivateModulePlugin
 
 dependencies {
-    compile project(":eventuate-local-java-kafka")
+
+    api "io.eventuate.common.eventuate.local:eventuate-common-eventuate-local:$eventuateCommonEventuateLocalVersion"
+    api "io.eventuate.common.json:eventuate-common-json-mapper:$eventuateCommonJsonVersion"
+    api "io.eventuate.common.id:eventuate-common-id:$eventuateCommonIdVersion"
+
+    api project(":eventuate-client-java")
+}
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }

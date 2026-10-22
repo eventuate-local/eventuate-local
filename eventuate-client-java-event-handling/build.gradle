@@ -1,0 +1,14 @@
+
+dependencies {
+    api project(":eventuate-client-java")
+    api project(":eventuate-client-java-common-impl-common")
+
+    api "org.slf4j:slf4j-api:$slf4jVersion"
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
+
+
+}
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

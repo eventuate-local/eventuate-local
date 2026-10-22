@@ -1,0 +1,10 @@
+
+dependencies {
+    api project(":eventuate-client-java-tests-example")
+    api project(":eventuate-client-java-test-util")
+
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+}
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

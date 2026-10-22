@@ -1,0 +1,16 @@
+
+dependencies {
+    api project(":eventuate-client-java")
+
+    api "io.eventuate.common.json:eventuate-common-json-mapper:$eventuateCommonJsonVersion"
+    api "io.eventuate.common.id:eventuate-common-id:$eventuateCommonIdVersion"
+
+
+    implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
+
+
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
+}
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}

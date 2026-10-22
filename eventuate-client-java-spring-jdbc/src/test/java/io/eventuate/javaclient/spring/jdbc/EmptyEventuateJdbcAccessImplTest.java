@@ -1,7 +1,7 @@
 package io.eventuate.javaclient.spring.jdbc;
 
-import io.eventuate.common.jdbc.EventuateSchema;
-import io.eventuate.common.spring.id.ApplicationIdGeneratorCondition;
+import io.eventuate.common.database.jdbc.EventuateSchema;
+import io.eventuate.common.id.spring.ApplicationIdGeneratorCondition;
 import io.eventuate.javaclient.jdbc.common.tests.EmbeddedSchemaModifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -2,11 +2,11 @@ package io.eventuate.local.java.crud;
 
 import io.eventuate.EventContext;
 import io.eventuate.common.id.IdGenerator;
-import io.eventuate.common.jdbc.EventuateCommonJdbcOperations;
-import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
-import io.eventuate.common.jdbc.EventuateSchema;
-import io.eventuate.common.jdbc.EventuateTransactionTemplate;
-import io.eventuate.common.jdbc.sqldialect.EventuateSqlDialect;
+import io.eventuate.common.database.jdbc.EventuateCommonJdbcOperations;
+import io.eventuate.common.database.jdbc.EventuateJdbcStatementExecutor;
+import io.eventuate.common.database.jdbc.EventuateSchema;
+import io.eventuate.common.database.jdbc.EventuateTransactionTemplate;
+import io.eventuate.common.database.jdbc.sqldialect.EventuateSqlDialect;
 import io.eventuate.javaclient.jdbc.EventAndTrigger;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccessImpl;
 import io.eventuate.javaclient.jdbc.LoadedSnapshot;

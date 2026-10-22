@@ -4,8 +4,8 @@ dependencies {
     api project(":eventuate-client-java-common-impl-crud")
     api project(":eventuate-client-java-common-impl-events")
 
-    api "io.eventuate.common:eventuate-common-json-mapper:$eventuateCommonVersion"
-    api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
+    api "io.eventuate.common.json:eventuate-common-json-mapper:$eventuateCommonJsonVersion"
+    api "io.eventuate.common.id:eventuate-common-id:$eventuateCommonIdVersion"
 
 
 

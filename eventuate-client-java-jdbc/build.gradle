@@ -4,7 +4,7 @@ dependencies {
     api project(":eventuate-client-java-jdbc-common")
     api project(":eventuate-client-java-common-impl-events")
     api "com.h2database:h2:$h2Version"
-    api "io.eventuate.common:eventuate-common-jdbc:$eventuateCommonVersion"
+    api "io.eventuate.common.database:eventuate-common-jdbc:$eventuateCommonDatabaseVersion"
 }
 tasks.withType(Test).configureEach {
     useJUnitPlatform()

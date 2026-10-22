@@ -1,7 +1,7 @@
 
 dependencies {
-    api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
-    api "io.eventuate.common:eventuate-common-jdbc:$eventuateCommonVersion"
+    api "io.eventuate.common.id:eventuate-common-id:$eventuateCommonIdVersion"
+    api "io.eventuate.common.database:eventuate-common-jdbc:$eventuateCommonDatabaseVersion"
     api project(":eventuate-client-java-common-impl-crud")
 }
 tasks.withType(Test).configureEach {

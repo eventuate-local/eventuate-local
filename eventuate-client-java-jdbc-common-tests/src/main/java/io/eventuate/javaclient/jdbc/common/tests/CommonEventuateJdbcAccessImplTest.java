@@ -1,8 +1,8 @@
 package io.eventuate.javaclient.jdbc.common.tests;
 
 import io.eventuate.EntityIdAndType;
-import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
-import io.eventuate.common.jdbc.EventuateSchema;
+import io.eventuate.common.database.jdbc.EventuateJdbcStatementExecutor;
+import io.eventuate.common.database.jdbc.EventuateSchema;
 import io.eventuate.javaclient.commonimpl.common.EventTypeAndData;
 import io.eventuate.javaclient.commonimpl.crud.AggregateCrudUpdateOptions;
 import io.eventuate.javaclient.commonimpl.crud.LoadedEvents;

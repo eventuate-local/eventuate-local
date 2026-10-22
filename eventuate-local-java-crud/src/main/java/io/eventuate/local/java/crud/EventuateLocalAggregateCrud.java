@@ -3,7 +3,7 @@ package io.eventuate.local.java.crud;
 import io.eventuate.Aggregate;
 import io.eventuate.EntityIdAndType;
 import io.eventuate.common.id.Int128;
-import io.eventuate.common.jdbc.EventuateTransactionTemplate;
+import io.eventuate.common.database.jdbc.EventuateTransactionTemplate;
 import io.eventuate.javaclient.commonimpl.common.EventTypeAndData;
 import io.eventuate.javaclient.commonimpl.crud.*;
 import io.eventuate.javaclient.jdbc.AbstractJdbcAggregateCrud;

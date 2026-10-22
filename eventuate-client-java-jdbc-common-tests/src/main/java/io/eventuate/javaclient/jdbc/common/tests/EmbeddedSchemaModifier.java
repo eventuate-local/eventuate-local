@@ -1,6 +1,6 @@
 package io.eventuate.javaclient.jdbc.common.tests;
 
-import io.eventuate.common.jdbc.EventuateSchema;
+import io.eventuate.common.database.jdbc.EventuateSchema;
 
 import java.util.List;
 import java.util.function.Function;

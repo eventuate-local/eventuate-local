@@ -5,7 +5,7 @@ dependencies {
 
     implementation "org.junit.jupiter:junit-jupiter:$junitVersion"
 
-    api "io.eventuate.common:eventuate-common-id:$eventuateCommonVersion"
+    api "io.eventuate.common.id:eventuate-common-id:$eventuateCommonIdVersion"
 
     testImplementation project(":eventuate-client-java-tests-example-domain")
     testImplementation "org.mockito:mockito-core:$mockitoVersion"

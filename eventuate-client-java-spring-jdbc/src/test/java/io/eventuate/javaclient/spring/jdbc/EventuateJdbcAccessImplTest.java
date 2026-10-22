@@ -1,7 +1,7 @@
 package io.eventuate.javaclient.spring.jdbc;
 
-import io.eventuate.common.jdbc.EventuateJdbcStatementExecutor;
-import io.eventuate.common.jdbc.EventuateSchema;
+import io.eventuate.common.database.jdbc.EventuateJdbcStatementExecutor;
+import io.eventuate.common.database.jdbc.EventuateSchema;
 import io.eventuate.javaclient.jdbc.EventuateJdbcAccess;
 import io.eventuate.javaclient.jdbc.common.tests.CommonEventuateJdbcAccessImplTest;
 import org.junit.jupiter.api.Test;

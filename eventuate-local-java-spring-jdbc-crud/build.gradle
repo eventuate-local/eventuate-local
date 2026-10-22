@@ -6,8 +6,8 @@ dependencies {
     api project(":eventuate-client-java-spring-crud")
     api project(":eventuate-client-java-spring-common-crud")
 
-    api "io.eventuate.common:eventuate-common-spring-jdbc:$eventuateCommonVersion"
-    api "io.eventuate.common:eventuate-common-spring-id:$eventuateCommonVersion"
+    api "io.eventuate.common.database:eventuate-common-spring-jdbc:$eventuateCommonDatabaseVersion"
+    api "io.eventuate.common.id:eventuate-common-spring-id:$eventuateCommonIdVersion"
 
     api "org.springframework.boot:spring-boot-starter:$springBootVersion"
     api "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
